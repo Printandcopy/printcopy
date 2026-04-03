@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Print & Copy</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
+body{background:#f5f5f0;min-height:100vh;color:#1a1a1a}
+header{background:#1a1a1a;color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:12px}
+.header-left{display:flex;align-items:center;gap:16px}
+header h1{font-size:16px;font-weight:500;white-space:nowrap}
+.clock-time{font-size:13px;color:#aaa;font-family:monospace}
+.clock-date{font-size:11px;color:#777;margin-top:1px}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:#666;display:inline-block;margin-right:4px}
+.conn-dot.ok{background:#4ade80}
+.conn-dot.err{background:#f87171}
+.nav-tabs{display:flex;gap:3px}
+.nav-tab{padding:5px 12px;border-radius:6px;border:none;background:transparent;color:#ccc;cursor:pointer;font-size:13px;font-weight:500}
+.nav-tab.active,.nav-tab:hover{background:#333;color:#fff}
+.screen{display:none;padding:16px 20px;max-width:980px;margin:0 auto}
+.screen.active{display:block}
+.card{background:#fff;border-radius:10px;border:0.5px solid #ddd;padding:14px 18px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+label{display:block;font-size:12px;color:#666;margin-bottom:3px;font-weight:500}
+input,select,textarea{width:100%;padding:7px 10px;border:0.5px solid #ccc;border-radius:6px;font-size:13px;color:#1a1a1a;background:#fff;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#378ADD}
+textarea{resize:vertical;min-height:64px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-grid.w1{grid-template-columns:1fr}
+.field{margin-bottom:0}
+.sections-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.sec-btn{padding:8px 4px;border-radius:7px;border:1.5px solid #ddd;background:#fff;cursor:pointer;text-align:center}
+.sec-btn.selected{border-color:#378ADD;background:#E6F1FB}
+.sec-btn .sc{font-size:13px;font-weight:700;color:#185FA5}
+.sec-btn .sn{font-size:10px;color:#888;margin-top:1px}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600}
+.sec-TX{background:#fce8e8;color:#7a1a1a}.sec-PL{background:#e8f0fe;color:#1a3a7a}.sec-UV{background:#e8fce8;color:#1a5a1a}.sec-SUB{background:#fef3e8;color:#7a4a1a}.sec-NEON{background:#f3e8fe;color:#4a1a7a}.sec-XR{background:#e8fef8;color:#1a5a4a}
+.radio-group{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.radio-opt{display:flex;align-items:center;gap:5px;cursor:pointer;padding:5px 10px;border-radius:6px;border:0.5px solid #ddd;font-size:13px}
+.radio-opt input{width:auto;margin:0}
+.radio-opt.sel{border-color:#378ADD;background:#E6F1FB;color:#185FA5}
+.date-type{display:flex;gap:7px;margin-top:5px}
+.date-type label{display:flex;align-items:center;gap:5px;font-size:12px;padding:4px 9px;border-radius:5px;border:0.5px solid #ddd;cursor:pointer;margin:0;font-weight:400}
+.date-type label:has(input:checked){border-color:#BA7517;background:#FAEEDA;color:#BA7517}
+.date-type input{width:auto}
+.btn{padding:7px 14px;border-radius:7px;border:none;font-size:13px;font-weight:500;cursor:pointer}
+.btn-primary{background:#185FA5;color:#fff}.btn-primary:hover{background:#0C447C}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-secondary{background:#f0f0f0;color:#333;border:0.5px solid #ddd}
+.btn-danger{background:#FCEBEB;color:#A32D2D;border:0.5px solid #f7c1c1}
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.search-box{position:relative}
+.search-results{position:absolute;top:100%;left:0;right:0;background:#fff;border:0.5px solid #ccc;border-top:none;border-radius:0 0 7px 7px;z-index:50;max-height:200px;overflow-y:auto;display:none}
+.sr-item{padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:0.5px solid #f0f0f0}
+.sr-item:hover{background:#f5f5f5}
+.sr-item .sn{font-weight:500}.sr-item .ss{font-size:11px;color:#888}
+.cond-box{background:#EEEDFE;border:0.5px solid #AFA9EC;border-radius:7px;padding:9px 12px;margin-top:8px;font-size:12px;color:#3C3489}
+.cond-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#EEEDFE;color:#534AB7;margin-left:6px}
+.totales-grid{display:grid;grid-template-columns:auto 130px;gap:7px 12px;align-items:center}
+.totales-grid label{font-size:13px;color:#666}
+.taller-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.view-tabs{display:flex;gap:3px;background:#fff;border-radius:8px;border:0.5px solid #ddd;padding:3px}
+.view-tab{padding:5px 12px;border-radius:5px;border:none;background:transparent;font-size:12px;font-weight:500;color:#888;cursor:pointer;white-space:nowrap}
+.view-tab.active{background:#1a1a1a;color:#fff}
+.taller-filters{background:#fff;border-radius:10px;border:0.5px solid #ddd;padding:12px 16px;margin-bottom:12px}
+.filter-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;align-items:center}
+.filter-row:last-child{margin-bottom:0}
+.filter-label{font-size:11px;color:#bbb;font-weight:600;min-width:54px}
+.filter-btn{padding:3px 10px;border-radius:20px;border:0.5px solid #ddd;background:#fff;font-size:12px;cursor:pointer;font-weight:500}
+.filter-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.sort-select{padding:4px 8px;border-radius:6px;border:0.5px solid #ddd;font-size:12px;background:#fff;color:#444;cursor:pointer}
+.stat-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.stat-card{background:#fff;border-radius:8px;border:0.5px solid #ddd;padding:9px 14px;flex:1;min-width:90px}
+.stat-card .sv{font-size:19px;font-weight:700}
+.stat-card .sl{font-size:11px;color:#888;margin-top:1px}
+.taller-card{background:#fff;border-radius:8px;border:0.5px solid #ddd;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:box-shadow .15s}
+.taller-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.taller-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid #f0f0f0;gap:8px;flex-wrap:wrap}
+.taller-body{padding:10px 14px}
+.taller-body p{font-size:13px;color:#444;margin-bottom:4px;line-height:1.5}
+.taller-body strong{color:#1a1a1a;font-weight:500}
+.fase-stepper{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.fase-step{padding:4px 9px;border-radius:5px;border:0.5px solid #ddd;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#888}
+.fase-step.current{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.fase-step.done{background:#EAF3DE;color:#3B6D11;border-color:#c0dd97}
+.fase-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.fase-0{background:#f1efe8;color:#5f5e5a}.fase-1{background:#FAEEDA;color:#BA7517}.fase-2{background:#E6F1FB;color:#185FA5}.fase-3{background:#EEEDFE;color:#534AB7}.fase-4{background:#EAF3DE;color:#3B6D11}
+.checks-textil{display:flex;gap:14px;margin-top:7px;padding:7px 11px;background:#fce8e8;border-radius:6px;border:0.5px solid #f7c1c1}
+.check-item{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:#7a1a1a;cursor:pointer}
+.check-item input{width:auto;cursor:pointer}
+.pendiente-pill{background:#FCEBEB;color:#A32D2D;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700}
+.pagado-pill{background:#EAF3DE;color:#3B6D11;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700}
+.operario-pill{background:#f1efe8;color:#5f5e5a;border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600}
+.delivery-urgent{border-left:3px solid #A32D2D}
+.delivery-soon{border-left:3px solid #BA7517}
+.semana-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#ddd;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.dia-col{background:#fff;min-height:80px}
+.dia-header{padding:6px 4px;text-align:center;border-bottom:0.5px solid #f0f0f0;background:#f9f9f7}
+.dia-header .dn{font-size:12px;font-weight:600}.dia-header .dd{font-size:11px;color:#999}
+.dia-header.hoy{background:#E6F1FB}.dia-header.hoy .dn{color:#185FA5}
+.dia-cards{padding:4px}
+.dia-mini{border-radius:5px;padding:3px 5px;margin-bottom:3px;font-size:11px;cursor:pointer;border:0.5px solid transparent}
+.dia-mini:hover{opacity:.8}
+.dm-TX{background:#fce8e8;color:#7a1a1a;border-color:#f5c0c0}.dm-PL{background:#e8f0fe;color:#1a3a7a;border-color:#b5d4f4}.dm-UV{background:#e8fce8;color:#1a5a1a;border-color:#9FE1CB}.dm-SUB{background:#fef3e8;color:#7a4a1a;border-color:#FAC775}.dm-NEON{background:#f3e8fe;color:#4a1a7a;border-color:#AFA9EC}.dm-XR{background:#e8fef8;color:#1a5a4a;border-color:#5DCAA5}
+.dm-fija{outline:2px solid #A32D2D}
+.mes-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#ddd;border-radius:8px;overflow:hidden;margin-bottom:12px}
+.mes-cell{background:#fff;min-height:80px;padding:4px}
+.mes-cell.otro-mes{background:#fafaf8}
+.mes-day-num{font-size:11px;font-weight:500;color:#444;margin-bottom:3px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.mes-day-num.hoy{background:#E6F1FB;color:#185FA5;font-weight:700}
+.operario-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.op-btn{padding:6px 14px;border-radius:20px;border:1.5px solid #ddd;background:#fff;font-size:13px;font-weight:500;cursor:pointer}
+.op-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.resguardo{background:#fff;border:1px solid #ddd;border-radius:8px;padding:18px;font-size:13px}
+.rh{text-align:center;margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:10px}
+.rh h2{font-size:17px;font-weight:700}
+.rnum{font-size:22px;font-weight:800;font-family:monospace;color:#185FA5;margin:5px 0}
+.rrow{display:flex;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid #f5f5f5;gap:8px}
+.rrow:last-child{border:none}
+.rlabel{color:#999;font-size:12px;flex-shrink:0}
+.rval{font-weight:500;text-align:right;font-size:13px}
+.rval.red{color:#A32D2D;font-weight:700}.rval.green{color:#3B6D11}
+.rcontact{background:#f5f5f5;border-radius:6px;padding:8px 10px;margin:8px 0;font-size:12px;line-height:1.7}
+.rimportant{background:#E6F1FB;border-radius:6px;padding:8px 10px;margin:6px 0;font-size:12px;color:#185FA5;line-height:1.6}
+.rfooter{margin-top:10px;padding-top:8px;border-top:1px dashed #ddd;font-size:11px;color:#999;line-height:1.6;text-align:center}
+.cliente-card{background:#fff;border-radius:7px;border:0.5px solid #ddd;padding:11px 15px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.empty-state{text-align:center;padding:36px 20px;color:#aaa;font-size:14px}
+.msg-ok{background:#EAF3DE;color:#3B6D11;border:0.5px solid #c0dd97;padding:9px 14px;border-radius:7px;font-size:13px;font-weight:500;margin-bottom:10px;display:none}
+.loading{text-align:center;padding:30px;color:#aaa;font-size:14px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;overflow-y:auto;padding:30px 16px}
+.modal-overlay.open{display:block}
+.modal{background:#fff;border-radius:12px;padding:22px;width:100%;max-width:560px;margin:0 auto}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.sin-fecha{background:#fff;border:0.5px solid #ddd;border-radius:8px;padding:10px 14px;margin-bottom:8px}
+.sin-fecha-title{font-size:11px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+@media print{body *{visibility:hidden}#print-area,#print-area *{visibility:visible}#print-area{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-left">
+    <h1>🖨️ Print &amp; Copy</h1>
+    <div id="clock-wrap" style="display:none">
+      <div class="clock-time" id="clock-time"></div>
+      <div class="clock-date" id="clock-date"></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span id="conn-status" style="font-size:11px;color:#666"><span class="conn-dot" id="conn-dot"></span>Conectando...</span>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showScreen('mostrador',this)">Mostrador</button>
+      <button class="nav-tab" onclick="showScreen('taller',this)">Taller</button>
+      <button class="nav-tab" onclick="showScreen('clientes',this)">Clientes</button>
+    </div>
+  </div>
+</header>
+
+<!-- MOSTRADOR -->
+<div id="screen-mostrador" class="screen active">
+  <div class="card">
+    <div class="card-title">Buscar cliente existente</div>
+    <div class="search-box">
+      <input type="text" id="search-client" placeholder="Nombre, teléfono o email..." oninput="searchClients(this.value)" autocomplete="off">
+      <div class="search-results" id="search-results"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Datos del cliente</div>
+    <div class="form-grid">
+      <div class="field"><label>Nombre *</label><input type="text" id="f-nombre" placeholder="Nombre completo" oninput="clearClientId()"></div>
+      <div class="field"><label>Teléfono</label><input type="tel" id="f-tel" placeholder="600 000 000"></div>
+      <div class="field"><label>Email</label><input type="email" id="f-email" placeholder="cliente@email.com"></div>
+      <div class="field"><label>Atendido por</label>
+        <select id="f-operario"><option value="Marilia" selected>Marilia</option><option value="Álvaro">Álvaro</option><option value="Charo">Charo</option><option value="Raúl">Raúl</option><option value="Bea">Bea</option></select>
+      </div>
+    </div>
+    <div id="cond-display" style="display:none;margin-top:9px">
+      <div class="cond-box"><strong>Condiciones de pago:</strong> <span id="cond-text"></span></div>
+    </div>
+    <div id="cliente-historial" style="display:none;margin-top:9px"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Sección del pedido</div>
+    <div class="sections-grid">
+      <div class="sec-btn" data-sec="TX" onclick="selectSec(this)"><div class="sc">TX</div><div class="sn">Textil</div></div>
+      <div class="sec-btn" data-sec="PL" onclick="selectSec(this)"><div class="sc">PL</div><div class="sn">Plotter</div></div>
+      <div class="sec-btn" data-sec="UV" onclick="selectSec(this)"><div class="sc">UV</div><div class="sn">UV</div></div>
+      <div class="sec-btn" data-sec="SUB" onclick="selectSec(this)"><div class="sc">SUB</div><div class="sn">Sublim.</div></div>
+      <div class="sec-btn" data-sec="NEON" onclick="selectSec(this)"><div class="sc">NEON</div><div class="sn">Neones</div></div>
+      <div class="sec-btn" data-sec="XR" onclick="selectSec(this)"><div class="sc">XR</div><div class="sn">Xerox</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Entrega</div>
+    <div style="max-width:260px">
+      <label>Fecha de entrega</label>
+      <input type="date" id="f-fecha-entrega">
+      <div class="date-type">
+        <label><input type="radio" name="fecha-tipo" value="aprox" checked> Aproximada</label>
+        <label><input type="radio" name="fecha-tipo" value="fija"> Fija (cliente exige)</label>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Descripción del trabajo</div>
+    <div class="form-grid w1">
+      <div class="field"><label>Descripción *</label><textarea id="f-desc" rows="3" placeholder="Detalla el trabajo..."></textarea></div>
+      <div class="field"><label>Anotaciones internas</label><textarea id="f-notas" rows="2" placeholder="Notas para el taller..."></textarea></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Pago</div>
+    <div class="totales-grid">
+      <label>Total pedido (€)</label><input type="number" id="f-total" placeholder="0.00" step="0.01" min="0" oninput="calcPendiente()">
+      <label>Señal recibida (€)</label><input type="number" id="f-senal" placeholder="0.00" step="0.01" min="0" oninput="calcPendiente()">
+      <label style="font-weight:600;color:#A32D2D">Importe pendiente (€)</label>
+      <div id="f-pendiente" style="font-size:16px;font-weight:700;color:#A32D2D;padding:4px 0">—</div>
+    </div>
+    <div class="radio-group">
+      <label class="radio-opt"><input type="radio" name="pago" value="pagado" onchange="updatePayRadio()"> Pagado completo</label>
+      <label class="radio-opt"><input type="radio" name="pago" value="senal" onchange="updatePayRadio()"> Solo señal</label>
+      <label class="radio-opt"><input type="radio" name="pago" value="pendiente" onchange="updatePayRadio()"> Pendiente de pago</label>
+    </div>
+    <div id="cond-pago-info" style="margin-top:8px;font-size:12px;color:#534AB7;display:none"></div>
+  </div>
+  <div class="msg-ok" id="msg-ok">✓ Pedido guardado correctamente</div>
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="resetForm()">Limpiar</button>
+    <button class="btn btn-primary" id="btn-guardar" onclick="guardarPedido()">Guardar y generar resguardo</button>
+  </div>
+</div>
+
+<!-- TALLER -->
+<div id="screen-taller" class="screen">
+  <div class="taller-top">
+    <div class="view-tabs">
+      <button class="view-tab active" onclick="setView('lista',this)">Lista</button>
+      <button class="view-tab" onclick="setView('semana',this)">Semana</button>
+      <button class="view-tab" onclick="setView('mes',this)">Mes</button>
+      <button class="view-tab" onclick="setView('operario',this)">Por operario</button>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <span style="font-size:12px;color:#aaa">Sección:</span>
+      <select class="sort-select" id="sec-global" onchange="renderTaller()">
+        <option value="all">Todas</option>
+        <option value="TX">TX Textil</option><option value="PL">PL Plotter</option>
+        <option value="UV">UV Impresión UV</option><option value="SUB">SUB Sublimación</option>
+        <option value="NEON">NEON Neones</option><option value="XR">XR Xerox</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" onclick="cargarDatos()">↻ Actualizar</button>
+    </div>
+  </div>
+  <div class="stat-row" id="taller-stats"></div>
+  <div id="filtros-lista" class="taller-filters">
+    <div class="filter-row">
+      <span class="filter-label">Fase</span>
+      <button class="filter-btn active" data-f="fase" data-v="all" onclick="setFilter(this)">Todos</button>
+      <button class="filter-btn" data-f="fase" data-v="0" onclick="setFilter(this)">Recibido</button>
+      <button class="filter-btn" data-f="fase" data-v="1" onclick="setFilter(this)">Espera mat.</button>
+      <button class="filter-btn" data-f="fase" data-v="2" onclick="setFilter(this)">Producción</button>
+      <button class="filter-btn" data-f="fase" data-v="3" onclick="setFilter(this)">Listo</button>
+      <button class="filter-btn" data-f="fase" data-v="4" onclick="setFilter(this)">Entregado</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Entrega</span>
+      <button class="filter-btn active" data-f="entrega" data-v="all" onclick="setFilter(this)">Todas</button>
+      <button class="filter-btn" data-f="entrega" data-v="hoy" onclick="setFilter(this)">Hoy</button>
+      <button class="filter-btn" data-f="entrega" data-v="manana" onclick="setFilter(this)">Mañana</button>
+      <button class="filter-btn" data-f="entrega" data-v="semana" onclick="setFilter(this)">Esta semana</button>
+      <button class="filter-btn" data-f="entrega" data-v="fija" onclick="setFilter(this)">Fecha fija</button>
+      <button class="filter-btn" data-f="entrega" data-v="vencido" onclick="setFilter(this)">Vencidos</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Pago</span>
+      <button class="filter-btn active" data-f="pago" data-v="all" onclick="setFilter(this)">Todos</button>
+      <button class="filter-btn" data-f="pago" data-v="pendiente" onclick="setFilter(this)">Con pendiente</button>
+      <button class="filter-btn" data-f="pago" data-v="pagado" onclick="setFilter(this)">Pagados</button>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Ordenar</span>
+      <select class="sort-select" id="sort-select" onchange="renderTaller()">
+        <option value="entrega">Por fecha de entrega</option>
+        <option value="creacion">Por fecha de creación</option>
+        <option value="seccion">Por sección</option>
+        <option value="pendiente">Por importe pendiente</option>
+      </select>
+    </div>
+  </div>
+  <div id="filtros-semana" style="display:none" class="taller-filters">
+    <div class="filter-row">
+      <span class="filter-label">Fase</span>
+      <button class="filter-btn active" data-f="sfase" data-v="all" onclick="setFilter(this)">Todos</button>
+      <button class="filter-btn" data-f="sfase" data-v="activos" onclick="setFilter(this)">Solo activos</button>
+      <button class="filter-btn" data-f="sfase" data-v="3" onclick="setFilter(this)">Listos</button>
+    </div>
+  </div>
+  <div id="operario-selector-wrap" style="display:none">
+    <div class="operario-selector" id="operario-btns"></div>
+  </div>
+  <div id="taller-list"></div>
+</div>
+
+<!-- CLIENTES -->
+<div id="screen-clientes" class="screen">
+  <div class="card" style="margin-bottom:10px">
+    <input type="text" id="search-clientes" placeholder="Buscar cliente..." oninput="renderClientes(this.value)">
+  </div>
+  <div id="clientes-list"></div>
+</div>
+
+<!-- MODAL RESGUARDO -->
+<div class="modal-overlay" id="modal-resguardo">
+  <div class="modal">
+    <h3>Resguardo del pedido</h3>
+    <div id="print-area"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-resguardo');resetForm()">Cerrar</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE PEDIDO -->
+<div class="modal-overlay" id="modal-pedido">
+  <div class="modal" style="max-width:580px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
+      <div id="mp-title"></div>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-pedido')">✕ Cerrar</button>
+    </div>
+    <div id="mp-body"></div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button>
+      <button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir resguardo</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal"><h3 id="mc-title"></h3><div id="mc-body"></div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-cliente')">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO CLIENTE -->
+<div class="modal-overlay" id="modal-new-client">
+  <div class="modal">
+    <h3>Condiciones de pago del cliente</h3>
+    <p style="font-size:13px;color:#666;margin-bottom:12px">Estándar: <strong>50% al entregar · Transferencia</strong>. Si tiene condiciones especiales, indícalas:</p>
+    <div class="field" style="margin-bottom:10px">
+      <label>Condiciones especiales (dejar vacío para estándar)</label>
+      <textarea id="nc-cond" rows="2" placeholder="Ej: Pago a 30 días, 100% por adelantado..."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="saveNewClient(false)">Estándar</button>
+      <button class="btn btn-primary" onclick="saveNewClient(true)">Guardar especiales</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SB_URL='https://ffiyprmbrznoforpvvik.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+
+const FASES=['Recibido','En espera de materiales','En producción','Listo','Entregado'];
+const SECS={TX:'Textil',PL:'Plotter',UV:'Impresión UV',SUB:'Sublimación',NEON:'Neones',XR:'Xerox'};
+const OPERARIOS=['Marilia','Álvaro','Charo','Raúl','Bea'];
+const COND_STD='50% al entregar el pedido · Transferencia bancaria';
+
+let selectedSec=null,currentClientId=null,_pendingClient=null,_pedidoModal=null;
+let activeFilters={fase:'all',entrega:'all',pago:'all',sfase:'all'};
+let currentView='lista',currentOperario='Marilia',mesOffset=0;
+let pedidos=[],clientes=[];
+
+// CONEXION
+async function testConnection(){
+  try{
+    const {error}=await sb.from('clientes').select('id').limit(1);
+    if(error)throw error;
+    document.getElementById('conn-dot').className='conn-dot ok';
+    document.getElementById('conn-status').innerHTML='<span class="conn-dot ok"></span>Conectado';
+  }catch(e){
+    document.getElementById('conn-dot').className='conn-dot err';
+    document.getElementById('conn-status').innerHTML='<span class="conn-dot err"></span>Sin conexión';
+  }
+}
+
+async function cargarDatos(){
+  document.getElementById('taller-list').innerHTML='<div class="loading">Cargando...</div>';
+  const [{data:c},{data:p}]=await Promise.all([
+    sb.from('clientes').select('*').order('nombre'),
+    sb.from('pedidos').select('*').order('fecha_creacion',{ascending:false})
+  ]);
+  clientes=c||[];
+  pedidos=(p||[]).map(dbToLocal);
+  renderTaller();
+  renderClientes();
+}
+
+// Convertir formato DB → local
+function dbToLocal(p){
+  return{
+    id:p.id, clienteId:p.cliente_id, clienteNombre:p.cliente_nombre,
+    clienteTel:p.cliente_tel, clienteEmail:p.cliente_email,
+    seccion:p.seccion, operario:p.operario,
+    fechaCreacion:p.fecha_creacion, fechaEntrega:p.fecha_entrega,
+    fechaTipo:p.fecha_tipo, descripcion:p.descripcion, notas:p.notas,
+    total:parseFloat(p.total)||0, senal:parseFloat(p.senal)||0,
+    pago:p.pago, condiciones:p.condiciones,
+    fase:p.fase, ropaOk:p.ropa_ok, dtfOk:p.dtf_ok
+  };
+}
+function localToDB(p){
+  return{
+    id:p.id, cliente_id:p.clienteId, cliente_nombre:p.clienteNombre,
+    cliente_tel:p.clienteTel, cliente_email:p.clienteEmail,
+    seccion:p.seccion, operario:p.operario,
+    fecha_creacion:p.fechaCreacion, fecha_entrega:p.fechaEntrega||null,
+    fecha_tipo:p.fechaTipo, descripcion:p.descripcion, notas:p.notas,
+    total:p.total, senal:p.senal, pago:p.pago, condiciones:p.condiciones,
+    fase:p.fase, ropa_ok:p.ropaOk, dtf_ok:p.dtfOk
+  };
+}
+
+// CLOCK
+function startClock(){
+  document.getElementById('clock-wrap').style.display='block';
+  function tick(){
+    const n=new Date();
+    document.getElementById('clock-time').textContent=n.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    document.getElementById('clock-date').textContent=n.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  }
+  tick();setInterval(tick,1000);
+}
+
+// NAV
+function showScreen(id,el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if(el)el.classList.add('active');
+  if(id==='mostrador')startClock();
+  if(id==='taller')renderTaller();
+  if(id==='clientes')renderClientes();
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');});
+
+// VIEWS
+function setView(v,el){
+  currentView=v;
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('filtros-lista').style.display=v==='lista'?'block':'none';
+  document.getElementById('filtros-semana').style.display=v==='semana'?'block':'none';
+  document.getElementById('operario-selector-wrap').style.display=v==='operario'?'block':'none';
+  if(v==='operario')renderOperarioSelector();
+  renderTaller();
+}
+
+// FORM
+function selectSec(el){document.querySelectorAll('.sec-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');selectedSec=el.dataset.sec;}
+function updatePayRadio(){document.querySelectorAll('.radio-opt').forEach(o=>o.classList.remove('sel'));const c=document.querySelector('input[name="pago"]:checked');if(c)c.closest('.radio-opt').classList.add('sel');}
+function calcPendiente(){
+  const t=parseFloat(document.getElementById('f-total').value)||0;
+  const s=parseFloat(document.getElementById('f-senal').value)||0;
+  const p=t-s;
+  const el=document.getElementById('f-pendiente');
+  el.textContent=p>0?p.toFixed(2)+' €':'0.00 €';
+  el.style.color=p>0?'#A32D2D':'#3B6D11';
+}
+function clearClientId(){currentClientId=null;document.getElementById('cond-display').style.display='none';document.getElementById('cliente-historial').style.display='none';}
+
+// SEARCH
+function searchClients(q){
+  const box=document.getElementById('search-results');
+  if(!q||q.length<2){box.style.display='none';return;}
+  const res=clientes.filter(c=>c.nombre.toLowerCase().includes(q.toLowerCase())||(c.telefono&&c.telefono.includes(q))||(c.email&&c.email.toLowerCase().includes(q.toLowerCase()))).slice(0,6);
+  if(!res.length){box.style.display='none';return;}
+  box.innerHTML=res.map(c=>`<div class="sr-item" onclick="fillClient(${c.id})">
+    <div class="sn">${c.nombre}</div>
+    <div class="ss">${c.telefono||''} ${c.email?'· '+c.email:''} ${c.condiciones&&c.condiciones!==COND_STD?'· <span style="color:#534AB7">Cond. especiales</span>':''}</div>
+  </div>`).join('');
+  box.style.display='block';
+}
+function fillClient(id){
+  const c=clientes.find(x=>x.id===id);if(!c)return;
+  currentClientId=id;
+  document.getElementById('f-nombre').value=c.nombre;
+  document.getElementById('f-tel').value=c.telefono||'';
+  document.getElementById('f-email').value=c.email||'';
+  document.getElementById('search-client').value='';
+  document.getElementById('search-results').style.display='none';
+  const cond=c.condiciones||COND_STD;
+  document.getElementById('cond-text').textContent=cond;
+  document.getElementById('cond-display').style.display='block';
+  document.getElementById('cond-pago-info').textContent='Condiciones: '+cond;
+  document.getElementById('cond-pago-info').style.display='block';
+  mostrarHistorialCliente(id);
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.search-box'))document.getElementById('search-results').style.display='none';});
+
+function mostrarHistorialCliente(id){
+  const peds=pedidos.filter(p=>p.clienteId===id);
+  const box=document.getElementById('cliente-historial');
+  if(!peds.length){box.style.display='none';return;}
+  const total=peds.reduce((s,p)=>s+p.total,0);
+  const pendiente=peds.reduce((s,p)=>s+(p.total-(p.senal||0)),0);
+  const activos=peds.filter(p=>p.fase<4).length;
+  let valor='';
+  if(total>=1000)valor='<span style="color:#BA7517;font-weight:700">⭐⭐⭐ Cliente VIP</span>';
+  else if(total>=400)valor='<span style="color:#3B6D11;font-weight:700">⭐⭐ Buen cliente</span>';
+  else if(peds.length>=2)valor='<span style="color:#185FA5;font-weight:600">⭐ Cliente recurrente</span>';
+  else valor='<span style="color:#888">Primera visita</span>';
+  const ultimo=[...peds].sort((a,b)=>new Date(b.fechaCreacion)-new Date(a.fechaCreacion))[0];
+  box.style.display='block';
+  box.innerHTML=`<div style="background:#FAEEDA;border:0.5px solid #FAC775;border-radius:8px;padding:10px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-weight:600;color:#7a4a1a;font-size:13px">Historial del cliente</span>${valor}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+      <div style="background:#fff;border-radius:6px;padding:7px 10px;text-align:center"><div style="font-size:18px;font-weight:700">${peds.length}</div><div style="font-size:11px;color:#888">Pedidos</div></div>
+      <div style="background:#fff;border-radius:6px;padding:7px 10px;text-align:center"><div style="font-size:18px;font-weight:700">${total.toFixed(0)}€</div><div style="font-size:11px;color:#888">Total histórico</div></div>
+      <div style="background:#fff;border-radius:6px;padding:7px 10px;text-align:center"><div style="font-size:18px;font-weight:700;color:${pendiente>0?'#A32D2D':'#3B6D11'}">${pendiente.toFixed(0)}€</div><div style="font-size:11px;color:#888">Pendiente</div></div>
+      <div style="background:#fff;border-radius:6px;padding:7px 10px;text-align:center"><div style="font-size:18px;font-weight:700;color:#185FA5">${activos}</div><div style="font-size:11px;color:#888">Activos</div></div>
+    </div>
+    <div style="margin-top:8px;font-size:12px;color:#888">Último pedido: ${formatDateTime(ultimo.fechaCreacion)} · ${ultimo.id}</div>
+  </div>`;
+}
+
+// GUARDAR
+async function guardarPedido(){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  const desc=document.getElementById('f-desc').value.trim();
+  if(!nombre){alert('El nombre del cliente es obligatorio');return;}
+  if(!selectedSec){alert('Selecciona una sección');return;}
+  if(!desc){alert('La descripción del trabajo es obligatoria');return;}
+  document.getElementById('btn-guardar').disabled=true;
+  document.getElementById('btn-guardar').textContent='Guardando...';
+  const tel=document.getElementById('f-tel').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  let cliente=currentClientId?clientes.find(c=>c.id===currentClientId):null;
+  if(!cliente)cliente=clientes.find(c=>c.nombre.toLowerCase()===nombre.toLowerCase());
+  if(!cliente){
+    _pendingClient={nombre,tel,email};
+    document.getElementById('nc-cond').value='';
+    document.getElementById('modal-new-client').classList.add('open');
+    document.getElementById('btn-guardar').disabled=false;
+    document.getElementById('btn-guardar').textContent='Guardar y generar resguardo';
+    return;
+  }
+  if(tel)cliente.telefono=tel;
+  if(email)cliente.email=email;
+  await sb.from('clientes').update({telefono:tel,email:email}).eq('id',cliente.id);
+  currentClientId=cliente.id;
+  await finalizarGuardar(cliente);
+}
+
+async function saveNewClient(useSpecial){
+  const cond=useSpecial&&document.getElementById('nc-cond').value.trim()?document.getElementById('nc-cond').value.trim():COND_STD;
+  const newC={id:Date.now(),nombre:_pendingClient.nombre,telefono:_pendingClient.tel,email:_pendingClient.email,condiciones:cond,creado:new Date().toISOString()};
+  const {error}=await sb.from('clientes').insert([newC]);
+  if(error){alert('Error al guardar cliente: '+error.message);return;}
+  clientes.push(newC);
+  currentClientId=newC.id;
+  closeModal('modal-new-client');
+  document.getElementById('cond-text').textContent=cond;
+  document.getElementById('cond-display').style.display='block';
+  document.getElementById('cond-pago-info').textContent='Condiciones: '+cond;
+  document.getElementById('cond-pago-info').style.display='block';
+  await finalizarGuardar(newC);
+}
+
+async function finalizarGuardar(cliente){
+  const nombre=document.getElementById('f-nombre').value.trim();
+  const desc=document.getElementById('f-desc').value.trim();
+  const tel=document.getElementById('f-tel').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  const operario=document.getElementById('f-operario').value;
+  const sec=selectedSec;
+
+  // Contador atómico en Supabase
+  const {data:cData,error:cErr}=await sb.rpc('incrementar_contador',{sec_param:sec});
+  let numVal;
+  if(cErr||!cData){
+    // fallback: leer y actualizar manualmente
+    const {data:ct}=await sb.from('contadores').select('valor').eq('seccion',sec).single();
+    numVal=(ct?.valor||0)+1;
+    await sb.from('contadores').update({valor:numVal}).eq('seccion',sec);
+  } else {
+    numVal=cData;
+  }
+  const numPedido=`${sec}-${String(numVal).padStart(4,'0')}`;
+  const fechaTipo=document.querySelector('input[name="fecha-tipo"]:checked').value;
+  const pagoTipo=document.querySelector('input[name="pago"]:checked')?.value||'pendiente';
+  const total=parseFloat(document.getElementById('f-total').value)||0;
+  const senal=parseFloat(document.getElementById('f-senal').value)||0;
+  const pedido={
+    id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,
+    seccion:sec,operario,fechaCreacion:new Date().toISOString(),
+    fechaEntrega:document.getElementById('f-fecha-entrega').value||null,
+    fechaTipo,descripcion:desc,notas:document.getElementById('f-notas').value.trim(),
+    total,senal,pago:pagoTipo,condiciones:cliente.condiciones||COND_STD,
+    fase:0,ropaOk:false,dtfOk:false
+  };
+  const {error}=await sb.from('pedidos').insert([localToDB(pedido)]);
+  if(error){
+    alert('Error al guardar pedido: '+error.message);
+    document.getElementById('btn-guardar').disabled=false;
+    document.getElementById('btn-guardar').textContent='Guardar y generar resguardo';
+    return;
+  }
+  pedidos.unshift(pedido);
+  mostrarResguardo(pedido);
+  const m=document.getElementById('msg-ok');m.style.display='block';setTimeout(()=>m.style.display='none',3000);
+  document.getElementById('btn-guardar').disabled=false;
+  document.getElementById('btn-guardar').textContent='Guardar y generar resguardo';
+}
+
+// RESGUARDO
+function mostrarResguardo(p){
+  const pend=p.total-(p.senal||0);
+  const fentrega=p.fechaEntrega?(p.fechaTipo==='fija'?'⚠️ FIJA · ':'≈ ')+formatDate(p.fechaEntrega):'Por determinar';
+  const pagoStr={pagado:'Pagado completo ✓',senal:'Señal entregada',pendiente:'Pendiente de pago'}[p.pago]||'';
+  document.getElementById('print-area').innerHTML=`<div class="resguardo">
+    <div class="rh"><h2>🖨️ Print &amp; Copy</h2><p style="color:#888;font-size:12px">Resguardo de pedido</p><div class="rnum">${p.id}</div><span class="badge sec-${p.seccion}">${SECS[p.seccion]}</span></div>
+    <div class="rcontact"><strong>Contacto &amp; envío de archivos:</strong><br>📱 WhatsApp: <strong>622 305 934</strong><br>☎️ Teléfono fijo: <strong>923 018 034</strong></div>
+    <div class="rimportant">📧 <strong>Email archivos:</strong> printcopyonline@gmail.com<br><strong>Asunto del email:</strong> ${p.id}<br><span style="font-size:11px">Indica siempre el número de pedido como asunto</span></div>
+    <div class="rrow"><span class="rlabel">Cliente</span><span class="rval">${p.clienteNombre}</span></div>
+    ${p.clienteTel?`<div class="rrow"><span class="rlabel">Teléfono</span><span class="rval">${p.clienteTel}</span></div>`:''}
+    <div class="rrow"><span class="rlabel">Fecha y hora pedido</span><span class="rval">${formatDateTime(p.fechaCreacion)}</span></div>
+    <div class="rrow"><span class="rlabel">Atendido por</span><span class="rval">${p.operario}</span></div>
+    <div class="rrow"><span class="rlabel">Entrega</span><span class="rval">${fentrega}</span></div>
+    <div class="rrow"><span class="rlabel">Trabajo</span><span class="rval">${p.descripcion}</span></div>
+    <div class="rrow"><span class="rlabel">Total</span><span class="rval">${p.total.toFixed(2)} €</span></div>
+    ${p.senal?`<div class="rrow"><span class="rlabel">Señal pagada</span><span class="rval green">${p.senal.toFixed(2)} €</span></div>`:''}
+    <div class="rrow"><span class="rlabel">Pendiente de pago</span><span class="rval ${pend>0?'red':'green'}">${pend.toFixed(2)} €</span></div>
+    <div class="rrow"><span class="rlabel">Estado pago</span><span class="rval">${pagoStr}</span></div>
+    <div class="rrow"><span class="rlabel">Condiciones</span><span class="rval" style="color:#534AB7;font-size:12px">${p.condiciones||COND_STD}</span></div>
+    <div class="rfooter">Conserve este resguardo · Print &amp; Copy · ${new Date().toLocaleDateString('es-ES')}</div>
+  </div>`;
+  document.getElementById('modal-resguardo').classList.add('open');
+}
+
+// DETALLE PEDIDO
+function verPedido(id){
+  const p=pedidos.find(x=>x.id===id);if(!p)return;
+  _pedidoModal=p;
+  const pend=p.total-(p.senal||0);
+  const fentrega=p.fechaEntrega?(p.fechaTipo==='fija'?'⚠️ FIJA · ':'≈ ')+formatDate(p.fechaEntrega):'Sin fecha';
+  const pagoStr={pagado:'Pagado completo ✓',senal:'Señal entregada',pendiente:'Pendiente de pago'}[p.pago]||'';
+  document.getElementById('mp-title').innerHTML=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-family:monospace;font-size:16px;font-weight:700">${p.id}</span><span class="badge sec-${p.seccion}">${SECS[p.seccion]}</span><span class="fase-badge fase-${p.fase}">${FASES[p.fase]}</span></div>`;
+  document.getElementById('mp-body').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+      <div class="stat-card"><div class="sv" style="font-size:14px">${p.clienteNombre}</div><div class="sl">Cliente</div></div>
+      <div class="stat-card"><div class="sv" style="font-size:14px">${p.operario}</div><div class="sl">Atendido por</div></div>
+      <div class="stat-card"><div class="sv" style="font-size:13px">${formatDateTime(p.fechaCreacion)}</div><div class="sl">Fecha y hora del pedido</div></div>
+      <div class="stat-card"><div class="sv" style="font-size:13px;color:${p.fechaTipo==='fija'?'#A32D2D':'#1a1a1a'}">${fentrega}</div><div class="sl">Entrega</div></div>
+    </div>
+    ${p.clienteTel?`<div style="font-size:13px;color:#666;margin-bottom:8px">📱 ${p.clienteTel}${p.clienteEmail?' &nbsp;·&nbsp; ✉️ '+p.clienteEmail:''}</div>`:''}
+    <div style="background:#f9f9f7;border-radius:7px;padding:10px 12px;margin-bottom:10px">
+      <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Trabajo</div>
+      <div style="font-size:13px;color:#1a1a1a;line-height:1.6">${p.descripcion}</div>
+      ${p.notas?`<div style="font-size:12px;color:#888;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee">📝 ${p.notas}</div>`:''}
+    </div>
+    ${p.seccion==='TX'?`<div class="checks-textil" style="margin-bottom:10px">
+      <label class="check-item"><input type="checkbox" ${p.ropaOk?'checked':''} onchange="toggleCheckModal('${p.id}','ropaOk',this.checked)"> Ropa pedida</label>
+      <label class="check-item"><input type="checkbox" ${p.dtfOk?'checked':''} onchange="toggleCheckModal('${p.id}','dtfOk',this.checked)"> DTF pedido</label>
+    </div>`:''}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+      <div class="stat-card"><div class="sv">${p.total.toFixed(2)}€</div><div class="sl">Total</div></div>
+      <div class="stat-card"><div class="sv" style="color:#3B6D11">${(p.senal||0).toFixed(2)}€</div><div class="sl">Pagado</div></div>
+      <div class="stat-card"><div class="sv" style="color:${pend>0?'#A32D2D':'#3B6D11'}">${pend.toFixed(2)}€</div><div class="sl">Pendiente</div></div>
+    </div>
+    <div style="font-size:12px;color:#888;margin-bottom:6px">${pagoStr}</div>
+    <div style="font-size:12px;color:#534AB7;margin-bottom:12px">💳 ${p.condiciones||COND_STD}</div>
+    <div style="font-size:12px;font-weight:600;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Cambiar fase</div>
+    <div class="fase-stepper">
+      ${FASES.map((f,i)=>`<button class="fase-step ${i<p.fase?'done':i===p.fase?'current':''}" onclick="setFaseModal('${p.id}',${i})">${f}</button>`).join('')}
+    </div>`;
+  document.getElementById('modal-pedido').classList.add('open');
+}
+
+async function setFaseModal(id,fase){
+  const p=pedidos.find(x=>x.id===id);if(!p)return;
+  p.fase=fase;_pedidoModal=p;
+  await sb.from('pedidos').update({fase}).eq('id',id);
+  verPedido(id);renderTaller();
+}
+async function toggleCheckModal(id,field,val){
+  const p=pedidos.find(x=>x.id===id);if(!p)return;
+  p[field]=val;
+  const col=field==='ropaOk'?'ropa_ok':'dtf_ok';
+  await sb.from('pedidos').update({[col]:val}).eq('id',id);
+}
+function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');mostrarResguardo(_pedidoModal);}}
+
+// FILTROS
+function setFilter(el){
+  const f=el.dataset.f,v=el.dataset.v;
+  activeFilters[f]=v;
+  document.querySelectorAll(`.filter-btn[data-f="${f}"]`).forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderTaller();
+}
+function getSecGlobal(){return document.getElementById('sec-global')?.value||'all';}
+function applySecFilter(list){const s=getSecGlobal();return s==='all'?list:list.filter(p=>p.seccion===s);}
+function pasaFiltroEntrega(p){
+  const v=activeFilters.entrega;if(v==='all')return true;
+  if(!p.fechaEntrega)return false;
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const fe=new Date(p.fechaEntrega+'T00:00:00');
+  if(v==='hoy')return fe.getTime()===hoy.getTime();
+  if(v==='manana'){const m=new Date(hoy);m.setDate(m.getDate()+1);return fe.getTime()===m.getTime();}
+  if(v==='semana'){const fin=new Date(hoy);fin.setDate(fin.getDate()+7);return fe>=hoy&&fe<=fin;}
+  if(v==='fija')return p.fechaTipo==='fija';
+  if(v==='vencido')return fe<hoy&&p.fase<4;
+  return true;
+}
+
+// RENDER
+function renderTaller(){renderStats();if(currentView==='lista')renderLista();else if(currentView==='semana')renderSemana();else if(currentView==='mes')renderMes();else renderOperario();}
+
+function renderStats(){
+  const all=applySecFilter(pedidos);
+  const activos=all.filter(p=>p.fase<4);
+  const totalPend=all.reduce((s,p)=>s+(p.total-(p.senal||0)),0);
+  const urgentes=activos.filter(p=>p.fechaTipo==='fija').length;
+  const listos=activos.filter(p=>p.fase===3).length;
+  document.getElementById('taller-stats').innerHTML=`
+    <div class="stat-card"><div class="sv">${activos.length}</div><div class="sl">Activos</div></div>
+    <div class="stat-card"><div class="sv" style="color:#534AB7">${listos}</div><div class="sl">Listos para recoger</div></div>
+    <div class="stat-card"><div class="sv" style="color:#A32D2D">${totalPend.toFixed(0)}€</div><div class="sl">Pendiente cobro</div></div>
+    <div class="stat-card"><div class="sv" style="color:#BA7517">${urgentes}</div><div class="sl">Entregas fijas</div></div>`;
+}
+
+function renderLista(){
+  let list=applySecFilter(pedidos);
+  if(activeFilters.fase!=='all')list=list.filter(p=>String(p.fase)===activeFilters.fase);
+  list=list.filter(p=>pasaFiltroEntrega(p));
+  if(activeFilters.pago==='pendiente')list=list.filter(p=>(p.total-(p.senal||0))>0);
+  if(activeFilters.pago==='pagado')list=list.filter(p=>(p.total-(p.senal||0))<=0);
+  const sort=document.getElementById('sort-select')?.value||'entrega';
+  list.sort((a,b)=>{
+    if(sort==='entrega')return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;
+    if(sort==='creacion')return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);
+    if(sort==='seccion')return a.seccion>b.seccion?1:-1;
+    if(sort==='pendiente')return(b.total-(b.senal||0))-(a.total-(a.senal||0));
+    return 0;
+  });
+  document.getElementById('taller-list').innerHTML=list.length?list.map(p=>tarjetaTaller(p)).join(''):'<div class="empty-state">No hay pedidos con estos filtros</div>';
+}
+
+function renderSemana(){
+  const sfase=activeFilters.sfase;
+  let list=applySecFilter(pedidos).filter(p=>sfase==='activos'?p.fase<4:sfase==='3'?p.fase===3:true);
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const dias=[];for(let i=0;i<7;i++){const d=new Date(hoy);d.setDate(d.getDate()+i);dias.push(d);}
+  const sinFecha=list.filter(p=>!p.fechaEntrega&&p.fase<4);
+  let html='<div class="semana-grid">';
+  dias.forEach(dia=>{
+    const key=dia.toISOString().split('T')[0];
+    const esHoy=dia.getTime()===hoy.getTime();
+    const peds=list.filter(p=>p.fechaEntrega===key);
+    const dn=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dia.getDay()];
+    html+=`<div class="dia-col"><div class="dia-header${esHoy?' hoy':''}"><div class="dn">${dn}</div><div class="dd">${dia.getDate()}/${dia.getMonth()+1}</div></div><div class="dia-cards">
+      ${peds.length?peds.map(p=>`<div class="dia-mini dm-${p.seccion}${p.fechaTipo==='fija'?' dm-fija':''}" onclick="verPedido('${p.id}')"><div style="font-weight:700;font-family:monospace;font-size:10px">${p.id}</div><div>${p.clienteNombre.split(' ')[0]}</div></div>`).join(''):'<div style="font-size:11px;color:#ddd;text-align:center;padding:6px">—</div>'}
+    </div></div>`;
+  });
+  html+='</div>';
+  const vencidos=list.filter(p=>p.fechaEntrega&&new Date(p.fechaEntrega+'T00:00:00')<hoy&&p.fase<4);
+  if(vencidos.length)html+=`<div class="sin-fecha"><div class="sin-fecha-title" style="color:#A32D2D">⚠️ Vencidos (${vencidos.length})</div>${vencidos.map(p=>miniCard(p)).join('')}</div>`;
+  if(sinFecha.length)html+=`<div class="sin-fecha"><div class="sin-fecha-title">Sin fecha (${sinFecha.length})</div>${sinFecha.map(p=>miniCard(p)).join('')}</div>`;
+  document.getElementById('taller-list').innerHTML=html;
+}
+
+function renderMes(){
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const ref=new Date(hoy.getFullYear(),hoy.getMonth()+mesOffset,1);
+  const año=ref.getFullYear(),mes=ref.getMonth();
+  const primerDia=new Date(año,mes,1),ultimoDia=new Date(año,mes+1,0);
+  const nombreMes=primerDia.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
+  let startDow=(primerDia.getDay()+6)%7;
+  const totalCeldas=startDow+ultimoDia.getDate();
+  const semanas=Math.ceil(totalCeldas/7);
+  const list=applySecFilter(pedidos);
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <button class="btn btn-secondary btn-sm" onclick="mesOffset--;renderTaller()">← Anterior</button>
+    <span style="font-size:14px;font-weight:600;text-transform:capitalize">${nombreMes}</span>
+    <button class="btn btn-secondary btn-sm" onclick="mesOffset++;renderTaller()">Siguiente →</button>
+  </div><div class="mes-grid">
+    ${['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d=>`<div style="background:#f5f5f0;text-align:center;padding:5px 2px;font-size:11px;font-weight:600;color:#888">${d}</div>`).join('')}`;
+  for(let s=0;s<semanas;s++){
+    for(let dow=0;dow<7;dow++){
+      const cellIdx=s*7+dow,diaNum=cellIdx-startDow+1;
+      if(diaNum<1||diaNum>ultimoDia.getDate()){html+=`<div class="mes-cell otro-mes"></div>`;continue;}
+      const fechaKey=`${año}-${String(mes+1).padStart(2,'0')}-${String(diaNum).padStart(2,'0')}`;
+      const esHoy=new Date(año,mes,diaNum).getTime()===hoy.getTime();
+      const peds=list.filter(p=>p.fechaEntrega===fechaKey);
+      html+=`<div class="mes-cell"><div class="mes-day-num${esHoy?' hoy':''}">${diaNum}</div>
+        ${peds.slice(0,3).map(p=>`<div class="dia-mini dm-${p.seccion}${p.fechaTipo==='fija'?' dm-fija':''}" onclick="verPedido('${p.id}')" title="${p.clienteNombre}"><span style="font-size:10px;font-weight:700;font-family:monospace">${p.id}</span> <span style="font-size:10px;opacity:.8">${p.clienteNombre.split(' ')[0]}</span></div>`).join('')}
+        ${peds.length>3?`<div style="font-size:10px;color:#aaa">+${peds.length-3} más</div>`:''}
+      </div>`;
+    }
+  }
+  html+='</div>';
+  const pedsMes=list.filter(p=>p.fechaEntrega&&p.fechaEntrega.startsWith(`${año}-${String(mes+1).padStart(2,'0')}`));
+  const totalMes=pedsMes.reduce((s,p)=>s+p.total,0);
+  const pendMes=pedsMes.reduce((s,p)=>s+(p.total-(p.senal||0)),0);
+  html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+    <div class="stat-card"><div class="sv">${pedsMes.length}</div><div class="sl">Entregas este mes</div></div>
+    <div class="stat-card"><div class="sv">${totalMes.toFixed(0)}€</div><div class="sl">Facturación mes</div></div>
+    <div class="stat-card"><div class="sv" style="color:#A32D2D">${pendMes.toFixed(0)}€</div><div class="sl">Pendiente cobro</div></div>
+  </div>`;
+  document.getElementById('taller-list').innerHTML=html;
+}
+
+function miniCard(p){
+  const pend=p.total-(p.senal||0);
+  return `<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f5f5f5;font-size:12px;cursor:pointer" onclick="verPedido('${p.id}')">
+    <span style="font-family:monospace;font-weight:700">${p.id}</span>
+    <span class="badge sec-${p.seccion}">${p.seccion}</span>
+    <span>${p.clienteNombre.split(' ')[0]}</span>
+    <span class="fase-badge fase-${p.fase}" style="font-size:10px">${FASES[p.fase]}</span>
+    ${pend>0?`<span class="pendiente-pill">${pend.toFixed(0)}€</span>`:''}
+  </div>`;
+}
+
+function renderOperarioSelector(){
+  document.getElementById('operario-btns').innerHTML=OPERARIOS.map(op=>
+    `<button class="op-btn${op===currentOperario?' active':''}" onclick="selectOperario('${op}',this)">${op}</button>`
+  ).join('');
+}
+function selectOperario(op,el){currentOperario=op;document.querySelectorAll('.op-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');renderOperario();}
+function renderOperario(){
+  let list=applySecFilter(pedidos).filter(p=>p.operario===currentOperario&&p.fase<4);
+  list.sort((a,b)=>(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1);
+  document.getElementById('taller-list').innerHTML=list.length
+    ?`<div style="font-size:13px;color:#666;margin-bottom:10px">Pedidos activos de <strong>${currentOperario}</strong>: ${list.length}</div>${list.map(p=>tarjetaTaller(p)).join('')}`
+    :`<div class="empty-state">No hay pedidos activos para ${currentOperario}</div>`;
+}
+
+function tarjetaTaller(p){
+  const pend=p.total-(p.senal||0);
+  const hoy=new Date();hoy.setHours(0,0,0,0);
+  const fe=p.fechaEntrega?new Date(p.fechaEntrega+'T00:00:00'):null;
+  const urgente=fe&&fe<hoy&&p.fase<4?'delivery-urgent':fe&&(fe.getTime()-hoy.getTime())<=86400000&&p.fase<4?'delivery-soon':'';
+  const fentrega=p.fechaEntrega?(p.fechaTipo==='fija'?'⚠️ ':'~')+formatDate(p.fechaEntrega):'Sin fecha';
+  const pendPill=pend>0?`<span class="pendiente-pill">${pend.toFixed(2)}€ pdte</span>`:`<span class="pagado-pill">Pagado</span>`;
+  return `<div class="taller-card ${urgente}" onclick="verPedido('${p.id}')">
+    <div class="taller-header">
+      <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:700;font-family:monospace">${p.id}</span>
+        <span class="badge sec-${p.seccion}">${SECS[p.seccion]}</span>
+        <span class="fase-badge fase-${p.fase}">${FASES[p.fase]}</span>
+        ${p.fechaTipo==='fija'?'<span style="font-size:11px;color:#A32D2D;font-weight:700">ENTREGA FIJA</span>':''}
+        ${pendPill}<span class="operario-pill">${p.operario}</span>
+      </div>
+      <div style="font-size:12px;color:#888;flex-shrink:0">${fentrega}</div>
+    </div>
+    <div class="taller-body">
+      <p><strong>Cliente:</strong> ${p.clienteNombre} ${p.clienteTel?'· '+p.clienteTel:''}</p>
+      <p><strong>Pedido:</strong> ${formatDateTime(p.fechaCreacion)}</p>
+      <p><strong>Trabajo:</strong> ${p.descripcion}</p>
+      ${p.notas?`<p><strong>Notas:</strong> ${p.notas}</p>`:''}
+      <p><strong>Total:</strong> ${p.total.toFixed(2)}€ | <strong>Pagado:</strong> ${(p.senal||0).toFixed(2)}€ | <strong style="color:${pend>0?'#A32D2D':'#3B6D11'}">Pendiente: ${pend.toFixed(2)}€</strong></p>
+    </div>
+  </div>`;
+}
+
+// CLIENTES
+function renderClientes(q=''){
+  let list=clientes;
+  if(q)list=list.filter(c=>c.nombre.toLowerCase().includes(q.toLowerCase())||(c.telefono&&c.telefono.includes(q)));
+  list=[...list].sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  if(!list.length){document.getElementById('clientes-list').innerHTML='<div class="empty-state">No hay clientes registrados</div>';return;}
+  document.getElementById('clientes-list').innerHTML=list.map(c=>{
+    const nped=pedidos.filter(p=>p.clienteId===c.id).length;
+    const espec=c.condiciones&&c.condiciones!==COND_STD;
+    return `<div class="cliente-card">
+      <div>
+        <div style="font-weight:500;font-size:14px">${c.nombre}${espec?'<span class="cond-badge">Cond. especiales</span>':''}</div>
+        <div style="font-size:12px;color:#888">${c.telefono||''} ${c.email?'· '+c.email:''}</div>
+        <div style="font-size:12px;color:#534AB7;margin-top:2px">${c.condiciones||COND_STD}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:7px">
+        <span style="font-size:12px;color:#888">${nped} pedido${nped!==1?'s':''}</span>
+        <button class="btn btn-secondary btn-sm" onclick="verPedidosCliente(${c.id})">Ver pedidos</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function verPedidosCliente(id){
+  const c=clientes.find(x=>x.id===id);
+  const peds=pedidos.filter(p=>p.clienteId===id).sort((a,b)=>new Date(b.fechaCreacion)-new Date(a.fechaCreacion));
+  document.getElementById('mc-title').textContent='Pedidos de '+c.nombre;
+  document.getElementById('mc-body').innerHTML=peds.length?peds.map(p=>{
+    const pend=p.total-(p.senal||0);
+    return `<div style="padding:7px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px;cursor:pointer" onclick="closeModal('modal-cliente');verPedido('${p.id}')">
+      <div style="display:flex;justify-content:space-between"><span style="font-family:monospace;font-weight:700">${p.id}</span><span class="fase-badge fase-${p.fase}">${FASES[p.fase]}</span></div>
+      <div style="color:#666;margin-top:3px">${p.descripcion}</div>
+      <div style="font-size:12px;margin-top:2px">Total: ${p.total.toFixed(2)}€ · <span style="color:${pend>0?'#A32D2D':'#3B6D11'};font-weight:600">Pendiente: ${pend.toFixed(2)}€</span></div>
+      <div style="color:#aaa;font-size:11px;margin-top:2px">${formatDateTime(p.fechaCreacion)} · ${p.operario}</div>
+    </div>`;}).join(''):'<p style="color:#aaa;font-size:13px">Sin pedidos</p>';
+  document.getElementById('modal-cliente').classList.add('open');
+}
+
+// UTILS
+function formatDate(d){if(!d)return '';const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;}
+function formatDateTime(iso){if(!iso)return '';const d=new Date(iso);return d.toLocaleDateString('es-ES')+' '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
+function resetForm(){
+  ['f-nombre','f-tel','f-email','f-desc','f-notas','f-total','f-senal','f-fecha-entrega','search-client'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.querySelectorAll('.sec-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('input[name="pago"]').forEach(r=>r.checked=false);
+  document.querySelectorAll('.radio-opt').forEach(o=>o.classList.remove('sel'));
+  document.querySelector('input[name="fecha-tipo"][value="aprox"]').checked=true;
+  document.getElementById('f-operario').value='Marilia';
+  document.getElementById('f-pendiente').textContent='—';
+  document.getElementById('cond-display').style.display='none';
+  document.getElementById('cond-pago-info').style.display='none';
+  document.getElementById('cliente-historial').style.display='none';
+  selectedSec=null;currentClientId=null;_pendingClient=null;
+}
+
+// INIT
+(async()=>{
+  startClock();
+  await testConnection();
+  await cargarDatos();
+})();
+</script>
+</body>
+</html>
