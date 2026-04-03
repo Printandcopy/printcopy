@@ -61,7 +61,6 @@ textarea{resize:vertical;min-height:64px}
 .cond-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#EEEDFE;color:#534AB7;margin-left:6px}
 .totales-grid{display:grid;grid-template-columns:auto 130px;gap:7px 12px;align-items:center}
 .totales-grid label{font-size:13px;color:#666}
-/* TALLER */
 .taller-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
 .view-tabs{display:flex;gap:3px;background:#fff;border-radius:8px;border:0.5px solid #ddd;padding:3px}
 .view-tab{padding:5px 12px;border-radius:5px;border:none;background:transparent;font-size:12px;font-weight:500;color:#888;cursor:pointer;white-space:nowrap}
@@ -119,7 +118,6 @@ textarea{resize:vertical;min-height:64px}
 .operario-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .op-btn{padding:6px 14px;border-radius:20px;border:1.5px solid #ddd;background:#fff;font-size:13px;font-weight:500;cursor:pointer}
 .op-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
-/* RESGUARDO */
 .resguardo{background:#fff;border:1px solid #ddd;border-radius:8px;padding:18px;font-size:13px}
 .rh{text-align:center;margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:10px}
 .rh h2{font-size:17px;font-weight:700}
@@ -132,22 +130,20 @@ textarea{resize:vertical;min-height:64px}
 .rcontact{background:#f5f5f5;border-radius:6px;padding:8px 10px;margin:8px 0;font-size:12px;line-height:1.7}
 .rimportant{background:#E6F1FB;border-radius:6px;padding:8px 10px;margin:6px 0;font-size:12px;color:#185FA5;line-height:1.6}
 .rfooter{margin-top:10px;padding-top:8px;border-top:1px dashed #ddd;font-size:11px;color:#999;line-height:1.6;text-align:center}
-/* CLIENTES */
 .cliente-card{background:#fff;border-radius:7px;border:0.5px solid #ddd;padding:11px 15px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .empty-state{text-align:center;padding:36px 20px;color:#aaa;font-size:14px}
 .msg-ok{background:#EAF3DE;color:#3B6D11;border:0.5px solid #c0dd97;padding:9px 14px;border-radius:7px;font-size:13px;font-weight:500;margin-bottom:10px;display:none}
 .loading{text-align:center;padding:30px;color:#aaa;font-size:14px}
-/* MODALES */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;overflow-y:auto;padding:30px 16px}
 .modal-overlay.open{display:block}
 .modal{background:#fff;border-radius:12px;padding:22px;width:100%;max-width:560px;margin:0 auto}
 .modal h3{font-size:15px;font-weight:600;margin-bottom:12px}
 .sin-fecha{background:#fff;border:0.5px solid #ddd;border-radius:8px;padding:10px 14px;margin-bottom:8px}
 .sin-fecha-title{font-size:11px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-/* CALCULADORA V2 */
+/* CALC V2 */
 .calc-grid{display:grid;grid-template-columns:1fr 300px;gap:0;min-height:600px}
-.calc-left{padding-right:0}
-.calc-right{background:#fff;border-left:1px solid #e0e0e0;overflow-y:auto;max-height:80vh;position:sticky;top:70px}
+.calc-left{padding:16px 20px;overflow-y:auto}
+.calc-right{background:#fff;border-left:1px solid #e0e0e0;overflow-y:auto;max-height:calc(100vh - 60px);position:sticky;top:60px}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .extras-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .extra-toggle{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;border:0.5px solid #ddd;font-size:12px;cursor:pointer;background:#fff}
@@ -174,10 +170,9 @@ textarea{resize:vertical;min-height:64px}
 .tramo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
 .tramo-uds{font-size:13px;font-weight:700}
 .tramo-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:#FAEEDA;color:#854F0B}
-.tramo-best{background:#BA7517;color:#fff}
 .tramo-prices{display:flex;align-items:baseline;gap:6px;font-size:11px;color:#666}
 .tramo-total{font-weight:600;color:#1a1a1a}
-.tramo-savings{font-size:10px;color:#3B6D11;font-weight:600;margin-top:1px}
+.tramo-savings{font-size:10px;color:#3B6D11;font-weight:600;margin-top:2px}
 .sug-card{background:#fafaf8;border-radius:7px;padding:8px 10px;margin-bottom:5px;border:0.5px solid #eee}
 .sug-card-title{font-size:12px;font-weight:600;margin-bottom:2px}
 .sug-card-desc{font-size:10px;color:#888;line-height:1.4}
@@ -209,28 +204,20 @@ textarea{resize:vertical;min-height:64px}
 
 <!-- MOSTRADOR -->
 <div id="screen-mostrador" class="screen active">
-  <div class="card">
-    <div class="card-title">Buscar cliente existente</div>
-    <div class="search-box">
-      <input type="text" id="search-client" placeholder="Nombre, teléfono o email..." oninput="searchClients(this.value)" autocomplete="off">
-      <div class="search-results" id="search-results"></div>
-    </div>
+  <div class="card"><div class="card-title">Buscar cliente existente</div>
+    <div class="search-box"><input type="text" id="search-client" placeholder="Nombre, teléfono o email..." oninput="searchClients(this.value)" autocomplete="off"><div class="search-results" id="search-results"></div></div>
   </div>
-  <div class="card">
-    <div class="card-title">Datos del cliente</div>
+  <div class="card"><div class="card-title">Datos del cliente</div>
     <div class="form-grid">
       <div class="field"><label>Nombre *</label><input type="text" id="f-nombre" placeholder="Nombre completo" oninput="clearClientId()"></div>
       <div class="field"><label>Teléfono</label><input type="tel" id="f-tel" placeholder="600 000 000"></div>
       <div class="field"><label>Email</label><input type="email" id="f-email" placeholder="cliente@email.com"></div>
-      <div class="field"><label>Atendido por</label>
-        <select id="f-operario"><option value="Marilia" selected>Marilia</option><option value="Álvaro">Álvaro</option><option value="Charo">Charo</option><option value="Raúl">Raúl</option><option value="Bea">Bea</option></select>
-      </div>
+      <div class="field"><label>Atendido por</label><select id="f-operario"><option value="Marilia" selected>Marilia</option><option value="Álvaro">Álvaro</option><option value="Charo">Charo</option><option value="Raúl">Raúl</option><option value="Bea">Bea</option></select></div>
     </div>
     <div id="cond-display" style="display:none;margin-top:9px"><div class="cond-box"><strong>Condiciones:</strong> <span id="cond-text"></span></div></div>
     <div id="cliente-historial" style="display:none;margin-top:9px"></div>
   </div>
-  <div class="card">
-    <div class="card-title">Sección del pedido</div>
+  <div class="card"><div class="card-title">Sección del pedido</div>
     <div class="sections-grid">
       <div class="sec-btn" data-sec="TX" onclick="selectSec(this)"><div class="sc">TX</div><div class="sn">Textil</div></div>
       <div class="sec-btn" data-sec="PL" onclick="selectSec(this)"><div class="sc">PL</div><div class="sn">Plotter</div></div>
@@ -240,25 +227,18 @@ textarea{resize:vertical;min-height:64px}
       <div class="sec-btn" data-sec="XR" onclick="selectSec(this)"><div class="sc">XR</div><div class="sn">Xerox</div></div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-title">Entrega</div>
-    <div style="max-width:260px">
-      <label>Fecha de entrega</label><input type="date" id="f-fecha-entrega">
-      <div class="date-type">
-        <label><input type="radio" name="fecha-tipo" value="aprox" checked> Aproximada</label>
-        <label><input type="radio" name="fecha-tipo" value="fija"> Fija (cliente exige)</label>
-      </div>
+  <div class="card"><div class="card-title">Entrega</div>
+    <div style="max-width:260px"><label>Fecha de entrega</label><input type="date" id="f-fecha-entrega">
+      <div class="date-type"><label><input type="radio" name="fecha-tipo" value="aprox" checked> Aproximada</label><label><input type="radio" name="fecha-tipo" value="fija"> Fija (cliente exige)</label></div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-title">Descripción del trabajo</div>
+  <div class="card"><div class="card-title">Descripción del trabajo</div>
     <div class="form-grid w1">
       <div class="field"><label>Descripción *</label><textarea id="f-desc" rows="3" placeholder="Detalla el trabajo..."></textarea></div>
       <div class="field"><label>Anotaciones internas</label><textarea id="f-notas" rows="2" placeholder="Notas para el taller..."></textarea></div>
     </div>
   </div>
-  <div class="card">
-    <div class="card-title">Pago</div>
+  <div class="card"><div class="card-title">Pago</div>
     <div class="totales-grid">
       <label>Total pedido (€)</label><input type="number" id="f-total" placeholder="0.00" step="0.01" min="0" oninput="calcPendiente()">
       <label>Señal recibida (€)</label><input type="number" id="f-senal" placeholder="0.00" step="0.01" min="0" oninput="calcPendiente()">
@@ -273,10 +253,7 @@ textarea{resize:vertical;min-height:64px}
     <div id="cond-pago-info" style="margin-top:8px;font-size:12px;color:#534AB7;display:none"></div>
   </div>
   <div class="msg-ok" id="msg-ok">✓ Pedido guardado correctamente</div>
-  <div class="btn-row">
-    <button class="btn btn-secondary" onclick="resetForm()">Limpiar</button>
-    <button class="btn btn-primary" id="btn-guardar" onclick="guardarPedido()">Guardar y generar resguardo</button>
-  </div>
+  <div class="btn-row"><button class="btn btn-secondary" onclick="resetForm()">Limpiar</button><button class="btn btn-primary" id="btn-guardar" onclick="guardarPedido()">Guardar y generar resguardo</button></div>
 </div>
 
 <!-- TALLER -->
@@ -300,8 +277,7 @@ textarea{resize:vertical;min-height:64px}
   </div>
   <div class="stat-row" id="taller-stats"></div>
   <div id="filtros-lista" class="taller-filters">
-    <div class="filter-row">
-      <span class="filter-label">Fase</span>
+    <div class="filter-row"><span class="filter-label">Fase</span>
       <button class="filter-btn active" data-f="fase" data-v="all" onclick="setFilter(this)">Todos</button>
       <button class="filter-btn" data-f="fase" data-v="0" onclick="setFilter(this)">Recibido</button>
       <button class="filter-btn" data-f="fase" data-v="1" onclick="setFilter(this)">Espera mat.</button>
@@ -309,8 +285,7 @@ textarea{resize:vertical;min-height:64px}
       <button class="filter-btn" data-f="fase" data-v="3" onclick="setFilter(this)">Listo</button>
       <button class="filter-btn" data-f="fase" data-v="4" onclick="setFilter(this)">Entregado</button>
     </div>
-    <div class="filter-row">
-      <span class="filter-label">Entrega</span>
+    <div class="filter-row"><span class="filter-label">Entrega</span>
       <button class="filter-btn active" data-f="entrega" data-v="all" onclick="setFilter(this)">Todas</button>
       <button class="filter-btn" data-f="entrega" data-v="hoy" onclick="setFilter(this)">Hoy</button>
       <button class="filter-btn" data-f="entrega" data-v="manana" onclick="setFilter(this)">Mañana</button>
@@ -318,50 +293,40 @@ textarea{resize:vertical;min-height:64px}
       <button class="filter-btn" data-f="entrega" data-v="fija" onclick="setFilter(this)">Fecha fija</button>
       <button class="filter-btn" data-f="entrega" data-v="vencido" onclick="setFilter(this)">Vencidos</button>
     </div>
-    <div class="filter-row">
-      <span class="filter-label">Pago</span>
+    <div class="filter-row"><span class="filter-label">Pago</span>
       <button class="filter-btn active" data-f="pago" data-v="all" onclick="setFilter(this)">Todos</button>
       <button class="filter-btn" data-f="pago" data-v="pendiente" onclick="setFilter(this)">Con pendiente</button>
       <button class="filter-btn" data-f="pago" data-v="pagado" onclick="setFilter(this)">Pagados</button>
     </div>
-    <div class="filter-row">
-      <span class="filter-label">Ordenar</span>
+    <div class="filter-row"><span class="filter-label">Ordenar</span>
       <select class="sort-select" id="sort-select" onchange="renderTaller()">
-        <option value="entrega">Por fecha de entrega</option>
-        <option value="creacion">Por fecha de creación</option>
-        <option value="seccion">Por sección</option>
-        <option value="pendiente">Por importe pendiente</option>
+        <option value="entrega">Por fecha de entrega</option><option value="creacion">Por fecha de creación</option>
+        <option value="seccion">Por sección</option><option value="pendiente">Por importe pendiente</option>
       </select>
     </div>
   </div>
   <div id="filtros-semana" style="display:none" class="taller-filters">
-    <div class="filter-row">
-      <span class="filter-label">Fase</span>
+    <div class="filter-row"><span class="filter-label">Fase</span>
       <button class="filter-btn active" data-f="sfase" data-v="all" onclick="setFilter(this)">Todos</button>
       <button class="filter-btn" data-f="sfase" data-v="activos" onclick="setFilter(this)">Solo activos</button>
       <button class="filter-btn" data-f="sfase" data-v="3" onclick="setFilter(this)">Listos</button>
     </div>
   </div>
-  <div id="operario-selector-wrap" style="display:none">
-    <div class="operario-selector" id="operario-btns"></div>
-  </div>
+  <div id="operario-selector-wrap" style="display:none"><div class="operario-selector" id="operario-btns"></div></div>
   <div id="taller-list"></div>
 </div>
 
 <!-- CLIENTES -->
 <div id="screen-clientes" class="screen">
-  <div class="card" style="margin-bottom:10px">
-    <input type="text" id="search-clientes" placeholder="Buscar cliente..." oninput="renderClientes(this.value)">
-  </div>
+  <div class="card" style="margin-bottom:10px"><input type="text" id="search-clientes" placeholder="Buscar cliente..." oninput="renderClientes(this.value)"></div>
   <div id="clientes-list"></div>
 </div>
 
 <!-- CALCULADORA V2 -->
 <div id="screen-calculadora" class="screen" style="max-width:100%;padding:0">
   <div class="calc-grid">
-    <div class="calc-left" style="padding:16px 20px;overflow-y:auto">
-      <div class="card">
-        <div class="card-title">Categoría de producto</div>
+    <div class="calc-left">
+      <div class="card"><div class="card-title">Categoría de producto</div>
         <select id="c-cat" onchange="cV2catChange()">
           <option value="">— Seleccionar categoría —</option>
           <optgroup label="── Gran Formato ──">
@@ -397,14 +362,8 @@ textarea{resize:vertical;min-height:64px}
           </optgroup>
         </select>
       </div>
-      <div class="card" id="c-opts-card" style="display:none">
-        <div class="card-title" id="c-opts-title">Opciones</div>
-        <div id="c-opts-body"></div>
-      </div>
-      <div class="card" id="c-extras-card" style="display:none">
-        <div class="card-title">Extras opcionales</div>
-        <div id="c-extras-body" class="extras-grid"></div>
-      </div>
+      <div class="card" id="c-opts-card" style="display:none"><div class="card-title" id="c-opts-title">Opciones</div><div id="c-opts-body"></div></div>
+      <div class="card" id="c-extras-card" style="display:none"><div class="card-title">Extras opcionales</div><div id="c-extras-body" class="extras-grid"></div></div>
       <div id="c-result-area" style="display:none">
         <div class="result-box">
           <div class="result-row"><span class="result-label">Precio base</span><span class="result-val" id="c-r-base">—</span></div>
@@ -415,6 +374,7 @@ textarea{resize:vertical;min-height:64px}
           <div id="c-r-unitario" class="result-unit"></div>
           <div id="c-r-tramo" class="result-tramo" style="display:none"></div>
         </div>
+        <div id="c-precio-cerrado" style="display:none;font-size:11px;color:#888;margin-top:6px;padding:4px 8px;background:#f9f9f7;border-radius:4px"></div>
       </div>
       <button class="c-btn-limpiar" onclick="cV2Limpiar()">🔄 Limpiar / Nueva consulta</button>
     </div>
@@ -428,51 +388,31 @@ textarea{resize:vertical;min-height:64px}
 <!-- MODALES -->
 <div class="modal-overlay" id="modal-resguardo">
   <div class="modal"><h3>Resguardo del pedido</h3><div id="print-area"></div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="closeModal('modal-resguardo');resetForm()">Cerrar</button>
-      <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button>
-    </div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-resguardo');resetForm()">Cerrar</button><button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button></div>
   </div>
 </div>
 <div class="modal-overlay" id="modal-pedido">
   <div class="modal" style="max-width:580px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
-      <div id="mp-title"></div>
-      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-pedido')">✕ Cerrar</button>
-    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px"><div id="mp-title"></div><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-pedido')">✕ Cerrar</button></div>
     <div id="mp-body"></div>
-    <div class="btn-row" style="margin-top:14px">
-      <button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button>
-      <button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir resguardo</button>
-    </div>
+    <div class="btn-row" style="margin-top:14px"><button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button><button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir resguardo</button></div>
   </div>
 </div>
 <div class="modal-overlay" id="modal-cliente">
-  <div class="modal"><h3 id="mc-title"></h3><div id="mc-body"></div>
-    <div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-cliente')">Cerrar</button></div>
-  </div>
+  <div class="modal"><h3 id="mc-title"></h3><div id="mc-body"></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-cliente')">Cerrar</button></div></div>
 </div>
 <div class="modal-overlay" id="modal-new-client">
   <div class="modal">
     <h3>Condiciones de pago del cliente</h3>
     <p style="font-size:13px;color:#666;margin-bottom:12px">Estándar: <strong>50% al entregar · Transferencia</strong>. Si tiene condiciones especiales, indícalas:</p>
-    <div class="field" style="margin-bottom:10px">
-      <label>Condiciones especiales (dejar vacío para estándar)</label>
-      <textarea id="nc-cond" rows="2" placeholder="Ej: Pago a 30 días..."></textarea>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="saveNewClient(false)">Estándar</button>
-      <button class="btn btn-primary" onclick="saveNewClient(true)">Guardar especiales</button>
-    </div>
+    <div class="field" style="margin-bottom:10px"><label>Condiciones especiales (dejar vacío para estándar)</label><textarea id="nc-cond" rows="2" placeholder="Ej: Pago a 30 días..."></textarea></div>
+    <div class="btn-row"><button class="btn btn-secondary" onclick="saveNewClient(false)">Estándar</button><button class="btn btn-primary" onclick="saveNewClient(true)">Guardar especiales</button></div>
   </div>
 </div>
 
 <script>
 // ── SUPABASE ──
-var sb=supabase.createClient(
-  'https://ffiyprmbrznoforpvvik.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg'
-);
+var sb=supabase.createClient('https://ffiyprmbrznoforpvvik.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg');
 var FASES=['Recibido','En espera de materiales','En producción','Listo','Entregado'];
 var SECS={TX:'Textil',PL:'Plotter',UV:'Impresión UV',SUB:'Sublimación',NEON:'Neones',XR:'Xerox'};
 var OPERARIOS=['Marilia','Álvaro','Charo','Raúl','Bea'];
@@ -483,7 +423,7 @@ var currentView='lista',currentOperario='Marilia',mesOffset=0;
 var pedidos=[],clientes=[];
 
 function testConnection(){
-  return sb.from('clientes').select('id').limit(1).then(function(r){
+  sb.from('clientes').select('id').limit(1).then(function(r){
     if(r.error)throw r.error;
     document.getElementById('conn-dot').className='conn-dot ok';
     document.getElementById('conn-status').innerHTML='<span class="conn-dot ok"></span>Conectado';
@@ -494,14 +434,12 @@ function testConnection(){
 }
 function cargarDatos(){
   document.getElementById('taller-list').innerHTML='<div class="loading">Cargando...</div>';
-  return Promise.all([
-    sb.from('clientes').select('*').order('nombre'),
-    sb.from('pedidos').select('*').order('fecha_creacion',{ascending:false})
-  ]).then(function(r){clientes=r[0].data||[];pedidos=(r[1].data||[]).map(dbToLocal);renderTaller();renderClientes();});
+  Promise.all([sb.from('clientes').select('*').order('nombre'),sb.from('pedidos').select('*').order('fecha_creacion',{ascending:false})]).then(function(r){
+    clientes=r[0].data||[];pedidos=(r[1].data||[]).map(dbToLocal);renderTaller();renderClientes();
+  });
 }
 function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok};}
 function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk};}
-
 function startClock(){
   document.getElementById('clock-wrap').style.display='block';
   function tick(){var n=new Date();document.getElementById('clock-time').textContent=n.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit',second:'2-digit'});document.getElementById('clock-date').textContent=n.toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});}
@@ -520,8 +458,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.addEventListener('click',function(e){if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');});
 function setView(v,el){
   currentView=v;
-  document.querySelectorAll('.view-tab').forEach(function(t){t.classList.remove('active');});
-  el.classList.add('active');
+  document.querySelectorAll('.view-tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');
   document.getElementById('filtros-lista').style.display=v==='lista'?'block':'none';
   document.getElementById('filtros-semana').style.display=v==='semana'?'block':'none';
   document.getElementById('operario-selector-wrap').style.display=v==='operario'?'block':'none';
@@ -588,7 +525,7 @@ function finalizarGuardar(cliente){
     var fechaTipo=document.querySelector('input[name="fecha-tipo"]:checked').value,pagoTipo=document.querySelector('input[name="pago"]:checked')?.value||'pendiente';
     var total=parseFloat(document.getElementById('f-total').value)||0,senal=parseFloat(document.getElementById('f-senal').value)||0;
     var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:document.getElementById('f-fecha-entrega').value||null,fechaTipo:fechaTipo,descripcion:desc,notas:document.getElementById('f-notas').value.trim(),total:total,senal:senal,pago:pagoTipo,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false};
-    return sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){if(r.error){alert('Error: '+r.error.message);return;}pedidos.unshift(pedido);mostrarResguardo(pedido);var m=document.getElementById('msg-ok');m.style.display='block';setTimeout(function(){m.style.display='none';},3000);});
+    sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){if(r.error){alert('Error: '+r.error.message);return;}pedidos.unshift(pedido);mostrarResguardo(pedido);var m=document.getElementById('msg-ok');m.style.display='block';setTimeout(function(){m.style.display='none';},3000);});
   }).finally(function(){document.getElementById('btn-guardar').disabled=false;document.getElementById('btn-guardar').textContent='Guardar y generar resguardo';});
 }
 function mostrarResguardo(p){
@@ -609,17 +546,26 @@ function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');mostr
 function setFilter(el){var f=el.dataset.f,v=el.dataset.v;activeFilters[f]=v;document.querySelectorAll('.filter-btn[data-f="'+f+'"]').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderTaller();}
 function getSecGlobal(){return document.getElementById('sec-global').value||'all';}
 function applySecFilter(list){var s=getSecGlobal();return s==='all'?list:list.filter(function(p){return p.seccion===s;});}
-function pasaFiltroEntrega(p){var v=activeFilters.entrega;if(v==='all')return true;if(!p.fechaEntrega)return false;var hoy=new Date();hoy.setHours(0,0,0,0);var fe=new Date(p.fechaEntrega+'T00:00:00');if(v==='hoy')return fe.getTime()===hoy.getTime();if(v==='manana'){var m=new Date(hoy);m.setDate(m.getDate()+1);return fe.getTime()===m.getTime();}if(v==='semana'){var fin=new Date(hoy);fin.setDate(fin.getDate()+7);return fe>=hoy&&fe<=fin;}if(v==='fija')return p.fechaTipo==='fija';if(v==='vencido')return fe<hoy&&p.fase<4;return true;}
+function pasaFiltroEntrega(p){
+  var v=activeFilters.entrega;if(v==='all')return true;if(!p.fechaEntrega)return false;
+  var hoy=new Date();hoy.setHours(0,0,0,0);var fe=new Date(p.fechaEntrega+'T00:00:00');
+  if(v==='hoy')return fe.getTime()===hoy.getTime();
+  if(v==='manana'){var m=new Date(hoy);m.setDate(m.getDate()+1);return fe.getTime()===m.getTime();}
+  if(v==='semana'){var fin=new Date(hoy);fin.setDate(fin.getDate()+7);return fe>=hoy&&fe<=fin;}
+  if(v==='fija')return p.fechaTipo==='fija';
+  if(v==='vencido')return fe<hoy&&p.fase<4;
+  return true;
+}
 function renderTaller(){renderStats();if(currentView==='lista')renderLista();else if(currentView==='semana')renderSemana();else if(currentView==='mes')renderMes();else renderOperario();}
 function renderStats(){var all=applySecFilter(pedidos),activos=all.filter(function(p){return p.fase<4;}),totalPend=all.reduce(function(s,p){return s+(p.total-(p.senal||0));},0),urgentes=activos.filter(function(p){return p.fechaTipo==='fija';}).length,listos=activos.filter(function(p){return p.fase===3;}).length;document.getElementById('taller-stats').innerHTML='<div class="stat-card"><div class="sv">'+activos.length+'</div><div class="sl">Activos</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+listos+'</div><div class="sl">Listos para recoger</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPend.toFixed(0)+'€</div><div class="sl">Pendiente cobro</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+urgentes+'</div><div class="sl">Entregas fijas</div></div>';}
 function renderLista(){var list=applySecFilter(pedidos);if(activeFilters.fase!=='all')list=list.filter(function(p){return String(p.fase)===activeFilters.fase;});list=list.filter(function(p){return pasaFiltroEntrega(p);});if(activeFilters.pago==='pendiente')list=list.filter(function(p){return(p.total-(p.senal||0))>0;});if(activeFilters.pago==='pagado')list=list.filter(function(p){return(p.total-(p.senal||0))<=0;});var sort=document.getElementById('sort-select').value||'entrega';list.sort(function(a,b){if(sort==='entrega')return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;if(sort==='creacion')return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);if(sort==='seccion')return a.seccion>b.seccion?1:-1;if(sort==='pendiente')return(b.total-(b.senal||0))-(a.total-(a.senal||0));return 0;});document.getElementById('taller-list').innerHTML=list.length?list.map(tarjetaTaller).join(''):'<div class="empty-state">No hay pedidos con estos filtros</div>';}
 function renderSemana(){var sfase=activeFilters.sfase;var list=applySecFilter(pedidos).filter(function(p){return sfase==='activos'?p.fase<4:sfase==='3'?p.fase===3:true;});var hoy=new Date();hoy.setHours(0,0,0,0);var dias=[];for(var i=0;i<7;i++){var d=new Date(hoy);d.setDate(d.getDate()+i);dias.push(d);}var sinFecha=list.filter(function(p){return!p.fechaEntrega&&p.fase<4;});var html='<div class="semana-grid">';dias.forEach(function(dia){var key=dia.toISOString().split('T')[0],esHoy=dia.getTime()===hoy.getTime(),peds=list.filter(function(p){return p.fechaEntrega===key;}),dn=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dia.getDay()];html+='<div class="dia-col"><div class="dia-header'+(esHoy?' hoy':'')+'"><div class="dn">'+dn+'</div><div class="dd">'+dia.getDate()+'/'+(dia.getMonth()+1)+'</div></div><div class="dia-cards">'+(peds.length?peds.map(function(p){return'<div class="dia-mini dm-'+p.seccion+(p.fechaTipo==='fija'?' dm-fija':'')+'" onclick="verPedido(\''+p.id+'\')"><div style="font-weight:700;font-family:monospace;font-size:10px">'+p.id+'</div><div>'+p.clienteNombre.split(' ')[0]+'</div></div>';}).join(''):'<div style="font-size:11px;color:#ddd;text-align:center;padding:6px">—</div>')+'</div></div>';});html+='</div>';var vencidos=list.filter(function(p){return p.fechaEntrega&&new Date(p.fechaEntrega+'T00:00:00')<hoy&&p.fase<4;});if(vencidos.length)html+='<div class="sin-fecha"><div class="sin-fecha-title" style="color:#A32D2D">⚠️ Vencidos ('+vencidos.length+')</div>'+vencidos.map(miniCard).join('')+'</div>';if(sinFecha.length)html+='<div class="sin-fecha"><div class="sin-fecha-title">Sin fecha ('+sinFecha.length+')</div>'+sinFecha.map(miniCard).join('')+'</div>';document.getElementById('taller-list').innerHTML=html;}
-function renderMes(){var hoy=new Date();hoy.setHours(0,0,0,0);var ref=new Date(hoy.getFullYear(),hoy.getMonth()+mesOffset,1),año=ref.getFullYear(),mes=ref.getMonth(),primerDia=new Date(año,mes,1),ultimoDia=new Date(año,mes+1,0),nombreMes=primerDia.toLocaleDateString('es-ES',{month:'long',year:'numeric'}),startDow=(primerDia.getDay()+6)%7,totalCeldas=startDow+ultimoDia.getDate(),semanas=Math.ceil(totalCeldas/7),list=applySecFilter(pedidos);var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><button class="btn btn-secondary btn-sm" onclick="mesOffset--;renderTaller()">← Anterior</button><span style="font-size:14px;font-weight:600;text-transform:capitalize">'+nombreMes+'</span><button class="btn btn-secondary btn-sm" onclick="mesOffset++;renderTaller()">Siguiente →</button></div><div class="mes-grid">'+['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(function(d){return'<div style="background:#f5f5f0;text-align:center;padding:5px 2px;font-size:11px;font-weight:600;color:#888">'+d+'</div>';}).join('');for(var s=0;s<semanas;s++){for(var dow=0;dow<7;dow++){var cellIdx=s*7+dow,diaNum=cellIdx-startDow+1;if(diaNum<1||diaNum>ultimoDia.getDate()){html+='<div class="mes-cell otro-mes"></div>';continue;}var fechaKey=año+'-'+String(mes+1).padStart(2,'0')+'-'+String(diaNum).padStart(2,'0'),esHoy=new Date(año,mes,diaNum).getTime()===hoy.getTime(),peds=list.filter(function(p){return p.fechaEntrega===fechaKey;});html+='<div class="mes-cell"><div class="mes-day-num'+(esHoy?' hoy':'')+'">'+diaNum+'</div>'+peds.slice(0,3).map(function(p){return'<div class="dia-mini dm-'+p.seccion+(p.fechaTipo==='fija'?' dm-fija':'')+'" onclick="verPedido(\''+p.id+'\')" title="'+p.clienteNombre+'"><span style="font-size:10px;font-weight:700;font-family:monospace">'+p.id+'</span> <span style="font-size:10px;opacity:.8">'+p.clienteNombre.split(' ')[0]+'</span></div>';}).join('')+(peds.length>3?'<div style="font-size:10px;color:#aaa">+'+(peds.length-3)+' más</div>':'')+'</div>';}}html+='</div>';var pedsMes=list.filter(function(p){return p.fechaEntrega&&p.fechaEntrega.startsWith(año+'-'+String(mes+1).padStart(2,'0'));});html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><div class="stat-card"><div class="sv">'+pedsMes.length+'</div><div class="sl">Entregas este mes</div></div><div class="stat-card"><div class="sv">'+pedsMes.reduce(function(s,p){return s+p.total;},0).toFixed(0)+'€</div><div class="sl">Facturación mes</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+pedsMes.reduce(function(s,p){return s+(p.total-(p.senal||0));},0).toFixed(0)+'€</div><div class="sl">Pendiente cobro</div></div></div>';document.getElementById('taller-list').innerHTML=html;}
+function renderMes(){var hoy=new Date();hoy.setHours(0,0,0,0);var ref=new Date(hoy.getFullYear(),hoy.getMonth()+mesOffset,1),año=ref.getFullYear(),mes=ref.getMonth(),primerDia=new Date(año,mes,1),ultimoDia=new Date(año,mes+1,0),nombreMes=primerDia.toLocaleDateString('es-ES',{month:'long',year:'numeric'}),startDow=(primerDia.getDay()+6)%7,totalCeldas=startDow+ultimoDia.getDate(),semanas=Math.ceil(totalCeldas/7),list=applySecFilter(pedidos);var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><button class="btn btn-secondary btn-sm" onclick="mesOffset--;renderTaller()">← Anterior</button><span style="font-size:14px;font-weight:600;text-transform:capitalize">'+nombreMes+'</span><button class="btn btn-secondary btn-sm" onclick="mesOffset++;renderTaller()">Siguiente →</button></div><div class="mes-grid">'+['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(function(d){return'<div style="background:#f5f5f0;text-align:center;padding:5px 2px;font-size:11px;font-weight:600;color:#888">'+d+'</div>';}).join('');for(var s=0;s<semanas;s++){for(var dow=0;dow<7;dow++){var cellIdx=s*7+dow,diaNum=cellIdx-startDow+1;if(diaNum<1||diaNum>ultimoDia.getDate()){html+='<div class="mes-cell otro-mes"></div>';continue;}var fechaKey=año+'-'+String(mes+1).padStart(2,'0')+'-'+String(diaNum).padStart(2,'0'),esHoy2=new Date(año,mes,diaNum).getTime()===hoy.getTime(),peds=list.filter(function(p){return p.fechaEntrega===fechaKey;});html+='<div class="mes-cell"><div class="mes-day-num'+(esHoy2?' hoy':'')+'">'+diaNum+'</div>'+peds.slice(0,3).map(function(p){return'<div class="dia-mini dm-'+p.seccion+(p.fechaTipo==='fija'?' dm-fija':'')+'" onclick="verPedido(\''+p.id+'\')" title="'+p.clienteNombre+'"><span style="font-size:10px;font-weight:700;font-family:monospace">'+p.id+'</span> <span style="font-size:10px;opacity:.8">'+p.clienteNombre.split(' ')[0]+'</span></div>';}).join('')+(peds.length>3?'<div style="font-size:10px;color:#aaa">+'+(peds.length-3)+' más</div>':'')+'</div>';}}html+='</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><div class="stat-card"><div class="sv">'+list.filter(function(p){return p.fechaEntrega&&p.fechaEntrega.startsWith(año+'-'+String(mes+1).padStart(2,'0'));}).length+'</div><div class="sl">Entregas este mes</div></div></div>';document.getElementById('taller-list').innerHTML=html;}
 function miniCard(p){var pend=p.total-(p.senal||0);return'<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f5f5f5;font-size:12px;cursor:pointer" onclick="verPedido(\''+p.id+'\')"><span style="font-family:monospace;font-weight:700">'+p.id+'</span><span class="badge sec-'+p.seccion+'">'+p.seccion+'</span><span>'+p.clienteNombre.split(' ')[0]+'</span><span class="fase-badge fase-'+p.fase+'" style="font-size:10px">'+FASES[p.fase]+'</span>'+(pend>0?'<span class="pendiente-pill">'+pend.toFixed(0)+'€</span>':'')+'</div>';}
 function renderOperarioSelector(){document.getElementById('operario-btns').innerHTML=OPERARIOS.map(function(op){return'<button class="op-btn'+(op===currentOperario?' active':'')+'" onclick="selectOperario(\''+op+'\',this)">'+op+'</button>';}).join('');}
 function selectOperario(op,el){currentOperario=op;document.querySelectorAll('.op-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderOperario();}
 function renderOperario(){var list=applySecFilter(pedidos).filter(function(p){return p.operario===currentOperario&&p.fase<4;});list.sort(function(a,b){return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;});document.getElementById('taller-list').innerHTML=list.length?'<div style="font-size:13px;color:#666;margin-bottom:10px">Pedidos activos de <strong>'+currentOperario+'</strong>: '+list.length+'</div>'+list.map(tarjetaTaller).join(''):'<div class="empty-state">No hay pedidos activos para '+currentOperario+'</div>';}
-function tarjetaTaller(p){var pend=p.total-(p.senal||0),hoy=new Date();hoy.setHours(0,0,0,0);var fe=p.fechaEntrega?new Date(p.fechaEntrega+'T00:00:00'):null,urgente=fe&&fe<hoy&&p.fase<4?'delivery-urgent':fe&&(fe.getTime()-hoy.getTime())<=86400000&&p.fase<4?'delivery-soon':'',fentrega=p.fechaEntrega?(p.fechaTipo==='fija'?'⚠️ ':'~')+formatDate(p.fechaEntrega):'Sin fecha',pendPill=pend>0?'<span class="pendiente-pill">'+pend.toFixed(2)+'€ pdte</span>':'<span class="pagado-pill">Pagado</span>';return'<div class="taller-card '+urgente+'" onclick="verPedido(\''+p.id+'\')"><div class="taller-header"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;font-family:monospace">'+p.id+'</span><span class="badge sec-'+p.seccion+'">'+SECS[p.seccion]+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span>'+(p.fechaTipo==='fija'?'<span style="font-size:11px;color:#A32D2D;font-weight:700">ENTREGA FIJA</span>':'')+pendPill+'<span class="operario-pill">'+p.operario+'</span></div><div style="font-size:12px;color:#888;flex-shrink:0">'+fentrega+'</div></div><div class="taller-body"><p><strong>Cliente:</strong> '+p.clienteNombre+(p.clienteTel?' · '+p.clienteTel:'')+'</p><p><strong>Pedido:</strong> '+formatDateTime(p.fechaCreacion)+'</p><p><strong>Trabajo:</strong> '+p.descripcion+'</p>'+(p.notas?'<p><strong>Notas:</strong> '+p.notas+'</p>':'')+'<p><strong>Total:</strong> '+p.total.toFixed(2)+'€ | <strong>Pagado:</strong> '+(p.senal||0).toFixed(2)+'€ | <strong style="color:'+(pend>0?'#A32D2D':'#3B6D11')+'">Pendiente: '+pend.toFixed(2)+'€</strong></p></div></div>';}
+function tarjetaTaller(p){var pend=p.total-(p.senal||0),hoy=new Date();hoy.setHours(0,0,0,0);var fe=p.fechaEntrega?new Date(p.fechaEntrega+'T00:00:00'):null,urgente=fe&&fe<hoy&&p.fase<4?'delivery-urgent':fe&&(fe.getTime()-hoy.getTime())<=86400000&&p.fase<4?'delivery-soon':'',fentrega=p.fechaEntrega?(p.fechaTipo==='fija'?'⚠️ ':'~')+formatDate(p.fechaEntrega):'Sin fecha',pendPill=pend>0?'<span class="pendiente-pill">'+pend.toFixed(2)+'€ pdte</span>':'<span class="pagado-pill">Pagado</span>';return'<div class="taller-card '+urgente+'" onclick="verPedido(\''+p.id+'\')" ><div class="taller-header"><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;font-family:monospace">'+p.id+'</span><span class="badge sec-'+p.seccion+'">'+SECS[p.seccion]+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span>'+(p.fechaTipo==='fija'?'<span style="font-size:11px;color:#A32D2D;font-weight:700">ENTREGA FIJA</span>':'')+pendPill+'<span class="operario-pill">'+p.operario+'</span></div><div style="font-size:12px;color:#888;flex-shrink:0">'+fentrega+'</div></div><div class="taller-body"><p><strong>Cliente:</strong> '+p.clienteNombre+(p.clienteTel?' · '+p.clienteTel:'')+'</p><p><strong>Pedido:</strong> '+formatDateTime(p.fechaCreacion)+'</p><p><strong>Trabajo:</strong> '+p.descripcion+'</p>'+(p.notas?'<p><strong>Notas:</strong> '+p.notas+'</p>':'')+'<p><strong>Total:</strong> '+p.total.toFixed(2)+'€ | <strong>Pagado:</strong> '+(p.senal||0).toFixed(2)+'€ | <strong style="color:'+(pend>0?'#A32D2D':'#3B6D11')+'">Pendiente: '+pend.toFixed(2)+'€</strong></p></div></div>';}
 function renderClientes(q){q=q||'';var list=q?clientes.filter(function(c){return c.nombre.toLowerCase().includes(q.toLowerCase())||(c.telefono&&c.telefono.includes(q));}):clientes;list=list.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre);});if(!list.length){document.getElementById('clientes-list').innerHTML='<div class="empty-state">No hay clientes registrados</div>';return;}document.getElementById('clientes-list').innerHTML=list.map(function(c){var nped=pedidos.filter(function(p){return p.clienteId===c.id;}).length,espec=c.condiciones&&c.condiciones!==COND_STD;return'<div class="cliente-card"><div><div style="font-weight:500;font-size:14px">'+c.nombre+(espec?'<span class="cond-badge">Cond. especiales</span>':'')+'</div><div style="font-size:12px;color:#888">'+(c.telefono||'')+' '+(c.email?'· '+c.email:'')+'</div><div style="font-size:12px;color:#534AB7;margin-top:2px">'+(c.condiciones||COND_STD)+'</div></div><div style="display:flex;align-items:center;gap:7px"><span style="font-size:12px;color:#888">'+nped+' pedido'+(nped!==1?'s':'')+'</span><button class="btn btn-secondary btn-sm" onclick="verPedidosCliente('+c.id+')">Ver pedidos</button></div></div>';}).join('');}
 function verPedidosCliente(id){var c=clientes.find(function(x){return x.id===id;}),peds=pedidos.filter(function(p){return p.clienteId===id;}).sort(function(a,b){return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);});document.getElementById('mc-title').textContent='Pedidos de '+c.nombre;document.getElementById('mc-body').innerHTML=peds.length?peds.map(function(p){var pend=p.total-(p.senal||0);return'<div style="padding:7px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px;cursor:pointer" onclick="closeModal(\'modal-cliente\');verPedido(\''+p.id+'\')"><div style="display:flex;justify-content:space-between"><span style="font-family:monospace;font-weight:700">'+p.id+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span></div><div style="color:#666;margin-top:3px">'+p.descripcion+'</div><div style="font-size:12px;margin-top:2px">Total: '+p.total.toFixed(2)+'€ · <span style="color:'+(pend>0?'#A32D2D':'#3B6D11')+';font-weight:600">Pendiente: '+pend.toFixed(2)+'€</span></div><div style="color:#aaa;font-size:11px;margin-top:2px">'+formatDateTime(p.fechaCreacion)+' · '+p.operario+'</div></div>';}).join(''):'<p style="color:#aaa;font-size:13px">Sin pedidos</p>';document.getElementById('modal-cliente').classList.add('open');}
 function formatDate(d){if(!d)return'';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
@@ -630,6 +576,8 @@ function resetForm(){['f-nombre','f-tel','f-email','f-desc','f-notas','f-total',
 var cV2Fmt=function(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';};
 var cV2R2=function(n){return Math.round(n*100)/100;};
 var cV2curCat=null;
+var cV2dtoAplicado=false;
+
 function floorIdx(tiers,q){var idx=-1;for(var i=0;i<tiers.length;i++){if(q>=tiers[i])idx=i;}return idx;}
 function nextTiers(tiers,q,count){var res=[];for(var i=0;i<tiers.length;i++){if(tiers[i]>q){res.push(i);if(res.length>=count)break;}}return res;}
 function cV2gv(id){var el=document.getElementById('cf-'+id);return el?el.value:'';}
@@ -641,9 +589,9 @@ xbanner:{name:"X Banner / Fotocall",sinIva:true,fields:[{id:'tipo',label:'Tipo',
 rollup:{name:"Roll Up / Fotocall Roll Up",sinIva:true,fields:[{id:'tipo',label:'Tipo',type:'select',options:['Roll Up','Fotocall Roll Up']},{id:'med',label:'Medida',type:'select',options:[]}],extrasDef:[{key:'diseno',label:'Diseño',price:12}],medidas:{"Roll Up":{"85×200":79,"100×200":99},"Fotocall Roll Up":{"120×200":119,"150×200":149,"200×200":199}},onFieldChange:function(id){if(id==='tipo')cV2setOpts('med',Object.keys(this.medidas[cV2gv('tipo')]||{}));},calc:function(v){return{base:(this.medidas[v.tipo]||{})[v.med]||0,qty:1};}},
 banderas:{name:"Banderas",sinIva:true,fields:[{id:'tam',label:'Tamaño (cm)',type:'select',options:['30×45','50×75','60×100','100×150','120×180','150×250']}],extrasDef:[{key:'diseno',label:'Diseño',price:9},{key:'express',label:'Express 48h',price:10}],prices:{"30×45":43.50,"50×75":49,"60×100":59,"100×150":79,"120×180":89,"150×250":99},calc:function(v){return{base:this.prices[v.tam]||0,qty:1};}},
 flyers:{name:"Flyers / Dípticos / Trípticos",sinIva:true,fields:[{id:'fmt',label:'Formato',type:'select',options:['A6','A5','Díptico A5','Díptico A4']},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[{key:'diseno',label:'Diseño',price:36}],tiers:[100,250,500,1000,2500,5000,10000],totals:{"A6":[32,39,52,64,75,96,119],"A5":[39,49,64,84,118,168,238],"Díptico A5":[62,79,94,104,148,212,345],"Díptico A4":[69,89,104,119,184,296,495]},calc:function(v){var q=parseInt(v.qty)||0;if(q<100)return{error:'Mínimo 100 uds'};var idx=floorIdx(this.tiers,q);if(idx<0)return{error:'Mínimo 100 uds'};var tq=this.tiers[idx],tot=this.totals[v.fmt][idx],pu=cV2R2(tot/tq);return{base:cV2R2(pu*q),qty:q,pu:pu,tierQty:tq,tiers:this.tiers};}},
-carteles:{name:"Carteles publicitarios",sinIva:true,fields:[{id:'qty',label:'Cantidad',type:'number',min:5}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],tiers:[5,10,25,50,100,200],unitPrices:[1.20,1.10,0.90,0.80,0.60,0.45],calc:function(v){var q=parseInt(v.qty)||0;if(q<5)return{error:'Mínimo 5 uds'};var idx=floorIdx(this.tiers,q);var pu=this.unitPrices[idx];return{base:cV2R2(pu*q),qty:q,pu:pu,tierQty:this.tiers[idx],tiers:this.tiers};}},
-tarjetas:{name:"Tarjetas de visita",sinIva:true,fields:[{id:'caras',label:'Caras',type:'select',options:['1 cara','2 caras']},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],extrasDyn:['laminado','esquinas'],tiers:[100,250,500,1000],totals:{"1 cara":[24,32,48,59],"2 caras":[27,39,55,68]},laminado:{"1 cara":[10,12,20,29],"2 caras":[12,15,25,39]},esquinas:[7.50,10,15,21],calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<100)return{error:'Mínimo 100 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],pu=cV2R2(this.totals[v.caras][idx]/tq),base=cV2R2(pu*q),er=[];if(ex&&ex.laminado){var lp=this.laminado[v.caras][idx];er.push({label:'Laminado',val:cV2Fmt(lp),amount:lp});}if(ex&&ex.esquinas){var ep=this.esquinas[idx];er.push({label:'Esquinas redondeadas',val:cV2Fmt(ep),amount:ep});}return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers,extraRows:er};}},
-tarjetas_troq:{name:"Tarjetas troqueladas",sinIva:true,fields:[{id:'caras',label:'Caras',type:'select',options:['1 cara','2 caras']},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],extrasDyn:['laminado'],tiers:[100,250,500,1000],totals:{"1 cara":[35,45,65,79],"2 caras":[35,55,75,89]},laminado:{"1 cara":[10,12,20,29],"2 caras":[12,15,25,39]},calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<100)return{error:'Mínimo 100 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],pu=cV2R2(this.totals[v.caras][idx]/tq),base=cV2R2(pu*q),er=[];if(ex&&ex.laminado){er.push({label:'Laminado',val:cV2Fmt(this.laminado[v.caras][idx]),amount:this.laminado[v.caras][idx]});}return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers,extraRows:er};}},
+carteles:{name:"Carteles publicitarios",sinIva:true,fields:[{id:'qty',label:'Cantidad',type:'number',min:5}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],tiers:[5,10,25,50,100,200],unitPrices:[1.20,1.10,0.90,0.80,0.60,0.45],calc:function(v){var q=parseInt(v.qty)||0;if(q<5)return{error:'Mínimo 5 uds'};var idx=floorIdx(this.tiers,q);return{base:cV2R2(this.unitPrices[idx]*q),qty:q,pu:this.unitPrices[idx],tierQty:this.tiers[idx],tiers:this.tiers};}},
+tarjetas:{name:"Tarjetas de visita",sinIva:true,fields:[{id:'caras',label:'Caras',type:'select',options:['1 cara','2 caras']},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],extrasDyn:['laminado','esquinas'],tiers:[100,250,500,1000],totals:{"1 cara":[24,32,48,59],"2 caras":[27,39,49,68]},laminado:{"1 cara":[10,12,20,29],"2 caras":[12,15,25,39]},esquinas:[7.50,10,15,21],calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<100)return{error:'Mínimo 100 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],pu=cV2R2(this.totals[v.caras][idx]/tq),base=cV2R2(pu*q),er=[];if(ex&&ex.laminado)er.push({label:'Laminado',val:cV2Fmt(this.laminado[v.caras][idx]),amount:this.laminado[v.caras][idx]});if(ex&&ex.esquinas)er.push({label:'Esquinas redondeadas',val:cV2Fmt(this.esquinas[idx]),amount:this.esquinas[idx]});return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers,extraRows:er};}},
+tarjetas_troq:{name:"Tarjetas troqueladas",sinIva:true,fields:[{id:'caras',label:'Caras',type:'select',options:['1 cara','2 caras']},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],extrasDyn:['laminado'],tiers:[100,250,500,1000],totals:{"1 cara":[35,45,65,79],"2 caras":[35,55,75,89]},laminado:{"1 cara":[10,12,20,29],"2 caras":[12,15,25,39]},calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<100)return{error:'Mínimo 100 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],pu=cV2R2(this.totals[v.caras][idx]/tq),base=cV2R2(pu*q),er=[];if(ex&&ex.laminado)er.push({label:'Laminado',val:cV2Fmt(this.laminado[v.caras][idx]),amount:this.laminado[v.caras][idx]});return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers,extraRows:er};}},
 tarjetas_pvc:{name:"Tarjetas PVC",sinIva:true,fields:[{id:'caras',label:'Caras',type:'select',options:['1 cara','2 caras']},{id:'qty',label:'Cantidad',type:'number',min:50}],extrasDef:[{key:'diseno',label:'Diseño',price:12}],extrasDyn:['banda'],tiers:[50,100,250,500,1000],unitPrices:{"1 cara":[1.09,0.99,0.89,0.79,0.69],"2 caras":[1.49,1.29,1.19,1.09,0.99]},calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<50)return{error:'Mínimo 50 uds'};var idx=floorIdx(this.tiers,q),pu=this.unitPrices[v.caras][idx],base=cV2R2(pu*q),er=[];if(ex&&ex.banda){var bp=cV2R2(0.12*q);er.push({label:'Banda magnética',val:cV2Fmt(bp),amount:bp});}return{base:base,qty:q,pu:pu,tierQty:this.tiers[idx],tiers:this.tiers,extraRows:er};}},
 tarjetas_especiales:{name:"Tarjetas acabados especiales",sinIva:true,fields:[{id:'qty',label:'Cantidad',type:'number',min:250}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],extrasDyn:['segunda_cara'],tiers:[250,500,1000],totals:[85,119,139],segunda_cara:[15,25,35],calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<250)return{error:'Mínimo 250 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],pu=cV2R2(this.totals[idx]/tq),base=cV2R2(pu*q),er=[];if(ex&&ex.segunda_cara)er.push({label:'Segunda cara',val:cV2Fmt(this.segunda_cara[idx]),amount:this.segunda_cara[idx]});return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers,extraRows:er};}},
 carpetas:{name:"Carpetas plegables",sinIva:true,fields:[{id:'tipo',label:'Tipo',type:'select',options:['Básica','Con bolsillo']},{id:'qty',label:'Cantidad',type:'number',min:50}],extrasDef:[{key:'diseno',label:'Diseño',price:12}],extrasDyn:['laminado'],tiers:[50,100,250,500,1000,2500],totals:{"Básica":[79,99,189,289,379,639],"Con bolsillo":[119,169,325,539,959,1625]},laminadoTotals:[25,29,59,89,169,349],calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<50)return{error:'Mínimo 50 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],pu=cV2R2(this.totals[v.tipo][idx]/tq),base=cV2R2(pu*q),er=[];if(ex&&ex.laminado)er.push({label:'Laminado',val:cV2Fmt(this.laminadoTotals[idx]),amount:this.laminadoTotals[idx]});return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers,extraRows:er};}},
@@ -670,10 +618,66 @@ calc:function(){var q=parseInt((document.getElementById('cf-qty')||{}).value)||0
 }
 };
 
-var CROSS={tarjetas:[{n:'Pegatinas con logo',d:'Mismo diseño. Para packaging.',precio:'Desde 0,18€/u',dto:15,promo:true},{n:'Carpetas corporativas',d:'Para presentar presupuestos.',precio:'Desde 79€',dto:15,promo:true},{n:'Sobres comerciales',d:'Imagen coherente en papelería.',precio:'Desde 39€',dto:15,promo:true}],tarjetas_troq:[{n:'Tarjetas normales',d:'Para uso diario.',precio:'Desde 24€'},{n:'Pegatinas',d:'Mismo diseño.',precio:'Desde 0,18€/u'}],tarjetas_especiales:[{n:'Tarjetas normales',d:'Para uso diario.',precio:'Desde 24€'},{n:'Carpetas',d:'Presentación premium.',precio:'Desde 79€'}],tarjetas_pvc:[{n:'Tarjetas papel',d:'Para uso diario.',precio:'Desde 24€'}],flyers:[{n:'Tarjetas de visita',d:'Complemento natural.',precio:'Desde 24€'},{n:'Carpetas',d:'Para entregar los flyers.',precio:'Desde 79€'}],carpetas:[{n:'Tarjetas de visita',d:'Para incluir en la carpeta.',precio:'Desde 24€'},{n:'Flyers',d:'Documentación para la carpeta.',precio:'Desde 32€'}],sobres:[{n:'Tarjetas de visita',d:'Papelería coordinada.',precio:'Desde 24€'},{n:'Flyers',d:'Para incluir dentro.',precio:'Desde 32€'}],manteles:[{n:'Cartas hostelería',d:'Renueva carta y manteles.',precio:'Desde 1,55€/u'},{n:'Tarjetas de visita',d:'Para dejar en barra.',precio:'Desde 24€'}],cartas:[{n:'Manteles personalizados',d:'Misma imagen en mesa.',precio:'Desde 0,05€/u'}],acreditaciones:[{n:'Lanyares',d:'Para colgar las acreditaciones.',precio:'Desde 1,45€/u'}],lanyares:[{n:'Acreditaciones',d:'Tarjeta para el lanyard.',precio:'Desde 0,82€/u'}],talonarios_entradas:[{n:'Flyers del evento',d:'Para promocionar.',precio:'Desde 32€'},{n:'Camisetas',d:'Merchandising.',precio:'Desde 10,95€/u'}],pegatinas_inmob:[{n:'Carteles inmobiliaria',d:'Pack completo.',precio:'Desde 4,95€/u'}],carteles_inmob:[{n:'Pegatinas inmobiliaria',d:'Para escaparate.',precio:'Desde 29€'}],talonarios:[{n:'Sellos',d:'Para validar los talonarios.',precio:'Desde 27,90€'}],sellos:[{n:'Tarjetas de visita',d:'Papelería básica de negocio.',precio:'Desde 24€'}],placas:[{n:'Rotulación',d:'Señalética completa.',precio:'Desde 30€/m²'}],xbanner:[{n:'Flyers',d:'Para repartir junto al banner.',precio:'Desde 32€'},{n:'Tarjetas',d:'Para dejar junto al expositor.',precio:'Desde 24€'}],rollup:[{n:'Flyers',d:'Para repartir junto al roll up.',precio:'Desde 32€'}],banderas:[{n:'Roll Up',d:'Combinación perfecta para eventos.',precio:'Desde 79€'}],carteles:[{n:'Flyers',d:'Complemento para distribución.',precio:'Desde 32€'}],tarjetones:[{n:'Sobres',d:'Para entregar las invitaciones.',precio:'Desde 39€'}],rotulacion:[{n:'Tarjetas de visita',d:'Si tiene negocio, necesita tarjetas.',precio:'Desde 24€'},{n:'Pegatinas con logo',d:'Para packaging y señalética.',precio:'Desde 0,18€/u'}],pegatinas:[{n:'Tarjetas de visita',d:'Mismo diseño corporativo.',precio:'Desde 24€'},{n:'Carpetas',d:'Para documentación comercial.',precio:'Desde 79€'}],textil:[{n:'Gorras personalizadas',d:'Complemento natural.',precio:'Desde 4,95€/u'},{n:'Rotulación vehículo',d:'Completa la imagen de empresa.',precio:'Desde 72,50€/m²'}]};
+var CROSS={
+  tarjetas:[{n:'Pegatinas con logo',d:'Mismo diseño. Para packaging y envases.',precio:'Desde 0,18€/u (250 uds)',dto:15,promo:true},{n:'Carpetas corporativas',d:'Para presentar presupuestos.',precio:'Desde 79€ (50 uds)',dto:15,promo:true},{n:'Sobres comerciales',d:'Imagen coherente en papelería.',precio:'Desde 39€ (100 uds)',dto:15,promo:true}],
+  tarjetas_troq:[{n:'Tarjetas normales',d:'Para uso diario, las troqueladas para clientes VIP.',precio:'Desde 24€ (100 uds)'},{n:'Pegatinas',d:'Mismo diseño corporativo.',precio:'Desde 0,18€/u'}],
+  tarjetas_especiales:[{n:'Tarjetas normales',d:'Para uso diario.',precio:'Desde 24€'},{n:'Carpetas',d:'Presentación premium.',precio:'Desde 79€'}],
+  tarjetas_pvc:[{n:'Tarjetas papel',d:'Para uso diario, PVC para clientes premium.',precio:'Desde 24€'}],
+  flyers:[{n:'Tarjetas de visita',d:'Complemento natural.',precio:'Desde 24€',esTarjetas:true},{n:'Carpetas',d:'Para entregar los flyers con presentación.',precio:'Desde 79€'}],
+  carpetas:[{n:'Tarjetas de visita',d:'Para incluir en la carpeta.',precio:'Desde 24€',esTarjetas:true},{n:'Flyers',d:'Documentación para la carpeta.',precio:'Desde 32€'}],
+  sobres:[{n:'Tarjetas de visita',d:'Papelería coordinada.',precio:'Desde 24€',esTarjetas:true},{n:'Flyers',d:'Para incluir dentro del sobre.',precio:'Desde 32€'}],
+  manteles:[{n:'Cartas hostelería',d:'Renueva carta y manteles a la vez.',precio:'Desde 1,55€/u'},{n:'Tarjetas de visita',d:'Para dejar en barra o mesas.',precio:'Desde 24€',esTarjetas:true}],
+  cartas:[{n:'Manteles personalizados',d:'Misma imagen en mesa completa.',precio:'Desde 0,05€/u'}],
+  acreditaciones:[{n:'Lanyares',d:'Para colgar las acreditaciones.',precio:'Desde 1,45€/u'}],
+  lanyares:[{n:'Acreditaciones',d:'Tarjeta para el lanyard.',precio:'Desde 0,82€/u'}],
+  talonarios_entradas:[{n:'Flyers del evento',d:'Para promocionar.',precio:'Desde 32€'},{n:'Camisetas',d:'Merchandising del evento.',precio:'Desde 10,95€/u'}],
+  pegatinas_inmob:[{n:'Carteles inmobiliaria',d:'Pack completo inmobiliaria.',precio:'Desde 4,95€/u'}],
+  carteles_inmob:[{n:'Pegatinas inmobiliaria',d:'Para escaparate y ventanas.',precio:'Desde 29€'}],
+  talonarios:[{n:'Sellos',d:'Para validar los talonarios.',precio:'Desde 27,90€'}],
+  sellos:[{n:'Tarjetas de visita',d:'Papelería básica de negocio.',precio:'Desde 24€',esTarjetas:true}],
+  placas:[{n:'Rotulación',d:'Señalética completa del local.',precio:'Desde 30€/m²'}],
+  xbanner:[{n:'Flyers',d:'Para repartir junto al banner.',precio:'Desde 32€'},{n:'Tarjetas',d:'Para dejar junto al expositor.',precio:'Desde 24€',esTarjetas:true}],
+  rollup:[{n:'Flyers',d:'Para repartir junto al roll up.',precio:'Desde 32€'}],
+  banderas:[{n:'Roll Up',d:'Combinación perfecta para eventos.',precio:'Desde 79€'}],
+  carteles:[{n:'Flyers',d:'Complemento para distribución.',precio:'Desde 32€'}],
+  tarjetones:[{n:'Sobres',d:'Para entregar las invitaciones.',precio:'Desde 39€'}],
+  rotulacion:[{n:'Tarjetas de visita',d:'Si tiene negocio, necesita tarjetas.',precio:'Desde 24€',esTarjetas:true},{n:'Pegatinas con logo',d:'Para packaging y señalética.',precio:'Desde 0,18€/u'}],
+  pegatinas:[{n:'Tarjetas de visita',d:'Mismo diseño corporativo.',precio:'Desde 24€',esTarjetas:true},{n:'Carpetas',d:'Para documentación comercial.',precio:'Desde 79€'}],
+  textil:[{n:'Gorras personalizadas',d:'Complemento natural para uniformes.',precio:'Desde 4,95€/u'},{n:'Rotulación vehículo',d:'Si tiene empresa, completa la imagen.',precio:'Desde 72,50€/m²'}]
+};
+
+var ARGS={
+  tarjetas:"🗣️ «¿Tiene ya sus tarjetas actualizadas? Muchos clientes aprovechan para renovarlas cuando hacen un pedido. Con 100 uds tiene para meses y quedan muy profesionales.»",
+  tarjetas_troq:"🗣️ «Las troqueladas marcan la diferencia en primera impresión. Son las que el cliente guarda en vez de tirar. Ideal para sectores premium.»",
+  tarjetas_especiales:"🗣️ «El barniz 3D o el acabado dorado hace que la tarjeta se recuerde. Para clientes que quieren destacar sobre la competencia.»",
+  tarjetas_pvc:"🗣️ «Las tarjetas PVC duran años y no se doblan ni estropean. Muy habituales en hostelería, clínicas y profesionales que dan muchas tarjetas.»",
+  flyers:"🗣️ «¿Va a repartirlos en mano o los dejará en mostrador? Si los deja en mostrador conviene hacer algo más de cantidad para no quedarse corto pronto. El coste extra de subir de tramo es mínimo.»",
+  carteles:"🗣️ «Para carteles en escaparate o exterior lo normal es renovarlos cada temporada. Si hace 25 ahora puede usar unos ahora y guardar el resto. El precio por unidad baja mucho.»",
+  carpetas:"🗣️ «La carpeta da imagen cuando entrega un presupuesto o documentación. El cliente percibe más profesionalidad y retiene mejor la información.»",
+  sobres:"🗣️ «Si ya tiene tarjetas y flyers, los sobres cierran el círculo de papelería corporativa. Quedan muy bien con el logo y los datos.»",
+  talonarios:"🗣️ «Los talonarios autocopiativos son perfectos para albaranes, pedidos o presupuestos rápidos. Con el sello queda todo registrado al momento.»",
+  manteles:"🗣️ «El mantel personalizado hace que la mesa ya sea publicidad. El cliente come y ve su marca. Muy habitual en hostelería con buena imagen.»",
+  cartas:"🗣️ «Una carta bien presentada sube el ticket medio. El cliente se detiene más, lee más opciones y pide más. La inversión se recupera sola.»",
+  tarjetones:"🗣️ «Para bodas, eventos o cheques regalo dan un toque muy especial. Los clientes los guardan y los regalan, son publicidad que viaja.»",
+  acreditaciones:"🗣️ «Con el lanyard coordinado queda todo mucho más profesional. Si tiene evento de varios días o quiere reutilizarlas conviene plastificarlas.»",
+  lanyares:"🗣️ «El lanyard con la acreditación es la imagen del evento. Cuantos más uds, menor coste. Y si lleva nombre impreso individual añade valor.»",
+  talonarios_entradas:"🗣️ «Para rifas o eventos el papel de seguridad evita falsificaciones. Y si las numeramos, el control es mucho más fácil al final del evento.»",
+  pegatinas_inmob:"🗣️ «Las pegatinas de inmobiliaria en escaparate son lo primero que ve el cliente. Con 200 uds tiene stock para meses y el precio baja bastante.»",
+  carteles_inmob:"🗣️ «Los lotes salen mucho más económicos por unidad. Si tiene varias propiedades activas o prevé nuevas captaciones, el lote es la mejor opción.»",
+  sellos:"🗣️ «El sello da imagen profesional en facturas, albaranes y documentación. Y con la recarga de tinta dura años. Es una inversión de una sola vez.»",
+  placas:"🗣️ «Una placa bien hecha en la entrada o en el interior posiciona el negocio. El metacrilato o el alucobond dan una imagen muy premium.»",
+  xbanner:"🗣️ «El X Banner es perfecto para ferias, eventos y punto de venta. La lona se cambia si cambia la oferta y el soporte se reutiliza.»",
+  rollup:"🗣️ «El roll up es la presentación más profesional en cualquier stand o recepción. Se monta en segundos y se guarda fácil. Muy rentable a largo plazo.»",
+  banderas:"🗣️ «Las banderas en exterior generan impacto desde la calle. Con viento o sin él, dan movimiento y visibilidad. Muy habituales en concesionarios y eventos.»",
+  rotulacion:"🗣️ «La rotulación es lo primero que ve el cliente al llegar. Una buena señalética da confianza y posiciona el negocio. Si ya tiene el diseño, el coste es muy ajustado.»",
+  pegatinas:"🗣️ «Las pegatinas troqueladas son el extra que marca la diferencia en packaging, envíos y presentaciones. Con 250 uds el precio por unidad ya es muy competitivo.»",
+  textil:"🗣️ «Para uniformes o eventos lo habitual es pedir algo más de cantidad. Las tallas se consumen distinto y siempre hace falta alguna extra. Con más uds el precio baja bastante.»",
+  default:"🗣️ «Si el cliente tiene dudas entre cantidad, recuérdale que el precio por unidad baja significativamente en el tramo siguiente. Merece la pena hacer el cálculo.»"
+};
 
 function cV2catChange(){
   cV2curCat=document.getElementById('c-cat').value;
+  cV2dtoAplicado=false;
   document.getElementById('c-opts-card').style.display='none';
   document.getElementById('c-opts-body').innerHTML='';
   document.getElementById('c-extras-card').style.display='none';
@@ -682,6 +686,7 @@ function cV2catChange(){
   document.getElementById('c-r-extras-rows').innerHTML='';
   document.getElementById('c-r-unitario').textContent='';
   document.getElementById('c-r-tramo').style.display='none';
+  var pcEl=document.getElementById('c-precio-cerrado');if(pcEl)pcEl.style.display='none';
   document.getElementById('c-sug-content').innerHTML='<div class="sug-empty">Selecciona opciones para ver sugerencias</div>';
   if(!cV2curCat)return;
   var p=P[cV2curCat];if(!p)return;
@@ -718,11 +723,25 @@ function cV2calc(){
   document.querySelectorAll('#c-extras-body input[type=checkbox]').forEach(function(cb){if(cb.checked)dynEx[cb.dataset.extra]=true;});
   var res=p.calc(vals,dynEx);
   var warn=document.getElementById('field-warn');
-  if(res&&res.error){if(warn)warn.innerHTML='<div class="min-warn">⚠️ '+res.error+'</div>';document.getElementById('c-result-area').style.display='none';document.getElementById('c-sug-content').innerHTML='<div class="sug-empty">'+res.error+'</div>';return;}
+  var pcEl=document.getElementById('c-precio-cerrado');
+  if(res&&res.error){
+    if(warn)warn.innerHTML='<div class="min-warn">⚠️ '+res.error+'</div>';
+    document.getElementById('c-result-area').style.display='none';
+    if(pcEl)pcEl.style.display='none';
+    document.getElementById('c-sug-content').innerHTML='<div class="sug-empty">'+res.error+'</div>';
+    return;
+  }
   if(warn)warn.innerHTML='';
   var fixedExtras=0,fixedRows=[];
-  document.querySelectorAll('#c-extras-body input[type=checkbox]:checked').forEach(function(cb){var price=parseFloat(cb.dataset.price);if(price>0){var isDyn=p.extrasDyn&&p.extrasDyn.indexOf(cb.dataset.extra)>=0;if(!isDyn){fixedExtras+=price;fixedRows.push({label:cb.parentNode.textContent.trim().replace(/\(.*\)$/,'').trim(),val:cV2Fmt(price)});}}});
-  var dynRows=res.extraRows||[],dynExtras=0;dynRows.forEach(function(r){dynExtras+=r.amount||0;});
+  document.querySelectorAll('#c-extras-body input[type=checkbox]:checked').forEach(function(cb){
+    var price=parseFloat(cb.dataset.price);
+    if(price>0){
+      var isDyn=p.extrasDyn&&p.extrasDyn.indexOf(cb.dataset.extra)>=0;
+      if(!isDyn){fixedExtras+=price;fixedRows.push({label:cb.parentNode.textContent.trim().replace(/\(.*\)$/,'').trim(),val:cV2Fmt(price)});}
+    }
+  });
+  var dynRows=res.extraRows||[],dynExtras=0;
+  dynRows.forEach(function(r){dynExtras+=r.amount||0;});
   var base=res.base,totalExtras=fixedExtras+dynExtras;
   var allRows=dynRows.map(function(r){return{label:r.label,val:r.val};}).concat(fixedRows);
   document.getElementById('c-result-area').style.display='block';
@@ -736,11 +755,19 @@ function cV2calc(){
   document.getElementById('c-r-unitario').textContent=res.qty>1&&res.pu?'Precio unitario: '+cV2Fmt(res.pu)+(p.sinIva?' sin IVA':' con IVA')+(res.unitLabel?' '+res.unitLabel:'')+' ('+res.qty+' uds)':'';
   if(res.tierQty&&res.qty!==res.tierQty){document.getElementById('c-r-tramo').style.display='block';document.getElementById('c-r-tramo').textContent='Tramo: '+res.tierQty.toLocaleString('es-ES')+' uds → precio de tramo × '+res.qty+' uds';}
   else document.getElementById('c-r-tramo').style.display='none';
+  if(pcEl){
+    var resto5=conIva%5;
+    var diff5=5-resto5;
+    var sugerido=diff5<=3?conIva+diff5:Math.ceil(conIva);
+    if(sugerido>conIva){pcEl.style.display='block';pcEl.textContent='💡 Precio cerrado sugerido: '+sugerido.toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:0})+'€';}
+    else pcEl.style.display='none';
+  }
   cV2renderSug(res);
 }
 
 function cV2renderSug(res){
   var html='';
+  // UPSELLING
   if(res.tiers&&res.qty){
     var nexts=nextTiers(res.tiers,res.qty,2);
     if(nexts.length){
@@ -749,18 +776,51 @@ function cV2renderSug(res){
       nexts.forEach(function(nIdx,i){
         var p=P[cV2curCat],nextQty=res.tiers[nIdx],testVals={};
         if(!p.customBuild){p.fields.forEach(function(f){testVals[f.id]=cV2gv(f.id);if(f.type==='number')testVals[f.id]=String(nextQty);});}
-        var testRes=p.calc(testVals,{});if(!testRes||testRes.error)return;
-        var nextPu=testRes.pu||0,nextTotal=testRes.base||0,savings=res.pu>0?Math.round((1-nextPu/res.pu)*100):0,extraCost=cV2R2(nextTotal-res.base),isRec=i===0;
-        html+='<div class="tramo-card'+(isRec?' recommended':'')+'"><div class="tramo-header"><span class="tramo-uds">'+nextQty.toLocaleString('es-ES')+' uds</span><span class="tramo-badge'+(isRec?' tramo-best':'')+'">'+( isRec?'Recomendado':'Máximo ahorro')+'</span></div><div class="tramo-prices"><span>'+cV2Fmt(nextPu)+'/u</span><span class="tramo-total">Total: '+cV2Fmt(nextTotal)+'</span></div>'+(savings>0?'<div class="tramo-savings">-'+savings+'% por unidad · Solo '+cV2Fmt(extraCost)+' más por '+(nextQty-res.qty)+' uds extra</div>':'')+'</div>';
-      });html+='</div>';
+        var testRes=p.calc(testVals,{});
+        if(!testRes||testRes.error)return;
+        var nextPu=testRes.pu||0;
+        var nextTotal=testRes.base||0;
+        var isRec=i===0;
+        var costoActualEnNextQty=cV2R2(res.pu*nextQty);
+        var ahorroT=cV2R2(costoActualEnNextQty-nextTotal);
+        var ahorroU=nextQty>0?cV2R2(ahorroT/nextQty):0;
+        var badgeStyle=isRec?'background:#BA7517;color:#fff':'background:#EAF3DE;color:#3B6D11;border:1px solid #c0dd97';
+        var badgeText=isRec?'⭐ Recomendado':'💚 Máximo ahorro';
+        html+='<div class="tramo-card'+(isRec?' recommended':'')+'"><div class="tramo-header"><span class="tramo-uds">'+nextQty.toLocaleString('es-ES')+' uds</span><span class="tramo-badge" style="'+badgeStyle+'">'+badgeText+'</span></div>'
+          +'<div class="tramo-prices" style="margin-top:4px"><span style="font-size:12px;font-weight:600;color:#1a1a1a">'+cV2Fmt(nextPu)+'/u</span><span class="tramo-total" style="margin-left:8px">Total: '+cV2Fmt(nextTotal)+'</span></div>'
+          +(ahorroU>0?'<div class="tramo-savings" style="margin-top:4px;font-size:11px;color:#3B6D11;font-weight:600;background:#EAF3DE;padding:3px 7px;border-radius:4px;display:inline-block">Ahorra '+cV2Fmt(ahorroU)+'/u · '+cV2Fmt(ahorroT)+' en total</div>':'')
+          +'</div>';
+      });
+      html+='</div>';
     }
   }
+  // ARGUMENTARIO
+  var arg=ARGS[cV2curCat]||ARGS.default;
+  if(arg){html+='<div class="sug-section"><div style="font-size:10px;color:#aaa;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">💬 Argumentario</div><div style="background:#EFF6FF;border-left:3px solid #378ADD;padding:10px;font-size:12px;color:#1E3A5F;line-height:1.5;border-radius:0 6px 6px 0">'+arg+'</div></div>';}
+  // VENTA CRUZADA
   var cross=CROSS[cV2curCat];
   if(cross&&cross.length){
     html+='<div class="sug-section"><div class="sug-section-title"><div class="sug-dot" style="background:#0F6E56"></div><span style="color:#085041">Productos complementarios</span></div>';
-    cross.forEach(function(s){var promoStyle=s.promo?'border:1.5px solid #3B6D11;background:#f5fbf0':'';var promoBadge=s.dto?'<div style="margin-top:4px"><span style="background:#3B6D11;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px">-'+s.dto+'% si lo añade a este pedido</span></div>':'';html+='<div class="sug-card" style="'+promoStyle+'"><div class="sug-card-title">'+s.n+'</div><div class="sug-card-desc">'+s.d+'</div>'+(s.precio?'<div style="font-size:12px;font-weight:600;color:#3B6D11;margin-top:4px">'+s.precio+'</div>':'')+promoBadge+'</div>';});html+='</div>';
+    cross.forEach(function(s,si){
+      var esTarjetas=s.esTarjetas===true;
+      var dtoId='dto-wrap-'+si;
+      var dtoBlock=esTarjetas?'<div id="'+dtoId+'" style="margin-top:6px"><button onclick="cV2aplicarDto(\''+dtoId+'\')" style="background:#3B6D11;color:#fff;border:none;border-radius:5px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer">✓ Aplicar 15% dto ahora</button></div>':'';
+      html+='<div class="sug-card"><div class="sug-card-title">'+s.n+'</div><div class="sug-card-desc">'+s.d+'</div>'+(s.precio?'<div style="font-size:12px;font-weight:600;color:#3B6D11;margin-top:4px">'+s.precio+'</div>':'')+dtoBlock+'</div>';
+    });
+    html+='</div>';
   }
   document.getElementById('c-sug-content').innerHTML=html||'<div class="sug-empty">Sin sugerencias adicionales</div>';
+}
+
+function cV2aplicarDto(wrapId){
+  cV2dtoAplicado=true;
+  var wrap=document.getElementById(wrapId);
+  if(!wrap)return;
+  var tramos=[{uds:100,orig:24,dto:20.40},{uds:250,orig:32,dto:27.20},{uds:500,orig:48,dto:40.80},{uds:1000,orig:59,dto:50.15}];
+  var html='<div style="margin-top:6px;background:#EAF3DE;border-radius:6px;padding:8px 10px;border:0.5px solid #c0dd97"><div style="font-size:11px;font-weight:700;color:#3B6D11;margin-bottom:6px">✓ 15% dto aplicado — Tarjetas visita 1 cara</div><table style="width:100%;font-size:11px;border-collapse:collapse"><tr style="color:#888"><td>Uds</td><td>Normal</td><td style="color:#3B6D11;font-weight:700">Con dto</td></tr>';
+  tramos.forEach(function(t){html+='<tr style="border-top:0.5px solid #eee"><td style="padding:3px 0;font-weight:600">'+t.uds+' uds</td><td style="text-decoration:line-through;color:#aaa">'+t.orig.toFixed(2)+'€</td><td style="color:#3B6D11;font-weight:700">'+t.dto.toFixed(2)+'€</td></tr>';});
+  html+='</table></div>';
+  wrap.innerHTML=html;
 }
 
 function cV2Limpiar(){document.getElementById('c-cat').value='';cV2catChange();}
