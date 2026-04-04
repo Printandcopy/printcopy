@@ -244,6 +244,41 @@ textarea{resize:vertical;min-height:64px}
 .sol-presupuestado{background:#EAF3DE;color:#3B6D11}
 .sol-descartada{background:#f1efe8;color:#5f5e5a}
 
+/* Resguardo imprimible */
+.resguardo-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.resguardo-overlay.open{display:flex}
+.resguardo-container{background:#fff;width:100%;max-width:400px;border-radius:8px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.3)}
+.resguardo-actions{padding:12px;background:#f5f5f0;display:flex;gap:8px;justify-content:flex-end}
+.resguardo-content{padding:0}
+.resguardo{padding:24px;font-family:Arial,sans-serif;font-size:12px;line-height:1.4;color:#000}
+.resguardo-header{text-align:center;border-bottom:2px solid #000;padding-bottom:12px;margin-bottom:12px}
+.resguardo-logo{font-size:20px;font-weight:bold;margin-bottom:4px}
+.resguardo-empresa{font-size:10px;color:#666}
+.resguardo-titulo{font-size:14px;font-weight:bold;margin:12px 0 8px;text-transform:uppercase;letter-spacing:1px}
+.resguardo-num{font-size:18px;font-weight:bold;text-align:center;background:#f0f0f0;padding:8px;margin:8px 0;border-radius:4px}
+.resguardo-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dotted #ccc}
+.resguardo-row:last-child{border-bottom:none}
+.resguardo-label{color:#666;font-size:11px}
+.resguardo-value{font-weight:500;text-align:right;max-width:60%}
+.resguardo-desc{background:#f9f9f9;padding:10px;margin:10px 0;border-radius:4px;font-size:11px;line-height:1.5}
+.resguardo-totales{margin-top:12px;border-top:2px solid #000;padding-top:10px}
+.resguardo-total-row{display:flex;justify-content:space-between;padding:4px 0}
+.resguardo-total-row.big{font-size:16px;font-weight:bold;margin-top:6px;padding-top:6px;border-top:1px solid #000}
+.resguardo-firma{margin-top:20px;padding-top:12px;border-top:1px dashed #ccc}
+.resguardo-firma-line{border-bottom:1px solid #000;height:40px;margin:8px 0}
+.resguardo-firma-label{font-size:10px;color:#666;text-align:center}
+.resguardo-footer{margin-top:16px;text-align:center;font-size:9px;color:#888;border-top:1px dashed #ccc;padding-top:10px}
+.resguardo-condiciones{font-size:9px;color:#666;margin-top:10px;padding:8px;background:#f9f9f9;border-radius:4px}
+
+@media print{
+  body *{visibility:hidden}
+  .resguardo-overlay,.resguardo-overlay *{visibility:visible}
+  .resguardo-overlay{position:absolute;top:0;left:0;right:0;background:#fff;padding:0}
+  .resguardo-container{max-width:100%;box-shadow:none;border-radius:0}
+  .resguardo-actions{display:none}
+  .resguardo{padding:10mm}
+}
+
 </style>
 </head>
 <body>
@@ -1163,7 +1198,7 @@ function verPedido(id){
 
 function setFaseModal(id,fase){var p=pedidos.find(function(x){return x.id===id;});if(!p)return;p.fase=fase;_pedidoModal=p;sb.from('pedidos').update({fase:fase}).eq('id',id).then(function(){});verPedido(id);renderTaller();}
 function toggleCheckModal(id,field,val){var p=pedidos.find(function(x){return x.id===id;});if(!p)return;p[field]=val;var col=field==='ropaOk'?'ropa_ok':'dtf_ok';var upd={};upd[col]=val;sb.from('pedidos').update(upd).eq('id',id).then(function(){});}
-function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');mostrarResguardo(_pedidoModal);setTimeout(function(){imprimirResguardo();},300);}}
+function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');generarResguardo(_pedidoModal);}}
 function setFilter(el){var f=el.dataset.f,v=el.dataset.v;activeFilters[f]=v;document.querySelectorAll('.filter-btn[data-f="'+f+'"]').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderTaller();}
 function getSecGlobal(){return document.getElementById('sec-global').value||'all';}
 function applySecFilter(list){var s=getSecGlobal();return s==='all'?list:list.filter(function(p){return p.seccion===s;});}
@@ -1272,6 +1307,84 @@ function verPedidosCliente(id){var c=clientes.find(function(x){return x.id===id;
 
 function formatDate(d){if(!d)return'';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function formatDateTime(iso){if(!iso)return'';var d=new Date(iso);return d.toLocaleDateString('es-ES')+' '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
+
+// ══════════════════════════════════════════════════════════════
+// RESGUARDO / TICKET
+// ══════════════════════════════════════════════════════════════
+function generarResguardo(pedido){
+  var p=pedido;
+  var pendiente=(p.total||0)-(p.senal||0);
+  var numPedido=p.id?p.id.substring(0,8).toUpperCase():'---';
+  
+  var html='<div class="resguardo">';
+  
+  // Cabecera
+  html+='<div class="resguardo-header">';
+  html+='<div class="resguardo-logo">🖨️ Print & Copy</div>';
+  html+='<div class="resguardo-empresa">Impresión · Rotulación · Personalización<br>Salamanca · 923 XXX XXX</div>';
+  html+='</div>';
+  
+  // Número de pedido
+  html+='<div class="resguardo-num">PEDIDO #'+numPedido+'</div>';
+  
+  // Datos básicos
+  html+='<div class="resguardo-titulo">Datos del pedido</div>';
+  html+='<div class="resguardo-row"><span class="resguardo-label">Fecha:</span><span class="resguardo-value">'+formatDateTime(p.fechaCreacion)+'</span></div>';
+  html+='<div class="resguardo-row"><span class="resguardo-label">Cliente:</span><span class="resguardo-value">'+(p.clienteNombre||'—')+'</span></div>';
+  html+='<div class="resguardo-row"><span class="resguardo-label">Teléfono:</span><span class="resguardo-value">'+(p.clienteTel||'—')+'</span></div>';
+  if(p.fechaEntrega){
+    html+='<div class="resguardo-row"><span class="resguardo-label">Entrega '+(p.fechaTipo==='fija'?'(FIJA)':'(aprox.)')+':</span><span class="resguardo-value">'+formatDate(p.fechaEntrega)+'</span></div>';
+  }
+  html+='<div class="resguardo-row"><span class="resguardo-label">Sección:</span><span class="resguardo-value">'+(SECS[p.seccion]||p.seccion||'—')+'</span></div>';
+  html+='<div class="resguardo-row"><span class="resguardo-label">Atendido por:</span><span class="resguardo-value">'+(p.operario||'—')+'</span></div>';
+  
+  // Descripción
+  html+='<div class="resguardo-titulo">Descripción del trabajo</div>';
+  html+='<div class="resguardo-desc">'+(p.descripcion||'—')+'</div>';
+  
+  if(p.notas){
+    html+='<div style="font-size:10px;color:#666;margin-top:6px"><strong>Notas:</strong> '+p.notas+'</div>';
+  }
+  
+  // Totales
+  html+='<div class="resguardo-totales">';
+  html+='<div class="resguardo-total-row"><span>Total:</span><span>'+(p.total||0).toFixed(2)+' €</span></div>';
+  html+='<div class="resguardo-total-row"><span>Señal entregada:</span><span>'+(p.senal||0).toFixed(2)+' €</span></div>';
+  html+='<div class="resguardo-total-row big"><span>PENDIENTE:</span><span>'+pendiente.toFixed(2)+' €</span></div>';
+  html+='</div>';
+  
+  // Condiciones
+  if(p.condiciones){
+    html+='<div class="resguardo-condiciones"><strong>Condiciones:</strong> '+p.condiciones+'</div>';
+  }
+  
+  // Firma
+  html+='<div class="resguardo-firma">';
+  html+='<div class="resguardo-firma-label">Firma del cliente</div>';
+  html+='<div class="resguardo-firma-line"></div>';
+  html+='</div>';
+  
+  // Footer
+  html+='<div class="resguardo-footer">';
+  html+='Conserve este resguardo para recoger su pedido<br>';
+  html+='Gracias por confiar en Print & Copy';
+  html+='</div>';
+  
+  html+='</div>';
+  
+  document.getElementById('resguardo-content').innerHTML=html;
+  document.getElementById('resguardo-overlay').classList.add('open');
+}
+
+function cerrarResguardo(){
+  document.getElementById('resguardo-overlay').classList.remove('open');
+}
+
+function imprimirPedido(id){
+  var p=pedidos.find(function(x){return x.id===id;});
+  if(!p){alert('Pedido no encontrado');return;}
+  generarResguardo(p);
+}
 
 function resetForm(){
   ['f-nombre','f-tel','f-email','f-desc','f-notas','f-total','f-senal','f-fecha-entrega','search-client'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
@@ -2322,7 +2435,13 @@ function nvCrearPedido(){
       });
       Promise.all(proms).then(function(nums){
         closeModal('modal-venta');cargarDatos();
-        alert('Pedidos creados: '+nums.join(', '));
+        // Guardar último pedido creado para imprimir
+        setTimeout(function(){
+          var ultimoPed=pedidos.find(function(p){return p.id===nums[0];});
+          if(ultimoPed && confirm('Pedidos creados: '+nums.join(', ')+'\n\n¿Imprimir resguardo?')){
+            generarResguardo(ultimoPed);
+          }
+        },500);
       });
     }
     
@@ -2402,5 +2521,17 @@ testConnection();
 cargarDatos();
 cargarPresupuestos();
 </script>
+
+<!-- Modal Resguardo -->
+<div class="resguardo-overlay" id="resguardo-overlay" onclick="if(event.target===this)cerrarResguardo()">
+  <div class="resguardo-container">
+    <div class="resguardo-actions">
+      <button class="btn btn-secondary" onclick="cerrarResguardo()">Cerrar</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+    <div class="resguardo-content" id="resguardo-content"></div>
+  </div>
+</div>
+
 </body>
 </html>
