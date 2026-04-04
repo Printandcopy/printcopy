@@ -527,6 +527,22 @@ textarea{resize:vertical;min-height:64px}
             <div class="field"><label>Operario</label><select id="nv-operario"><option>Marilia</option><option>Álvaro</option><option>Charo</option><option>Raúl</option><option>Bea</option></select></div>
           </div>
         </div>
+        <!-- Montaje / Instalación -->
+        <div class="card">
+          <div class="card-title">Montaje / Instalación</div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px">
+            <input type="checkbox" id="nv-montaje" onchange="nvToggleMontaje()" style="width:auto">
+            <span style="font-size:13px;font-weight:500">Incluye montaje o instalación fuera del local</span>
+          </label>
+          <div id="nv-montaje-fields" style="display:none">
+            <div class="form-grid">
+              <div class="field"><label>Dirección</label><input type="text" id="nv-montaje-dir" placeholder="Calle, número, ciudad..."></div>
+              <div class="field"><label>Fecha montaje</label><input type="date" id="nv-montaje-fecha"></div>
+              <div class="field"><label>Horario</label><input type="text" id="nv-montaje-hora" placeholder="Ej: mañanas, 10:00-12:00"></div>
+              <div class="field"><label>Notas montaje</label><textarea id="nv-montaje-notas" rows="2" placeholder="Accesos, contacto..."></textarea></div>
+            </div>
+          </div>
+        </div>
       </div>
       <!-- Panel derecho: Resumen -->
       <div class="venta-right">
@@ -540,12 +556,25 @@ textarea{resize:vertical;min-height:64px}
             <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;border-top:1px solid #eee;padding-top:8px"><span>Total</span><span id="nv-total" style="color:#185FA5">0,00 €</span></div>
           </div>
         </div>
+        <!-- Pago (para crear pedido directo) -->
+        <div class="card" id="nv-pago-card">
+          <div class="card-title">Pago</div>
+          <div class="form-grid">
+            <div class="field"><label>Señal (€)</label><input type="number" id="nv-senal" value="0" step="0.01" min="0" oninput="nvCalcPendiente()"></div>
+            <div class="field"><label style="color:#A32D2D;font-weight:600">Pendiente (€)</label><div id="nv-pendiente" style="font-size:16px;font-weight:700;color:#A32D2D;padding:7px 0">0,00 €</div></div>
+          </div>
+          <div class="radio-group" style="margin-top:8px">
+            <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="pagado"> Cobrado</label>
+            <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="senal"> Solo señal</label>
+            <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="pendiente" checked> Pendiente</label>
+          </div>
+        </div>
         <div id="nv-cross" class="card" style="display:none"><div class="card-title">💡 Cross-selling</div><div id="nv-cross-content"></div></div>
         <div class="card"><div class="card-title">Notas</div><textarea id="nv-notas" rows="2" placeholder="Observaciones..."></textarea></div>
         <div class="card">
           <div class="form-grid">
             <div class="field"><label>Validez días</label><input type="number" id="nv-validez" value="15" min="1"></div>
-            <div class="field"><label>Condición pago</label><select id="nv-pago"><option value="50_50">50% · 50%</option><option value="100_0">100% encargar</option><option value="0_100">100% recoger</option></select></div>
+            <div class="field"><label>Condición pago</label><select id="nv-condicion"><option value="50_50">50% · 50%</option><option value="100_0">100% encargar</option><option value="0_100">100% recoger</option><option value="factura30">Factura 30d</option><option value="factura60">Factura 60d</option></select></div>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
@@ -1529,10 +1558,25 @@ function nuevaVenta(){
   document.getElementById('nv-result').style.display='none';
   document.getElementById('nv-upsell').style.display='none';
   document.getElementById('nv-btn-add').style.display='none';
+  document.getElementById('nv-cross').style.display='none';
   document.getElementById('nv-fecha').value='';
+  document.getElementById('nv-ftipo').value='aprox';
+  document.getElementById('nv-operario').value='Marilia';
   document.getElementById('nv-notas').value='';
   document.getElementById('nv-dto').value='0';
   document.getElementById('nv-validez').value='15';
+  document.getElementById('nv-condicion').value='50_50';
+  // Pago
+  document.getElementById('nv-senal').value='0';
+  document.getElementById('nv-pendiente').textContent='0,00 €';
+  document.querySelectorAll('input[name="nv-pago-estado"]').forEach(function(r){r.checked=r.value==='pendiente';});
+  // Montaje
+  document.getElementById('nv-montaje').checked=false;
+  document.getElementById('nv-montaje-fields').style.display='none';
+  document.getElementById('nv-montaje-dir').value='';
+  document.getElementById('nv-montaje-fecha').value='';
+  document.getElementById('nv-montaje-hora').value='';
+  document.getElementById('nv-montaje-notas').value='';
   nvRenderLineas();
   document.getElementById('modal-venta').classList.add('open');
 }
@@ -1805,6 +1849,19 @@ function nvCalcTotales(){
   var total=cV2R2(sub*(1-dto/100));
   document.getElementById('nv-subtotal').textContent=cV2Fmt(sub);
   document.getElementById('nv-total').textContent=cV2Fmt(total);
+  nvCalcPendiente();
+}
+
+function nvCalcPendiente(){
+  var totalStr=document.getElementById('nv-total').textContent.replace(/[^0-9,]/g,'').replace(',','.');
+  var total=parseFloat(totalStr)||0;
+  var senal=parseFloat(document.getElementById('nv-senal').value)||0;
+  var pendiente=cV2R2(total-senal);
+  document.getElementById('nv-pendiente').textContent=cV2Fmt(pendiente);
+}
+
+function nvToggleMontaje(){
+  document.getElementById('nv-montaje-fields').style.display=document.getElementById('nv-montaje').checked?'block':'none';
 }
 
 function nvShowCross(cat){
@@ -1818,26 +1875,36 @@ function nvShowCross(cat){
 
 function nvGuardar(estado){
   var nombre=document.getElementById('nv-nombre').value.trim();
-  if(!nombre){alert('Nombre obligatorio');return;}
-  if(!nvLineas.length){alert('Añade al menos una línea');return;}
   var tel=document.getElementById('nv-tel').value.trim();
+  if(!nombre){alert('Nombre obligatorio');return;}
+  if(!tel){alert('Teléfono obligatorio');return;}
+  if(!nvLineas.length){alert('Añade al menos una línea');return;}
   var email=document.getElementById('nv-email').value.trim();
+  var sector=document.getElementById('nv-sector').value;
   var validez=parseInt(document.getElementById('nv-validez').value)||15;
   var hoy=new Date();
   var fechaExp=new Date(hoy.getTime()+validez*24*60*60*1000).toISOString().split('T')[0];
   var sub=nvLineas.reduce(function(s,l){return s+l.total;},0);
   var dto=parseFloat(document.getElementById('nv-dto').value)||0;
   var total=cV2R2(sub*(1-dto/100));
+  var condicion=document.getElementById('nv-condicion').value;
+  var incluyeMontaje=document.getElementById('nv-montaje').checked;
   
   sb.from('contador_global').select('valor').eq('tipo','presupuesto').single().then(function(r){
     var num=(r.data?r.data.valor:0)+1;
     var numero='PRES-'+String(num).padStart(6,'0');
-    var data={numero:numero,cliente_nombre:nombre,cliente_telefono:tel,cliente_email:email,subtotal:sub,descuento_pct:dto,total:total,validez_dias:validez,fecha_expiracion:fechaExp,estado:estado,enviado:estado==='enviado',notas:document.getElementById('nv-notas').value.trim()};
+    var data={numero:numero,cliente_nombre:nombre,cliente_telefono:tel,cliente_email:email,cliente_sector:sector,subtotal:sub,descuento_pct:dto,total:total,validez_dias:validez,fecha_expiracion:fechaExp,estado:estado,enviado:estado==='enviado',notas:document.getElementById('nv-notas').value.trim(),condicion_pago:condicion,incluye_montaje:incluyeMontaje};
+    if(incluyeMontaje){
+      data.direccion_montaje=document.getElementById('nv-montaje-dir').value.trim();
+      data.fecha_montaje=document.getElementById('nv-montaje-fecha').value||null;
+      data.horario_montaje=document.getElementById('nv-montaje-hora').value.trim();
+      data.notas_montaje=document.getElementById('nv-montaje-notas').value.trim();
+    }
     sb.from('contador_global').update({valor:num}).eq('tipo','presupuesto').then(function(){
       sb.from('presupuestos').insert([data]).select().then(function(r2){
         if(r2.error){alert('Error: '+r2.error.message);return;}
         var presId=r2.data[0].id;
-        var lineasDB=nvLineas.map(function(l,i){return{presupuesto_id:presId,seccion:l.sec,descripcion:l.desc,cantidad:1,precio_unitario:l.total,subtotal:l.total,orden:i};});
+        var lineasDB=nvLineas.map(function(l,i){return{presupuesto_id:presId,seccion:l.sec,descripcion:l.desc,cantidad:l.unidades||1,precio_unitario:l.total/(l.unidades||1),subtotal:l.total,orden:i};});
         sb.from('presupuesto_lineas').insert(lineasDB).then(function(){
           closeModal('modal-venta');cargarPresupuestos();
           alert('Cotización '+numero+' guardada');
@@ -1849,29 +1916,69 @@ function nvGuardar(estado){
 
 function nvCrearPedido(){
   var nombre=document.getElementById('nv-nombre').value.trim();
-  if(!nombre){alert('Nombre obligatorio');return;}
-  if(!nvLineas.length){alert('Añade al menos una línea');return;}
   var tel=document.getElementById('nv-tel').value.trim();
+  if(!nombre){alert('Nombre obligatorio');return;}
+  if(!tel){alert('Teléfono obligatorio');return;}
+  if(!nvLineas.length){alert('Añade al menos una línea');return;}
   var email=document.getElementById('nv-email').value.trim();
+  var sector=document.getElementById('nv-sector').value;
   var fecha=document.getElementById('nv-fecha').value;
+  var fechaTipo=document.getElementById('nv-ftipo').value;
   var operario=document.getElementById('nv-operario').value;
+  var condicion=document.getElementById('nv-condicion').value;
+  var senal=parseFloat(document.getElementById('nv-senal').value)||0;
+  var pagoEstado=document.querySelector('input[name="nv-pago-estado"]:checked').value;
+  var incluyeMontaje=document.getElementById('nv-montaje').checked;
+  var sub=nvLineas.reduce(function(s,l){return s+l.total;},0);
+  var dto=parseFloat(document.getElementById('nv-dto').value)||0;
+  var totalGlobal=cV2R2(sub*(1-dto/100));
+  
   if(!confirm('¿Crear '+nvLineas.length+' pedido(s)?'))return;
   
   var cliente=clientes.find(function(c){return c.nombre.toLowerCase()===nombre.toLowerCase();});
   
   function crearPedidos(clienteId){
     var combinadoId=null;
-    var totalGlobal=nvLineas.reduce(function(s,l){return s+l.total;},0);
     
     function hacerPedidos(){
-      var proms=nvLineas.map(function(lin){
+      var proms=nvLineas.map(function(lin,idx){
         return new Promise(function(res){
           var sec=lin.sec;
           sb.from('contadores').select('valor').eq('seccion',sec).single().then(function(r){
             var nv=(r.data?r.data.valor:0)+1;
             sb.from('contadores').update({valor:nv}).eq('seccion',sec).then(function(){
               var numPed=sec+'-'+String(nv).padStart(4,'0');
-              var ped={id:numPed,cliente_id:clienteId,cliente_nombre:nombre,cliente_tel:tel,cliente_email:email,seccion:sec,operario:operario,fecha_creacion:new Date().toISOString(),fecha_entrega:fecha||null,fecha_tipo:'aprox',descripcion:lin.desc,total:lin.total,senal:0,pago:'pendiente',condiciones:COND_STD,fase:0,combinado_id:combinadoId};
+              // Repartir señal proporcionalmente
+              var proporcion=lin.total/totalGlobal;
+              var senalLinea=cV2R2(senal*proporcion);
+              var ped={
+                id:numPed,
+                cliente_id:clienteId,
+                cliente_nombre:nombre,
+                cliente_tel:tel,
+                cliente_email:email,
+                seccion:sec,
+                operario:operario,
+                fecha_creacion:new Date().toISOString(),
+                fecha_entrega:fecha||null,
+                fecha_tipo:fechaTipo,
+                descripcion:lin.desc,
+                notas:document.getElementById('nv-notas').value.trim(),
+                total:lin.total,
+                senal:senalLinea,
+                pago:pagoEstado,
+                condiciones:condicion,
+                fase:0,
+                combinado_id:combinadoId,
+                incluye_montaje:incluyeMontaje,
+                usuario_creador:currentUser
+              };
+              if(incluyeMontaje){
+                ped.direccion_montaje=document.getElementById('nv-montaje-dir').value.trim();
+                ped.fecha_montaje=document.getElementById('nv-montaje-fecha').value||null;
+                ped.horario_montaje=document.getElementById('nv-montaje-hora').value.trim();
+                ped.notas_montaje=document.getElementById('nv-montaje-notas').value.trim();
+              }
               sb.from('pedidos').insert([ped]).then(function(){res(numPed);});
             });
           });
@@ -1897,8 +2004,8 @@ function nvCrearPedido(){
   
   if(cliente){crearPedidos(cliente.id);}
   else{
-    sb.from('clientes').insert([{nombre:nombre,telefono:tel,email:email,nivel:'nuevo',pago:'50_50'}]).select().then(function(r){
-      if(r.error){alert('Error');return;}
+    sb.from('clientes').insert([{nombre:nombre,telefono:tel,email:email,sector:sector,nivel:'nuevo',pago:'50_50'}]).select().then(function(r){
+      if(r.error){alert('Error al crear cliente');return;}
       clientes.push(r.data[0]);crearPedidos(r.data[0].id);
     });
   }
