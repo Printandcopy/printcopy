@@ -388,10 +388,19 @@ textarea{resize:vertical;min-height:64px}
       </div>
       <div class="card" id="c-opts-card" style="display:none"><div class="card-title" id="c-opts-title">Opciones</div><div id="c-opts-body"></div></div>
       <div class="card" id="c-extras-card" style="display:none"><div class="card-title">Extras opcionales</div><div id="c-extras-body" class="extras-grid"></div></div>
+      <!-- Multiplicador de unidades (para productos sin qty interno) -->
+      <div class="card" id="c-unidades-card" style="display:none">
+        <div class="card-title">Cantidad de unidades</div>
+        <div class="form-grid" style="grid-template-columns:1fr 2fr">
+          <div class="field"><label>Unidades</label><input type="number" id="c-unidades" value="1" min="1" oninput="cV2calc()" style="font-weight:700;font-size:15px"></div>
+          <div style="display:flex;align-items:end;font-size:12px;color:#888;padding-bottom:8px">Multiplica el precio base × unidades<br>(Ej: 3 X Banner iguales)</div>
+        </div>
+      </div>
       <div id="c-result-area" style="display:none">
         <div class="result-box">
-          <div class="result-row"><span class="result-label">Precio base</span><span class="result-val" id="c-r-base">—</span></div>
+          <div class="result-row"><span class="result-label">Precio unitario</span><span class="result-val" id="c-r-base">—</span></div>
           <div id="c-r-extras-rows"></div>
+          <div class="result-row" id="c-r-unidades-row" style="display:none"><span class="result-label">Unidades</span><span class="result-val" id="c-r-unidades-val">1</span></div>
           <div class="result-divider"></div>
           <div class="result-row"><span class="result-label">TOTAL SIN IVA</span><span class="result-val" id="c-r-siniva">—</span></div>
           <div class="result-row"><span class="result-label">TOTAL CON IVA (21%)</span><span class="result-main" id="c-r-coniva">—</span></div>
@@ -1186,6 +1195,7 @@ function resetForm(){
 var cV2Fmt=function(n){return n.toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';};
 var cV2R2=function(n){return Math.round(n*100)/100;};
 var cV2curCat=null;
+var cV2lastUnidades=1;
 var cV2dtoAplicado=false;
 
 function floorIdx(tiers,q){var idx=-1;for(var i=0;i<tiers.length;i++){if(q>=tiers[i])idx=i;}return idx;}
@@ -1219,7 +1229,7 @@ sellos:{name:"Sellos automáticos Colop",sinIva:false,fields:[{id:'modelo',label
 rotulacion:{name:"Rotulación (por m²)",sinIva:true,fields:[{id:'mat',label:'Material',type:'select',options:['PAPEL','LONA','VINILO','VINILO CON CORTE','NEONES','FIGURAS FRESADAS']},{id:'ancho',label:'Ancho (cm)',type:'number',min:1},{id:'alto',label:'Alto (cm)',type:'number',min:1}],extrasDef:[],extrasDyn:['soporte'],matData:{"PAPEL":{t:[[0,99,30]],e:[0.50,0,1.00,0,0]},"LONA":{t:[[0,99,42.50]],e:[0.50,15,0.90,12,0]},"VINILO":{t:[[0,99,72.50]],e:[0.50,12,0.95,10,0],hasSoporte:true},"VINILO CON CORTE":{t:[[0,99,87]],e:[0.50,12,0.95,10,0],hasSoporte:true},"NEONES":{t:[[0,0.10,1250],[0.10,0.15,1200],[0.15,0.20,1150],[0.20,0.25,1100],[0.25,0.30,1050],[0.30,0.35,1000],[0.35,0.40,950],[0.40,0.45,900],[0.45,0.50,850],[0.50,0.55,825],[0.55,0.60,800],[0.60,0.65,775],[0.65,0.70,750],[0.70,0.75,725],[0.75,0.80,700],[0.80,0.85,675],[0.85,0.90,650],[0.90,0.95,625],[0.95,1.00,600],[1.00,1.10,575],[1.10,1.15,550],[1.15,99,525]],e:[0.14,93,0.20,200,0]},"FIGURAS FRESADAS":{t:[[0,0.75,90],[0.75,99,80]],e:[0.50,30,1.00,25,20]}},
 onFieldChange:function(id){if(id==='mat'){var mat=cV2gv('mat'),hasSop=this.matData[mat]&&this.matData[mat].hasSoporte,sopLbl=document.querySelector('label[data-extralabel="soporte"]');if(sopLbl)sopLbl.style.display=hasSop?'flex':'none';}},
 calc:function(v,ex){var ancho=parseFloat(v.ancho)||0,alto=parseFloat(v.alto)||0;if(ancho<=0||alto<=0)return{error:'Introduce ancho y alto'};var sup=(ancho/100)*(alto/100),md=this.matData[v.mat];if(!md)return{error:'Material no encontrado'};var tarifa=md.t[md.t.length-1][2];for(var i=0;i<md.t.length;i++){if(sup>md.t[i][0]&&sup<=md.t[i][1]){tarifa=md.t[i][2];break;}}var extra=sup<=md.e[0]?md.e[1]:sup<=md.e[2]?md.e[3]:md.e[4],pvpVin=cV2R2(sup*tarifa+extra),sinIvaVin=cV2R2(pvpVin/1.21),er=[];if(ex&&ex.soporte){var sopSel=document.getElementById('cf-soporte');if(sopSel){var sopPm2=parseFloat(sopSel.value)||0;if(sopPm2>0){var sc=cV2R2(sopPm2*sup);er.push({label:'Soporte ('+sopPm2+'€/m²)',val:cV2Fmt(sc),amount:sc});}}}return{base:sinIvaVin,qty:1,extraRows:er};}},
-pegatinas:{name:"Pegatinas troqueladas",sinIva:true,fields:[{id:'pancho',label:'Ancho (cm)',type:'number',min:1},{id:'palto',label:'Alto (cm)',type:'number',min:1},{id:'qty',label:'Cantidad (uds)',type:'number',min:50}],extrasDef:[],pegTable:[[15,0.30,0.18,0.12,0.08,0.07,0.05],[30,0.35,0.20,0.14,0.09,0.08,0.06],[40,0.40,0.25,0.18,0.12,0.09,0.07],[50,0.45,0.30,0.20,0.13,0.10,0.08],[60,0.50,0.35,0.22,0.15,0.11,0.09],[70,0.55,0.40,0.24,0.17,0.12,0.10],[80,0.60,0.45,0.26,0.19,0.13,0.11],[90,0.65,0.50,0.28,0.20,0.15,0.12],[100,0.70,0.55,0.33,0.25,0.18,0.15],[125,0.80,0.65,0.43,0.35,0.28,0.25],[150,0.90,0.75,0.53,0.45,0.38,0.35]],pegTiers:[50,100,250,500,1000,2000],calc:function(v){var a=parseFloat(v.pancho)||0,b=parseFloat(v.palto)||0,q=parseInt(v.qty)||0;if(a<=0||b<=0)return{error:'Introduce ancho y alto'};var cm2=a*b;if(q<50)return{error:'Mínimo 50 uds'};if(cm2>150)return{error:'Máximo 150 cm²'};var fila=this.pegTable[this.pegTable.length-1];for(var i=0;i<this.pegTable.length;i++){if(cm2<=this.pegTable[i][0]){fila=this.pegTable[i];break;}}var col=0;for(var j=0;j<this.pegTiers.length;j++){if(q>=this.pegTiers[j])col=j;}return{base:cV2R2(fila[col+1]*q),qty:q,pu:fila[col+1],tierQty:this.pegTiers[col],tiers:this.pegTiers};}},
+pegatinas:{name:"Pegatinas troqueladas",sinIva:true,fields:[{id:'pancho',label:'Ancho (cm)',type:'number',min:1},{id:'palto',label:'Alto (cm)',type:'number',min:1},{id:'qty',label:'Cantidad (uds)',type:'number',min:50}],extrasDef:[{key:'corte',label:'Corte individual',price:10}],pegTable:[[15,0.30,0.18,0.12,0.08,0.07,0.05],[30,0.35,0.20,0.14,0.09,0.08,0.06],[40,0.40,0.25,0.18,0.12,0.09,0.07],[50,0.45,0.30,0.20,0.13,0.10,0.08],[60,0.50,0.35,0.22,0.15,0.11,0.09],[70,0.55,0.40,0.24,0.17,0.12,0.10],[80,0.60,0.45,0.26,0.19,0.13,0.11],[90,0.65,0.50,0.28,0.20,0.15,0.12],[100,0.70,0.55,0.33,0.25,0.18,0.15],[125,0.80,0.65,0.43,0.35,0.28,0.25],[150,0.90,0.75,0.53,0.45,0.38,0.35]],pegTiers:[50,100,250,500,1000,2000],calc:function(v,ex){var a=parseFloat(v.pancho)||0,b=parseFloat(v.palto)||0,q=parseInt(v.qty)||0;if(a<=0||b<=0)return{error:'Introduce ancho y alto'};var cm2=a*b;if(q<50)return{error:'Mínimo 50 uds'};if(cm2>150)return{error:'Máximo 150 cm²'};var fila=this.pegTable[this.pegTable.length-1];for(var i=0;i<this.pegTable.length;i++){if(cm2<=this.pegTable[i][0]){fila=this.pegTable[i];break;}}var col=0;for(var j=0;j<this.pegTiers.length;j++){if(q>=this.pegTiers[j])col=j;}var base=cV2R2(fila[col+1]*q);var er=[];if(ex&&ex.corte){er.push({label:'Corte individual',val:'+10,00 €',amount:10});}return{base:base,qty:q,pu:fila[col+1],tierQty:this.pegTiers[col],tiers:this.pegTiers,extraRows:er};}},
 textil:{name:"Textil",sinIva:false,fields:[],extrasDef:[],prendaHTML:'<optgroup label="── Moda / Casual ──"><option value="CAMISETAS">Camisetas</option><option value="SUDADERAS">Sudaderas</option><option value="SUDADERAS C/CAPUCHA">Sudaderas c/capucha</option><option value="POLOS">Polos</option><option value="PETOS">Petos</option><option value="TOTEBAG">Totebag</option></optgroup><optgroup label="── Especial Trabajo ──"><option value="CHALECO THUNDER">Chaleco Thunder</option><option value="PANTALON THUNDER">Pantalón Thunder</option><option value="PARKA TRAFFIC">Parka Traffic</option><option value="BUZO KEVIN">Buzo Kevin</option></optgroup><optgroup label="── Especial Fiestas ──"><option value="PETOS FIESTA">Petos Fiesta</option><option value="MOCHILA">Mochila</option><option value="PANUELO">Pañuelo</option><option value="GORRAS">Gorras</option></optgroup><optgroup label="── Especial Hostelería ──"><option value="DELANTAL MINI">Delantal Mini</option><option value="DELANTAL CLASSIC">Delantal Classic</option><option value="DELANTAL BENOIT">Delantal Benoit</option><option value="CAMISA AIFOS">Camisa Aifos</option></optgroup><optgroup label="── Especial Limpieza ──"><option value="PANACEA">Panacea</option><option value="ARZAK">Arzak</option><option value="VADEMECUM">Vademecum</option><option value="VACCINE">Vaccine</option></optgroup>',
 prendas:{"CAMISETAS":[[1,1,17.95],[2,5,14.95],[6,10,13.95],[11,20,12.95],[21,9999,10.95]],"SUDADERAS":[[1,1,24.95],[2,5,22.95],[6,10,21.95],[11,20,20.95],[21,9999,18.95]],"SUDADERAS C/CAPUCHA":[[1,1,27.95],[2,5,25.95],[6,10,24.95],[11,20,23.95],[21,9999,21.95]],"POLOS":[[1,1,20.95],[2,5,18.95],[6,10,17.95],[11,20,16.95],[21,9999,14.95]],"PETOS":[[1,1,25.00],[2,5,23.00],[6,10,22.00],[11,20,20.95],[21,9999,19.95]],"TOTEBAG":[[1,1,17.95],[2,5,13.95],[6,10,12.95],[11,20,10.95],[21,9999,9.95]],"CHALECO THUNDER":[[1,1,29.95],[2,5,26.95],[6,10,25.95],[11,20,24.50],[21,9999,22.95]],"PANTALON THUNDER":[[1,1,25.95],[2,5,22.95],[6,10,21.95],[11,20,20.95],[21,9999,18.95]],"PARKA TRAFFIC":[[1,1,54.90],[2,5,51.90],[6,10,48.90],[11,20,45.90],[21,9999,42.90]],"BUZO KEVIN":[[1,1,31.95],[2,5,27.95],[6,10,26.95],[11,20,25.95],[21,9999,23.95]],"PETOS FIESTA":[[1,1,25.00],[2,5,23.00],[6,10,22.00],[11,20,20.95],[21,9999,19.95]],"MOCHILA":[[1,1,15.95],[2,5,11.95],[6,10,10.95],[11,20,9.95],[21,9999,7.95]],"PANUELO":[[1,1,13.50],[2,5,10.50],[6,10,9.50],[11,20,8.50],[21,9999,6.50]],"GORRAS":[[1,1,13.95],[2,5,9.95],[6,10,7.95],[11,20,6.50],[21,9999,4.95]],"DELANTAL MINI":[[1,1,17.95],[2,5,14.95],[6,10,13.95],[11,20,12.95],[21,9999,10.95]],"DELANTAL CLASSIC":[[1,1,18.95],[2,5,15.95],[6,10,14.95],[11,20,13.95],[21,9999,11.95]],"DELANTAL BENOIT":[[1,1,19.95],[2,5,16.95],[6,10,15.95],[11,20,14.95],[21,9999,12.95]],"CAMISA AIFOS":[[1,1,24.95],[2,5,21.95],[6,10,20.95],[11,20,19.95],[21,9999,17.95]],"PANACEA":[[1,1,23.95],[2,5,21.95],[6,10,20.95],[11,20,19.95],[21,9999,17.95]],"ARZAK":[[1,1,20.95],[2,5,18.95],[6,10,17.95],[11,20,16.95],[21,9999,14.95]],"VADEMECUM":[[1,1,23.95],[2,5,21.95],[6,10,20.95],[11,20,19.95],[21,9999,17.95]],"VACCINE":[[1,1,26.95],[2,5,24.95],[6,10,23.95],[11,20,22.95],[21,9999,20.95]]},
 extraEst:{pequena:2.00,mediana:3.50,grande:4.50},customBuild:true,
@@ -1292,10 +1302,13 @@ function cV2catChange(){
   document.getElementById('c-opts-body').innerHTML='';
   document.getElementById('c-extras-card').style.display='none';
   document.getElementById('c-extras-body').innerHTML='';
+  document.getElementById('c-unidades-card').style.display='none';
+  document.getElementById('c-unidades').value='1';
   document.getElementById('c-result-area').style.display='none';
   document.getElementById('c-r-extras-rows').innerHTML='';
   document.getElementById('c-r-unitario').textContent='';
   document.getElementById('c-r-tramo').style.display='none';
+  document.getElementById('c-r-unidades-row').style.display='none';
   var pcEl=document.getElementById('c-precio-cerrado');if(pcEl)pcEl.style.display='none';
   document.getElementById('c-sug-content').innerHTML='<div class="sug-empty">Selecciona opciones para ver sugerencias</div>';
   if(!cV2curCat)return;
@@ -1312,6 +1325,11 @@ function cV2catChange(){
   });
   html+='</div><div id="field-warn"></div>';
   document.getElementById('c-opts-body').innerHTML=html;
+  // Mostrar campo unidades si el producto NO tiene un campo qty interno
+  var tieneQtyInterno=p.fields.some(function(f){return f.id==='qty';});
+  if(!tieneQtyInterno&&!p.customBuild){
+    document.getElementById('c-unidades-card').style.display='block';
+  }
   var extHtml='';
   if(p.extrasDef)p.extrasDef.forEach(function(e){extHtml+='<label class="extra-toggle"><input type="checkbox" data-extra="'+e.key+'" data-price="'+e.price+'" onchange="this.parentNode.classList.toggle(\'on\',this.checked);cV2calc()"> '+e.label+' (+'+cV2Fmt(e.price)+')</label>';});
   if(p.extrasDyn)p.extrasDyn.forEach(function(k){
@@ -1342,6 +1360,14 @@ function cV2calc(){
     return;
   }
   if(warn)warn.innerHTML='';
+  
+  // Obtener multiplicador de unidades (si no tiene qty interno)
+  var tieneQtyInterno=p.fields&&p.fields.some(function(f){return f.id==='qty';});
+  var unidades=1;
+  if(!tieneQtyInterno&&!p.customBuild){
+    unidades=parseInt(document.getElementById('c-unidades').value)||1;
+  }
+  
   var fixedExtras=0,fixedRows=[];
   document.querySelectorAll('#c-extras-body input[type=checkbox]:checked').forEach(function(cb){
     var price=parseFloat(cb.dataset.price);
@@ -1352,17 +1378,31 @@ function cV2calc(){
   });
   var dynRows=res.extraRows||[],dynExtras=0;
   dynRows.forEach(function(r){dynExtras+=r.amount||0;});
-  var base=res.base,totalExtras=fixedExtras+dynExtras;
+  var baseUnit=res.base,totalExtrasUnit=fixedExtras+dynExtras;
   var allRows=dynRows.map(function(r){return{label:r.label,val:r.val};}).concat(fixedRows);
+  
+  // Calcular totales multiplicando por unidades
+  var sinIvaUnit,conIvaUnit;
+  if(p.sinIva){sinIvaUnit=cV2R2(baseUnit+totalExtrasUnit);conIvaUnit=cV2R2(sinIvaUnit*1.21);}
+  else{conIvaUnit=cV2R2(baseUnit+totalExtrasUnit);sinIvaUnit=cV2R2(conIvaUnit/1.21);}
+  
+  var sinIva=cV2R2(sinIvaUnit*unidades);
+  var conIva=cV2R2(conIvaUnit*unidades);
+  
   document.getElementById('c-result-area').style.display='block';
-  // Mostrar botón carrito
   var btnC=document.getElementById('btn-add-carrito');
   if(btnC)btnC.style.display='block';
-  document.getElementById('c-r-base').textContent=cV2Fmt(base);
+  document.getElementById('c-r-base').textContent=cV2Fmt(conIvaUnit);
   document.getElementById('c-r-extras-rows').innerHTML=allRows.map(function(r){return'<div class="result-row"><span class="result-label">+ '+r.label+'</span><span class="result-val">'+r.val+'</span></div>';}).join('');
-  var sinIva,conIva;
-  if(p.sinIva){sinIva=cV2R2(base+totalExtras);conIva=cV2R2(sinIva*1.21);}
-  else{conIva=cV2R2(base+totalExtras);sinIva=cV2R2(conIva/1.21);}
+  
+  // Mostrar fila de unidades si >1
+  if(unidades>1){
+    document.getElementById('c-r-unidades-row').style.display='flex';
+    document.getElementById('c-r-unidades-val').textContent='×'+unidades;
+  }else{
+    document.getElementById('c-r-unidades-row').style.display='none';
+  }
+  
   document.getElementById('c-r-siniva').textContent=cV2Fmt(sinIva);
   document.getElementById('c-r-coniva').textContent=cV2Fmt(conIva);
   document.getElementById('c-r-unitario').textContent=res.qty>1&&res.pu?'Precio unitario: '+cV2Fmt(res.pu)+(p.sinIva?' sin IVA':' con IVA')+(res.unitLabel?' '+res.unitLabel:'')+' ('+res.qty+' uds)':'';
@@ -1375,6 +1415,8 @@ function cV2calc(){
     if(sugerido>conIva){pcEl.style.display='block';pcEl.textContent='💡 Precio cerrado sugerido: '+sugerido.toLocaleString('es-ES',{minimumFractionDigits:0,maximumFractionDigits:0})+'€';}
     else pcEl.style.display='none';
   }
+  // Guardar unidades para el carrito
+  cV2lastUnidades=unidades;
   cV2renderSug(res);
 }
 
@@ -1437,6 +1479,7 @@ function cV2Limpiar(){
   document.getElementById('c-cat').value='';
   var btnC=document.getElementById('btn-add-carrito');
   if(btnC)btnC.style.display='none';
+  cV2lastUnidades=1;
   cV2catChange();
 }
 
@@ -1449,6 +1492,8 @@ function addToCarrito(){
   var p=P[cV2curCat];
   var desc=p.name;
   var detalles=[];
+  var unidades=cV2lastUnidades||1;
+  
   if(!p.customBuild){
     p.fields.forEach(function(f){var el=document.getElementById('cf-'+f.id);if(el&&el.value)detalles.push(f.label+': '+el.value);});
   } else {
@@ -1460,12 +1505,16 @@ function addToCarrito(){
     var lbl=cb.parentNode.textContent.trim().replace(/\(.*\)$/,'').trim();
     detalles.push(lbl);
   });
+  
+  // Añadir unidades al detalle si >1
+  if(unidades>1)desc='['+unidades+' uds] '+desc;
   if(detalles.length)desc+=' — '+detalles.join(' · ');
+  
   var totalEl=document.getElementById('c-r-coniva');
   var totalStr=totalEl?totalEl.textContent.replace(/[^0-9,]/g,'').replace(',','.'):0;
   var total=parseFloat(totalStr)||0;
   var sec=CAT_TO_SEC[cV2curCat]||'XR';
-  carrito.push({desc:desc,total:total,sec:sec,cat:cV2curCat});
+  carrito.push({desc:desc,total:total,sec:sec,cat:cV2curCat,unidades:unidades});
   renderCarrito();
   cV2Limpiar();
 }
