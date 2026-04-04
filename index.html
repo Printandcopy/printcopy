@@ -280,6 +280,7 @@ textarea{resize:vertical;min-height:64px}
         <option value="activas">Activas</option>
         <option value="all">Todas</option>
         <option value="nueva">Nuevas</option>
+        <option value="visita">🚗 Pend. visita</option>
         <option value="contactado">Contactadas</option>
         <option value="visitado">Visitadas</option>
         <option value="presupuestado">Presupuestadas</option>
@@ -294,7 +295,7 @@ textarea{resize:vertical;min-height:64px}
 
 <!-- Modal Nueva Solicitud -->
 <div class="modal-overlay" id="modal-solicitud">
-  <div class="modal" style="max-width:500px">
+  <div class="modal" style="max-width:520px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <h3 style="margin:0;font-size:16px">Nueva solicitud</h3>
       <button onclick="closeModal('modal-solicitud')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888">×</button>
@@ -311,6 +312,22 @@ textarea{resize:vertical;min-height:64px}
       <select id="sol-origen"><option value="telefono">Llamada telefónica</option><option value="tienda">Visita a tienda</option><option value="whatsapp">WhatsApp</option><option value="email">Email</option><option value="web">Web / Redes</option><option value="recomendacion">Recomendación</option></select>
     </div>
     <div class="field" style="margin-bottom:12px"><label>¿Qué necesita? *</label><textarea id="sol-necesita" rows="3" placeholder="Descripción de lo que busca el cliente..."></textarea></div>
+    <!-- Requiere visita -->
+    <div class="card" style="background:#f9f9f7;padding:12px 14px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px">
+        <input type="checkbox" id="sol-requiere-visita" onchange="solToggleVisita()" style="width:auto">
+        <span style="font-size:13px;font-weight:600">Requiere visita para presupuestar</span>
+      </label>
+      <div id="sol-visita-fields" style="display:none">
+        <div class="form-grid">
+          <div class="field"><label>Dirección visita</label><input type="text" id="sol-visita-dir" placeholder="Calle, número, ciudad..."></div>
+          <div class="field"><label>Fecha visita</label><input type="date" id="sol-visita-fecha"></div>
+          <div class="field"><label>Horario preferido</label><input type="text" id="sol-visita-hora" placeholder="Ej: mañanas, 10:00-12:00"></div>
+          <div class="field"><label>Contacto en sitio</label><input type="text" id="sol-visita-contacto" placeholder="Nombre y teléfono"></div>
+        </div>
+        <div class="field" style="margin-top:8px"><label>Notas visita</label><textarea id="sol-visita-notas" rows="2" placeholder="Indicaciones de acceso, qué medir..."></textarea></div>
+      </div>
+    </div>
     <div class="form-grid" style="margin-bottom:12px">
       <div class="field"><label>Fecha seguimiento</label><input type="date" id="sol-seguimiento"></div>
       <div class="field"><label>Prioridad</label>
@@ -1661,26 +1678,33 @@ function renderSolicitudes(){
   var filtro=document.getElementById('sol-filtro').value;
   var list=solicitudes;
   if(filtro==='activas')list=list.filter(function(s){return s.estado!=='presupuestado'&&s.estado!=='descartada';});
+  else if(filtro==='visita')list=list.filter(function(s){return s.requiere_visita&&s.estado!=='presupuestado'&&s.estado!=='descartada';});
   else if(filtro!=='all')list=list.filter(function(s){return s.estado===filtro;});
   
   var nueva=solicitudes.filter(function(s){return s.estado==='nueva';}).length;
-  var contactado=solicitudes.filter(function(s){return s.estado==='contactado';}).length;
+  var pendVisita=solicitudes.filter(function(s){return s.requiere_visita&&s.estado!=='visitado'&&s.estado!=='presupuestado'&&s.estado!=='descartada';}).length;
   var visitado=solicitudes.filter(function(s){return s.estado==='visitado';}).length;
   var hoy=new Date().toISOString().split('T')[0];
   var seguimientoHoy=solicitudes.filter(function(s){return s.fecha_seguimiento===hoy&&s.estado!=='presupuestado'&&s.estado!=='descartada';}).length;
   
-  document.getElementById('sol-stats').innerHTML='<div class="stat-card"><div class="sv" style="color:#185FA5">'+nueva+'</div><div class="sl">Nuevas</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+contactado+'</div><div class="sl">Contactadas</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+visitado+'</div><div class="sl">Visitadas</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+seguimientoHoy+'</div><div class="sl">Seguimiento hoy</div></div>';
+  document.getElementById('sol-stats').innerHTML='<div class="stat-card"><div class="sv" style="color:#185FA5">'+nueva+'</div><div class="sl">Nuevas</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+pendVisita+'</div><div class="sl">Pend. visita</div></div><div class="stat-card"><div class="sv" style="color:#3B6D11">'+visitado+'</div><div class="sl">Visitadas</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+seguimientoHoy+'</div><div class="sl">Seguimiento hoy</div></div>';
   
   if(!list.length){document.getElementById('sol-list').innerHTML='<div class="empty-state">Sin solicitudes. Haz clic en "+ Nueva solicitud" para crear una.</div>';return;}
   
   document.getElementById('sol-list').innerHTML=list.map(function(s){
     var esUrgente=s.prioridad==='alta';
+    var reqVisita=s.requiere_visita;
     var seguimiento=s.fecha_seguimiento?'<span style="font-size:11px;color:'+(s.fecha_seguimiento<=hoy?'#A32D2D':'#888')+'">📅 '+formatDate(s.fecha_seguimiento)+'</span>':'';
-    return '<div class="sol-card'+(esUrgente?' urgente':'')+'" onclick="verSolicitud(\''+s.id+'\')"><div style="display:flex;justify-content:space-between;align-items:start;gap:10px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px"><strong style="font-size:14px">'+s.nombre+'</strong><span class="sol-estado sol-'+s.estado+'">'+SOL_ESTADOS[s.estado]+'</span>'+(esUrgente?'<span style="color:#A32D2D;font-size:11px;font-weight:600">⚡ Urgente</span>':'')+'</div><div style="font-size:12px;color:#666;margin-bottom:4px">'+(s.telefono||'')+(s.email?' · '+s.email:'')+'</div><div style="font-size:12px;color:#888;line-height:1.4">'+truncate(s.necesita,80)+'</div></div><div style="text-align:right;flex-shrink:0">'+seguimiento+'<div style="font-size:10px;color:#aaa;margin-top:4px">'+formatDateTime(s.created_at)+'</div></div></div></div>';
+    var visitaInfo=reqVisita&&s.visita_fecha?'<span style="font-size:11px;color:#534AB7">🚗 '+formatDate(s.visita_fecha)+'</span>':'';
+    return '<div class="sol-card'+(esUrgente?' urgente':'')+'" onclick="verSolicitud(\''+s.id+'\')"><div style="display:flex;justify-content:space-between;align-items:start;gap:10px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px"><strong style="font-size:14px">'+s.nombre+'</strong><span class="sol-estado sol-'+s.estado+'">'+SOL_ESTADOS[s.estado]+'</span>'+(reqVisita?'<span style="background:#f3e8fe;color:#534AB7;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:600">🚗 Visita</span>':'')+(esUrgente?'<span style="color:#A32D2D;font-size:11px;font-weight:600">⚡ Urgente</span>':'')+'</div><div style="font-size:12px;color:#666;margin-bottom:4px">'+(s.telefono||'')+(s.email?' · '+s.email:'')+'</div><div style="font-size:12px;color:#888;line-height:1.4">'+truncate(s.necesita,80)+'</div></div><div style="text-align:right;flex-shrink:0">'+visitaInfo+(visitaInfo&&seguimiento?'<br>':'')+seguimiento+'<div style="font-size:10px;color:#aaa;margin-top:4px">'+formatDateTime(s.created_at)+'</div></div></div></div>';
   }).join('');
 }
 
 function truncate(str,len){if(!str)return'';return str.length>len?str.substring(0,len)+'...':str;}
+
+function solToggleVisita(){
+  document.getElementById('sol-visita-fields').style.display=document.getElementById('sol-requiere-visita').checked?'block':'none';
+}
 
 function nuevaSolicitud(){
   document.getElementById('sol-nombre').value='';
@@ -1689,6 +1713,13 @@ function nuevaSolicitud(){
   document.getElementById('sol-sector').value='';
   document.getElementById('sol-origen').value='telefono';
   document.getElementById('sol-necesita').value='';
+  document.getElementById('sol-requiere-visita').checked=false;
+  document.getElementById('sol-visita-fields').style.display='none';
+  document.getElementById('sol-visita-dir').value='';
+  document.getElementById('sol-visita-fecha').value='';
+  document.getElementById('sol-visita-hora').value='';
+  document.getElementById('sol-visita-contacto').value='';
+  document.getElementById('sol-visita-notas').value='';
   document.getElementById('sol-seguimiento').value='';
   document.getElementById('sol-prioridad').value='normal';
   document.getElementById('sol-notas').value='';
@@ -1703,6 +1734,8 @@ function guardarSolicitud(){
   if(!tel){alert('Teléfono obligatorio');return;}
   if(!necesita){alert('Describe qué necesita el cliente');return;}
   
+  var requiereVisita=document.getElementById('sol-requiere-visita').checked;
+  
   var data={
     nombre:nombre,
     telefono:tel,
@@ -1710,6 +1743,12 @@ function guardarSolicitud(){
     sector:document.getElementById('sol-sector').value,
     origen:document.getElementById('sol-origen').value,
     necesita:necesita,
+    requiere_visita:requiereVisita,
+    visita_direccion:requiereVisita?document.getElementById('sol-visita-dir').value.trim():null,
+    visita_fecha:requiereVisita?(document.getElementById('sol-visita-fecha').value||null):null,
+    visita_horario:requiereVisita?document.getElementById('sol-visita-hora').value.trim():null,
+    visita_contacto:requiereVisita?document.getElementById('sol-visita-contacto').value.trim():null,
+    visita_notas:requiereVisita?document.getElementById('sol-visita-notas').value.trim():null,
     fecha_seguimiento:document.getElementById('sol-seguimiento').value||null,
     prioridad:document.getElementById('sol-prioridad').value,
     notas:document.getElementById('sol-notas').value.trim(),
@@ -1734,10 +1773,24 @@ function verSolicitud(id){
   html+='<div><span style="font-size:11px;color:#888">Teléfono</span><div style="font-weight:500">'+(s.telefono||'—')+'</div></div>';
   html+='<div><span style="font-size:11px;color:#888">Email</span><div>'+(s.email||'—')+'</div></div>';
   html+='<div><span style="font-size:11px;color:#888">Sector</span><div>'+(SECTORES[s.sector]||s.sector||'—')+'</div></div>';
-  html+='<div><span style="font-size:11px;color:#888">Origen</span><div>'+s.origen+'</div></div>';
+  html+='<div><span style="font-size:11px;color:#888">Origen</span><div>'+(s.origen||'—')+'</div></div>';
   html+='</div>';
   
   html+='<div style="background:#f9f9f7;border-radius:6px;padding:10px 12px;margin-bottom:12px"><div style="font-size:11px;color:#888;margin-bottom:4px">¿Qué necesita?</div><div style="font-size:13px;line-height:1.5">'+s.necesita+'</div></div>';
+  
+  // Datos de visita
+  if(s.requiere_visita){
+    html+='<div style="background:#f3e8fe;border-radius:6px;padding:10px 12px;margin-bottom:12px;border-left:3px solid #534AB7">';
+    html+='<div style="font-size:11px;color:#534AB7;font-weight:600;margin-bottom:6px">🚗 REQUIERE VISITA</div>';
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">';
+    if(s.visita_direccion)html+='<div><span style="color:#888">Dirección:</span> '+s.visita_direccion+'</div>';
+    if(s.visita_fecha)html+='<div><span style="color:#888">Fecha:</span> '+formatDate(s.visita_fecha)+'</div>';
+    if(s.visita_horario)html+='<div><span style="color:#888">Horario:</span> '+s.visita_horario+'</div>';
+    if(s.visita_contacto)html+='<div><span style="color:#888">Contacto:</span> '+s.visita_contacto+'</div>';
+    html+='</div>';
+    if(s.visita_notas)html+='<div style="margin-top:6px;font-size:12px;color:#4a1a7a">'+s.visita_notas+'</div>';
+    html+='</div>';
+  }
   
   if(s.notas)html+='<div style="background:#E6F1FB;border-radius:6px;padding:10px 12px;margin-bottom:12px"><div style="font-size:11px;color:#185FA5;margin-bottom:4px">Notas internas</div><div style="font-size:12px;color:#1E3A5F">'+s.notas+'</div></div>';
   
@@ -1748,14 +1801,20 @@ function verSolicitud(id){
   
   document.getElementById('ver-sol-body').innerHTML=html;
   
-  // Acciones según estado
+  // Acciones según estado y si requiere visita
   var btns='';
   if(s.estado==='nueva'){
     btns='<button class="btn btn-secondary" onclick="cambiarEstadoSol(\'contactado\')">📞 Marcar contactado</button>';
-    btns+='<button class="btn btn-primary" onclick="convertirSolAVenta()">📋 Crear presupuesto</button>';
+    if(s.requiere_visita){
+      btns+='<button class="btn btn-secondary" onclick="cambiarEstadoSol(\'visitado\')" style="background:#f3e8fe;border-color:#534AB7;color:#534AB7">🚗 Marcar visitado</button>';
+    }
+    if(!s.requiere_visita)btns+='<button class="btn btn-primary" onclick="convertirSolAVenta()">📋 Crear presupuesto</button>';
   }else if(s.estado==='contactado'){
-    btns='<button class="btn btn-secondary" onclick="cambiarEstadoSol(\'visitado\')">🚗 Marcar visitado</button>';
-    btns+='<button class="btn btn-primary" onclick="convertirSolAVenta()">📋 Crear presupuesto</button>';
+    if(s.requiere_visita){
+      btns='<button class="btn btn-secondary" onclick="cambiarEstadoSol(\'visitado\')" style="background:#f3e8fe;border-color:#534AB7;color:#534AB7">🚗 Marcar visitado</button>';
+    }else{
+      btns='<button class="btn btn-primary" onclick="convertirSolAVenta()">📋 Crear presupuesto</button>';
+    }
   }else if(s.estado==='visitado'){
     btns='<button class="btn btn-primary" onclick="convertirSolAVenta()">📋 Crear presupuesto</button>';
   }
