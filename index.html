@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Print & Copy v41</title>
+<title>Print & Copy v42</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
@@ -299,6 +299,7 @@ textarea{resize:vertical;min-height:64px}
       <button class="nav-tab" onclick="showScreen('ventas',this)">Ventas</button>
       <button class="nav-tab" onclick="showScreen('taller',this)">Taller</button>
       <button class="nav-tab" onclick="showScreen('clientes',this)">Clientes</button>
+      <button class="nav-tab" onclick="showScreen('analytics',this)">📊</button>
     </div>
   </div>
 </header>
@@ -476,6 +477,39 @@ textarea{resize:vertical;min-height:64px}
 <div id="screen-clientes" class="screen">
   <div class="card" style="margin-bottom:10px"><input type="text" id="search-clientes" placeholder="Buscar cliente..." oninput="renderClientes(this.value)"></div>
   <div id="clientes-list"></div>
+</div>
+
+<!-- ANALYTICS -->
+<div id="screen-analytics" class="screen">
+  <div class="taller-top">
+    <div style="display:flex;gap:10px;align-items:center">
+      <h2 style="font-size:16px;font-weight:600;margin:0">📊 Analytics</h2>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <select class="sort-select" id="analytics-periodo" onchange="renderAnalytics()">
+        <option value="hoy">Hoy</option>
+        <option value="semana" selected>Esta semana</option>
+        <option value="mes">Este mes</option>
+        <option value="trimestre">Último trimestre</option>
+        <option value="ano">Este año</option>
+        <option value="todo">Todo</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" onclick="renderAnalytics()">↻</button>
+    </div>
+  </div>
+  <div id="analytics-stats" class="stats-grid" style="margin-bottom:12px"></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title">Ventas por sección</div>
+    <div id="analytics-secciones"></div>
+  </div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="card-title">Top clientes</div>
+    <div id="analytics-clientes"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Rendimiento por operario</div>
+    <div id="analytics-operarios"></div>
+  </div>
 </div>
 
 <!-- CALCULADORA V2 -->
@@ -790,6 +824,7 @@ textarea{resize:vertical;min-height:64px}
   <div class="modal" style="max-width:580px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px"><div id="mp-title"></div><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-pedido')">✕ Cerrar</button></div>
     <div id="mp-body"></div>
+    <div id="mp-comms" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"></div>
     <div class="btn-row" style="margin-top:14px"><button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button><button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir resguardo</button></div>
   </div>
 </div>
@@ -952,6 +987,7 @@ function showScreen(id,el){
   if(id==='ventas')cargarPresupuestos();
   if(id==='taller')renderTaller();
   if(id==='clientes')renderClientes();
+  if(id==='analytics')renderAnalytics();
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.addEventListener('click',function(e){if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');});
@@ -1231,12 +1267,104 @@ function verPedido(id){
   _pedidoModal=p;var pend=p.total-(p.senal||0);var fentrega=p.fechaEntrega?(p.fechaTipo==='fija'?'⚠️ FIJA · ':'≈ ')+formatDate(p.fechaEntrega):'Sin fecha';var pagoStr={pagado:'Pagado completo ✓',senal:'Señal entregada',pendiente:'Pendiente de pago'}[p.pago]||'';
   document.getElementById('mp-title').innerHTML='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-family:monospace;font-size:16px;font-weight:700">'+p.id+'</span><span class="badge sec-'+p.seccion+'">'+SECS[p.seccion]+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span></div>';
   document.getElementById('mp-body').innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"><div class="stat-card"><div class="sv" style="font-size:14px">'+p.clienteNombre+'</div><div class="sl">Cliente</div></div><div class="stat-card"><div class="sv" style="font-size:14px">'+p.operario+'</div><div class="sl">Atendido por</div></div><div class="stat-card"><div class="sv" style="font-size:13px">'+formatDateTime(p.fechaCreacion)+'</div><div class="sl">Fecha y hora</div></div><div class="stat-card"><div class="sv" style="font-size:13px;color:'+(p.fechaTipo==='fija'?'#A32D2D':'#1a1a1a')+'">'+fentrega+'</div><div class="sl">Entrega</div></div></div>'+(p.clienteTel?'<div style="font-size:13px;color:#666;margin-bottom:8px">📱 '+p.clienteTel+(p.clienteEmail?' · ✉️ '+p.clienteEmail:'')+'</div>':'')+'<div style="background:#f9f9f7;border-radius:7px;padding:10px 12px;margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Trabajo</div><div style="font-size:13px;color:#1a1a1a;line-height:1.6">'+p.descripcion+'</div>'+(p.notas?'<div style="font-size:12px;color:#888;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee">📝 '+p.notas+'</div>':'')+'</div>'+(p.seccion==='TX'?'<div class="checks-textil" style="margin-bottom:10px"><label class="check-item"><input type="checkbox" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"> Ropa pedida</label><label class="check-item"><input type="checkbox" '+(p.dtfOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'dtfOk\',this.checked)"> DTF pedido</label></div>':'')+'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"><div class="stat-card"><div class="sv">'+p.total.toFixed(2)+'€</div><div class="sl">Total</div></div><div class="stat-card"><div class="sv" style="color:#3B6D11">'+(p.senal||0).toFixed(2)+'€</div><div class="sl">Pagado</div></div><div class="stat-card"><div class="sv" style="color:'+(pend>0?'#A32D2D':'#3B6D11')+'">'+pend.toFixed(2)+'€</div><div class="sl">Pendiente</div></div></div><div style="font-size:12px;color:#888;margin-bottom:6px">'+pagoStr+'</div><div style="font-size:12px;color:#534AB7;margin-bottom:12px">💳 '+(p.condiciones||COND_STD)+'</div><div style="font-size:12px;font-weight:600;color:#666;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Cambiar fase</div><div class="fase-stepper">'+FASES.map(function(f,i){return'<button class="fase-step '+(i<p.fase?'done':i===p.fase?'current':'')+'" onclick="setFaseModal(\''+p.id+'\','+i+')">'+f+'</button>';}).join('')+'</div>';
+  renderBotonesComm(p);
   document.getElementById('modal-pedido').classList.add('open');
 }
 
 function setFaseModal(id,fase){var p=pedidos.find(function(x){return x.id===id;});if(!p)return;p.fase=fase;_pedidoModal=p;sb.from('pedidos').update({fase:fase}).eq('id',id).then(function(){});verPedido(id);renderTaller();}
 function toggleCheckModal(id,field,val){var p=pedidos.find(function(x){return x.id===id;});if(!p)return;p[field]=val;var col=field==='ropaOk'?'ropa_ok':'dtf_ok';var upd={};upd[col]=val;sb.from('pedidos').update(upd).eq('id',id).then(function(){});}
 function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');generarResguardo(_pedidoModal);}}
+
+// ══════════════════════════════════════════════════════════════
+// COMUNICACIONES - WhatsApp y Email
+// ══════════════════════════════════════════════════════════════
+var MSG_TEMPLATES={
+  listo:{
+    asunto:'Tu pedido está listo - Print & Copy',
+    wa:'Hola {nombre}! 👋\n\nTu pedido *{id}* está *listo para recoger* en Print & Copy.\n\n📦 {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 C/ Toro 48, Salamanca\n⏰ L-V 10:00-14:00 y 17:00-20:00\n\n¡Te esperamos! 🙌',
+    email:'Hola {nombre},\n\nTe informamos que tu pedido {id} ya está listo para recoger.\n\n📦 Trabajo: {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 Puedes pasar a recogerlo en:\nC/ Toro 48, Salamanca\nHorario: L-V 10:00-14:00 y 17:00-20:00\n\n¡Gracias por confiar en Print & Copy!\n\nUn saludo,\nEl equipo de Print & Copy'
+  },
+  recuerdo:{
+    asunto:'Recordatorio: Tu pedido está pendiente - Print & Copy',
+    wa:'Hola {nombre}! 👋\n\nTe recordamos que tu pedido *{id}* está *pendiente de recoger* en Print & Copy.\n\n📦 {descripcion}\n💰 Pendiente: {pendiente_num}€\n\n📍 C/ Toro 48, Salamanca\n⏰ L-V 10:00-14:00 y 17:00-20:00\n\n¿Alguna duda? Escríbenos 😊',
+    email:'Hola {nombre},\n\nTe recordamos que tienes un pedido pendiente de recoger en Print & Copy.\n\n📦 Pedido: {id}\n📦 Trabajo: {descripcion}\n💰 Pendiente de pago: {pendiente_num}€\n\n📍 Dirección:\nC/ Toro 48, Salamanca\nHorario: L-V 10:00-14:00 y 17:00-20:00\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nUn saludo,\nEl equipo de Print & Copy'
+  },
+  confirmacion:{
+    asunto:'Confirmación de pedido - Print & Copy',
+    wa:'Hola {nombre}! 👋\n\nGracias por tu pedido en Print & Copy.\n\n📋 *Pedido {id}*\n📦 {descripcion}\n📅 Entrega: {entrega}\n💰 Total: {total}€{pendiente}\n\nTe avisaremos cuando esté listo. ¡Gracias! 🙌',
+    email:'Hola {nombre},\n\nGracias por tu pedido en Print & Copy. Aquí tienes los detalles:\n\n📋 Pedido: {id}\n📦 Trabajo: {descripcion}\n📅 Fecha entrega estimada: {entrega}\n💰 Total: {total}€{pendiente}\n\nTe contactaremos cuando esté listo para recoger.\n\n¡Gracias por confiar en nosotros!\n\nUn saludo,\nEl equipo de Print & Copy'
+  }
+};
+
+function renderBotonesComm(p){
+  var html='';
+  var tel=p.clienteTel?p.clienteTel.replace(/\s/g,''):'';
+  var email=p.clienteEmail||'';
+  if(tel||email){
+    html+='<div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;width:100%;margin-bottom:4px">Comunicar al cliente</div>';
+    if(tel){
+      html+='<button class="btn btn-sm" style="background:#25D366;color:white;border:none" onclick="enviarWA(\'listo\')">📱 WA: Listo</button>';
+      html+='<button class="btn btn-sm" style="background:#128C7E;color:white;border:none" onclick="enviarWA(\'recuerdo\')">📱 WA: Recordar</button>';
+      html+='<button class="btn btn-sm" style="background:#075E54;color:white;border:none" onclick="enviarWA(\'confirmacion\')">📱 WA: Confirmar</button>';
+    }
+    if(email){
+      html+='<button class="btn btn-sm" style="background:#EA4335;color:white;border:none" onclick="enviarEmail(\'listo\')">✉️ Email: Listo</button>';
+      html+='<button class="btn btn-sm" style="background:#D93025;color:white;border:none" onclick="enviarEmail(\'recuerdo\')">✉️ Email: Recordar</button>';
+    }
+    if(tel){
+      html+='<button class="btn btn-sm btn-secondary" onclick="llamarCliente()">📞 Llamar</button>';
+    }
+  }else{
+    html+='<div style="font-size:12px;color:#aaa;font-style:italic">Sin datos de contacto</div>';
+  }
+  document.getElementById('mp-comms').innerHTML=html;
+}
+
+function prepararMensaje(tipo){
+  var p=_pedidoModal;if(!p)return null;
+  var tpl=MSG_TEMPLATES[tipo];if(!tpl)return null;
+  var pend=p.total-(p.senal||0);
+  var pendStr=pend>0?'\n⚠️ Pendiente de pago: '+pend.toFixed(2)+'€':'';
+  var entrega=p.fechaEntrega?formatDate(p.fechaEntrega):'A convenir';
+  var replacements={
+    '{nombre}':p.clienteNombre.split(' ')[0],
+    '{id}':p.id,
+    '{descripcion}':p.descripcion.substring(0,100),
+    '{total}':p.total.toFixed(2),
+    '{pendiente}':pendStr,
+    '{pendiente_num}':pend.toFixed(2),
+    '{entrega}':entrega
+  };
+  var wa=tpl.wa,email=tpl.email,asunto=tpl.asunto;
+  for(var k in replacements){
+    wa=wa.split(k).join(replacements[k]);
+    email=email.split(k).join(replacements[k]);
+    asunto=asunto.split(k).join(replacements[k]);
+  }
+  return{wa:wa,email:email,asunto:asunto};
+}
+
+function enviarWA(tipo){
+  var p=_pedidoModal;if(!p||!p.clienteTel)return;
+  var msg=prepararMensaje(tipo);if(!msg)return;
+  var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+  if(!tel.startsWith('34')&&tel.length===9)tel='34'+tel;
+  var url='https://wa.me/'+tel+'?text='+encodeURIComponent(msg.wa);
+  window.open(url,'_blank');
+}
+
+function enviarEmail(tipo){
+  var p=_pedidoModal;if(!p||!p.clienteEmail)return;
+  var msg=prepararMensaje(tipo);if(!msg)return;
+  var url='mailto:'+p.clienteEmail+'?subject='+encodeURIComponent(msg.asunto)+'&body='+encodeURIComponent(msg.email);
+  window.location.href=url;
+}
+
+function llamarCliente(){
+  var p=_pedidoModal;if(!p||!p.clienteTel)return;
+  var tel=p.clienteTel.replace(/\s/g,'');
+  window.location.href='tel:'+tel;
+}
 function setFilter(el){var f=el.dataset.f,v=el.dataset.v;activeFilters[f]=v;document.querySelectorAll('.filter-btn[data-f="'+f+'"]').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderTaller();}
 function getSecGlobal(){return document.getElementById('sec-global').value||'all';}
 function applySecFilter(list){var s=getSecGlobal();return s==='all'?list:list.filter(function(p){return p.seccion===s;});}
@@ -1294,6 +1422,111 @@ function renderClientes(q){
     if(nivel==='restringido'||nivel==='premium')manualBtns+='<button class="btn btn-secondary btn-sm" onclick="setNivelManual('+c.id+',\'auto\')">↺ Auto</button>';
     return'<div class="cliente-card"><div style="flex:1"><div style="font-weight:500;font-size:14px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">'+c.nombre+sectorBadge+nivelBtn+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+(c.telefono||'')+' '+(c.email?'· '+c.email:'')+'</div><div style="font-size:12px;color:#534AB7;margin-top:2px">'+(c.condiciones||COND_STD)+'</div></div><div style="display:flex;align-items:center;gap:5px;flex-shrink:0">'+manualBtns+'<span style="font-size:12px;color:#888">'+nped+' ped.</span><button class="btn btn-secondary btn-sm" onclick="editarCliente('+c.id+')">✏️ Editar</button><button class="btn btn-secondary btn-sm" onclick="verPedidosCliente('+c.id+')">Ver pedidos</button></div></div>';
   }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// ANALYTICS
+// ══════════════════════════════════════════════════════════════
+function getAnalyticsPeriodo(){
+  var sel=document.getElementById('analytics-periodo');
+  if(!sel)return{desde:null,hasta:null};
+  var v=sel.value,hoy=new Date();hoy.setHours(0,0,0,0);
+  var desde=new Date(hoy),hasta=new Date(hoy);hasta.setHours(23,59,59,999);
+  if(v==='hoy'){/*ya está*/}
+  else if(v==='semana'){desde.setDate(desde.getDate()-desde.getDay()+1);if(desde>hoy)desde.setDate(desde.getDate()-7);}
+  else if(v==='mes'){desde.setDate(1);}
+  else if(v==='trimestre'){desde.setMonth(desde.getMonth()-3);}
+  else if(v==='ano'){desde.setMonth(0);desde.setDate(1);}
+  else if(v==='todo'){desde=null;}
+  return{desde:desde,hasta:hasta};
+}
+
+function filtrarPorPeriodo(lista,campFecha){
+  var per=getAnalyticsPeriodo();
+  if(!per.desde)return lista;
+  return lista.filter(function(item){
+    var f=item[campFecha];if(!f)return false;
+    var fecha=new Date(f);
+    return fecha>=per.desde&&fecha<=per.hasta;
+  });
+}
+
+function renderAnalytics(){
+  var pedsFiltrados=filtrarPorPeriodo(pedidos,'fechaCreacion');
+  var totalVentas=pedsFiltrados.reduce(function(s,p){return s+p.total;},0);
+  var totalCobrado=pedsFiltrados.reduce(function(s,p){return s+(p.senal||0)+(p.pago==='pagado'?(p.total-(p.senal||0)):0);},0);
+  var totalPendiente=totalVentas-totalCobrado;
+  var numPedidos=pedsFiltrados.length;
+  var ticketMedio=numPedidos>0?totalVentas/numPedidos:0;
+  
+  // Stats principales
+  document.getElementById('analytics-stats').innerHTML=
+    '<div class="stat-card"><div class="sv">'+numPedidos+'</div><div class="sl">Pedidos</div></div>'+
+    '<div class="stat-card"><div class="sv" style="color:#185FA5">'+totalVentas.toFixed(0)+'€</div><div class="sl">Facturado</div></div>'+
+    '<div class="stat-card"><div class="sv" style="color:#3B6D11">'+totalCobrado.toFixed(0)+'€</div><div class="sl">Cobrado</div></div>'+
+    '<div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPendiente.toFixed(0)+'€</div><div class="sl">Pendiente</div></div>'+
+    '<div class="stat-card"><div class="sv">'+ticketMedio.toFixed(0)+'€</div><div class="sl">Ticket medio</div></div>';
+  
+  // Por sección
+  var porSeccion={};
+  pedsFiltrados.forEach(function(p){
+    if(!porSeccion[p.seccion])porSeccion[p.seccion]={total:0,num:0};
+    porSeccion[p.seccion].total+=p.total;
+    porSeccion[p.seccion].num++;
+  });
+  var secHtml=Object.keys(porSeccion).sort(function(a,b){return porSeccion[b].total-porSeccion[a].total;}).map(function(sec){
+    var d=porSeccion[sec],pct=totalVentas>0?(d.total/totalVentas*100):0;
+    return'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+      '<span class="badge sec-'+sec+'" style="min-width:50px;text-align:center">'+sec+'</span>'+
+      '<div style="flex:1;background:#f5f5f0;border-radius:4px;height:20px;overflow:hidden">'+
+        '<div style="background:#185FA5;height:100%;width:'+pct+'%;border-radius:4px"></div>'+
+      '</div>'+
+      '<span style="min-width:80px;text-align:right;font-weight:600">'+d.total.toFixed(0)+'€</span>'+
+      '<span style="min-width:50px;text-align:right;font-size:12px;color:#888">'+d.num+' ped</span>'+
+    '</div>';
+  }).join('');
+  document.getElementById('analytics-secciones').innerHTML=secHtml||'<div style="color:#aaa;font-size:13px">Sin datos</div>';
+  
+  // Top clientes
+  var porCliente={};
+  pedsFiltrados.forEach(function(p){
+    var key=p.clienteNombre||'Sin nombre';
+    if(!porCliente[key])porCliente[key]={total:0,num:0};
+    porCliente[key].total+=p.total;
+    porCliente[key].num++;
+  });
+  var topClientes=Object.keys(porCliente).sort(function(a,b){return porCliente[b].total-porCliente[a].total;}).slice(0,10);
+  var cliHtml=topClientes.map(function(cli,i){
+    var d=porCliente[cli];
+    return'<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:0.5px solid #f5f5f5">'+
+      '<span style="width:20px;font-size:12px;color:#888">'+(i+1)+'.</span>'+
+      '<span style="flex:1;font-weight:500">'+cli+'</span>'+
+      '<span style="font-weight:600;color:#185FA5">'+d.total.toFixed(0)+'€</span>'+
+      '<span style="font-size:12px;color:#888;min-width:50px;text-align:right">'+d.num+' ped</span>'+
+    '</div>';
+  }).join('');
+  document.getElementById('analytics-clientes').innerHTML=cliHtml||'<div style="color:#aaa;font-size:13px">Sin datos</div>';
+  
+  // Por operario
+  var porOperario={};
+  pedsFiltrados.forEach(function(p){
+    var op=p.operario||'Sin asignar';
+    if(!porOperario[op])porOperario[op]={total:0,num:0};
+    porOperario[op].total+=p.total;
+    porOperario[op].num++;
+  });
+  var opHtml=Object.keys(porOperario).sort(function(a,b){return porOperario[b].total-porOperario[a].total;}).map(function(op){
+    var d=porOperario[op],pct=totalVentas>0?(d.total/totalVentas*100):0;
+    return'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+      '<span style="min-width:70px;font-weight:500">'+op+'</span>'+
+      '<div style="flex:1;background:#f5f5f0;border-radius:4px;height:16px;overflow:hidden">'+
+        '<div style="background:#534AB7;height:100%;width:'+pct+'%;border-radius:4px"></div>'+
+      '</div>'+
+      '<span style="min-width:70px;text-align:right;font-weight:600">'+d.total.toFixed(0)+'€</span>'+
+      '<span style="min-width:50px;text-align:right;font-size:12px;color:#888">'+d.num+' ped</span>'+
+    '</div>';
+  }).join('');
+  document.getElementById('analytics-operarios').innerHTML=opHtml||'<div style="color:#aaa;font-size:13px">Sin datos</div>';
 }
 
 var _editClienteId=null;
