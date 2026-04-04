@@ -570,12 +570,12 @@ textarea{resize:vertical;min-height:64px}
           <div class="card-title">Pago</div>
           <div class="form-grid">
             <div class="field"><label>Señal (€)</label><input type="number" id="nv-senal" value="0" step="0.01" min="0" oninput="nvCalcPendiente()"></div>
-            <div class="field"><label style="color:#A32D2D;font-weight:600">Pendiente (€)</label><div id="nv-pendiente" style="font-size:16px;font-weight:700;color:#A32D2D;padding:7px 0">0,00 €</div></div>
+            <div class="field"><label style="color:#A32D2D;font-weight:600">Queda por cobrar</label><div id="nv-pendiente" style="font-size:16px;font-weight:700;color:#A32D2D;padding:7px 0">0,00 €</div></div>
           </div>
           <div class="radio-group" style="margin-top:8px">
-            <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="pagado"> Cobrado</label>
-            <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="senal"> Solo señal</label>
-            <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="pendiente" checked> Pendiente</label>
+            <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="pagado"> Cobrado 100%</label>
+            <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="senal"> Señal pagada</label>
+            <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="pendiente" checked> Por cobrar</label>
           </div>
         </div>
         <div id="nv-cross" class="card" style="display:none"><div class="card-title">💡 Cross-selling</div><div id="nv-cross-content"></div></div>
@@ -1429,7 +1429,7 @@ function cV2renderSug(res){
       html+='<div class="tramo-card current"><div class="tramo-header"><span class="tramo-uds">'+res.qty.toLocaleString('es-ES')+' uds</span><span class="tramo-badge">Pedido actual</span></div>'+(res.pu?'<div class="tramo-prices"><span>'+cV2Fmt(res.pu)+'/u</span><span class="tramo-total">Total: '+cV2Fmt(res.base)+'</span></div>':'')+'</div>';
       nexts.forEach(function(nIdx,i){
         var p=P[cV2curCat],nextQty=res.tiers[nIdx],testVals={};
-        if(!p.customBuild){p.fields.forEach(function(f){testVals[f.id]=cV2gv(f.id);if(f.type==='number')testVals[f.id]=String(nextQty);});}
+        if(!p.customBuild){p.fields.forEach(function(f){testVals[f.id]=cV2gv(f.id);if(f.id==='qty')testVals[f.id]=String(nextQty);});}
         var testRes=p.calc(testVals,{});
         if(!testRes||testRes.error)return;
         var nextPu=testRes.pu||0;
