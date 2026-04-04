@@ -450,47 +450,61 @@ textarea{resize:vertical;min-height:64px}
         <!-- Calculadora embebida -->
         <div class="card">
           <div class="card-title">Añadir producto (calculadora)</div>
-          <div class="form-grid">
-            <div class="field"><label>Categoría</label>
-              <select id="nv-cat" onchange="nvCatChange()">
-                <option value="">— Seleccionar producto —</option>
-                <optgroup label="── Gran Formato ──">
-                  <option value="rotulacion">Rotulación (por m²)</option>
-                  <option value="placas">Placas personalizadas</option>
-                  <option value="xbanner">X Banner / Fotocall</option>
-                  <option value="rollup">Roll Up / Fotocall Roll Up</option>
-                  <option value="banderas">Banderas</option>
-                </optgroup>
-                <optgroup label="── Impresión ──">
-                  <option value="tarjetas">Tarjetas de visita</option>
-                  <option value="tarjetas_troq">Tarjetas troqueladas</option>
-                  <option value="tarjetas_pvc">Tarjetas PVC</option>
-                  <option value="tarjetas_especiales">Tarjetas acabados especiales</option>
-                  <option value="flyers">Flyers / Dípticos / Trípticos</option>
-                  <option value="carteles">Carteles publicitarios</option>
-                  <option value="carpetas">Carpetas plegables</option>
-                  <option value="sobres">Sobres comerciales</option>
-                  <option value="talonarios">Talonarios autocopiativos</option>
-                  <option value="pegatinas">Pegatinas troqueladas</option>
-                  <option value="sellos">Sellos automáticos Colop</option>
-                </optgroup>
-                <optgroup label="── Textil ──">
-                  <option value="textil">Textil (camisetas, sudaderas...)</option>
-                </optgroup>
-              </select>
+          <div class="field" style="margin-bottom:10px">
+            <label>Categoría</label>
+            <select id="nv-cat" onchange="nvCatChange()">
+              <option value="">— Seleccionar producto —</option>
+              <optgroup label="── Gran Formato ──">
+                <option value="rotulacion">Rotulación (por m²)</option>
+                <option value="placas">Placas personalizadas</option>
+                <option value="xbanner">X Banner / Fotocall</option>
+                <option value="rollup">Roll Up / Fotocall Roll Up</option>
+                <option value="banderas">Banderas</option>
+              </optgroup>
+              <optgroup label="── Impresión ──">
+                <option value="tarjetas">Tarjetas de visita</option>
+                <option value="tarjetas_troq">Tarjetas troqueladas</option>
+                <option value="tarjetas_pvc">Tarjetas PVC</option>
+                <option value="tarjetas_especiales">Tarjetas acabados especiales</option>
+                <option value="flyers">Flyers / Dípticos / Trípticos</option>
+                <option value="carteles">Carteles publicitarios</option>
+                <option value="carpetas">Carpetas plegables</option>
+                <option value="sobres">Sobres comerciales</option>
+                <option value="talonarios">Talonarios autocopiativos</option>
+                <option value="pegatinas">Pegatinas troqueladas</option>
+                <option value="sellos">Sellos automáticos Colop</option>
+                <option value="manteles">Manteles personalizados</option>
+                <option value="cartas">Cartas hostelería</option>
+                <option value="tarjetones">Tarjetones / Cheques regalo</option>
+                <option value="acreditaciones">Acreditaciones</option>
+                <option value="lanyares">Lanyares</option>
+              </optgroup>
+              <optgroup label="── Textil ──">
+                <option value="textil">Textil (camisetas, sudaderas...)</option>
+              </optgroup>
+            </select>
+          </div>
+          <!-- Campos dinámicos -->
+          <div id="nv-campos-dinamicos"></div>
+          <!-- Unidades (siempre visible cuando hay producto) -->
+          <div id="nv-unidades-wrap" style="display:none;margin-top:10px;padding:10px;background:#f9f9f7;border-radius:6px">
+            <div class="form-grid" style="grid-template-columns:1fr 1fr">
+              <div class="field"><label>Unidades (multiplicador)</label><input type="number" id="nv-unidades" value="1" min="1" oninput="nvCalc()" style="font-weight:700;font-size:15px"></div>
+              <div style="display:flex;align-items:end;font-size:12px;color:#888;padding-bottom:8px">Ej: 3 carteles iguales = 3 unidades</div>
             </div>
-            <div class="field" id="nv-f1-wrap" style="display:none"><label id="nv-f1-lbl"></label><select id="nv-f1" onchange="nvCalc()"></select></div>
           </div>
-          <div class="form-grid" id="nv-f2f3-wrap" style="display:none;margin-top:10px">
-            <div class="field" id="nv-f2-wrap"><label id="nv-f2-lbl"></label><input type="number" id="nv-f2" min="1" oninput="nvCalc()"></div>
-            <div class="field" id="nv-f3-wrap" style="display:none"><label id="nv-f3-lbl"></label><select id="nv-f3" onchange="nvCalc()"></select></div>
-          </div>
-          <div id="nv-extras-wrap" style="display:none;margin-top:10px"><label>Extras</label><div class="extras-grid" id="nv-extras"></div></div>
+          <!-- Extras -->
+          <div id="nv-extras-wrap" style="display:none;margin-top:10px"><label style="font-weight:600;margin-bottom:6px;display:block">Extras opcionales</label><div class="extras-grid" id="nv-extras"></div></div>
+          <!-- Textil custom -->
           <div id="nv-textil-wrap" style="display:none;margin-top:10px"></div>
+          <!-- Resultado -->
           <div id="nv-result" class="result-box" style="display:none;margin-top:12px">
-            <div class="result-row"><span class="result-label">Precio</span><span class="result-main" id="nv-precio">0,00 €</span></div>
-            <div class="result-unit" id="nv-unit"></div>
+            <div class="result-row"><span class="result-label">Precio unitario</span><span class="result-val" id="nv-precio-unit">0,00 €</span></div>
+            <div class="result-row"><span class="result-label">Unidades</span><span class="result-val" id="nv-cant-display">1</span></div>
+            <div class="result-divider"></div>
+            <div class="result-row"><span class="result-label">TOTAL</span><span class="result-main" id="nv-precio">0,00 €</span></div>
           </div>
+          <!-- Upselling -->
           <div id="nv-upsell" class="sug-box" style="display:none;margin-top:10px"><div class="sug-title">💡 Sugerencia</div><div id="nv-upsell-content"></div></div>
           <div class="btn-row" style="margin-top:12px"><button class="btn btn-primary" id="nv-btn-add" onclick="nvAddLinea()" style="display:none">+ Añadir al presupuesto</button></div>
         </div>
@@ -1508,8 +1522,8 @@ function nuevaVenta(){
   document.getElementById('nv-email').value='';
   document.getElementById('nv-sector').value='';
   document.getElementById('nv-cat').value='';
-  document.getElementById('nv-f1-wrap').style.display='none';
-  document.getElementById('nv-f2f3-wrap').style.display='none';
+  document.getElementById('nv-campos-dinamicos').innerHTML='';
+  document.getElementById('nv-unidades-wrap').style.display='none';
   document.getElementById('nv-extras-wrap').style.display='none';
   document.getElementById('nv-textil-wrap').style.display='none';
   document.getElementById('nv-result').style.display='none';
@@ -1527,7 +1541,7 @@ function abrirVentaDesdeCarrito(){
   nvLineas=carrito.map(function(c){return{sec:CAT_TO_SEC[c.cat]||'XR',desc:c.desc,total:c.total};});
   limpiarCarrito();
   document.getElementById('nv-nombre').value='';document.getElementById('nv-tel').value='';document.getElementById('nv-email').value='';document.getElementById('nv-sector').value='';
-  document.getElementById('nv-cat').value='';document.getElementById('nv-f1-wrap').style.display='none';document.getElementById('nv-f2f3-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-result').style.display='none';document.getElementById('nv-upsell').style.display='none';document.getElementById('nv-btn-add').style.display='none';
+  document.getElementById('nv-cat').value='';document.getElementById('nv-campos-dinamicos').innerHTML='';document.getElementById('nv-unidades-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-result').style.display='none';document.getElementById('nv-upsell').style.display='none';document.getElementById('nv-btn-add').style.display='none';
   nvRenderLineas();
   document.getElementById('modal-venta').classList.add('open');
 }
@@ -1553,61 +1567,91 @@ function nvSelCliente(id){
 function nvCatChange(){
   var cat=document.getElementById('nv-cat').value;
   _nvCat=cat;_nvRes=null;
-  document.getElementById('nv-f1-wrap').style.display='none';
-  document.getElementById('nv-f2f3-wrap').style.display='none';
-  document.getElementById('nv-f3-wrap').style.display='none';
+  document.getElementById('nv-campos-dinamicos').innerHTML='';
+  document.getElementById('nv-unidades-wrap').style.display='none';
   document.getElementById('nv-extras-wrap').style.display='none';
   document.getElementById('nv-textil-wrap').style.display='none';
   document.getElementById('nv-result').style.display='none';
   document.getElementById('nv-upsell').style.display='none';
   document.getElementById('nv-btn-add').style.display='none';
   var prod=P[cat];if(!prod)return;
-  // Campo 1
-  if(prod.fields&&prod.fields[0]&&prod.fields[0].type==='select'){
-    document.getElementById('nv-f1-wrap').style.display='block';
-    document.getElementById('nv-f1-lbl').textContent=prod.fields[0].label;
-    document.getElementById('nv-f1').innerHTML=prod.fields[0].options.map(function(o){return '<option>'+o+'</option>';}).join('');
-  }
-  // Campos 2 y 3
-  if(prod.fields&&prod.fields.length>1){
-    document.getElementById('nv-f2f3-wrap').style.display='grid';
-    if(prod.fields[1].type==='number'){
-      document.getElementById('nv-f2-wrap').style.display='block';
-      document.getElementById('nv-f2-lbl').textContent=prod.fields[1].label;
-      document.getElementById('nv-f2').value='';
-      document.getElementById('nv-f2').placeholder='mín. '+(prod.fields[1].min||1);
-    }
-    if(prod.fields[2]&&prod.fields[2].type==='select'){
-      document.getElementById('nv-f3-wrap').style.display='block';
-      document.getElementById('nv-f3-lbl').textContent=prod.fields[2].label;
-      document.getElementById('nv-f3').innerHTML=prod.fields[2].options.map(function(o){return '<option>'+o+'</option>';}).join('');
-    }
-  }
-  // Extras
-  if(prod.extrasDef&&prod.extrasDef.length){
-    document.getElementById('nv-extras-wrap').style.display='block';
-    document.getElementById('nv-extras').innerHTML=prod.extrasDef.map(function(e){return '<label class="extra-toggle"><input type="checkbox" id="nv-ex-'+e.key+'" onchange="nvCalc()"> '+e.label+'</label>';}).join('');
-  }
-  // Textil custom
+  
+  // Generar campos dinámicos según el producto
+  var html='<div class="form-grid" style="margin-top:10px">';
   if(prod.customBuild){
+    // Textil tiene su propio builder
     document.getElementById('nv-textil-wrap').style.display='block';
     document.getElementById('nv-textil-wrap').innerHTML=prod.buildCustom().replace(/cf-/g,'nv-tx-').replace(/cV2calc/g,'nvCalc').replace(/cV2addEst/g,'nvAddEst');
+  }else if(prod.fields&&prod.fields.length){
+    prod.fields.forEach(function(f,i){
+      if(f.type==='select'){
+        html+='<div class="field"><label>'+f.label+'</label><select id="nvf-'+f.id+'" onchange="nvFieldChange(\''+f.id+'\');nvCalc()">';
+        if(f.options&&f.options.length){
+          f.options.forEach(function(o){html+='<option value="'+o+'">'+o+'</option>';});
+        }
+        html+='</select></div>';
+      }else if(f.type==='number'){
+        html+='<div class="field"><label>'+f.label+'</label><input type="number" id="nvf-'+f.id+'" min="'+(f.min||1)+'" placeholder="mín. '+(f.min||1)+'" oninput="nvCalc()"></div>';
+      }
+    });
+    html+='</div>';
+    document.getElementById('nv-campos-dinamicos').innerHTML=html;
+    // Trigger onFieldChange si existe
+    if(prod.onFieldChange){
+      setTimeout(function(){prod.onFieldChange(prod.fields[0].id);nvCalc();},50);
+    }
   }
-  if(prod.onFieldChange)prod.onFieldChange('tipo');
+  // Mostrar unidades (siempre para productos no-textil)
+  if(!prod.customBuild){
+    document.getElementById('nv-unidades-wrap').style.display='block';
+    document.getElementById('nv-unidades').value='1';
+  }
+  // Extras fijos
+  if(prod.extrasDef&&prod.extrasDef.length){
+    document.getElementById('nv-extras-wrap').style.display='block';
+    var exHtml=prod.extrasDef.map(function(e){
+      return '<label class="extra-toggle"><input type="checkbox" id="nv-ex-'+e.key+'" onchange="nvCalc()"> '+e.label+' (+'+cV2Fmt(e.price)+')</label>';
+    }).join('');
+    // Extras dinámicos
+    if(prod.extrasDyn){
+      prod.extrasDyn.forEach(function(k){
+        exHtml+='<label class="extra-toggle"><input type="checkbox" id="nv-ex-'+k+'" onchange="nvCalc()"> '+k.charAt(0).toUpperCase()+k.slice(1)+'</label>';
+      });
+    }
+    document.getElementById('nv-extras').innerHTML=exHtml;
+  }
   nvCalc();
+}
+
+function nvFieldChange(fieldId){
+  var cat=_nvCat;var prod=P[cat];if(!prod||!prod.onFieldChange)return;
+  // Para productos como xbanner/rollup que cambian opciones dinámicamente
+  if(prod.medidas&&fieldId==='tipo'){
+    var tipo=document.getElementById('nvf-tipo').value;
+    var medSel=document.getElementById('nvf-med');
+    if(medSel&&prod.medidas[tipo]){
+      medSel.innerHTML=Object.keys(prod.medidas[tipo]).map(function(m){return '<option>'+m+'</option>';}).join('');
+    }
+  }
 }
 
 function nvCalc(){
   var cat=_nvCat;var prod=P[cat];if(!prod)return;
   var vals={};
-  if(prod.fields){
-    prod.fields.forEach(function(f,i){
-      if(i===0&&f.type==='select')vals[f.id]=document.getElementById('nv-f1').value;
-      if(i===1&&f.type==='number')vals[f.id]=parseFloat(document.getElementById('nv-f2').value)||0;
-      if(i===1&&f.type==='select')vals[f.id]=document.getElementById('nv-f1').value;
-      if(i===2&&f.type==='select')vals[f.id]=document.getElementById('nv-f3').value;
+  var unidades=parseInt(document.getElementById('nv-unidades').value)||1;
+  
+  // Leer valores de campos dinámicos
+  if(prod.fields&&!prod.customBuild){
+    prod.fields.forEach(function(f){
+      var el=document.getElementById('nvf-'+f.id);
+      if(el){
+        if(f.type==='number')vals[f.id]=parseFloat(el.value)||0;
+        else vals[f.id]=el.value;
+      }
     });
   }
+  
+  // Leer extras
   var ex={};
   if(prod.extrasDef){
     prod.extrasDef.forEach(function(e){
@@ -1621,6 +1665,7 @@ function nvCalc(){
       if(el&&el.checked)ex[k]=true;
     });
   }
+  
   var res;
   if(prod.customBuild){
     // Textil usa su propia calc
@@ -1635,25 +1680,44 @@ function nvCalc(){
       var v=s.value;if(v!=='none'){extraTotal+={pequena:2,mediana:3.50,grande:4.50}[v]||0;}
     });
     res={base:cV2R2(pu*q),qty:q,pu:cV2R2(pu+extraTotal)};
+    unidades=1; // Textil ya tiene cantidad interna
   }else{
     res=prod.calc(vals,ex);
   }
-  if(!res||res.error){document.getElementById('nv-result').style.display='none';document.getElementById('nv-btn-add').style.display='none';return;}
-  _nvRes=res;_nvRes.cat=cat;_nvRes.vals=vals;_nvRes.ex=ex;
-  var total=res.base||res.t||0;
-  if(res.extraRows)res.extraRows.forEach(function(r){total+=r.amount||0;});
-  _nvRes.totalFinal=cV2R2(total*(prod.sinIva?1.21:1));
+  
+  if(!res||res.error){
+    document.getElementById('nv-result').style.display='none';
+    document.getElementById('nv-btn-add').style.display='none';
+    return;
+  }
+  
+  _nvRes=res;_nvRes.cat=cat;_nvRes.vals=vals;_nvRes.ex=ex;_nvRes.unidades=unidades;
+  
+  // Calcular total con extras
+  var totalUnit=res.base||res.t||0;
+  if(res.extraRows)res.extraRows.forEach(function(r){totalUnit+=r.amount||0;});
+  var totalUnitIva=cV2R2(totalUnit*(prod.sinIva?1.21:1));
+  var totalFinal=cV2R2(totalUnitIva*unidades);
+  _nvRes.totalUnit=totalUnitIva;
+  _nvRes.totalFinal=totalFinal;
+  
+  // Mostrar resultado
   document.getElementById('nv-result').style.display='block';
-  document.getElementById('nv-precio').textContent=cV2Fmt(_nvRes.totalFinal);
-  document.getElementById('nv-unit').textContent=res.pu?cV2Fmt(res.pu)+'/u × '+res.qty+' uds':'';
+  document.getElementById('nv-precio-unit').textContent=cV2Fmt(totalUnitIva);
+  document.getElementById('nv-cant-display').textContent=unidades;
+  document.getElementById('nv-precio').textContent=cV2Fmt(totalFinal);
   document.getElementById('nv-btn-add').style.display='inline-block';
-  // Upselling
+  
+  // Upselling (solo para productos con tramos)
   if(res.tiers&&res.qty){
     var idx=floorIdx(res.tiers,res.qty);
     if(idx<res.tiers.length-1){
       var nextQ=res.tiers[idx+1];
-      document.getElementById('nv-upsell').style.display='block';
-      document.getElementById('nv-upsell-content').innerHTML='<div style="cursor:pointer;color:#854F0B" onclick="document.getElementById(\'nv-f2\').value='+nextQ+';nvCalc()">📈 Subir a '+nextQ+' uds para mejor precio</div>';
+      var fieldQty=prod.fields.find(function(f){return f.type==='number';});
+      if(fieldQty){
+        document.getElementById('nv-upsell').style.display='block';
+        document.getElementById('nv-upsell-content').innerHTML='<div style="cursor:pointer;color:#854F0B" onclick="document.getElementById(\'nvf-'+fieldQty.id+'\').value='+nextQ+';nvCalc()">📈 Subir a '+nextQ+' uds para mejor precio</div>';
+      }
     }else{document.getElementById('nv-upsell').style.display='none';}
   }else{document.getElementById('nv-upsell').style.display='none';}
 }
@@ -1672,21 +1736,46 @@ function nvAddLinea(){
   if(!_nvRes)return;
   var prod=P[_nvRes.cat];
   var desc=prod.name;
+  var unidades=_nvRes.unidades||1;
+  
+  // Añadir detalles del producto
   if(_nvRes.vals){
     var v=_nvRes.vals;
-    if(v.caras)desc+=' '+v.caras;
-    if(v.fmt)desc+=' '+v.fmt;
-    if(v.tipo)desc+=' '+v.tipo;
-    if(v.tam)desc+=' '+v.tam;
-    if(v.mat)desc+=' '+v.mat;
+    var detalles=[];
+    if(v.mat)detalles.push(v.mat);
+    if(v.tipo)detalles.push(v.tipo);
+    if(v.tam)detalles.push(v.tam);
+    if(v.fmt)detalles.push(v.fmt);
+    if(v.caras)detalles.push(v.caras);
+    if(v.ancho&&v.alto)detalles.push(v.ancho+'×'+v.alto+'cm');
+    if(v.med)detalles.push(v.med);
+    if(detalles.length)desc+=' ('+detalles.join(', ')+')';
   }
+  
+  // Cantidad interna del producto (ej: 500 tarjetas)
   if(_nvRes.qty>1)desc+=' ×'+_nvRes.qty;
+  
+  // Extras
   var exList=[];for(var k in _nvRes.ex){if(_nvRes.ex[k])exList.push(k);}
   if(exList.length)desc+=' +'+exList.join('+');
-  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,cat:_nvRes.cat});
+  
+  // Unidades (multiplicador)
+  if(unidades>1)desc=' ['+unidades+' uds] '+desc;
+  
+  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,cat:_nvRes.cat,unidades:unidades});
   nvRenderLineas();
   nvShowCross(_nvRes.cat);
-  document.getElementById('nv-cat').value='';nvCatChange();
+  
+  // Limpiar para siguiente producto
+  document.getElementById('nv-cat').value='';
+  document.getElementById('nv-campos-dinamicos').innerHTML='';
+  document.getElementById('nv-unidades-wrap').style.display='none';
+  document.getElementById('nv-extras-wrap').style.display='none';
+  document.getElementById('nv-textil-wrap').style.display='none';
+  document.getElementById('nv-result').style.display='none';
+  document.getElementById('nv-upsell').style.display='none';
+  document.getElementById('nv-btn-add').style.display='none';
+  _nvCat=null;_nvRes=null;
 }
 
 function nvAddManual(){
