@@ -233,6 +233,16 @@ textarea{resize:vertical;min-height:64px}
 .linea-del{background:none;border:none;color:#aaa;cursor:pointer;font-size:16px;padding:4px}
 .linea-del:hover{color:#A32D2D}
 .btn-success{background:#3B6D11;color:#fff}.btn-success:hover{background:#2a5009}
+/* Solicitudes */
+.sol-card{background:#fff;border-radius:8px;border:0.5px solid #ddd;padding:12px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+.sol-card:hover{border-color:#378ADD}
+.sol-card.urgente{border-left:4px solid #A32D2D}
+.sol-estado{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.sol-nueva{background:#E6F1FB;color:#185FA5}
+.sol-contactado{background:#FAEEDA;color:#854F0B}
+.sol-visitado{background:#f3e8fe;color:#4a1a7a}
+.sol-presupuestado{background:#EAF3DE;color:#3B6D11}
+.sol-descartada{background:#f1efe8;color:#5f5e5a}
 
 </style>
 </head>
@@ -249,6 +259,7 @@ textarea{resize:vertical;min-height:64px}
     <div class="user-badge">👤 <select id="current-user" onchange="setCurrentUser(this.value)"><option value="Marilia">Marilia</option><option value="Álvaro">Álvaro</option><option value="Charo">Charo</option><option value="Raúl">Raúl</option><option value="Bea">Bea</option></select></div>
     <span id="conn-status" style="font-size:11px;color:#aaa"><span class="conn-dot" id="conn-dot"></span>Conectando...</span>
     <div class="nav-tabs">
+      <button class="nav-tab" onclick="showScreen('solicitudes',this)">Solicitudes</button>
       <button class="nav-tab active" onclick="showScreen('ventas',this)">Ventas</button>
       <button class="nav-tab" onclick="showScreen('taller',this)">Taller</button>
       <button class="nav-tab" onclick="showScreen('clientes',this)">Clientes</button>
@@ -256,6 +267,75 @@ textarea{resize:vertical;min-height:64px}
     </div>
   </div>
 </header>
+
+<!-- SOLICITUDES -->
+<div id="screen-solicitudes" class="screen">
+  <div class="taller-top">
+    <div style="display:flex;gap:10px;align-items:center">
+      <h2 style="font-size:16px;font-weight:600;margin:0">Solicitudes</h2>
+      <button class="btn btn-primary" onclick="nuevaSolicitud()">+ Nueva solicitud</button>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <select class="sort-select" id="sol-filtro" onchange="renderSolicitudes()">
+        <option value="activas">Activas</option>
+        <option value="all">Todas</option>
+        <option value="nueva">Nuevas</option>
+        <option value="contactado">Contactadas</option>
+        <option value="visitado">Visitadas</option>
+        <option value="presupuestado">Presupuestadas</option>
+        <option value="descartada">Descartadas</option>
+      </select>
+      <button class="btn btn-secondary btn-sm" onclick="cargarSolicitudes()">↻</button>
+    </div>
+  </div>
+  <div class="stat-row" id="sol-stats"></div>
+  <div id="sol-list"></div>
+</div>
+
+<!-- Modal Nueva Solicitud -->
+<div class="modal-overlay" id="modal-solicitud">
+  <div class="modal" style="max-width:500px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 style="margin:0;font-size:16px">Nueva solicitud</h3>
+      <button onclick="closeModal('modal-solicitud')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888">×</button>
+    </div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="field"><label>Nombre / Empresa *</label><input type="text" id="sol-nombre" placeholder="Nombre del contacto"></div>
+      <div class="field"><label>Teléfono *</label><input type="tel" id="sol-tel" placeholder="600 000 000"></div>
+      <div class="field"><label>Email</label><input type="email" id="sol-email" placeholder="email@ejemplo.com"></div>
+      <div class="field"><label>Sector</label>
+        <select id="sol-sector"><option value="">—</option><option value="particular">Particular</option><option value="hosteleria">Hostelería</option><option value="comercio">Comercio</option><option value="empresa">Empresa</option><option value="eventos">Eventos</option><option value="inmobiliaria">Inmobiliaria</option></select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>Origen</label>
+      <select id="sol-origen"><option value="telefono">Llamada telefónica</option><option value="tienda">Visita a tienda</option><option value="whatsapp">WhatsApp</option><option value="email">Email</option><option value="web">Web / Redes</option><option value="recomendacion">Recomendación</option></select>
+    </div>
+    <div class="field" style="margin-bottom:12px"><label>¿Qué necesita? *</label><textarea id="sol-necesita" rows="3" placeholder="Descripción de lo que busca el cliente..."></textarea></div>
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="field"><label>Fecha seguimiento</label><input type="date" id="sol-seguimiento"></div>
+      <div class="field"><label>Prioridad</label>
+        <select id="sol-prioridad"><option value="normal">Normal</option><option value="alta">Alta (urgente)</option><option value="baja">Baja</option></select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:16px"><label>Notas internas</label><textarea id="sol-notas" rows="2" placeholder="Notas para seguimiento..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-solicitud')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarSolicitud()">Guardar solicitud</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Ver Solicitud -->
+<div class="modal-overlay" id="modal-ver-solicitud">
+  <div class="modal" style="max-width:550px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 id="ver-sol-title" style="margin:0;font-size:16px"></h3>
+      <button onclick="closeModal('modal-ver-solicitud')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#888">×</button>
+    </div>
+    <div id="ver-sol-body"></div>
+    <div id="ver-sol-actions" class="btn-row" style="margin-top:16px"></div>
+  </div>
+</div>
 
 <!-- VENTAS (Lista de cotizaciones + acceso a nueva venta) -->
 <div id="screen-ventas" class="screen active">
@@ -756,6 +836,8 @@ function cargarDatos(){
     pedidos=(rPedidos.data||[]).map(dbToLocal);
     renderTaller();
     renderClientes();
+    cargarSolicitudes();
+    cargarPresupuestos();
   }).catch(function(err){
     console.error('Error cargando datos:',err);
     document.getElementById('taller-list').innerHTML='<div class="empty-state">Error al conectar con la base de datos</div>';
@@ -1562,6 +1644,152 @@ function cV2addEst(){var wrap=document.getElementById('extra-est-wrap');if(!wrap
 function cV2renumberEst(){document.querySelectorAll('#extra-est-wrap > div').forEach(function(r,i){r.querySelector('span').textContent=(i+2)+'ª estampación';});}
 
 // ══════════════════════════════════════════════════════════════
+// SOLICITUDES
+// ══════════════════════════════════════════════════════════════
+var solicitudes=[];
+var _solActual=null;
+var SOL_ESTADOS={nueva:'Nueva',contactado:'Contactado',visitado:'Visitado',presupuestado:'Presupuestado',descartada:'Descartada'};
+
+function cargarSolicitudes(){
+  sb.from('solicitudes').select('*').order('created_at',{ascending:false}).then(function(r){
+    solicitudes=r.data||[];
+    renderSolicitudes();
+  });
+}
+
+function renderSolicitudes(){
+  var filtro=document.getElementById('sol-filtro').value;
+  var list=solicitudes;
+  if(filtro==='activas')list=list.filter(function(s){return s.estado!=='presupuestado'&&s.estado!=='descartada';});
+  else if(filtro!=='all')list=list.filter(function(s){return s.estado===filtro;});
+  
+  var nueva=solicitudes.filter(function(s){return s.estado==='nueva';}).length;
+  var contactado=solicitudes.filter(function(s){return s.estado==='contactado';}).length;
+  var visitado=solicitudes.filter(function(s){return s.estado==='visitado';}).length;
+  var hoy=new Date().toISOString().split('T')[0];
+  var seguimientoHoy=solicitudes.filter(function(s){return s.fecha_seguimiento===hoy&&s.estado!=='presupuestado'&&s.estado!=='descartada';}).length;
+  
+  document.getElementById('sol-stats').innerHTML='<div class="stat-card"><div class="sv" style="color:#185FA5">'+nueva+'</div><div class="sl">Nuevas</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+contactado+'</div><div class="sl">Contactadas</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+visitado+'</div><div class="sl">Visitadas</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+seguimientoHoy+'</div><div class="sl">Seguimiento hoy</div></div>';
+  
+  if(!list.length){document.getElementById('sol-list').innerHTML='<div class="empty-state">Sin solicitudes. Haz clic en "+ Nueva solicitud" para crear una.</div>';return;}
+  
+  document.getElementById('sol-list').innerHTML=list.map(function(s){
+    var esUrgente=s.prioridad==='alta';
+    var seguimiento=s.fecha_seguimiento?'<span style="font-size:11px;color:'+(s.fecha_seguimiento<=hoy?'#A32D2D':'#888')+'">📅 '+formatDate(s.fecha_seguimiento)+'</span>':'';
+    return '<div class="sol-card'+(esUrgente?' urgente':'')+'" onclick="verSolicitud(\''+s.id+'\')"><div style="display:flex;justify-content:space-between;align-items:start;gap:10px"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px"><strong style="font-size:14px">'+s.nombre+'</strong><span class="sol-estado sol-'+s.estado+'">'+SOL_ESTADOS[s.estado]+'</span>'+(esUrgente?'<span style="color:#A32D2D;font-size:11px;font-weight:600">⚡ Urgente</span>':'')+'</div><div style="font-size:12px;color:#666;margin-bottom:4px">'+(s.telefono||'')+(s.email?' · '+s.email:'')+'</div><div style="font-size:12px;color:#888;line-height:1.4">'+truncate(s.necesita,80)+'</div></div><div style="text-align:right;flex-shrink:0">'+seguimiento+'<div style="font-size:10px;color:#aaa;margin-top:4px">'+formatDateTime(s.created_at)+'</div></div></div></div>';
+  }).join('');
+}
+
+function truncate(str,len){if(!str)return'';return str.length>len?str.substring(0,len)+'...':str;}
+
+function nuevaSolicitud(){
+  document.getElementById('sol-nombre').value='';
+  document.getElementById('sol-tel').value='';
+  document.getElementById('sol-email').value='';
+  document.getElementById('sol-sector').value='';
+  document.getElementById('sol-origen').value='telefono';
+  document.getElementById('sol-necesita').value='';
+  document.getElementById('sol-seguimiento').value='';
+  document.getElementById('sol-prioridad').value='normal';
+  document.getElementById('sol-notas').value='';
+  document.getElementById('modal-solicitud').classList.add('open');
+}
+
+function guardarSolicitud(){
+  var nombre=document.getElementById('sol-nombre').value.trim();
+  var tel=document.getElementById('sol-tel').value.trim();
+  var necesita=document.getElementById('sol-necesita').value.trim();
+  if(!nombre){alert('Nombre obligatorio');return;}
+  if(!tel){alert('Teléfono obligatorio');return;}
+  if(!necesita){alert('Describe qué necesita el cliente');return;}
+  
+  var data={
+    nombre:nombre,
+    telefono:tel,
+    email:document.getElementById('sol-email').value.trim(),
+    sector:document.getElementById('sol-sector').value,
+    origen:document.getElementById('sol-origen').value,
+    necesita:necesita,
+    fecha_seguimiento:document.getElementById('sol-seguimiento').value||null,
+    prioridad:document.getElementById('sol-prioridad').value,
+    notas:document.getElementById('sol-notas').value.trim(),
+    estado:'nueva',
+    usuario_creador:currentUser
+  };
+  
+  sb.from('solicitudes').insert([data]).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    closeModal('modal-solicitud');
+    cargarSolicitudes();
+  });
+}
+
+function verSolicitud(id){
+  var s=solicitudes.find(function(x){return x.id===id;});if(!s)return;
+  _solActual=s;
+  
+  document.getElementById('ver-sol-title').innerHTML='<span style="font-weight:600">'+s.nombre+'</span> <span class="sol-estado sol-'+s.estado+'">'+SOL_ESTADOS[s.estado]+'</span>';
+  
+  var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  html+='<div><span style="font-size:11px;color:#888">Teléfono</span><div style="font-weight:500">'+(s.telefono||'—')+'</div></div>';
+  html+='<div><span style="font-size:11px;color:#888">Email</span><div>'+(s.email||'—')+'</div></div>';
+  html+='<div><span style="font-size:11px;color:#888">Sector</span><div>'+(SECTORES[s.sector]||s.sector||'—')+'</div></div>';
+  html+='<div><span style="font-size:11px;color:#888">Origen</span><div>'+s.origen+'</div></div>';
+  html+='</div>';
+  
+  html+='<div style="background:#f9f9f7;border-radius:6px;padding:10px 12px;margin-bottom:12px"><div style="font-size:11px;color:#888;margin-bottom:4px">¿Qué necesita?</div><div style="font-size:13px;line-height:1.5">'+s.necesita+'</div></div>';
+  
+  if(s.notas)html+='<div style="background:#E6F1FB;border-radius:6px;padding:10px 12px;margin-bottom:12px"><div style="font-size:11px;color:#185FA5;margin-bottom:4px">Notas internas</div><div style="font-size:12px;color:#1E3A5F">'+s.notas+'</div></div>';
+  
+  html+='<div style="display:flex;gap:16px;font-size:12px;color:#888">';
+  html+='<span>Creada: '+formatDateTime(s.created_at)+'</span>';
+  if(s.fecha_seguimiento)html+='<span>Seguimiento: '+formatDate(s.fecha_seguimiento)+'</span>';
+  html+='</div>';
+  
+  document.getElementById('ver-sol-body').innerHTML=html;
+  
+  // Acciones según estado
+  var btns='';
+  if(s.estado==='nueva'){
+    btns='<button class="btn btn-secondary" onclick="cambiarEstadoSol(\'contactado\')">📞 Marcar contactado</button>';
+    btns+='<button class="btn btn-primary" onclick="convertirSolAVenta()">📋 Crear presupuesto</button>';
+  }else if(s.estado==='contactado'){
+    btns='<button class="btn btn-secondary" onclick="cambiarEstadoSol(\'visitado\')">🚗 Marcar visitado</button>';
+    btns+='<button class="btn btn-primary" onclick="convertirSolAVenta()">📋 Crear presupuesto</button>';
+  }else if(s.estado==='visitado'){
+    btns='<button class="btn btn-primary" onclick="convertirSolAVenta()">📋 Crear presupuesto</button>';
+  }
+  if(s.estado!=='presupuestado'&&s.estado!=='descartada'){
+    btns+='<button class="btn btn-danger" onclick="cambiarEstadoSol(\'descartada\')" style="margin-left:auto">✕ Descartar</button>';
+  }
+  document.getElementById('ver-sol-actions').innerHTML=btns;
+  document.getElementById('modal-ver-solicitud').classList.add('open');
+}
+
+function cambiarEstadoSol(nuevoEstado){
+  if(!_solActual)return;
+  sb.from('solicitudes').update({estado:nuevoEstado}).eq('id',_solActual.id).then(function(){
+    closeModal('modal-ver-solicitud');
+    cargarSolicitudes();
+  });
+}
+
+function convertirSolAVenta(){
+  if(!_solActual)return;
+  // Marcar como presupuestado
+  sb.from('solicitudes').update({estado:'presupuestado'}).eq('id',_solActual.id).then(function(){
+    closeModal('modal-ver-solicitud');
+    // Abrir modal nueva venta con datos precargados
+    nuevaVenta();
+    document.getElementById('nv-nombre').value=_solActual.nombre;
+    document.getElementById('nv-tel').value=_solActual.telefono||'';
+    document.getElementById('nv-email').value=_solActual.email||'';
+    document.getElementById('nv-sector').value=_solActual.sector||'';
+    document.getElementById('nv-notas').value='Solicitud: '+_solActual.necesita;
+    cargarSolicitudes();
+  });
+}
+
 // VENTAS Y PRESUPUESTOS
 // ══════════════════════════════════════════════════════════════
 var presupuestos=[];
