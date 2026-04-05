@@ -589,7 +589,6 @@ textarea{resize:vertical;min-height:64px}
           <div class="result-divider"></div>
           <div class="result-row"><span class="result-label">TOTAL SIN IVA</span><span class="result-val" id="c-r-siniva">—</span></div>
           <div class="result-row"><span class="result-label">TOTAL CON IVA (21%)</span><span class="result-main" id="c-r-coniva">—</span></div>
-          <div id="c-r-plazo" style="display:none;margin-top:8px;padding:8px 12px;background:#e8f5e9;border-radius:6px;font-size:12px;color:#2e7d32;text-align:left;line-height:1.5"><span id="c-r-plazo-dias">—</span></div>
           <div id="c-r-unitario" class="result-unit"></div>
           <div id="c-r-tramo" class="result-tramo" style="display:none"></div>
         </div>
@@ -599,6 +598,10 @@ textarea{resize:vertical;min-height:64px}
       <button class="c-btn-limpiar" onclick="cV2Limpiar()">🔄 Limpiar / Nueva consulta</button>
     </div>
     <div class="calc-right">
+      <div id="c-info-producto" style="display:none;margin-bottom:12px;padding:12px;background:#f8f9fa;border-radius:8px;border-left:4px solid #DCC25C">
+        <div id="c-info-plazo" style="font-weight:600;color:#2e7d32;margin-bottom:4px"></div>
+        <div id="c-info-specs" style="font-size:12px;color:#555"></div>
+      </div>
       <div class="sug-header"><h2>💡 Sugerencias de venta</h2><div class="sug-pulse"></div></div>
       <div id="c-sug-content"><div class="sug-empty">Selecciona un producto para ver sugerencias</div></div>
       <div class="carrito-panel">
@@ -2010,17 +2013,15 @@ function cV2calc(){
   document.getElementById('c-r-siniva').textContent=cV2Fmt(sinIva);
   document.getElementById('c-r-coniva').textContent=cV2Fmt(conIva);
   
-  // Mostrar plazo de entrega y especificaciones
-  var plazoEl=document.getElementById('c-r-plazo');
+  // Mostrar plazo y specs en panel derecho
+  var infoPanel=document.getElementById('c-info-producto');
   var plazoReal=res.plazoReal||p.plazo;
   if(plazoReal||p.specs){
-    plazoEl.style.display='block';
-    var html='';
-    if(plazoReal)html+='📦 <strong>Entrega: '+plazoReal+' días hábiles</strong>';
-    if(p.specs)html+=(plazoReal?'<br>':'')+'📋 '+p.specs;
-    document.getElementById('c-r-plazo-dias').innerHTML=html;
+    infoPanel.style.display='block';
+    document.getElementById('c-info-plazo').innerHTML=plazoReal?'📦 Entrega: '+plazoReal+' días hábiles':'';
+    document.getElementById('c-info-specs').innerHTML=p.specs?'📋 '+p.specs:'';
   }else{
-    plazoEl.style.display='none';
+    infoPanel.style.display='none';
   }
   
   document.getElementById('c-r-unitario').textContent=res.qty>1&&res.pu?'Precio unitario: '+cV2Fmt(res.pu)+(p.sinIva?' sin IVA':' con IVA')+(res.unitLabel?' '+res.unitLabel:'')+' ('+res.qty+' uds)':'';
@@ -2097,6 +2098,8 @@ function cV2Limpiar(){
   document.getElementById('c-cat').value='';
   var btnC=document.getElementById('btn-add-carrito');
   if(btnC)btnC.style.display='none';
+  var infoP=document.getElementById('c-info-producto');
+  if(infoP)infoP.style.display='none';
   cV2lastUnidades=1;
   cV2catChange();
 }
