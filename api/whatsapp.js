@@ -1,6 +1,7 @@
-// API Route: /api/whatsapp
-const WHATICKET_URL = 'https://app.whaticket.com';
+// API Route: /api/whatsapp - Whaticket Integration
+const WHATICKET_URL = 'https://api.whaticket.com';
 const WHATICKET_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6WyJjcmVhdGU6bWVzc2FnZXMiLCJjcmVhdGU6Y29udGFjdHMiXSwiY29tcGFueUlkIjoiMzQxNzEyYWMtYzhhMy00NGMzLWE5ZDctZGIzZDRiNzhiYzU0IiwiaWF0IjoxNzc1MzcxNTE4fQ.-KPCiTDj46gREXYpkMeMJuQwj8msINyu0kwyyuNzIag';
+const CONNECTION_ID = '74b01007-4608-4c29-a086-190786999f56';
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,15 +28,16 @@ module.exports = async function handler(req, res) {
       tel = '34' + tel;
     }
 
-    const response = await fetch(WHATICKET_URL + '/api/messages/send', {
+    const response = await fetch(WHATICKET_URL + '/v1/messages/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + WHATICKET_TOKEN
       },
       body: JSON.stringify({
+        connectionId: CONNECTION_ID,
         number: tel,
-        body: mensaje
+        message: mensaje
       })
     });
 
