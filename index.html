@@ -740,6 +740,7 @@ textarea{resize:vertical;min-height:64px}
             <div class="field"><label>Tipo</label><select id="nv-ftipo"><option value="aprox">Aproximada</option><option value="fija">Fija</option><option value="obligada">Obligada cliente</option></select></div>
             <div class="field"><label>Operario</label><select id="nv-operario"><option>Marilia</option><option>Álvaro</option><option>Charo</option><option>Raúl</option><option>Bea</option></select></div>
           </div>
+          <div id="nv-aviso-plazos" style="display:none;margin-top:8px;padding:8px 12px;background:#fff8e1;border-radius:6px;font-size:12px;color:#8d6e00;border:1px solid #ffe082"></div>
         </div>
         <!-- Montaje / Instalación -->
         <div class="card">
@@ -2647,18 +2648,40 @@ function calcFechaEntrega(diasHabiles){
 
 // Obtener plazo máximo de las líneas añadidas
 function nvActualizarFecha(){
-  if(!nvLineas.length)return;
-  var maxPlazo=0;
+  var avisoEl=document.getElementById('nv-aviso-plazos');
+  if(!nvLineas.length){avisoEl.style.display='none';return;}
+  
+  // Recopilar plazos de cada producto
+  var plazos=[];
   nvLineas.forEach(function(l){
     var prod=P[l.cat];
-    if(prod&&prod.plazo&&prod.plazo>maxPlazo)maxPlazo=prod.plazo;
-  });
-  if(maxPlazo>0){
-    var fechaSugerida=calcFechaEntrega(maxPlazo);
-    var fechaInput=document.getElementById('nv-fecha');
-    if(!fechaInput.value||fechaInput.value<fechaSugerida){
-      fechaInput.value=fechaSugerida;
+    if(prod&&prod.plazo){
+      plazos.push({nombre:prod.name,plazo:prod.plazo,fecha:calcFechaEntrega(prod.plazo)});
     }
+  });
+  
+  if(!plazos.length){avisoEl.style.display='none';return;}
+  
+  // Ordenar por plazo
+  plazos.sort(function(a,b){return a.plazo-b.plazo;});
+  var minPlazo=plazos[0].plazo;
+  var maxPlazo=plazos[plazos.length-1].plazo;
+  
+  // Fecha sugerida = la mayor
+  var fechaSugerida=calcFechaEntrega(maxPlazo);
+  var fechaInput=document.getElementById('nv-fecha');
+  if(!fechaInput.value||fechaInput.value<fechaSugerida){
+    fechaInput.value=fechaSugerida;
+  }
+  
+  // Mostrar aviso si hay plazos diferentes
+  if(minPlazo!==maxPlazo){
+    var fechaMin=new Date(plazos[0].fecha).toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+    var fechaMax=new Date(plazos[plazos.length-1].fecha).toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+    avisoEl.innerHTML='⚠️ <strong>'+plazos[0].nombre+'</strong> lista el '+fechaMin+', pero <strong>'+plazos[plazos.length-1].nombre+'</strong> necesita hasta el '+fechaMax+'. Entrega conjunta: <strong>'+fechaMax+'</strong>';
+    avisoEl.style.display='block';
+  }else{
+    avisoEl.style.display='none';
   }
 }
 
