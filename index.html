@@ -589,6 +589,7 @@ textarea{resize:vertical;min-height:64px}
           <div class="result-divider"></div>
           <div class="result-row"><span class="result-label">TOTAL SIN IVA</span><span class="result-val" id="c-r-siniva">—</span></div>
           <div class="result-row"><span class="result-label">TOTAL CON IVA (21%)</span><span class="result-main" id="c-r-coniva">—</span></div>
+          <div id="c-r-plazo" style="display:none;margin-top:8px;padding:6px 10px;background:#e8f5e9;border-radius:6px;font-size:12px;color:#2e7d32;text-align:center">📦 Entrega: <strong id="c-r-plazo-dias">—</strong></div>
           <div id="c-r-unitario" class="result-unit"></div>
           <div id="c-r-tramo" class="result-tramo" style="display:none"></div>
         </div>
@@ -2007,6 +2008,16 @@ function cV2calc(){
   
   document.getElementById('c-r-siniva').textContent=cV2Fmt(sinIva);
   document.getElementById('c-r-coniva').textContent=cV2Fmt(conIva);
+  
+  // Mostrar plazo de entrega
+  var plazoEl=document.getElementById('c-r-plazo');
+  if(p.plazo){
+    plazoEl.style.display='block';
+    document.getElementById('c-r-plazo-dias').textContent=p.plazo+' días hábiles';
+  }else{
+    plazoEl.style.display='none';
+  }
+  
   document.getElementById('c-r-unitario').textContent=res.qty>1&&res.pu?'Precio unitario: '+cV2Fmt(res.pu)+(p.sinIva?' sin IVA':' con IVA')+(res.unitLabel?' '+res.unitLabel:'')+' ('+res.qty+' uds)':'';
   if(res.tierQty&&res.qty!==res.tierQty){document.getElementById('c-r-tramo').style.display='block';document.getElementById('c-r-tramo').textContent='Tramo: '+res.tierQty.toLocaleString('es-ES')+' uds → precio de tramo × '+res.qty+' uds';}
   else document.getElementById('c-r-tramo').style.display='none';
@@ -2426,11 +2437,13 @@ function nuevaVenta(){
 }
 
 function abrirVentaDesdeCarrito(){
-  nvLineas=carrito.map(function(c){return{sec:CAT_TO_SEC[c.cat]||'XR',desc:c.desc,total:c.total};});
+  nvLineas=carrito.map(function(c){return{sec:CAT_TO_SEC[c.cat]||'XR',desc:c.desc,total:c.total,cat:c.cat,plazo:P[c.cat]&&P[c.cat].plazo||0};});
   limpiarCarrito();
   document.getElementById('nv-nombre').value='';document.getElementById('nv-tel').value='';document.getElementById('nv-email').value='';document.getElementById('nv-sector').value='';
   document.getElementById('nv-cat').value='';document.getElementById('nv-campos-dinamicos').innerHTML='';document.getElementById('nv-unidades-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-result').style.display='none';document.getElementById('nv-upsell').style.display='none';document.getElementById('nv-btn-add').style.display='none';
+  document.getElementById('nv-fecha').value='';
   nvRenderLineas();
+  nvActualizarFecha();
   document.getElementById('modal-venta').classList.add('open');
 }
 
