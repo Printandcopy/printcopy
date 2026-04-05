@@ -1,13 +1,23 @@
 {
-  "name": "printcopy-app",
-  "version": "1.0.0",
-  "description": "Print & Copy - Sistema de gestión",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'Build complete'",
-    "start": "vercel dev"
-  },
-  "dependencies": {
-    "nodemailer": "^6.9.8"
-  }
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "api/*.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 }
