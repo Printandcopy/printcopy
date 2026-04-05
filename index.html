@@ -475,7 +475,10 @@ textarea{resize:vertical;min-height:64px}
 
 <!-- CLIENTES -->
 <div id="screen-clientes" class="screen">
-  <div class="card" style="margin-bottom:10px"><input type="text" id="search-clientes" placeholder="Buscar cliente..." oninput="renderClientes(this.value)"></div>
+  <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center">
+    <input type="text" id="search-clientes" placeholder="Buscar cliente..." oninput="renderClientes(this.value)" style="flex:1">
+    <button class="btn btn-primary" onclick="abrirNuevoCliente()">+ Nuevo cliente</button>
+  </div>
   <div id="clientes-list"></div>
 </div>
 
@@ -849,7 +852,7 @@ textarea{resize:vertical;min-height:64px}
 
 <div class="modal-overlay" id="modal-editar-cliente">
   <div class="modal" style="max-width:520px">
-    <h3>Editar cliente</h3>
+    <h3 id="modal-cliente-titulo">Editar cliente</h3>
     <div class="form-grid" style="margin-bottom:10px">
       <div class="field"><label>Nombre *</label><input type="text" id="ec-nombre"></div>
       <div class="field"><label>Teléfono</label><input type="tel" id="ec-tel" maxlength="9"></div>
@@ -1607,11 +1610,13 @@ function editarCliente(id){
   document.getElementById('ec-pago').value=c.pago||'50_50';
   var nivelManual=c.nivel==='restringido'||c.nivel==='premium'?c.nivel:'auto';
   document.getElementById('ec-nivel').value=nivelManual;
+  document.getElementById('modal-cliente-titulo').textContent='Editar cliente';
+  document.querySelector('#modal-editar-cliente .btn-primary').textContent='Guardar cambios';
   document.getElementById('modal-editar-cliente').classList.add('open');
 }
 
 function guardarEdicionCliente(){
-  var c=clientes.find(function(x){return x.id==_editClienteId;});if(!c)return;
+  var isNew=!_editClienteId;
   var nombre=document.getElementById('ec-nombre').value.trim();
   if(!nombre){alert('El nombre es obligatorio');return;}
   var tel=document.getElementById('ec-tel').value.trim();
@@ -1620,18 +1625,47 @@ function guardarEdicionCliente(){
   var pagoVal=document.getElementById('ec-pago').value;
   var nivelSel=document.getElementById('ec-nivel').value;
   var condText=pagoLabel(pagoVal);
-  c.nombre=nombre;c.telefono=tel;c.email=email;c.sector=sector;
-  c.pago=pagoVal;c.condiciones=condText;
-  if(nivelSel==='auto')delete c.nivel;else c.nivel=nivelSel;
-  sb.from('clientes').update({
-    nombre:nombre,telefono:tel,email:email,sector:sector,
-    condiciones:condText,pago:pagoVal,
-    nivel:nivelSel==='auto'?null:nivelSel
-  }).eq('id',_editClienteId).then(function(r){
-    if(r.error){alert('Error al guardar: '+r.error.message);return;}
-  });
-  closeModal('modal-editar-cliente');
-  renderClientes(document.getElementById('search-clientes').value);
+  
+  if(isNew){
+    // Crear nuevo cliente
+    var newData={nombre:nombre,telefono:tel,email:email,sector:sector,condiciones:condText,pago:pagoVal,nivel:nivelSel==='auto'?null:nivelSel};
+    sb.from('clientes').insert([newData]).select().then(function(r){
+      if(r.error){alert('Error al crear: '+r.error.message);return;}
+      newData.id=r.data[0].id;
+      clientes.push(newData);
+      closeModal('modal-editar-cliente');
+      renderClientes('');
+      alert('Cliente creado correctamente');
+    });
+  }else{
+    // Editar existente
+    var c=clientes.find(function(x){return x.id==_editClienteId;});if(!c)return;
+    c.nombre=nombre;c.telefono=tel;c.email=email;c.sector=sector;
+    c.pago=pagoVal;c.condiciones=condText;
+    if(nivelSel==='auto')delete c.nivel;else c.nivel=nivelSel;
+    sb.from('clientes').update({
+      nombre:nombre,telefono:tel,email:email,sector:sector,
+      condiciones:condText,pago:pagoVal,
+      nivel:nivelSel==='auto'?null:nivelSel
+    }).eq('id',_editClienteId).then(function(r){
+      if(r.error){alert('Error al guardar: '+r.error.message);return;}
+    });
+    closeModal('modal-editar-cliente');
+    renderClientes(document.getElementById('search-clientes').value);
+  }
+}
+
+function abrirNuevoCliente(){
+  _editClienteId=null;
+  document.getElementById('ec-nombre').value='';
+  document.getElementById('ec-tel').value='';
+  document.getElementById('ec-email').value='';
+  document.getElementById('ec-sector').value='';
+  document.getElementById('ec-pago').value='50_50';
+  document.getElementById('ec-nivel').value='auto';
+  document.getElementById('modal-cliente-titulo').textContent='Nuevo cliente';
+  document.querySelector('#modal-editar-cliente .btn-primary').textContent='Crear cliente';
+  document.getElementById('modal-editar-cliente').classList.add('open');
 }
 
 function setNivelManual(id,nivel){
