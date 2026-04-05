@@ -1,43 +1,34 @@
-// API Route: /api/whatsapp - Whaticket Integration
-const WHATICKET_URL = 'https://api.whaticket.com';
 const WHATICKET_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6WyJjcmVhdGU6bWVzc2FnZXMiLCJjcmVhdGU6Y29udGFjdHMiXSwiY29tcGFueUlkIjoiMzQxNzEyYWMtYzhhMy00NGMzLWE5ZDctZGIzZDRiNzhiYzU0IiwiaWF0IjoxNzc1MzcxNTE4fQ.-KPCiTDj46gREXYpkMeMJuQwj8msINyu0kwyyuNzIag';
-const CONNECTION_ID = '74b01007-4608-4c29-a086-190786999f56';
+const WHATSAPP_ID = '74b01007-4608-4c29-a086-190786999f56';
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { telefono, mensaje } = req.body;
-
-    if (!telefono || !mensaje) {
-      return res.status(400).json({ error: 'Faltan campos' });
-    }
+    const { telefono, mensaje, nombre } = req.body;
+    if (!telefono || !mensaje) return res.status(400).json({ error: 'Faltan campos' });
 
     let tel = telefono.replace(/\s/g, '').replace(/^\+/, '');
-    if (tel.length === 9 && !tel.startsWith('34')) {
-      tel = '34' + tel;
-    }
+    if (tel.length === 9 && !tel.startsWith('34')) tel = '34' + tel;
 
-    const response = await fetch(WHATICKET_URL + '/v1/messages/send', {
+    const response = await fetch('https://api.whaticket.com/api/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + WHATICKET_TOKEN
       },
       body: JSON.stringify({
-        connectionId: CONNECTION_ID,
-        number: tel,
-        message: mensaje
+        whatsappId: WHATSAPP_ID,
+        messages: [{
+          number: tel,
+          name: nombre || 'Cliente',
+          body: mensaje
+        }]
       })
     });
 
@@ -47,7 +38,7 @@ module.exports = async function handler(req, res) {
       return res.status(response.status).json({ error: 'Error Whaticket', details: data });
     }
 
-    return res.status(200).json({ success: true, message: 'WhatsApp enviado', data: data });
+    return res.status(200).json({ success: true, data: data });
 
   } catch (error) {
     return res.status(500).json({ error: 'Error interno', details: error.message });
