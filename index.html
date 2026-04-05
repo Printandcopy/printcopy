@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Print & Copy v47</title>
+<title>Print & Copy v48</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
@@ -284,7 +284,7 @@ textarea{resize:vertical;min-height:64px}
 <body>
 <header>
   <div class="header-left">
-    <h1>🖨️ Print &amp; Copy <span style="font-size:10px;color:#666;font-weight:400">v47</span></h1>
+    <h1>🖨️ Print &amp; Copy <span style="font-size:10px;color:#666;font-weight:400">v48</span></h1>
     <div id="clock-wrap" style="display:none">
       <div class="clock-time" id="clock-time"></div>
       <div class="clock-date" id="clock-date"></div>
@@ -736,7 +736,7 @@ textarea{resize:vertical;min-height:64px}
           <div class="card-title">Entrega</div>
           <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr">
             <div class="field"><label>Fecha</label><input type="date" id="nv-fecha"></div>
-            <div class="field"><label>Tipo</label><select id="nv-ftipo"><option value="aprox">Aproximada</option><option value="fija">Fija</option></select></div>
+            <div class="field"><label>Tipo</label><select id="nv-ftipo"><option value="aprox">Aproximada</option><option value="fija">Fija</option><option value="obligada">Obligada cliente</option></select></div>
             <div class="field"><label>Operario</label><select id="nv-operario"><option>Marilia</option><option>Álvaro</option><option>Charo</option><option>Raúl</option><option>Bea</option></select></div>
           </div>
         </div>
@@ -1756,7 +1756,7 @@ rollup:{name:"Roll Up / Fotocall Roll Up",sinIva:true,fields:[{id:'tipo',label:'
 banderas:{name:"Banderas",sinIva:true,fields:[{id:'tam',label:'Tamaño (cm)',type:'select',options:['30×45','50×75','60×100','100×150','120×180','150×250']}],extrasDef:[{key:'diseno',label:'Diseño',price:9},{key:'express',label:'Express 48h',price:10}],prices:{"30×45":43.50,"50×75":49,"60×100":59,"100×150":79,"120×180":89,"150×250":99},calc:function(v){return{base:this.prices[v.tam]||0,qty:1};}},
 flyers:{name:"Flyers / Dípticos / Trípticos",sinIva:true,fields:[{id:'fmt',label:'Formato',type:'select',options:['A6','A5','Díptico A5','Díptico A4']},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[{key:'diseno',label:'Diseño',price:36}],tiers:[100,250,500,1000,2500,5000,10000],totals:{"A6":[32,39,52,64,75,96,119],"A5":[39,49,64,84,118,168,238],"Díptico A5":[62,79,94,104,148,212,345],"Díptico A4":[69,89,104,119,184,296,495]},calc:function(v){var q=parseInt(v.qty)||0;if(q<100)return{error:'Mínimo 100 uds'};var idx=floorIdx(this.tiers,q);if(idx<0)return{error:'Mínimo 100 uds'};var tq=this.tiers[idx],tot=this.totals[v.fmt][idx],pu=cV2R2(tot/tq);return{base:cV2R2(pu*q),qty:q,pu:pu,tierQty:tq,tiers:this.tiers};}},
 carteles:{name:"Carteles publicitarios",sinIva:true,fields:[{id:'qty',label:'Cantidad',type:'number',min:5}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],tiers:[5,10,25,50,100,200],unitPrices:[1.20,1.10,0.90,0.80,0.60,0.45],calc:function(v){var q=parseInt(v.qty)||0;if(q<5)return{error:'Mínimo 5 uds'};var idx=floorIdx(this.tiers,q);return{base:cV2R2(this.unitPrices[idx]*q),qty:q,pu:this.unitPrices[idx],tierQty:this.tiers[idx],tiers:this.tiers};}},
-tarjetas:{name:"Tarjetas de visita",sinIva:true,fields:[{id:'caras',label:'Caras',type:'select',options:['1 cara','2 caras']},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],extrasDyn:['laminado','esquinas'],tiers:[100,250,500,1000],totals:{"1 cara":[24,32,48,59],"2 caras":[27,39,49,68]},laminado:{"1 cara":[10,12,20,29],"2 caras":[12,15,25,39]},esquinas:[7.50,10,15,21],calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<100)return{error:'Mínimo 100 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],pu=cV2R2(this.totals[v.caras][idx]/tq),base=cV2R2(pu*q),er=[];if(ex&&ex.laminado)er.push({label:'Laminado',val:cV2Fmt(this.laminado[v.caras][idx]),amount:this.laminado[v.caras][idx]});if(ex&&ex.esquinas)er.push({label:'Esquinas redondeadas',val:cV2Fmt(this.esquinas[idx]),amount:this.esquinas[idx]});return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers,extraRows:er};}},
+tarjetas:{name:"Tarjetas de visita",sinIva:true,plazo:5,fields:[{id:'caras',label:'Caras',type:'select',options:['1 cara','2 caras']},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],extrasDyn:['laminado','esquinas'],tiers:[100,250,500,1000],totals:{"1 cara":[24,32,48,59],"2 caras":[27,39,49,68]},laminado:{"1 cara":[10,12,20,29],"2 caras":[12,15,25,39]},esquinas:[7.50,10,15,21],calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<100)return{error:'Mínimo 100 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],pu=cV2R2(this.totals[v.caras][idx]/tq),base=cV2R2(pu*q),er=[];if(ex&&ex.laminado)er.push({label:'Laminado',val:cV2Fmt(this.laminado[v.caras][idx]),amount:this.laminado[v.caras][idx]});if(ex&&ex.esquinas)er.push({label:'Esquinas redondeadas',val:cV2Fmt(this.esquinas[idx]),amount:this.esquinas[idx]});return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers,extraRows:er};}},
 tarjetas_troq:{name:"Tarjetas troqueladas",sinIva:true,fields:[{id:'caras',label:'Caras',type:'select',options:['1 cara','2 caras']},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],extrasDyn:['laminado'],tiers:[100,250,500,1000],totals:{"1 cara":[35,45,65,79],"2 caras":[35,55,75,89]},laminado:{"1 cara":[10,12,20,29],"2 caras":[12,15,25,39]},calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<100)return{error:'Mínimo 100 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],pu=cV2R2(this.totals[v.caras][idx]/tq),base=cV2R2(pu*q),er=[];if(ex&&ex.laminado)er.push({label:'Laminado',val:cV2Fmt(this.laminado[v.caras][idx]),amount:this.laminado[v.caras][idx]});return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers,extraRows:er};}},
 tarjetas_pvc:{name:"Tarjetas PVC",sinIva:true,fields:[{id:'caras',label:'Caras',type:'select',options:['1 cara','2 caras']},{id:'qty',label:'Cantidad',type:'number',min:50}],extrasDef:[{key:'diseno',label:'Diseño',price:12}],extrasDyn:['banda'],tiers:[50,100,250,500,1000],unitPrices:{"1 cara":[1.09,0.99,0.89,0.79,0.69],"2 caras":[1.49,1.29,1.19,1.09,0.99]},calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<50)return{error:'Mínimo 50 uds'};var idx=floorIdx(this.tiers,q),pu=this.unitPrices[v.caras][idx],base=cV2R2(pu*q),er=[];if(ex&&ex.banda){var bp=cV2R2(0.12*q);er.push({label:'Banda magnética',val:cV2Fmt(bp),amount:bp});}return{base:base,qty:q,pu:pu,tierQty:this.tiers[idx],tiers:this.tiers,extraRows:er};}},
 tarjetas_especiales:{name:"Tarjetas acabados especiales",sinIva:true,fields:[{id:'qty',label:'Cantidad',type:'number',min:250}],extrasDef:[{key:'diseno',label:'Diseño',price:21}],extrasDyn:['segunda_cara'],tiers:[250,500,1000],totals:[85,119,139],segunda_cara:[15,25,35],calc:function(v,ex){var q=parseInt(v.qty)||0;if(q<250)return{error:'Mínimo 250 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],pu=cV2R2(this.totals[idx]/tq),base=cV2R2(pu*q),er=[];if(ex&&ex.segunda_cara)er.push({label:'Segunda cara',val:cV2Fmt(this.segunda_cara[idx]),amount:this.segunda_cara[idx]});return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers,extraRows:er};}},
@@ -2620,6 +2620,35 @@ function nvAddEst(){
   wrap.appendChild(div);nvCalc();
 }
 
+// Calcular fecha de entrega sumando días hábiles (L-V)
+function calcFechaEntrega(diasHabiles){
+  var fecha=new Date();
+  var dias=0;
+  while(dias<diasHabiles){
+    fecha.setDate(fecha.getDate()+1);
+    var dow=fecha.getDay();
+    if(dow!==0&&dow!==6)dias++; // Solo L-V
+  }
+  return fecha.toISOString().split('T')[0];
+}
+
+// Obtener plazo máximo de las líneas añadidas
+function nvActualizarFecha(){
+  if(!nvLineas.length)return;
+  var maxPlazo=0;
+  nvLineas.forEach(function(l){
+    var prod=P[l.cat];
+    if(prod&&prod.plazo&&prod.plazo>maxPlazo)maxPlazo=prod.plazo;
+  });
+  if(maxPlazo>0){
+    var fechaSugerida=calcFechaEntrega(maxPlazo);
+    var fechaInput=document.getElementById('nv-fecha');
+    if(!fechaInput.value||fechaInput.value<fechaSugerida){
+      fechaInput.value=fechaSugerida;
+    }
+  }
+}
+
 function nvAddLinea(){
   if(!_nvRes)return;
   var prod=P[_nvRes.cat];
@@ -2650,8 +2679,9 @@ function nvAddLinea(){
   // Unidades (multiplicador)
   if(unidades>1)desc=' ['+unidades+' uds] '+desc;
   
-  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,cat:_nvRes.cat,unidades:unidades});
+  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,cat:_nvRes.cat,unidades:unidades,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0});
   nvRenderLineas();
+  nvActualizarFecha();
   nvShowCross(_nvRes.cat);
   
   // Limpiar para siguiente producto
