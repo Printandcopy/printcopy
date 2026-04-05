@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Print & Copy v45</title>
+<title>Print & Copy v46</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
@@ -284,7 +284,7 @@ textarea{resize:vertical;min-height:64px}
 <body>
 <header>
   <div class="header-left">
-    <h1>🖨️ Print &amp; Copy <span style="font-size:10px;color:#666;font-weight:400">v45</span></h1>
+    <h1>🖨️ Print &amp; Copy <span style="font-size:10px;color:#666;font-weight:400">v46</span></h1>
     <div id="clock-wrap" style="display:none">
       <div class="clock-time" id="clock-time"></div>
       <div class="clock-date" id="clock-date"></div>
@@ -2740,7 +2740,15 @@ function nvGuardar(estado){
         var lineasDB=nvLineas.map(function(l,i){return{presupuesto_id:presId,seccion:l.sec,descripcion:l.desc,cantidad:l.unidades||1,precio_unitario:l.total/(l.unidades||1),subtotal:l.total,orden:i};});
         sb.from('presupuesto_lineas').insert(lineasDB).then(function(){
           closeModal('modal-venta');cargarPresupuestos();
-          alert('Cotización '+numero+' guardada');
+          if(estado==='enviado' && email){
+            var lineasTexto=nvLineas.map(function(l){return '• '+l.desc+': '+l.total.toFixed(2)+'€';}).join('\n');
+            var cuerpo='Hola '+nombre+',\n\nGracias por tu interés en Print & Copy.\n\nTe adjuntamos tu presupuesto '+numero+':\n\n'+lineasTexto+'\n\nSubtotal: '+sub.toFixed(2)+'€'+(dto>0?'\nDescuento: '+dto+'%':'')+'\nTOTAL: '+total.toFixed(2)+'€\n\nValidez: '+validez+' días (hasta '+fechaExp+')\nCondiciones: '+condicion+'\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\n¡Gracias por confiar en nosotros!\nEl equipo de Print & Copy';
+            fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({destinatario:email,asunto:'Presupuesto '+numero+' - Print & Copy',mensaje:cuerpo})}).then(function(r){return r.json();}).then(function(d){
+              if(d.success){alert('Cotización '+numero+' guardada y enviada por email');}else{alert('Cotización '+numero+' guardada. Error al enviar email: '+(d.error||'desconocido'));}
+            }).catch(function(e){alert('Cotización '+numero+' guardada. Error al enviar: '+e.message);});
+          }else{
+            alert('Cotización '+numero+' guardada');
+          }
         });
       });
     });
