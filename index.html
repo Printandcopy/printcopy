@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Print & Copy v43</title>
+<title>Print & Copy v45</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,sans-serif}
@@ -284,7 +284,7 @@ textarea{resize:vertical;min-height:64px}
 <body>
 <header>
   <div class="header-left">
-    <h1>🖨️ Print &amp; Copy</h1>
+    <h1>🖨️ Print &amp; Copy <span style="font-size:10px;color:#666;font-weight:400">v45</span></h1>
     <div id="clock-wrap" style="display:none">
       <div class="clock-time" id="clock-time"></div>
       <div class="clock-date" id="clock-date"></div>
@@ -1281,13 +1281,13 @@ function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');gener
 var MSG_TEMPLATES={
   listo:{
     asunto:'Tu pedido está listo - Print & Copy',
-    wa:'Hola {nombre}! 👋\n\nTu pedido *{id}* está *listo para recoger* en Print & Copy.\n\n📦 {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 C/ Toro 48, Salamanca\n⏰ L-V 10:00-14:00 y 17:00-20:00\n\n¡Te esperamos! 🙌',
-    email:'Hola {nombre},\n\nTe informamos que tu pedido {id} ya está listo para recoger.\n\n📦 Trabajo: {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 Puedes pasar a recogerlo en:\nC/ Toro 48, Salamanca\nHorario: L-V 10:00-14:00 y 17:00-20:00\n\n¡Gracias por confiar en Print & Copy!\n\nUn saludo,\nEl equipo de Print & Copy'
+    wa:'Hola {nombre}! 👋\n\nTu pedido *{id}* está *listo para recoger* en Print & Copy.\n\n📦 {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\n¡Te esperamos! 🙌',
+    email:'Hola {nombre},\n\nTe informamos que tu pedido {id} ya está listo para recoger.\n\n📦 Trabajo: {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 Puedes pasar a recogerlo en:\nAv. Portugal 62, Salamanca\nHorario: L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\n¡Gracias por confiar en Print & Copy!\n\nUn saludo,\nEl equipo de Print & Copy'
   },
   recuerdo:{
     asunto:'Recordatorio: Tu pedido está pendiente - Print & Copy',
-    wa:'Hola {nombre}! 👋\n\nTe recordamos que tu pedido *{id}* está *pendiente de recoger* en Print & Copy.\n\n📦 {descripcion}\n💰 Pendiente: {pendiente_num}€\n\n📍 C/ Toro 48, Salamanca\n⏰ L-V 10:00-14:00 y 17:00-20:00\n\n¿Alguna duda? Escríbenos 😊',
-    email:'Hola {nombre},\n\nTe recordamos que tienes un pedido pendiente de recoger en Print & Copy.\n\n📦 Pedido: {id}\n📦 Trabajo: {descripcion}\n💰 Pendiente de pago: {pendiente_num}€\n\n📍 Dirección:\nC/ Toro 48, Salamanca\nHorario: L-V 10:00-14:00 y 17:00-20:00\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nUn saludo,\nEl equipo de Print & Copy'
+    wa:'Hola {nombre}! 👋\n\nTe recordamos que tu pedido *{id}* está *pendiente de recoger* en Print & Copy.\n\n📦 {descripcion}\n💰 Pendiente: {pendiente_num}€\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\n¿Alguna duda? Escríbenos 😊',
+    email:'Hola {nombre},\n\nTe recordamos que tienes un pedido pendiente de recoger en Print & Copy.\n\n📦 Pedido: {id}\n📦 Trabajo: {descripcion}\n💰 Pendiente de pago: {pendiente_num}€\n\n📍 Dirección:\nAv. Portugal 62, Salamanca\nHorario: L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nUn saludo,\nEl equipo de Print & Copy'
   },
   confirmacion:{
     asunto:'Confirmación de pedido - Print & Copy',
