@@ -1,0 +1,13 @@
+{
+  "name": "printcopy-app",
+  "version": "1.0.0",
+  "description": "Print & Copy - Sistema de gestión",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Build complete'",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.8"
+  }
+}
