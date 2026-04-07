@@ -303,6 +303,14 @@ textarea{resize:vertical;min-height:64px}
     </div>
   </div>
 </header>
+<!-- BARRA AVISOS ACEPTADOS -->
+<div id="barra-avisos" style="display:none;background:#A32D2D;color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:56px;z-index:99;cursor:pointer" onclick="abrirPrimerAceptado()">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:18px">🔔</span>
+    <span id="barra-avisos-texto" style="font-size:13px;font-weight:700"></span>
+  </div>
+  <span style="font-size:12px;background:rgba(255,255,255,.2);padding:5px 14px;border-radius:20px;font-weight:700">Crear pedido →</span>
+</div>
 
 <!-- PRESUPUESTOS (Solicitudes + Cotizaciones) -->
 <div id="screen-solicitudes" class="screen">
@@ -3675,6 +3683,28 @@ function cotSeguimientoEmail(){
 function cotRechazar(){
   if(!_cotActual||!confirm('¿Rechazar?'))return;
   sb.from('presupuestos').update({estado:'rechazado'}).eq('id',_cotActual.id).then(function(){closeModal('modal-cot');cargarPresupuestos();});
+}
+
+function abrirPrimerAceptado(){
+  var p=presupuestos.find(function(x){return x.estado==='aceptado'&&x.aceptado_por_cliente;});
+  if(p)verCotizacion(p.id);
+}
+
+function actualizarBarraAvisos(){
+  var pendientes=presupuestos.filter(function(p){return p.estado==='aceptado'&&p.aceptado_por_cliente&&!p.convertido;});
+  var barra=document.getElementById('barra-avisos');
+  var txt=document.getElementById('barra-avisos-texto');
+  if(!barra)return;
+  if(pendientes.length){
+    barra.style.display='flex';
+    if(pendientes.length===1){
+      txt.textContent=pendientes[0].cliente_nombre+' aceptó '+pendientes[0].numero+' — pendiente de crear pedido';
+    } else {
+      txt.textContent=pendientes.length+' presupuestos aceptados pendientes de crear pedido';
+    }
+  } else {
+    barra.style.display='none';
+  }
 }
 
 function cotConvertir(){
