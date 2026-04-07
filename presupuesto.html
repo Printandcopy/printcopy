@@ -148,6 +148,17 @@ textarea{width:100%;min-height:80px;font-size:13px;padding:9px;border:1px solid 
 
         <!-- PASO 1: botones iniciales -->
         <div id="paso1">
+          <div id="desglose-senal" style="display:none;background:#EAF3DE;border-radius:8px;padding:12px 14px;margin-bottom:10px;font-size:13px;border:1px solid #C0DD97">
+            <div style="font-size:11px;color:#3B6D11;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Resumen de pago</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+              <span style="color:#555">Pagas ahora (señal)</span>
+              <span id="ds-senal" style="font-weight:700;color:#3B6D11;font-size:15px">—</span>
+            </div>
+            <div style="display:flex;justify-content:space-between">
+              <span style="color:#555">Pagas al recoger</span>
+              <span id="ds-resto" style="font-weight:700;color:#185FA5;font-size:15px">—</span>
+            </div>
+          </div>
           <button class="btn-aceptar" onclick="mostrarPago()">
             Acepto el presupuesto
           </button>

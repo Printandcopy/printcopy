@@ -3875,8 +3875,19 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo){
 function confirmarSenal(presId){
   var pres=presupuestos.find(function(p){return p.id===presId;});
   if(!pres)return;
-  if(!confirm('Confirmar señal cobrada y pasar a taller?\n'+pres.numero+' - '+pres.cliente_nombre))return;
-  function crear(p){crearPedidoDesdePresupuesto(p,calcSenal(parseFloat(p.total)||0,p.condicion_pago),p.metodo_pago_senal);}
+  if(!confirm('Confirmar cobro y pasar a taller?\n'+pres.numero+' - '+pres.cliente_nombre))return;
+  function crear(p){
+    crearPedidoDesdePresupuesto(p,calcSenal(parseFloat(p.total)||0,p.condicion_pago),p.metodo_pago_senal);
+    if(p.cliente_telefono){
+      var tel=p.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
+      if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+      var nombre=p.cliente_nombre.split(' ')[0];
+      var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
+      var resto=parseFloat(p.total)-senal;
+      var msg='Hola '+nombre+'!\n\nHemos recibido tu pago del presupuesto *'+p.numero+'*.\n\nTu pedido ya esta en produccion.\n'+(resto>0?'Quedan *'+resto.toFixed(2)+'EUR* al recoger.\n\n':'\n')+'Print & Copy - 923 018 034';
+      fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA:',d.error);});
+    }
+  }
   if(pres.lineas&&pres.lineas.length){crear(pres);}
   else{sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',pres.id).then(function(r){pres.lineas=r.data||[];crear(pres);});}
 }
@@ -3955,11 +3966,11 @@ function actualizarBarraAvisos(){
     }
     if(pendCobro.length){
       html+='<div style="padding:10px 20px 4px;font-size:10px;color:#FAC775;text-transform:uppercase;letter-spacing:.8px">Pendientes de cobro de senal</div>';
-      var mlbl={bizum:'Bizum/Tarjeta',transf:'Transferencia',efectivo:'Efectivo'};
+      var mlbl={bizum:'Bizum/Tarjeta',transf:'Transferencia',efectivo:'Efectivo',sin_metodo:'Metodo no registrado'};
       html+=pendCobro.map(function(p){
         var dias=p.updated_at?Math.floor((ahora-new Date(p.updated_at))/(1000*60*60*24)):0;
         var urgente=dias>=3;
-        var m=p.metodo_pago_senal||'pendiente';
+        var m=p.metodo_pago_senal||'sin_metodo';
         var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
         var bg=urgente?'#412402':'#1a3a0a';
         var bdr=urgente?'border-left:3px solid #EF9F27;':'';
