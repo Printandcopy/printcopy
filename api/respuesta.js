@@ -95,11 +95,12 @@ module.exports = async function handler(req, res) {
         efectivo: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
           + `Ref: *${pres.numero}* · ${ahora}\n`
           + `Total: ${totalFmt}\n\n`
-          + `💵 *Pago en tienda: ${senalFmt}*\n`
+          + `🏪 *Pago en tienda: ${senalFmt}*\n`
+          + `Efectivo, tarjeta o Bizum\n`
           + `Av. Portugal 62, Salamanca\n`
-          + `L-V 9:30-14:00 y 16:30-20:00 · S 10:00-14:00\n\n`
+          + `L-V 9:30-14:00 y 16:30-20:00 · Sáb 10:00-14:00\n\n`
           + (restoFmt ? `Resto al recoger: ${restoFmt}\n\n` : '')
-          + `Arrancamos en cuanto pases por tienda.\n`
+          + `Arrancamos en cuanto pases.\n`
           + `Print & Copy · 923 018 034`,
         pendiente: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
           + `Ref: *${pres.numero}* · ${ahora}\n`

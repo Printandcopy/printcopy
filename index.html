@@ -381,7 +381,7 @@ textarea{resize:vertical;min-height:64px}
         <input type="text" id="sol-nombre" placeholder="Buscar o escribir nombre..." oninput="solBuscarCliente(this.value)">
         <div id="sol-resultados" class="search-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #ddd;border-radius:6px;max-height:150px;overflow-y:auto;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.15)"></div>
       </div>
-      <div class="field"><label>Teléfono *</label><input type="tel" id="sol-tel" placeholder="600 000 000" maxlength="11" oninput="formatTel(this)"></div>
+      <div class="field"><label>Teléfono *</label><input type="tel" id="sol-tel" placeholder="600 000 000" maxlength="9" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,9)"></div>
       <div class="field"><label>Email</label><input type="email" id="sol-email" placeholder="email@ejemplo.com"></div>
       <div class="field"><label>Sector</label>
         <select id="sol-sector"><option value="">—</option><option value="particular">Particular</option><option value="hosteleria">Hostelería</option><option value="comercio">Comercio</option><option value="empresa">Empresa</option><option value="eventos">Eventos</option><option value="inmobiliaria">Inmobiliaria</option></select>
@@ -680,7 +680,7 @@ textarea{resize:vertical;min-height:64px}
           </div>
           <div class="form-grid">
             <div class="field"><label>Nombre</label><input type="text" id="nv-nombre"></div>
-            <div class="field"><label>Teléfono</label><input type="tel" id="nv-tel" placeholder="600 000 000" maxlength="11" oninput="formatTel(this)"></div>
+            <div class="field"><label>Teléfono</label><input type="tel" id="nv-tel" placeholder="600 000 000" maxlength="9" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,9)"></div>
             <div class="field"><label>Email</label><input type="email" id="nv-email"></div>
             <div class="field"><label>Sector</label>
               <select id="nv-sector"><option value="">—</option><option value="particular">Particular</option><option value="hosteleria">Hostelería</option><option value="comercio">Comercio</option><option value="empresa">Empresa</option><option value="eventos">Eventos</option></select>
@@ -808,12 +808,12 @@ textarea{resize:vertical;min-height:64px}
         <div class="card">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
             <input type="checkbox" id="nv-envio" onchange="nvToggleEnvio()" style="width:auto">
-            <span style="font-size:13px;font-weight:500">Necesita envío a domicilio</span>
+            <span style="font-size:13px;font-weight:500;color:#185FA5">&#128666; Necesita envío a domicilio</span>
           </label>
           <div id="nv-envio-fields" style="display:none;margin-top:10px">
             <div class="form-grid">
               <div class="field"><label>Nombre destinatario</label><input type="text" id="nv-envio-nombre" placeholder="Nombre completo"></div>
-              <div class="field"><label>Teléfono contacto</label><input type="text" id="nv-envio-tel" placeholder="600 000 000"></div>
+              <div class="field"><label>Teléfono contacto</label><input type="tel" id="nv-envio-tel" placeholder="600 000 000" maxlength="9" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,9)"></div>
               <div class="field"><label>Dirección</label><input type="text" id="nv-envio-dir" placeholder="Calle, número, piso..."></div>
               <div class="field"><label>CP y población</label><input type="text" id="nv-envio-cp" placeholder="37001 Salamanca"></div>
               <div class="field"><label>Notas envío</label><input type="text" id="nv-envio-notas" placeholder="Horario entrega, portería..."></div>
@@ -908,7 +908,7 @@ textarea{resize:vertical;min-height:64px}
     <h3 id="modal-cliente-titulo">Editar cliente</h3>
     <div class="form-grid" style="margin-bottom:10px">
       <div class="field"><label>Nombre *</label><input type="text" id="ec-nombre"></div>
-      <div class="field"><label>Teléfono</label><input type="tel" id="ec-tel" placeholder="600 000 000" maxlength="11" oninput="formatTel(this)"></div>
+      <div class="field"><label>Teléfono</label><input type="tel" id="ec-tel" placeholder="600 000 000" maxlength="9" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,9)"></div>
       <div class="field"><label>Email</label><input type="email" id="ec-email"></div>
       <div class="field"><label>Sector</label>
         <select id="ec-sector">
@@ -2906,6 +2906,10 @@ function nvSelCliente(id){
   document.getElementById('nv-tel').value=c.telefono||'';
   document.getElementById('nv-email').value=c.email||'';
   document.getElementById('nv-sector').value=c.sector||'';
+  // Cargar condicion de pago del cliente
+  if(c.pago&&document.getElementById('nv-condicion')){
+    document.getElementById('nv-condicion').value=c.pago;
+  }
   document.getElementById('nv-buscar').value='';
   document.getElementById('nv-resultados').style.display='none';
 }
@@ -3269,6 +3273,11 @@ function nvToggleEnvio(){
 function nvCalcEnvio(){
   // Quitar línea previa de envío
   nvLineas=nvLineas.filter(function(l){return!l.esEnvio;});
+  // Solo calcular si hay productos reales
+  if(!nvLineas.length){
+    document.getElementById('nv-envio-aviso').style.display='none';
+    return;
+  }
   var sub=nvLineas.reduce(function(s,l){return s+(l.total||0);},0);
   var dto=parseFloat(document.getElementById('nv-dto').value)||0;
   var totalSinEnvio=cV2R2(sub*(1-dto/100));
@@ -3717,11 +3726,16 @@ function cotReenviarEnlace(){
     if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
     var url='https://printcopy.vercel.app/presupuesto.html?t='+token;
     var nombre=p.cliente_nombre.split(' ')[0];
-    var msg='Hola '+nombre+'!\n'
-      +'Tu presupuesto *'+p.numero+'* de Print & Copy est\u00e1 listo.\n\n'
-      +'\uD83D\uDC49 *Ver y confirmar:*\n'
+    var msg='Hola '+nombre+'! '
+      +'Tu presupuesto *'+p.numero+'* de Print & Copy esta listo.\n\n'
+      +'Somos la imprenta mejor valorada de Salamanca '
+      +'con *4,9 sobre 5* en mas de 760 opiniones verificadas en Google.\n\n'
+      +'Antes de imprimir te mandamos la previa digital para que la apruebes. '
+      +'Hacemos todos los cambios que necesites hasta que quede exactamente como quieres.\n\n'
+      +'Solo pagas el *50% ahora* - el resto al recoger.\n\n'
+      +'Ver y confirmar:\n'
       +url+'\n\n'
-      +'Respondemos el mismo d\u00eda \u00b7 Print & Copy \u00b7 923 018 034';
+      +'Cualquier duda llamanos: 923 018 034';
     fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
       .then(function(r){return r.json();})

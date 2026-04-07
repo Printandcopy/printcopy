@@ -238,8 +238,8 @@ textarea{width:100%;min-height:80px;font-size:13px;padding:9px;border:1px solid 
               <div class="metodo-sub">IBAN Santander</div>
             </div>
             <div class="metodo" id="m-efectivo" onclick="selMetodo('efectivo')">
-              <div class="metodo-titulo">Efectivo</div>
-              <div class="metodo-sub">Paso por tienda</div>
+              <div class="metodo-titulo">Pago en tienda</div>
+              <div class="metodo-sub">Efectivo, tarjeta o Bizum</div>
             </div>
 
           </div>
@@ -260,9 +260,10 @@ textarea{width:100%;min-height:80px;font-size:13px;padding:9px;border:1px solid 
           </div>
           <div class="metodo-detalle" id="detalle-efectivo">
             <strong>Pago en tienda</strong><br>
-            Pásate por <strong>Av. Portugal 62, Salamanca</strong> para abonar <strong id="d-senal-ef">—</strong>.<br><br>
-            Horario: Lun-Vie 9:30-14:00 y 16:30-20:00 · Sáb 10:00-14:00<br><br>
-            Tu pedido entrará en producción en cuanto pases a pagar.
+            Pásate por <strong>Av. Portugal 62, Salamanca</strong> para abonar <strong id="d-senal-ef">—</strong>.<br>
+            Puedes pagar en efectivo, con tarjeta o por Bizum en tienda.<br><br>
+            Horario: L-V 9:30-14:00 y 16:30-20:00 · Sáb 10:00-14:00<br><br>
+            Tu pedido entrará en producción en cuanto pases.
           </div>
 
 
@@ -450,16 +451,10 @@ function mostrarOK(tipo,msg){
   document.getElementById('paso2').style.display='none';
   var ok=document.getElementById('estado-ok');
   ok.style.display='block';
-  document.getElementById('ok-sub').textContent=msg||'';
+  document.getElementById('ok-sub').innerHTML=(msg||'')+'<br><br><span style="font-size:12px;color:#888">Ya puedes cerrar esta página.</span>';
   document.getElementById('badge-estado').textContent='Aceptado';
   document.getElementById('badge-estado').style.background='#3B6D11';
-  // Intentar cerrar (solo funciona si fue abierta por JS)
-  setTimeout(function(){
-    if(!window.close()){
-      document.getElementById('ok-sub').innerHTML+=
-        '<br><br><span style="font-size:12px;color:#888">Puedes cerrar esta pestaña.</span>';
-    }
-  },2000);
+  ok.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
 function toggleCambio(){
