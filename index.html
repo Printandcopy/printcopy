@@ -556,6 +556,7 @@ textarea{resize:vertical;min-height:64px}
             <option value="xbanner">X Banner / Fotocall X Banner</option>
             <option value="rollup">Roll Up / Fotocall Roll Up</option>
             <option value="banderas">Banderas</option>
+            <option value="neones">Neones LED flex</option>
           </optgroup>
           <optgroup label="── Impresión Digital ──">
             <option value="flyers">Flyers / Dípticos / Trípticos</option>
@@ -688,6 +689,7 @@ textarea{resize:vertical;min-height:64px}
                 <option value="xbanner">X Banner / Fotocall</option>
                 <option value="rollup">Roll Up / Fotocall Roll Up</option>
                 <option value="banderas">Banderas</option>
+                <option value="neones">Neones LED flex</option>
               </optgroup>
               <optgroup label="── Impresión ──">
                 <option value="tarjetas">Tarjetas de visita</option>
@@ -1029,6 +1031,20 @@ function showScreen(id,el){
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.addEventListener('click',function(e){if(e.target.classList.contains('modal-overlay')&&!window.getSelection().toString())e.target.classList.remove('open');});
+// Tabulacion dentro de modales
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Tab')return;
+  var modal=document.querySelector('.modal-overlay.open .modal');
+  if(!modal)return;
+  var focusable=Array.from(modal.querySelectorAll('input,select,textarea,button:not([disabled]),[tabindex]:not([tabindex="-1"])'));
+  if(!focusable.length)return;
+  var idx=focusable.indexOf(document.activeElement);
+  if(e.shiftKey){
+    if(idx<=0){e.preventDefault();focusable[focusable.length-1].focus();}
+  }else{
+    if(idx===focusable.length-1){e.preventDefault();focusable[0].focus();}
+  }
+});
 function setView(v,el){
   currentView=v;
   document.querySelectorAll('.view-tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');
@@ -1890,7 +1906,33 @@ talonarios_entradas:{name:"Talonarios entradas / Rifas",sinIva:true,plazo:3,spec
 pegatinas_inmob:{name:"Pegatinas inmobiliaria",sinIva:true,plazo:2,specs:"Adhesivo estucado brillo 170gr",fields:[{id:'fmt',label:'Formato',type:'select',options:['A5','A4','A3']},{id:'qty',label:'Cantidad',type:'number',min:50}],extrasDef:[{key:'diseno',label:'Diseño',price:12}],tiers:[50,100,200,500],totals:{"A5":[29,45,99,149],"A4":[49,79,149,199],"A3":[79,119,199,249]},calc:function(v){var q=parseInt(v.qty)||0;if(q<50)return{error:'Mínimo 50 uds'};var idx=floorIdx(this.tiers,q),tq=this.tiers[idx],totalTramo=this.totals[v.fmt][idx],pu=cV2R2(totalTramo/tq),base=(q===tq)?totalTramo:cV2R2(pu*q);return{base:base,qty:q,pu:pu,tierQty:tq,tiers:this.tiers};}},
 carteles_inmob:{name:"Carteles inmobiliaria",sinIva:true,plazo:4,plazoLote:7,specs:"Polipropileno 600gr",fields:[{id:'modo',label:'Modalidad',type:'select',options:['Por unidad','Por lote']},{id:'tam',label:'Tamaño',type:'select',options:['75×50','100×75']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[{key:'diseno',label:'Diseño',price:12}],onFieldChange:function(id){if(id==='modo'){var modo=cV2gv('modo');cV2setOpts('tam',modo==='Por unidad'?['75×50','100×75']:['75×50 1mod','75×50 2mod','100×75 1dis','100×75 2dis']);}},ud_tiers:[[1,1],[2,5],[6,10],[11,20]],ud_prices:{"75×50":[24.95,19.95,17.95,13.95],"100×75":[44.95,29.95,27.95,23.95]},lote_tiers:[32,64,128],lote_unit:{"75×50 1mod":[8.95,6.45,4.95],"75×50 2mod":[10.95,7.95,5.95],"100×75 1dis":[13.95,9.95,8.45],"100×75 2dis":[15.95,11.95,9.95]},calc:function(v){var q=parseInt(v.qty)||0;if(cV2gv('modo')==='Por unidad'){if(q<1)return{error:'Mínimo 1 ud'};var idx=0;for(var i=this.ud_tiers.length-1;i>=0;i--){if(q>=this.ud_tiers[i][0]){idx=i;break;}}var pu=(this.ud_prices[v.tam]||[])[idx]||0;return{base:cV2R2(pu*q),qty:q,pu:pu};}else{if(q<32)return{error:'Mínimo 32 uds en lote'};var idx=floorIdx(this.lote_tiers,q),pu=(this.lote_unit[v.tam]||[])[idx]||0;return{base:cV2R2(pu*q),qty:q,pu:pu,tierQty:this.lote_tiers[idx],tiers:this.lote_tiers,plazoReal:7};}}},
 sellos:{name:"Sellos automáticos Colop",sinIva:false,plazo:3,fields:[{id:'modelo',label:'Modelo',type:'select',options:['EOS 10 (12×27mm) — 27,90€','EOS 20 (38×14mm) — 29,90€','EOS 30 (51×18mm) — 32,90€','EOS Q30 (31×31mm) — 34,90€','EOS 35 (51×30mm) — 41,90€','EOS 40 (58×23mm) — 36,90€','EOS 50 (70×30mm) — 44,90€','EOS 60 (76×38mm) — 49,90€','EOS R17 (Ø17mm) — 29,90€','EOS R30 (Ø30mm) — 34,90€','EOS R40 (Ø42mm) — 45,90€']},{id:'colorTinta',label:'Color tinta',type:'select',options:['Azul']}],extrasDef:[{key:'recarga',label:'Recarga tinta',price:8.95}],modelPrices:[27.90,29.90,32.90,34.90,41.90,36.90,44.90,49.90,29.90,34.90,45.90],modelosConNegro:['EOS 20','EOS 30','EOS 40'],onFieldChange:function(id){if(id==='modelo'){var mod=cV2gv('modelo'),tieneNegro=this.modelosConNegro.some(function(m){return mod.indexOf(m)===0;});cV2setOpts('colorTinta',tieneNegro?['Azul','Negro']:['Azul']);}},calc:function(v){var idx=this.fields[0].options.indexOf(v.modelo);return{base:this.modelPrices[idx]||0,qty:1};}},
-rotulacion:{name:"Rotulación (por m²)",sinIva:true,fields:[{id:'mat',label:'Material',type:'select',options:['PAPEL','LONA','VINILO','VINILO CON CORTE','NEONES','FIGURAS FRESADAS']},{id:'formato',label:'Formato',type:'select',options:['A0 (84×119cm)','A1 (59×84cm)','A2 (42×59cm)','A3 (30×42cm)','A4 (21×30cm)','50×70cm','Personalizado']},{id:'ancho',label:'Ancho (cm)',type:'number',min:1},{id:'alto',label:'Alto (cm)',type:'number',min:1},{id:'soporte',label:'Soporte',type:'select',options:['Sin soporte','Foam 5mm (18€/m²)','Foam 10mm (22€/m²)','Foam 19mm (28€/m²)','Dibond 3mm (45€/m²)','Cartón pluma (12€/m²)','PVC Pluma (30€/m²)']}],extrasDef:[],formatosMedidas:{'A0 (84×119cm)':[84,119],'A1 (59×84cm)':[59,84],'A2 (42×59cm)':[42,59],'A3 (30×42cm)':[30,42],'A4 (21×30cm)':[21,30],'50×70cm':[50,70]},soportePrecios:{'Sin soporte':0,'Foam 5mm (18€/m²)':18,'Foam 10mm (22€/m²)':22,'Foam 19mm (28€/m²)':28,'Dibond 3mm (45€/m²)':45,'Cartón pluma (12€/m²)':12,'PVC Pluma (30€/m²)':30},matData:{"PAPEL":{t:[[0,99,30]],e:[0.50,0,1.00,0,0],plazo:2,specs:"Papel póster 170gr"},"LONA":{t:[[0,99,42.50]],e:[0.50,15,0.90,12,0],plazo:2,specs:"Lona Frontlit 550gr"},"VINILO":{t:[[0,99,72.50]],e:[0.50,12,0.95,10,0],plazo:3,specs:"Vinilo adhesivo",hasSoporte:true},"VINILO CON CORTE":{t:[[0,99,87]],e:[0.50,12,0.95,10,0],plazo:4,specs:"Vinilo con corte de plotter"},"NEONES":{t:[[0,0.10,1250],[0.10,0.15,1200],[0.15,0.20,1150],[0.20,0.25,1100],[0.25,0.30,1050],[0.30,0.35,1000],[0.35,0.40,950],[0.40,0.45,900],[0.45,0.50,850],[0.50,0.55,825],[0.55,0.60,800],[0.60,0.65,775],[0.65,0.70,750],[0.70,0.75,725],[0.75,0.80,700],[0.80,0.85,675],[0.85,0.90,650],[0.90,0.95,625],[0.95,1.00,600],[1.00,1.10,575],[1.10,1.15,550],[1.15,99,525]],e:[0.14,93,0.20,200,0],plazo:8,specs:"Neón LED flex"},"FIGURAS FRESADAS":{t:[[0,0.75,90],[0.75,99,80]],e:[0.50,30,1.00,25,20],plazo:4,specs:"PVC Pluma 10mm"}},
+neones:{name:"Neón LED flex",sinIva:false,plazo:8,specs:"Neón LED flex a medida · Precio por m² de letra",
+fields:[
+  {id:'ancho',label:'Ancho total (cm)',type:'number',min:1},
+  {id:'alto',label:'Alto total (cm)',type:'number',min:1}
+],
+extrasDef:[{key:'vinilo',label:'Con vinilo de fondo (+10%)',price:0}],
+tiers:[[0,0.10,1250],[0.10,0.15,1200],[0.15,0.20,1150],[0.20,0.25,1100],[0.25,0.30,1050],[0.30,0.35,1000],
+        [0.35,0.40,950],[0.40,0.45,900],[0.45,0.50,850],[0.50,0.55,825],[0.55,0.60,800],[0.60,0.65,775],
+        [0.65,0.70,750],[0.70,0.75,725],[0.75,0.80,700],[0.80,0.85,675],[0.85,0.90,650],[0.90,0.95,625],
+        [0.95,1.00,600],[1.00,1.10,575],[1.10,1.15,550],[1.15,99,525]],
+calc:function(v,ex){
+  var ancho=parseFloat(v.ancho)||0,alto=parseFloat(v.alto)||0;
+  if(ancho<1||alto<1)return{error:'Introduce ancho y alto'};
+  var m2=cV2R2((ancho/100)*(alto/100));
+  if(m2<=0)return{error:'Medidas incorrectas'};
+  var pu=this.tiers[this.tiers.length-1][2];
+  for(var i=0;i<this.tiers.length;i++){if(m2>this.tiers[i][0]&&m2<=this.tiers[i][1]){pu=this.tiers[i][2];break;}}
+  // La tarifa ya incluye IVA — sinIva:false, base=PVP, la calc divide por 1.21 para sinIVA
+  var pvp=Math.round(pu*m2*100)/100;
+  var extraRows=[];
+  if(ex&&ex.vinilo){
+    var impVinilo=Math.round(pvp*0.10*100)/100;
+    extraRows.push({label:'Vinilo de fondo (+10%)',val:cV2Fmt(impVinilo),amount:impVinilo});
+  }
+  return{base:pvp,qty:1,pu:0,m2:m2,extraRows:extraRows,unitLabel:'por m²'};
+}},
+rotulacion:{name:"Rotulación (por m²)",sinIva:true,fields:[{id:'mat',label:'Material',type:'select',options:['PAPEL','LONA','VINILO','VINILO CON CORTE','FIGURAS FRESADAS']},{id:'formato',label:'Formato',type:'select',options:['A0 (84×119cm)','A1 (59×84cm)','A2 (42×59cm)','A3 (30×42cm)','A4 (21×30cm)','50×70cm','Personalizado']},{id:'ancho',label:'Ancho (cm)',type:'number',min:1},{id:'alto',label:'Alto (cm)',type:'number',min:1},{id:'soporte',label:'Soporte',type:'select',options:['Sin soporte','Foam 5mm (18€/m²)','Foam 10mm (22€/m²)','Foam 19mm (28€/m²)','Dibond 3mm (45€/m²)','Cartón pluma (12€/m²)','PVC Pluma (30€/m²)']}],extrasDef:[],formatosMedidas:{'A0 (84×119cm)':[84,119],'A1 (59×84cm)':[59,84],'A2 (42×59cm)':[42,59],'A3 (30×42cm)':[30,42],'A4 (21×30cm)':[21,30],'50×70cm':[50,70]},soportePrecios:{'Sin soporte':0,'Foam 5mm (18€/m²)':18,'Foam 10mm (22€/m²)':22,'Foam 19mm (28€/m²)':28,'Dibond 3mm (45€/m²)':45,'Cartón pluma (12€/m²)':12,'PVC Pluma (30€/m²)':30},matData:{"PAPEL":{t:[[0,99,30]],e:[0.50,0,1.00,0,0],plazo:2,specs:"Papel póster 170gr"},"LONA":{t:[[0,99,42.50]],e:[0.50,15,0.90,12,0],plazo:2,specs:"Lona Frontlit 550gr"},"VINILO":{t:[[0,99,72.50]],e:[0.50,12,0.95,10,0],plazo:3,specs:"Vinilo adhesivo",hasSoporte:true},"VINILO CON CORTE":{t:[[0,99,87]],e:[0.50,12,0.95,10,0],plazo:4,specs:"Vinilo con corte de plotter"},"NEONES":{t:[[0,0.10,1250],[0.10,0.15,1200],[0.15,0.20,1150],[0.20,0.25,1100],[0.25,0.30,1050],[0.30,0.35,1000],[0.35,0.40,950],[0.40,0.45,900],[0.45,0.50,850],[0.50,0.55,825],[0.55,0.60,800],[0.60,0.65,775],[0.65,0.70,750],[0.70,0.75,725],[0.75,0.80,700],[0.80,0.85,675],[0.85,0.90,650],[0.90,0.95,625],[0.95,1.00,600],[1.00,1.10,575],[1.10,1.15,550],[1.15,99,525]],e:[0.14,93,0.20,200,0],plazo:8,specs:"Neón LED flex"},"FIGURAS FRESADAS":{t:[[0,0.75,90],[0.75,99,80]],e:[0.50,30,1.00,25,20],plazo:4,specs:"PVC Pluma 10mm"}},
 onFieldChange:function(id){
 var mat=cV2gv('mat')||'PAPEL';
 var fmt=cV2gv('formato')||'A0 (84×119cm)';
@@ -1973,6 +2015,7 @@ var CROSS={
   banderas:[{n:'Roll Up',d:'Combinación perfecta para eventos.',precio:'Desde 79€'}],
   carteles:[{n:'Flyers',d:'Complemento para distribución.',precio:'Desde 32€'}],
   tarjetones:[{n:'Sobres',d:'Para entregar las invitaciones.',precio:'Desde 39€'}],
+  neones:[{n:'Rotulación vinilo',d:'Complementa el neón con letras en vinilo.',precio:'Desde 72,50€/m²'},{n:'Placa personalizada',d:'Marco o fondo para el neón.',precio:'Desde 29,90€'}],
   rotulacion:[{n:'Tarjetas de visita',d:'Si tiene negocio, necesita tarjetas.',precio:'Desde 24€',esTarjetas:true},{n:'Pegatinas con logo',d:'Para packaging y señalética.',precio:'Desde 0,18€/u'}],
   pegatinas:[{n:'Tarjetas de visita',d:'Mismo diseño corporativo.',precio:'Desde 24€',esTarjetas:true},{n:'Carpetas',d:'Para documentación comercial.',precio:'Desde 79€'}],
   textil:[{n:'Gorras personalizadas',d:'Complemento natural para uniformes.',precio:'Desde 4,95€/u'},{n:'Rotulación vehículo',d:'Si tiene empresa, completa la imagen.',precio:'Desde 72,50€/m²'}],
@@ -2089,6 +2132,8 @@ function cV2catChange(){
   document.getElementById('c-extras-body').innerHTML=extHtml;
   document.getElementById('c-extras-card').style.display=extHtml?'block':'none';
   if(p.onFieldChange)p.fields.forEach(function(f){if(f.type==='select')p.onFieldChange(f.id);});
+  // Calcular precio con valores por defecto al entrar
+  if(!p.customBuild)cV2calc();
 }
 
 function cV2onField(id){var p=P[cV2curCat];if(p&&p.onFieldChange)p.onFieldChange(id);cV2calc();}
@@ -2308,7 +2353,7 @@ function carritoToPedido(){
   abrirVentaDesdeCarrito();
 }
 var CAT_TO_SEC={
-  rotulacion:'PL',placas:'UV',xbanner:'PL',rollup:'PL',banderas:'PL',
+  rotulacion:'PL',placas:'UV',xbanner:'PL',rollup:'PL',banderas:'PL',neones:'NEON',
   flyers:'XR',carteles:'XR',tarjetas:'XR',tarjetas_especiales:'XR',tarjetas_troq:'XR',
   tarjetas_pvc:'XR',pegatinas:'XR',carpetas:'XR',sobres:'XR',talonarios:'XR',
   manteles:'XR',cartas:'XR',tarjetones:'XR',acreditaciones:'XR',lanyares:'XR',
@@ -3209,7 +3254,8 @@ function nvGuardar(estado,canal){
   sb.from('contador_global').select('valor').eq('tipo','presupuesto').single().then(function(r){
     var num=(r.data?r.data.valor:0)+1;
     var numero='PRES-'+String(num).padStart(6,'0');
-    var data={numero:numero,cliente_nombre:nombre,cliente_telefono:tel,cliente_email:email,cliente_sector:sector,subtotal:sub,descuento_pct:dto,total:total,validez_dias:validez,fecha_expiracion:fechaExp,estado:estado,enviado:estado==='enviado',notas:document.getElementById('nv-notas').value.trim(),condicion_pago:condicion,incluye_montaje:incluyeMontaje};
+    var tokenPublico=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
+    var data={numero:numero,cliente_nombre:nombre,cliente_telefono:tel,cliente_email:email,cliente_sector:sector,subtotal:sub,descuento_pct:dto,total:total,validez_dias:validez,fecha_expiracion:fechaExp,estado:estado,enviado:estado==='enviado',notas:document.getElementById('nv-notas').value.trim(),condicion_pago:condicion,incluye_montaje:incluyeMontaje,token_publico:tokenPublico};
     if(incluyeMontaje){
       data.direccion_montaje=document.getElementById('nv-montaje-dir').value.trim();
       data.fecha_montaje=document.getElementById('nv-montaje-fecha').value||null;
@@ -3264,10 +3310,21 @@ function nvGuardar(estado,canal){
                 .then(function(d){alert(d.success?'Presupuesto '+numero+' enviado por WhatsApp':'Guardado. Error WA: '+(d.error||'desconocido'));})
                 .catch(function(e){alert('Guardado. Error WA: '+e.message);});
             }else if(canal==='email'&&email){
+              var urlPresEmail='https://printcopy.vercel.app/presupuesto.html?t='+tokenPublico;
+              var emailHTML='<div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto">'
+                +'<div style="background:#1a1a1a;padding:16px 20px;border-radius:8px 8px 0 0"><span style="color:#fff;font-size:16px;font-weight:700">Print &amp; Copy</span></div>'
+                +'<div style="border:1px solid #e8e8e4;border-top:none;border-radius:0 0 8px 8px;padding:24px">'
+                +'<p style="font-size:15px;color:#1a1a1a">Hola <b>'+nombre.split(' ')[0]+'</b>,</p>'
+                +'<p style="color:#555;font-size:13px;margin-top:8px">Tu presupuesto <b>'+numero+'</b> ya está listo. Puedes verlo, revisarlo y responder directamente desde el enlace:</p>'
+                +'<div style="text-align:center;margin:24px 0"><a href="'+urlPresEmail+'" style="background:#185FA5;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:700">Ver presupuesto y responder</a></div>'
+                +'<p style="color:#888;font-size:11px;text-align:center">O copia este enlace en tu navegador:<br><span style="color:#185FA5">'+urlPresEmail+'</span></p>'
+                +'<hr style="border:none;border-top:1px solid #f0f0ec;margin:20px 0">'
+                +'<p style="color:#aaa;font-size:10px;text-align:center">Eventos Personalizados Salamanca SL · CIF B04944500 · printcopysalamanca.es · 923 018 034</p>'
+                +'</div></div>';
               fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({destinatario:email,asunto:'Presupuesto '+numero+' - Print & Copy',
-                  mensaje:'Adjunto encontrarás tu presupuesto '+numero+' de Print & Copy.',
-                  html:htmlPresupuesto})})
+                body:JSON.stringify({destinatario:email,asunto:'Tu presupuesto '+numero+' de Print & Copy está listo',
+                  mensaje:'Tu presupuesto '+numero+' de Print & Copy está listo.',
+                  html:emailHTML})})
                 .then(function(r){return r.json();})
                 .then(function(d){alert(d.success?'Presupuesto '+numero+' enviado por email a '+email:'Guardado. Error email: '+(d.error||'desconocido'));})
                 .catch(function(e){alert('Guardado. Error email: '+e.message);});
@@ -3462,14 +3519,34 @@ function verCotizacion(id){
     document.getElementById('cot-btn-convertir').style.display='none';
     document.getElementById('cot-btn-rechazar').style.display='none';
 
+    // Limpiar botones dinamicos de reenvio previos
+    ['cot-btn-wa-reenvio','cot-btn-email-reenvio'].forEach(function(id){
+      var el=document.getElementById(id);if(el)el.remove();
+    });
+    var btnRow=document.getElementById('cot-btn-enviar').parentNode;
+
     if(p.estado==='guardado'){
       document.getElementById('cot-btn-enviar').style.display='inline-block';
       document.getElementById('cot-btn-enviar').textContent='Marcar como enviada';
       document.getElementById('cot-btn-rechazar').style.display='inline-block';
       document.getElementById('cot-btn-rechazar').textContent='Descartar';
     }else if(p.estado==='enviado'){
-      document.getElementById('cot-btn-enviar').style.display='inline-block';
-      document.getElementById('cot-btn-enviar').textContent='Reenviar';
+      // Reenvio real sin cambiar estado
+      if(p.cliente_telefono){
+        var bWA=document.createElement('button');
+        bWA.id='cot-btn-wa-reenvio';bWA.className='btn btn-sm';
+        bWA.style.cssText='background:#25D366;color:white;border:none';
+        bWA.textContent='Reenviar por WA';
+        bWA.onclick=function(){cotReenviar('whatsapp');};
+        btnRow.appendChild(bWA);
+      }
+      if(p.cliente_email){
+        var bEM=document.createElement('button');
+        bEM.id='cot-btn-email-reenvio';bEM.className='btn btn-sm btn-primary';
+        bEM.textContent='Reenviar por Email';
+        bEM.onclick=function(){cotReenviar('email');};
+        btnRow.appendChild(bEM);
+      }
       document.getElementById('cot-btn-convertir').style.display='inline-block';
       document.getElementById('cot-btn-convertir').textContent='Convertir a pedido';
       document.getElementById('cot-btn-rechazar').style.display='inline-block';
@@ -3513,6 +3590,40 @@ function cotLlamar(){
   if(_cotActual&&_cotActual.cliente_telefono){
     var tel=_cotActual.cliente_telefono.replace(/\s/g,'');
     window.open('tel:'+tel);
+  }
+}
+
+function cotReenviar(canal){
+  var p=_cotActual;if(!p)return;
+  var htmlPres=generarPDFPresupuesto(true);
+  if(canal==='whatsapp'&&p.cliente_telefono){
+    var tel=p.cliente_telefono.replace(/\s/g,'').replace(/^\+/,'');
+    if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+    var condLabels={'50_50':'50% al encargar - 50% al recoger','100_0':'100% al encargar','0_100':'100% al recoger','factura30':'Factura 30 dias','factura60':'Factura 60 dias'};
+    var condWA=condLabels[p.condicion_pago]||p.condicion_pago||'';
+    var total=parseFloat(p.total)||0;
+    var lins=(p.lineas||[]).map(function(l){return '- '+l.descripcion+': '+parseFloat(l.subtotal).toFixed(2)+'EUR'+(l.plazo?' ('+l.plazo+' dias)':'');}).join('\n');
+    var msg='Hola '+p.cliente_nombre.split(' ')[0]+'!\n\n'
+      +'Te reenviamos el presupuesto *'+p.numero+'* de Print & Copy:\n\n'
+      +lins+'\n\n'
+      +'*TOTAL: '+total.toFixed(2)+'EUR* (IVA incluido)\n'
+      +'Pago: '+condWA+'\n\n'
+      +'Cualquier duda, aqui estamos.\n\n'
+      +'Print & Copy - 923 018 034 - printcopysalamanca.es';
+    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
+      .then(function(r){return r.json();})
+      .then(function(d){alert(d.success?'Presupuesto reenviado por WhatsApp':'Error WA: '+(d.error||'desconocido'));})
+      .catch(function(e){alert('Error WA: '+e.message);});
+  }else if(canal==='email'&&p.cliente_email){
+    fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({destinatario:p.cliente_email,
+        asunto:'Presupuesto '+p.numero+' - Print & Copy',
+        mensaje:'Adjunto encontraras tu presupuesto '+p.numero+' de Print & Copy.',
+        html:htmlPres})})
+      .then(function(r){return r.json();})
+      .then(function(d){alert(d.success?'Presupuesto reenviado por email a '+p.cliente_email:'Error email: '+(d.error||'desconocido'));})
+      .catch(function(e){alert('Error email: '+e.message);});
   }
 }
 
