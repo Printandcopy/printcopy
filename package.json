@@ -2,6 +2,7 @@
   "name": "printcopy",
   "version": "1.0.0",
   "dependencies": {
-    "nodemailer": "^6.9.8"
+    "nodemailer": "^6.9.8",
+    "@supabase/supabase-js": "^2.39.0"
   }
 }
