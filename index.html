@@ -804,6 +804,23 @@ textarea{resize:vertical;min-height:64px}
             </div>
           </div>
         </div>
+        <!-- ENVÍO -->
+        <div class="card">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+            <input type="checkbox" id="nv-envio" onchange="nvToggleEnvio()" style="width:auto">
+            <span style="font-size:13px;font-weight:500">Necesita envío a domicilio</span>
+          </label>
+          <div id="nv-envio-fields" style="display:none;margin-top:10px">
+            <div class="form-grid">
+              <div class="field"><label>Nombre destinatario</label><input type="text" id="nv-envio-nombre" placeholder="Nombre completo"></div>
+              <div class="field"><label>Teléfono contacto</label><input type="text" id="nv-envio-tel" placeholder="600 000 000"></div>
+              <div class="field"><label>Dirección</label><input type="text" id="nv-envio-dir" placeholder="Calle, número, piso..."></div>
+              <div class="field"><label>CP y población</label><input type="text" id="nv-envio-cp" placeholder="37001 Salamanca"></div>
+              <div class="field"><label>Notas envío</label><input type="text" id="nv-envio-notas" placeholder="Horario entrega, portería..."></div>
+            </div>
+            <div id="nv-envio-aviso" style="display:none;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:12px"></div>
+          </div>
+        </div>
       </div>
       <!-- Panel derecho: Resumen -->
       <div class="venta-right">
@@ -2848,6 +2865,14 @@ function nuevaVenta(){
   document.getElementById('nv-montaje').checked=false;
   document.getElementById('nv-pago-card').style.display='none';
   document.getElementById('nv-montaje-fields').style.display='none';
+  if(document.getElementById('nv-envio')){document.getElementById('nv-envio').checked=false;}
+  if(document.getElementById('nv-envio-fields')){document.getElementById('nv-envio-fields').style.display='none';}
+  if(document.getElementById('nv-envio-nombre')){document.getElementById('nv-envio-nombre').value='';}
+  if(document.getElementById('nv-envio-tel')){document.getElementById('nv-envio-tel').value='';}
+  if(document.getElementById('nv-envio-dir')){document.getElementById('nv-envio-dir').value='';}
+  if(document.getElementById('nv-envio-cp')){document.getElementById('nv-envio-cp').value='';}
+  if(document.getElementById('nv-envio-notas')){document.getElementById('nv-envio-notas').value='';}
+  nvLineas=nvLineas.filter(function(l){return!l.esEnvio;});
   document.getElementById('nv-montaje-dir').value='';
   document.getElementById('nv-montaje-fecha').value='';
   document.getElementById('nv-montaje-hora').value='';
@@ -3193,6 +3218,8 @@ function nvCalcTotales(){
   document.getElementById('nv-subtotal').textContent=cV2Fmt(sub);
   document.getElementById('nv-total').textContent=cV2Fmt(total);
   nvCalcPendiente();
+  // Recalcular envío si está activo
+  if(document.getElementById('nv-envio')&&document.getElementById('nv-envio').checked)nvCalcEnvio();
 }
 
 function nvCalcPendiente(){
@@ -3227,6 +3254,41 @@ function nvToggleMontaje(){
   document.getElementById('nv-montaje-fields').style.display=document.getElementById('nv-montaje').checked?'block':'none';
 }
 
+function nvToggleEnvio(){
+  var checked=document.getElementById('nv-envio').checked;
+  document.getElementById('nv-envio-fields').style.display=checked?'block':'none';
+  if(checked)nvCalcEnvio();
+  else{
+    // Quitar línea de envío si existía
+    nvLineas=nvLineas.filter(function(l){return!l.esEnvio;});
+    nvRenderLineas();
+    document.getElementById('nv-envio-aviso').style.display='none';
+  }
+}
+
+function nvCalcEnvio(){
+  // Quitar línea previa de envío
+  nvLineas=nvLineas.filter(function(l){return!l.esEnvio;});
+  var sub=nvLineas.reduce(function(s,l){return s+(l.total||0);},0);
+  var dto=parseFloat(document.getElementById('nv-dto').value)||0;
+  var totalSinEnvio=cV2R2(sub*(1-dto/100));
+  // Umbral 99€ + IVA = 119.79€ con IVA → comprobamos sin IVA (99€)
+  var aviso=document.getElementById('nv-envio-aviso');
+  if(totalSinEnvio<99){
+    // Añadir gastos de envío: 7€ + IVA = 8.47€
+    var costeEnvio=cV2R2(7*1.21);
+    nvLineas.push({sec:'XR',desc:'Gastos de env\u00edo',total:costeEnvio,esEnvio:true,plazo:0});
+    aviso.style.display='block';
+    aviso.style.cssText='display:block;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:12px;background:#FFF8E6;border:1px solid #FAC775;color:#BA7517';
+    aviso.textContent='Gastos de env\u00edo a\u00f1adidos: 8,47 \u20ac (7 \u20ac + IVA) — pedido inferior a 99 \u20ac';
+  } else {
+    aviso.style.display='block';
+    aviso.style.cssText='display:block;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:12px;background:#EAF3DE;border:1px solid #C0DD97;color:#3B6D11';
+    aviso.textContent='Env\u00edo incluido \u2014 pedido superior a 99 \u20ac';
+  }
+  nvRenderLineas();
+}
+
 function nvShowCross(cat){
   var list=CROSS[cat];
   if(!list||!list.length){document.getElementById('nv-cross').style.display='none';return;}
@@ -3258,6 +3320,9 @@ function nvGuardar(estado,canal){
   var dto=parseFloat(document.getElementById('nv-dto').value)||0;
   var total=cV2R2(sub*(1-dto/100));
   var condicion=document.getElementById('nv-condicion').value;
+  // Si tiene envío y condición estándar → 100% anticipado (salvo crédito)
+  var tieneEnvio=document.getElementById('nv-envio')&&document.getElementById('nv-envio').checked;
+  if(tieneEnvio&&(condicion==='50_50'||condicion==='0_100'))condicion='100_0';
   var incluyeMontaje=document.getElementById('nv-montaje').checked;
   
   // Crear cliente si no existe (por teléfono)
@@ -3413,6 +3478,12 @@ function nvCrearPedido(){
                 fecha_tipo:fechaTipo,
                 descripcion:lin.desc,
                 notas:document.getElementById('nv-notas').value.trim(),
+      incluye_envio:document.getElementById('nv-envio')&&document.getElementById('nv-envio').checked,
+      envio_nombre:document.getElementById('nv-envio-nombre')?(document.getElementById('nv-envio-nombre').value.trim()||null):null,
+      envio_tel:document.getElementById('nv-envio-tel')?(document.getElementById('nv-envio-tel').value.trim()||null):null,
+      envio_direccion:document.getElementById('nv-envio-dir')?(document.getElementById('nv-envio-dir').value.trim()||null):null,
+      envio_cp:document.getElementById('nv-envio-cp')?(document.getElementById('nv-envio-cp').value.trim()||null):null,
+      envio_notas:document.getElementById('nv-envio-notas')?(document.getElementById('nv-envio-notas').value.trim()||null):null,
                 total:lin.total,
                 senal:senalLinea,
                 pago:pagoEstado,
