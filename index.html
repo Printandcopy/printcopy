@@ -3611,6 +3611,15 @@ function verCotizacion(id){
       document.getElementById('cot-btn-enviar').textContent='Marcar como enviada';
       document.getElementById('cot-btn-rechazar').style.display='inline-block';
       document.getElementById('cot-btn-rechazar').textContent='Descartar';
+      // Botón reenviar enlace si tiene token
+      if(p.token_publico&&p.cliente_telefono){
+        var bLG=document.createElement('button');
+        bLG.id='cot-btn-enlace-reenvio';bLG.className='btn btn-sm';
+        bLG.style.cssText='background:#534AB7;color:white;border:none';
+        bLG.textContent='Enviar enlace WA';
+        bLG.onclick=function(){cotReenviarEnlace();};
+        btnRow.appendChild(bLG);
+      }
     }else if(p.estado==='enviado'){
       // Reenvio real sin cambiar estado
       if(p.cliente_telefono){
@@ -3620,6 +3629,15 @@ function verCotizacion(id){
         bWA.textContent='Reenviar por WA';
         bWA.onclick=function(){cotReenviar('whatsapp');};
         btnRow.appendChild(bWA);
+        // Botón reenviar enlace de pago
+        if(p.token_publico){
+          var bLink=document.createElement('button');
+          bLink.id='cot-btn-enlace-reenvio';bLink.className='btn btn-sm';
+          bLink.style.cssText='background:#534AB7;color:white;border:none';
+          bLink.textContent='Reenviar enlace';
+          bLink.onclick=function(){cotReenviarEnlace();};
+          btnRow.appendChild(bLink);
+        }
       }
       if(p.cliente_email){
         var bEM=document.createElement('button');
@@ -3684,6 +3702,25 @@ function cotLlamar(){
     var tel=_cotActual.cliente_telefono.replace(/\s/g,'');
     window.open('tel:'+tel);
   }
+}
+
+function cotReenviarEnlace(){
+  var p=_cotActual;if(!p||!p.token_publico)return;
+  if(!p.cliente_telefono){alert('Sin teléfono');return;}
+  var tel=p.cliente_telefono.replace(/\s/g,'').replace(/^\+/,'');
+  if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+  var url='https://printcopy.vercel.app/presupuesto.html?t='+p.token_publico;
+  var nombre=p.cliente_nombre.split(' ')[0];
+  var msg='Hola '+nombre+'!\n'
+    +'Tu presupuesto *'+p.numero+'* de Print & Copy est\u00e1 listo.\n\n'
+    +'\uD83D\uDC49 *Ver y confirmar:*\n'
+    +url+'\n\n'
+    +'Respondemos el mismo d\u00eda \u00b7 Print & Copy \u00b7 923 018 034';
+  fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
+    .then(function(r){return r.json();})
+    .then(function(d){alert(d.success?'Enlace reenviado por WhatsApp':'Error WA: '+(d.error||'desconocido'));})  
+    .catch(function(e){alert('Error: '+e.message);});
 }
 
 function cotReenviar(canal){
