@@ -3294,18 +3294,11 @@ function nvGuardar(estado,canal){
               var condLabelsWA={'50_50':'50% al encargar · 50% al recoger','100_0':'100% al encargar','0_100':'100% al recoger','factura30':'Factura 30 días','factura60':'Factura 60 días'};
               var condWA=condLabelsWA[condicion]||condicion;
               var lineasWA=nvLineas.map(function(l){return '• '+l.desc+' — '+l.total.toFixed(2)+'€'+(l.plazo?' ('+l.plazo+' días)':'');}).join('\n');
-              var msgWA='Hola '+nombre.split(' ')[0]+'! 👋\n\n'
-                +'Gracias por contactar con *Print & Copy*.\n\n'
-                +'Te enviamos tu presupuesto *'+numero+'*:\n\n'
-                +lineasWA+'\n\n'
-                +(dto>0?'Descuento: '+dto+'%\n':'')  
-                +'*TOTAL: '+total.toFixed(2)+'€* (IVA incluido)\n\n'
-                +'💳 Pago: '+condWA+'\n'
-                +'📅 Validez: '+validez+' días\n\n'
-                +'👉 *Ver y responder tu presupuesto:*\n'
-                +'https://printcopy.vercel.app/presupuesto.html?t='+tokenPublico+'\n\n'
-                +'Respondemos el mismo día en horario de tienda.\n'
-                +'Print & Copy · 923 018 034';
+              var msgWA='Hola '+nombre.split(' ')[0]+'! \uD83D\uDC4B\\n\\n'
+                +'Tu presupuesto *'+numero+'* de Print & Copy est\u00e1 listo.\\n\\n'
+                +'\uD83D\uDC49 *Ver y confirmar:*\\n'
+                +'https://printcopy.vercel.app/presupuesto.html?t='+tokenPublico+'\\n\\n'
+                +'Respondemos el mismo d\u00eda \u00b7 Print & Copy \u00b7 923 018 034';
               fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({telefono:telNorm,mensaje:msgWA,nombre:nombre})})
                 .then(function(r){return r.json();})
@@ -3555,7 +3548,19 @@ function verCotizacion(id){
       document.getElementById('cot-btn-rechazar').textContent='Rechazada';
     }else if(p.estado==='aceptado'){
       document.getElementById('cot-btn-convertir').style.display='inline-block';
-      document.getElementById('cot-btn-convertir').textContent='Ir al pedido';
+      document.getElementById('cot-btn-convertir').textContent='✓ Crear pedido';
+      document.getElementById('cot-btn-convertir').style.cssText='background:#3B6D11;color:#fff;border:none;font-size:14px;padding:10px 20px;border-radius:6px;cursor:pointer';
+      // Alerta si fue aceptado por el cliente via web
+      if(p.aceptado_por_cliente){
+        var alertDiv=document.getElementById('cot-alerta-cliente');
+        if(!alertDiv){
+          alertDiv=document.createElement('div');
+          alertDiv.id='cot-alerta-cliente';
+          alertDiv.style.cssText='background:#EAF3DE;border:1px solid #97C459;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#3B6D11;font-weight:700';
+          document.getElementById('cot-body').prepend(alertDiv);
+        }
+        alertDiv.textContent='✓ El cliente aceptó este presupuesto desde el enlace';
+      }
     }
 
     document.getElementById('modal-cot').classList.add('open');
@@ -3693,8 +3698,25 @@ function cotConvertir(){
   document.getElementById('nv-fecha').value=fechaEntrega.toISOString().split('T')[0];
   closeModal('modal-cot');
   nvRenderLineas();
-  document.getElementById('modal-venta').classList.add('open');
+  // Marcar presupuesto como convertido
   sb.from('presupuestos').update({estado:'aceptado',convertido:true}).eq('id',_cotActual.id).then(function(){cargarPresupuestos();});
+  // Mostrar modal de nuevo pedido con bloque pago visible si tiene señal
+  var condPago=_cotActual.condicion_pago||'50_50';
+  var tieneSenal=(condPago==='50_50'||condPago==='100_0');
+  if(tieneSenal){
+    document.getElementById('nv-pago-card').style.display='block';
+    // Aviso en el modal
+    var avisoEl=document.getElementById('nv-aviso-senal');
+    if(!avisoEl){
+      avisoEl=document.createElement('div');
+      avisoEl.id='nv-aviso-senal';
+      avisoEl.style.cssText='background:#FFF8E6;border:1px solid #FAC775;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px;color:#BA7517;font-weight:700';
+      document.querySelector('#modal-venta .modal-body').prepend(avisoEl);
+    }
+    var condTexto={'50_50':'50% al encargar','100_0':'100% al encargar'}[condPago]||'';
+    avisoEl.textContent='⚠️ Cobrar señal antes de pasar a taller: '+condTexto;
+  }
+  document.getElementById('modal-venta').classList.add('open');
 }
 
 // ── INIT ──
@@ -3702,6 +3724,28 @@ startClock();
 testConnection();
 cargarDatos();
 cargarPresupuestos();
+// Polling cada 60s para detectar presupuestos aceptados por el cliente
+setInterval(function(){
+  sb.from('presupuestos').select('id,numero,cliente_nombre,estado').eq('estado','aceptado').eq('notificado_interno',false).then(function(r){
+    if(r.data&&r.data.length){
+      r.data.forEach(function(p){
+        if(Notification.permission==='granted'){
+          new Notification('✅ Presupuesto aceptado',{body:p.cliente_nombre+' aceptó '+p.numero,icon:'/favicon.ico'});
+        }
+        // Toast en pantalla
+        var t=document.createElement('div');
+        t.style.cssText='position:fixed;bottom:20px;right:20px;background:#3B6D11;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2)';
+        t.innerHTML='✅ '+p.cliente_nombre+' aceptó <b>'+p.numero+'</b><br><span style="font-size:11px;font-weight:400;opacity:.85">Pulsa para ver y crear pedido</span>';
+        t.onclick=function(){verCotizacion(p.id);t.remove();};
+        document.body.appendChild(t);
+        setTimeout(function(){if(t.parentNode)t.remove();},10000);
+      });
+      cargarPresupuestos();
+    }
+  });
+},60000);
+// Pedir permiso notificaciones
+if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
 
 // ══════════════════════════════════════════════════════════════
 // PDF PRESUPUESTO

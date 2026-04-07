@@ -36,7 +36,7 @@ module.exports = async function handler(req, res) {
     if (error || !pres) return res.status(404).json({ error: 'Presupuesto no encontrado' });
 
     if (accion === 'aceptar') {
-      await sb.from('presupuestos').update({ estado: 'aceptado' }).eq('id', pres.id);
+      await sb.from('presupuestos').update({ estado: 'aceptado', aceptado_por_cliente: true, notificado_interno: false }).eq('id', pres.id);
       await notificarWA(
         `PRESUPUESTO ACEPTADO\n\n` +
         `Cliente: ${pres.cliente_nombre}\n` +
