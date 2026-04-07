@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Presupuesto — Print &amp; Copy Salamanca</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f0f0ec;min-height:100vh;padding:16px}
+.wrap{max-width:600px;margin:0 auto}
+.card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:12px;border:1px solid #e8e8e4}
+.topbar{background:#1a1a1a;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.topbar-logo{color:#fff;font-size:14px;font-weight:700;letter-spacing:.5px}
+.topbar-sub{color:#aaa;font-size:11px;margin-top:2px}
+.badge{background:#185FA5;color:#fff;font-size:11px;padding:4px 10px;border-radius:20px}
+.body{padding:20px}
+.row2{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.name{font-size:18px;font-weight:700;color:#1a1a1a}
+.meta{font-size:12px;color:#666;margin-top:2px}
+.numero{font-size:20px;font-weight:700;color:#185FA5;font-family:monospace}
+.validez-bar{margin-bottom:18px}
+.validez-row{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:5px}
+.bar-bg{background:#f0f0ec;border-radius:3px;height:5px}
+.bar-fill{background:#BA7517;height:5px;border-radius:3px;transition:width .4s}
+table.lineas{width:100%;border-collapse:collapse}
+.lineas thead tr{background:#1a1a1a;color:#fff}
+.lineas thead th{padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.6px;text-align:left;font-weight:600}
+.lineas thead th:last-child{text-align:right}
+.lineas thead th:nth-child(2),.lineas thead th:nth-child(3){text-align:center}
+.lineas tbody tr:nth-child(even){background:#f9f9f7}
+.lineas tbody td{padding:11px 12px;font-size:13px;vertical-align:top;border-bottom:1px solid #f0f0ec}
+.lineas tbody td:nth-child(2),.lineas tbody td:nth-child(3){text-align:center;color:#666;font-size:11px}
+.lineas tbody td:last-child{text-align:right;color:#185FA5;font-weight:700}
+.lineas tfoot tr{background:#185FA5}
+.lineas tfoot td{padding:13px 12px;color:#fff;font-weight:700}
+.lineas tfoot td:last-child{text-align:right;font-size:18px}
+.linea-desc{font-size:13px;color:#1a1a1a}
+.linea-spec{font-size:11px;color:#888;margin-top:2px}
+.conds{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+@media(max-width:400px){.conds{grid-template-columns:1fr}}
+.cond-box{border:1px solid #e8e8e4;border-radius:8px;padding:12px}
+.cond-val{font-size:13px;font-weight:600;color:#1a1a1a;line-height:1.7}
+.iban{font-size:11px;font-family:monospace;background:#f5f5f0;padding:6px 8px;border-radius:4px;margin:6px 0;word-break:break-all}
+.cond-sub{font-size:10px;color:#888;margin-top:2px;line-height:1.6}
+.sep{border:none;border-top:1px solid #f0f0ec;margin:20px 0}
+.respuesta-titulo{font-size:13px;color:#666;text-align:center;margin-bottom:14px}
+.btn-aceptar{width:100%;background:#3B6D11;color:#fff;border:none;border-radius:8px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;transition:opacity .2s}
+.btn-aceptar:active{opacity:.8}
+.btn-cambio{width:100%;background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:8px;padding:14px;font-size:14px;cursor:pointer;transition:background .15s}
+.btn-cambio:hover{background:#f9f9f7}
+.cambio-box{display:none;margin-top:10px;border:1px solid #FAC775;border-radius:8px;padding:14px;background:#FAEEDA}
+.cambio-label{font-size:12px;font-weight:700;color:#BA7517;margin-bottom:8px}
+textarea{width:100%;min-height:80px;font-size:13px;padding:9px;border:1px solid #ddd;border-radius:6px;resize:vertical;font-family:Arial,sans-serif}
+.btn-enviar{width:100%;margin-top:8px;background:#BA7517;color:#fff;border:none;border-radius:6px;padding:11px;font-size:13px;font-weight:700;cursor:pointer}
+.nota-responde{font-size:11px;color:#888;text-align:center;margin-top:10px}
+.contactos{display:flex;gap:10px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.contactos a{font-size:12px;text-decoration:none;border:1px solid #e8e8e4;padding:6px 14px;border-radius:6px;color:#666}
+.pie{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;padding-top:14px;border-top:1px solid #f0f0ec}
+.pie span{font-size:10px;color:#aaa}
+.estado-ok{display:none;text-align:center;padding:24px;background:#EAF3DE;border-radius:8px}
+.estado-ok-icon{width:48px;height:48px;background:#3B6D11;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+.estado-ok-icon svg{fill:#fff}
+.estado-ok-titulo{font-size:16px;font-weight:700;color:#3B6D11;margin-bottom:6px}
+.estado-ok-sub{font-size:13px;color:#666}
+.loading{text-align:center;padding:40px;color:#888;font-size:14px}
+.error-box{text-align:center;padding:40px;color:#A32D2D;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="loading" class="card"><div class="body loading">Cargando presupuesto...</div></div>
+  <div id="contenido" style="display:none">
+    <!-- TOPBAR -->
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <div class="topbar-logo">Print &amp; Copy</div>
+          <div class="topbar-sub">Av. Portugal 62 · Salamanca</div>
+        </div>
+        <div class="badge" id="badge-estado">Pendiente de respuesta</div>
+      </div>
+      <div class="body">
+        <div class="row2">
+          <div>
+            <div class="label">Presupuesto para</div>
+            <div class="name" id="cli-nombre">—</div>
+            <div class="meta" id="cli-tel"></div>
+          </div>
+          <div style="text-align:right">
+            <div class="numero" id="pres-numero">—</div>
+            <div class="meta">Emitido: <span id="pres-fecha">—</span></div>
+            <div class="meta">Válido hasta: <span id="pres-validez" style="color:#BA7517;font-weight:700">—</span></div>
+          </div>
+        </div>
+        <div class="validez-bar">
+          <div class="validez-row">
+            <span>Tiempo restante</span>
+            <span id="dias-texto" style="color:#BA7517;font-weight:700">—</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
+        </div>
+        <!-- TABLA LINEAS -->
+        <table class="lineas">
+          <thead><tr>
+            <th>Descripción</th>
+            <th style="width:50px">Uds</th>
+            <th style="width:110px">Plazo</th>
+            <th style="width:90px">Importe</th>
+          </tr></thead>
+          <tbody id="lineas-body"></tbody>
+          <tfoot><tr>
+            <td colspan="3">TOTAL (IVA incluido)</td>
+            <td id="pres-total">—</td>
+          </tr></tfoot>
+        </table>
+        <!-- CONDICIONES -->
+        <div class="conds">
+          <div class="cond-box">
+            <div class="label">Condición de pago</div>
+            <div class="cond-val" id="cond-pago">—</div>
+            <div class="label" style="margin-top:10px">Formas de pago</div>
+            <div class="cond-sub">Bizum · Tarjeta · Transferencia · En tienda</div>
+          </div>
+          <div class="cond-box">
+            <div class="label">Datos bancarios</div>
+            <div class="iban">ES58 0049 5292 14 2616098558</div>
+            <div class="cond-sub">Banco Santander<br>Eventos Personalizados Salamanca SL</div>
+          </div>
+        </div>
+        <!-- PIE -->
+        <div class="pie" style="margin-top:14px">
+          <span>Eventos Personalizados Salamanca SL · CIF B04944500</span>
+          <span>printcopysalamanca.es · 923 018 034</span>
+        </div>
+      </div>
+    </div>
+    <!-- RESPUESTA -->
+    <div class="card" id="card-respuesta">
+      <div class="body">
+        <div class="respuesta-titulo">Da tu respuesta directamente desde aquí</div>
+        <button class="btn-aceptar" id="btn-aceptar" onclick="aceptar()">
+          Acepto el presupuesto — me contactáis para confirmar
+        </button>
+        <button class="btn-cambio" onclick="toggleCambio()">
+          Tengo una pregunta antes de confirmar
+        </button>
+        <div class="cambio-box" id="cambio-box">
+          <div class="cambio-label">Cuéntanos qué necesitas y te respondemos hoy:</div>
+          <textarea id="cambio-texto" placeholder="Ej: me gustaría más cantidad, cambiar el material, ajustar el precio..."></textarea>
+          <button class="btn-enviar" onclick="enviarCambio()">Enviar mensaje</button>
+        </div>
+        <div class="nota-responde">Respondemos el mismo día en horario de tienda</div>
+        <div class="contactos">
+          <a href="tel:923018034">923 018 034</a>
+          <a href="https://wa.me/34622305934" style="color:#25D366;border-color:#25D366">WhatsApp</a>
+        </div>
+        <!-- ESTADO OK -->
+        <div class="estado-ok" id="estado-ok">
+          <div class="estado-ok-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+          </div>
+          <div class="estado-ok-titulo" id="ok-titulo">Presupuesto aceptado</div>
+          <div class="estado-ok-sub" id="ok-sub">Te contactamos en breve para confirmar los detalles.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="error-div" class="card" style="display:none"><div class="body error-box">Presupuesto no encontrado o enlace caducado.</div></div>
+</div>
+<script>
+var TOKEN = new URLSearchParams(window.location.search).get('t') || location.pathname.split('/').pop();
+var CONDS = {'50_50':'50% al encargar · 50% al recoger','100_0':'100% al encargar','0_100':'100% al recoger','factura30':'Factura a 30 días','factura60':'Factura a 60 días'};
+
+function fmt(n){return parseFloat(n).toFixed(2).replace('.',',')+'€';}
+function fmtDate(s){if(!s)return'—';var d=new Date(s);return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();}
+
+async function cargar(){
+  try{
+    var r=await fetch('/api/presupuesto?token='+TOKEN);
+    var d=await r.json();
+    if(!r.ok||!d.presupuesto){document.getElementById('loading').style.display='none';document.getElementById('error-div').style.display='block';return;}
+    var p=d.presupuesto, lins=d.lineas||[];
+    document.getElementById('loading').style.display='none';
+    document.getElementById('contenido').style.display='block';
+    document.getElementById('cli-nombre').textContent=p.cliente_nombre||'—';
+    if(p.cliente_telefono)document.getElementById('cli-tel').textContent=p.cliente_telefono;
+    document.getElementById('pres-numero').textContent=p.numero||'—';
+    document.getElementById('pres-fecha').textContent=fmtDate(p.created_at);
+    document.getElementById('pres-total').textContent=fmt(p.total||0);
+    document.getElementById('cond-pago').textContent=CONDS[p.condicion_pago]||p.condicion_pago||'—';
+    // Validez y barra
+    var validezDias=parseInt(p.validez_dias)||30;
+    var fechaEmision=new Date(p.created_at);
+    var fechaExp=new Date(fechaEmision);fechaExp.setDate(fechaExp.getDate()+validezDias);
+    var hoy=new Date();
+    var diasRestantes=Math.max(0,Math.ceil((fechaExp-hoy)/(1000*60*60*24)));
+    var pct=Math.min(100,Math.round((diasRestantes/validezDias)*100));
+    document.getElementById('pres-validez').textContent=fmtDate(fechaExp.toISOString().split('T')[0]);
+    document.getElementById('dias-texto').textContent=diasRestantes+' días';
+    document.getElementById('bar-fill').style.width=pct+'%';
+    if(pct<30)document.getElementById('bar-fill').style.background='#A32D2D';
+    // Líneas
+    var html='';
+    lins.forEach(function(l,i){
+      html+='<tr>';
+      html+='<td><div class="linea-desc">'+l.descripcion+'</div></td>';
+      html+='<td>'+(l.cantidad||1)+'</td>';
+      html+='<td>'+(l.plazo?l.plazo+' días lab.':'A consultar')+'</td>';
+      html+='<td>'+fmt(l.subtotal||0)+'</td>';
+      html+='</tr>';
+    });
+    document.getElementById('lineas-body').innerHTML=html||'<tr><td colspan="4" style="padding:12px;color:#888;text-align:center">Sin líneas</td></tr>';
+    // Si ya está aceptado ocultar botones
+    if(p.estado==='aceptado'){mostrarOK('aceptado');}
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('error-div').style.display='block';
+  }
+}
+
+function mostrarOK(tipo){
+  document.getElementById('btn-aceptar').style.display='none';
+  document.querySelector('.btn-cambio').style.display='none';
+  document.getElementById('cambio-box').style.display='none';
+  document.querySelector('.nota-responde').style.display='none';
+  document.querySelector('.contactos').style.display='none';
+  document.querySelector('.respuesta-titulo').style.display='none';
+  var ok=document.getElementById('estado-ok');
+  ok.style.display='block';
+  if(tipo==='aceptado'){
+    document.getElementById('ok-titulo').textContent='Presupuesto aceptado';
+    document.getElementById('ok-sub').textContent='Te contactamos en breve para confirmar los detalles. ¡Gracias!';
+    document.getElementById('badge-estado').textContent='Aceptado';
+    document.getElementById('badge-estado').style.background='#3B6D11';
+  }else if(tipo==='cambios'){
+    document.getElementById('ok-titulo').textContent='Mensaje enviado';
+    document.getElementById('ok-sub').textContent='Respondemos el mismo día en horario de tienda.';
+    ok.style.background='#FAEEDA';
+    ok.querySelector('.estado-ok-icon').style.background='#BA7517';
+    document.getElementById('ok-titulo').style.color='#BA7517';
+  }
+}
+
+async function aceptar(){
+  var btn=document.getElementById('btn-aceptar');
+  btn.textContent='Enviando...';btn.disabled=true;
+  try{
+    var r=await fetch('/api/respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({token:TOKEN,accion:'aceptar'})});
+    var d=await r.json();
+    if(d.success)mostrarOK('aceptado');
+    else{btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
+  }catch(e){btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
+}
+
+function toggleCambio(){
+  var box=document.getElementById('cambio-box');
+  box.style.display=box.style.display==='block'?'none':'block';
+  if(box.style.display==='block')box.querySelector('textarea').focus();
+}
+
+async function enviarCambio(){
+  var txt=document.getElementById('cambio-texto').value.trim();
+  if(!txt)return;
+  var btn=document.querySelector('.btn-enviar');
+  btn.textContent='Enviando...';btn.disabled=true;
+  try{
+    var r=await fetch('/api/respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({token:TOKEN,accion:'cambios',mensaje:txt})});
+    var d=await r.json();
+    if(d.success)mostrarOK('cambios');
+    else{btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
+  }catch(e){btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
+}
+
+cargar();
+</script>
+</body>
+</html>

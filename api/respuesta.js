@@ -1,0 +1,67 @@
+const { createClient } = require('@supabase/supabase-js');
+
+const sb = createClient(
+  'https://ffiyprmbrznofoprvvik.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg'
+);
+
+const WHATICKET_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6WyJjcmVhdGU6bWVzc2FnZXMiLCJjcmVhdGU6Y29udGFjdHMiXSwiY29tcGFueUlkIjoiMzQxNzEyYWMtYzhhMy00NGMzLWE5ZDctZGIzZDRiNzhiYzU0IiwiaWF0IjoxNzc1MzcxNTE4fQ.-KPCiTDj46gREXYpkMeMJuQwj8msINyu0kwyyuNzIag';
+const WHATSAPP_ID = '74b01007-4608-4c29-a086-190786999f56';
+const TEL_PRINTCOPY = '34622305934';
+
+async function notificarWA(mensaje) {
+  await fetch('https://app.whaticket.com/api/messages/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WHATICKET_TOKEN}` },
+    body: JSON.stringify({ number: TEL_PRINTCOPY, whatsappId: WHATSAPP_ID, body: mensaje })
+  });
+}
+
+module.exports = async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  const { token, accion, mensaje } = req.body || {};
+  if (!token || !accion) return res.status(400).json({ error: 'Faltan datos' });
+
+  try {
+    const { data: pres, error } = await sb
+      .from('presupuestos')
+      .select('*')
+      .eq('token_publico', token)
+      .single();
+
+    if (error || !pres) return res.status(404).json({ error: 'Presupuesto no encontrado' });
+
+    if (accion === 'aceptar') {
+      await sb.from('presupuestos').update({ estado: 'aceptado' }).eq('id', pres.id);
+      await notificarWA(
+        `PRESUPUESTO ACEPTADO\n\n` +
+        `Cliente: ${pres.cliente_nombre}\n` +
+        `Tel: ${pres.cliente_telefono || '—'}\n` +
+        `Ref: ${pres.numero}\n` +
+        `Total: ${parseFloat(pres.total).toFixed(2)}EUR\n\n` +
+        `Accede al sistema para convertirlo en pedido.`
+      );
+      return res.status(200).json({ success: true, accion: 'aceptar' });
+    }
+
+    if (accion === 'cambios') {
+      await notificarWA(
+        `CONSULTA EN PRESUPUESTO\n\n` +
+        `Cliente: ${pres.cliente_nombre}\n` +
+        `Tel: ${pres.cliente_telefono || '—'}\n` +
+        `Ref: ${pres.numero}\n\n` +
+        `Mensaje del cliente:\n"${mensaje}"\n\n` +
+        `Responde para cerrar la venta.`
+      );
+      return res.status(200).json({ success: true, accion: 'cambios' });
+    }
+
+    return res.status(400).json({ error: 'Accion no reconocida' });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
