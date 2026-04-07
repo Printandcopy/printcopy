@@ -3375,10 +3375,14 @@ function nvGuardar(estado,canal){
               var condLabelsWA={'50_50':'50% al encargar · 50% al recoger','100_0':'100% al encargar','0_100':'100% al recoger','factura30':'Factura 30 días','factura60':'Factura 60 días'};
               var condWA=condLabelsWA[condicion]||condicion;
               var lineasWA=nvLineas.map(function(l){return '• '+l.desc+' — '+l.total.toFixed(2)+'€'+(l.plazo?' ('+l.plazo+' días)':'');}).join('\n');
-              var msgWA='Hola '+nombre.split(' ')[0]+'!'
-                +'\nTu presupuesto *'+numero+'* está listo.'
-                +'\n\nhttps://printcopy.vercel.app/presupuesto.html?t='+tokenPublico
-                +'\n\nPrint & Copy · 923 018 034';
+              var msgWA='Hola '+nombre.split(' ')[0]+'! '
+                +'Tu presupuesto *'+numero+'* de Print & Copy está listo.\n\n'
+                +'Antes de imprimir te mandamos la previa digital para que la apruebes. '
+                +'Hacemos todos los cambios que necesites hasta que quede exactamente como quieres.\n\n'
+                +'Solo pagas el *50% ahora* — el resto al recoger.\n\n'
+                +'Ver y confirmar:\n'
+                +'https://printcopy.vercel.app/presupuesto.html?t='+tokenPublico+'\n\n'
+                +'Cualquier duda estamos aqui. Print & Copy - 923 018 034';
               fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({telefono:telNorm,mensaje:msgWA,nombre:nombre})})
                 .then(function(r){return r.json();})
