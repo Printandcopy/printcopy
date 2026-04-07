@@ -393,11 +393,13 @@ function mostrarOK(tipo,msg){
   document.getElementById('ok-sub').textContent=msg||'';
   document.getElementById('badge-estado').textContent='Aceptado';
   document.getElementById('badge-estado').style.background='#3B6D11';
-  var secs=6;
-  var ci=setInterval(function(){
-    secs--;
-    if(secs<=0){clearInterval(ci);window.close();}
-  },1000);
+  // Intentar cerrar (solo funciona si fue abierta por JS)
+  setTimeout(function(){
+    if(!window.close()){
+      document.getElementById('ok-sub').innerHTML+=
+        '<br><br><span style="font-size:12px;color:#888">Puedes cerrar esta pestaña.</span>';
+    }
+  },2000);
 }
 
 function toggleCambio(){
