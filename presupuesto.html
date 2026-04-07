@@ -285,6 +285,17 @@ async function cargar(){
     });
     document.getElementById('lineas-body').innerHTML=html||'<tr><td colspan="4" style="padding:12px;color:#888;text-align:center">Sin líneas</td></tr>';
     if(_pres.estado==='aceptado')mostrarOK('aceptado','Tu pedido ya está en producción. Gracias por confiar en Print & Copy.');
+    var condP=_pres.condicion_pago||'50_50';
+    var totalP=parseFloat(_pres.total||0);
+    var senalP=calcSenal(totalP,condP);
+    if(senalP>0&&senalP<totalP){
+      var dsEl=document.getElementById('desglose-senal');
+      if(dsEl){
+        dsEl.style.display='block';
+        document.getElementById('ds-senal').textContent=fmt(senalP);
+        document.getElementById('ds-resto').textContent=fmt(totalP-senalP);
+      }
+    }
     // Mostrar desglose señal si aplica
     var condP=_pres.condicion_pago||'50_50';
     var totalP=parseFloat(_pres.total||0);
@@ -337,9 +348,9 @@ function volverPaso1(){
 
 function selMetodo(m){
   _metodoSel=m;
-  ['bizum','transf','efectivo','pendiente'].forEach(function(k){
-    document.getElementById('m-'+k).classList.remove('sel');
-    document.getElementById('detalle-'+k).style.display='none';
+  ['bizum','transf','efectivo'].forEach(function(k){
+    var el=document.getElementById('m-'+k);if(el)el.classList.remove('sel');
+    var det=document.getElementById('detalle-'+k);if(det)det.style.display='none';
   });
   document.getElementById('m-'+m).classList.add('sel');
   document.getElementById('detalle-'+m).style.display='block';
@@ -347,10 +358,9 @@ function selMetodo(m){
   btn.disabled=false;
   btn.style.opacity='1';
   var textos={
-    bizum:'Confirmar — recibir enlace de pago por WhatsApp',
+    bizum:'Confirmar y enviar pedido a producción',
     transf:'Confirmar — haré la transferencia',
-    efectivo:'Confirmar — paso por tienda a pagar',
-    pendiente:'Confirmar — me contactáis para el pago'
+    efectivo:'Confirmar — paso por tienda a pagar'
   };
   btn.textContent=textos[m]||'Confirmar';
 }
