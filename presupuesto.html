@@ -308,7 +308,6 @@ async function cargar(){
     // Si 0_100 o factura ocultar señal — solo mostrar "Lo acuerdo con vosotros"
     var condPago=_pres.condicion_pago||'';
     if(condPago==='0_100'||condPago==='factura30'||condPago==='factura60'){
-      document.getElementById('m-pendiente').style.display='none';
       document.getElementById('m-bizum').style.display='none';
       document.getElementById('m-transf').style.display='none';
       document.getElementById('m-efectivo').style.display='none';

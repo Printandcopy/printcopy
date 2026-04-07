@@ -3818,36 +3818,163 @@ function abrirPrimerAceptado(){
   if(p)verCotizacion(p.id);
 }
 
+function calcSenal(total,cond){
+  if(cond==='50_50')return cV2R2(total*0.5);
+  if(cond==='100_0')return total;
+  return 0;
+}
+
+function crearPedidoDesdePresupuesto(pres,senal,metodo){
+  var lins=pres.lineas||[];
+  if(!lins.length)return;
+  var totalGlobal=parseFloat(pres.total)||0;
+  var maxPlazo=3;
+  lins.forEach(function(l){if(l.plazo&&l.plazo>maxPlazo)maxPlazo=l.plazo;});
+  var fechaAuto=new Date();
+  fechaAuto.setDate(fechaAuto.getDate()+maxPlazo);
+  while(fechaAuto.getDay()===0||fechaAuto.getDay()===6){fechaAuto.setDate(fechaAuto.getDate()+1);}
+  var fecha=fechaAuto.toISOString().split('T')[0];
+  var clienteObj=clientes.find(function(c){return c.telefono===pres.cliente_telefono;});
+  var clienteId=clienteObj?clienteObj.id:null;
+  var senalTotal=senal||0;
+  var pagoEst=senalTotal>=totalGlobal?'pagado':senalTotal>0?'senal':'pendiente';
+  var proms=lins.map(function(lin){
+    return new Promise(function(res){
+      var sec=lin.seccion||'XR';
+      sb.from('contadores').select('valor').eq('seccion',sec).single().then(function(r){
+        var nv=(r.data?r.data.valor:0)+1;
+        sb.from('contadores').update({valor:nv}).eq('seccion',sec).then(function(){
+          var numPed=sec+'-'+String(nv).padStart(4,'0');
+          var proporcion=totalGlobal>0?((parseFloat(lin.subtotal)||0)/totalGlobal):1;
+          var ped={id:numPed,cliente_id:clienteId,cliente_nombre:pres.cliente_nombre,
+            cliente_tel:pres.cliente_telefono,cliente_email:pres.cliente_email||'',
+            seccion:sec,operario:'Sistema',fecha_creacion:new Date().toISOString(),
+            fecha_entrega:fecha,fecha_tipo:'aprox',descripcion:lin.descripcion,
+            notas:'Auto desde '+pres.numero+(metodo?' | '+metodo:''),
+            total:parseFloat(lin.subtotal)||0,senal:cV2R2(senalTotal*proporcion),
+            pago:pagoEst,condiciones:pres.condicion_pago||'50_50',fase:1,
+            presupuesto_origen:pres.numero};
+          sb.from('pedidos').insert([ped]).then(function(){res(numPed);});
+        });
+      });
+    });
+  });
+  Promise.all(proms).then(function(nums){
+    sb.from('presupuestos').update({convertido:true,senal_cobrada:senalTotal>0}).eq('id',pres.id).then(function(){
+      cargarDatos();actualizarBarraAvisos();
+      var t=document.createElement('div');
+      t.style.cssText='position:fixed;bottom:20px;right:20px;background:#185FA5;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;max-width:300px;box-shadow:0 4px 12px rgba(0,0,0,.3)';
+      t.innerHTML='\uD83D\uDCE6 <b>'+pres.cliente_nombre+'</b> en taller<br><span style="font-size:11px;opacity:.85">'+nums.join(', ')+' desde '+pres.numero+'</span>';
+      t.onclick=function(){t.remove();};
+      document.body.appendChild(t);
+      setTimeout(function(){if(t.parentNode)t.remove();},12000);
+    });
+  });
+}
+
+function confirmarSenal(presId){
+  var pres=presupuestos.find(function(p){return p.id===presId;});
+  if(!pres)return;
+  if(!confirm('Confirmar señal cobrada y pasar a taller?\n'+pres.numero+' - '+pres.cliente_nombre))return;
+  function crear(p){crearPedidoDesdePresupuesto(p,calcSenal(parseFloat(p.total)||0,p.condicion_pago),p.metodo_pago_senal);}
+  if(pres.lineas&&pres.lineas.length){crear(pres);}
+  else{sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',pres.id).then(function(r){pres.lineas=r.data||[];crear(pres);});}
+}
+
+function reenviarDatosTransf(presId){
+  var p=presupuestos.find(function(x){return x.id===presId;});
+  if(!p||!p.cliente_telefono)return;
+  var tel=p.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
+  if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+  var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
+  var msg='Hola '+p.cliente_nombre.split(' ')[0]+'!\n\nDatos transferencia presupuesto *'+p.numero+'*:\n\nImporte: *'+senal.toFixed(2)+'EUR*\nIBAN: ES58 0049 5292 14 2616098558\nTitular: Eventos Personalizados Salamanca SL\nConcepto: *'+p.numero+'*\n\nArrancamos al recibirlo.\nPrint & Copy - 923 018 034';
+  fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
+    .then(function(r){return r.json();}).then(function(d){alert(d.success?'Datos reenviados':'Error: '+(d.error||''));});
+}
+
+function recordatorioEfectivo(presId){
+  var p=presupuestos.find(function(x){return x.id===presId;});
+  if(!p||!p.cliente_telefono)return;
+  var tel=p.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
+  if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+  var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
+  var msg='Hola '+p.cliente_nombre.split(' ')[0]+'!\n\nTu pedido *'+p.numero+'* arranca cuando pases a abonar *'+senal.toFixed(2)+'EUR*.\n\nAv. Portugal 62 - L-V 9:30-14:00 y 16:30-20:00 - S 10:00-14:00\nPrint & Copy - 923 018 034';
+  fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
+    .then(function(r){return r.json();}).then(function(d){alert(d.success?'Recordatorio enviado':'Error: '+(d.error||''));});
+}
+
+function reenviarEnlacePago(presId){
+  var prev=_cotActual;
+  _cotActual=presupuestos.find(function(x){return x.id===presId;});
+  if(_cotActual)cotReenviarEnlace();
+  _cotActual=prev;
+}
+
 function actualizarBarraAvisos(){
-  var pendientes=presupuestos.filter(function(p){return p.estado==='aceptado'&&!p.convertido;});
+  var ahora=new Date();
+  var credito=['factura30','factura60'];
+  var todos=presupuestos.filter(function(p){return p.estado==='aceptado'&&!p.convertido;});
   var barra=document.getElementById('barra-avisos');
   var txt=document.getElementById('barra-avisos-texto');
   var btnVer=document.getElementById('barra-ver-btn');
   var btnCrear=document.getElementById('barra-crear-btn');
   var lista=document.getElementById('barra-avisos-lista');
   if(!barra)return;
-  if(!pendientes.length){barra.style.display='none';return;}
+  // Auto-crear pedido para clientes credito
+  todos.forEach(function(p){
+    if(credito.indexOf(p.condicion_pago)>=0){
+      var key='autocred_'+p.id;
+      if(!sessionStorage.getItem(key)){
+        sessionStorage.setItem(key,'1');
+        if(p.lineas&&p.lineas.length){crearPedidoDesdePresupuesto(p,0,'credito');}
+        else{sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',p.id).then(function(r){p.lineas=r.data||[];crearPedidoDesdePresupuesto(p,0,'credito');});}
+      }
+    }
+  });
+  var pendCobro=todos.filter(function(p){return credito.indexOf(p.condicion_pago)<0&&!p.senal_cobrada&&(p.condicion_pago==='50_50'||p.condicion_pago==='100_0');});
+  var listosPedido=todos.filter(function(p){return p.senal_cobrada||p.condicion_pago==='0_100';});
+  if(!todos.length){barra.style.display='none';return;}
   barra.style.display='flex';
-  if(pendientes.length===1){
-    var horaUno=pendientes[0].updated_at?new Date(pendientes[0].updated_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
+  var totalCount=todos.length;
+  if(totalCount===1&&pendCobro.length===0&&listosPedido.length===0){
+    var horaUno=todos[0].updated_at?new Date(todos[0].updated_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
     txt.innerHTML='<span style="background:#27500A;color:#C0DD97;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;margin-right:8px">1</span>'
-      +pendientes[0].cliente_nombre+' aceptó '+pendientes[0].numero+(horaUno?' a las '+horaUno:'')+'  — pendiente de crear pedido';
-    btnVer.style.display='none';
-    btnCrear.style.display='block';
-    lista.style.display='none';
+      +todos[0].cliente_nombre+' acepto '+todos[0].numero+(horaUno?' a las '+horaUno:'')+' - pendiente de crear pedido';
+    btnVer.style.display='none';btnCrear.style.display='block';lista.style.display='none';
   } else {
-    txt.innerHTML='<span style="background:#27500A;color:#C0DD97;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;margin-right:8px">'+pendientes.length+'</span>'
-      +'presupuestos aceptados pendientes de crear pedido';
-    btnVer.style.display='block';
-    btnCrear.style.display='none';
-    // Renderizar lista
-    lista.innerHTML=pendientes.map(function(p){
-      var hora=p.updated_at?new Date(p.updated_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
-      return '<div class="barra-item" onclick="verCotizacion(\''+p.id+'\')">'  
-        +'<span style="color:#C0DD97;font-size:12px">'+p.cliente_nombre+' · '+p.numero+' · '+parseFloat(p.total).toFixed(2)+'€'+(hora?' · '+hora:'')+' </span>'
-        +'<span style="color:#EAF3DE;font-size:11px">Crear pedido →</span>'
-        +'</div>';
-    }).join('');
+    txt.innerHTML='<span style="background:#27500A;color:#C0DD97;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;margin-right:8px">'+totalCount+'</span>'
+      +'presupuestos aceptados'+(pendCobro.length?' - <span style="color:#FAC775">'+pendCobro.length+' pendientes de cobro</span>':'');
+    btnVer.style.display='block';btnCrear.style.display='none';
+    var html='';
+    if(listosPedido.length){
+      html+='<div style="padding:8px 20px 4px;font-size:10px;color:#9FE1CB;text-transform:uppercase;letter-spacing:.8px">Listos para crear pedido</div>';
+      html+=listosPedido.map(function(p){
+        var hora=p.updated_at?new Date(p.updated_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
+        return '<div class="barra-item" onclick="verCotizacion(\''+p.id+'\')"><span style="color:#C0DD97;font-size:12px">'+p.cliente_nombre+' - '+p.numero+' - '+parseFloat(p.total).toFixed(2)+'EUR'+(hora?' - '+hora:'')+'</span><span style="color:#EAF3DE;font-size:11px">Crear pedido</span></div>';
+      }).join('');
+    }
+    if(pendCobro.length){
+      html+='<div style="padding:10px 20px 4px;font-size:10px;color:#FAC775;text-transform:uppercase;letter-spacing:.8px">Pendientes de cobro de senal</div>';
+      var mlbl={bizum:'Bizum/Tarjeta',transf:'Transferencia',efectivo:'Efectivo'};
+      html+=pendCobro.map(function(p){
+        var dias=p.updated_at?Math.floor((ahora-new Date(p.updated_at))/(1000*60*60*24)):0;
+        var urgente=dias>=3;
+        var m=p.metodo_pago_senal||'pendiente';
+        var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
+        var bg=urgente?'#412402':'#1a3a0a';
+        var bdr=urgente?'border-left:3px solid #EF9F27;':'';
+        var bc=urgente?'#854F0B':'#0F6E56';
+        var tc=urgente?'#FAC775':'#9FE1CB';
+        var diasTxt=(urgente?'! ':'')+dias+' dia'+(dias!==1?'s':'')+' sin pago';
+        var accion='';
+        if(m==='transf')accion='<button style="background:'+bc+';color:'+tc+';border:none;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer" onclick="reenviarDatosTransf(\''+p.id+'\')">Reenviar datos</button>';
+        else if(m==='efectivo')accion='<button style="background:'+bc+';color:'+tc+';border:none;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer" onclick="recordatorioEfectivo(\''+p.id+'\')">Recordatorio WA</button>';
+        else if(m==='bizum')accion='<button style="background:'+bc+';color:'+tc+';border:none;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer" onclick="reenviarEnlacePago(\''+p.id+'\')">Reenviar enlace</button>';
+        return '<div style="background:'+bg+';'+bdr+'border-radius:6px;padding:10px 12px;margin:4px 20px"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="background:'+bc+';color:'+tc+';font-size:10px;padding:2px 8px;border-radius:10px">'+(mlbl[m]||m)+'</span><span style="color:'+tc+';font-size:11px'+(urgente?';font-weight:700':'')+'">'+diasTxt+'</span></div><span style="color:#C0DD97;font-size:12px">'+p.cliente_nombre+' - '+p.numero+' - Senal: '+senal.toFixed(2)+'EUR</span></div><div style="display:flex;gap:6px">'+accion+'<button style="background:#3B6D11;color:#EAF3DE;border:none;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer;font-weight:700" onclick="confirmarSenal(\''+p.id+'\')">Cobrada</button></div></div></div>';
+      }).join('');
+      html+='<div style="height:8px"></div>';
+    }
+    lista.innerHTML=html;
   }
 }
 function toggleBarraLista(){
@@ -3855,8 +3982,9 @@ function toggleBarraLista(){
   var btn=document.getElementById('barra-ver-btn');
   var abierto=lista.style.display==='flex';
   lista.style.display=abierto?'none':'flex';
-  btn.textContent=abierto?'Ver todos ↓':'Cerrar ↑';
+  btn.textContent=abierto?'Ver todos':'Cerrar';
 }
+
 
 function cotConvertir(){
   if(!_cotActual)return;
