@@ -3937,7 +3937,12 @@ function recordatorioEfectivo(presId){
   var tel=p.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
   if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
   var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
-  var msg='Hola '+p.cliente_nombre.split(' ')[0]+'!\n\nTu pedido *'+p.numero+'* arranca cuando pases a abonar *'+senal.toFixed(2)+'EUR*.\n\nAv. Portugal 62 - L-V 9:30-14:00 y 16:30-20:00 - S 10:00-14:00\nPrint & Copy - 923 018 034';
+  var msg='Hola '+p.cliente_nombre.split(' ')[0]+'! '
+    +'Te escribimos sobre tu pedido *'+p.numero+'*.\n\n'
+    +'En cuanto pases por tienda a abonar la senal de *'+senal.toFixed(2)+'EUR* lo ponemos en marcha.\n\n'
+    +'Puedes pagar en efectivo, tarjeta o Bizum.\n'
+    +'Av. Portugal 62 - L-V 9:30-14:00 y 16:30-20:00 - Sab 10:00-14:00\n\n'
+    +'Cualquier duda: 923 018 034';
   fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
     .then(function(r){return r.json();}).then(function(d){alert(d.success?'Recordatorio enviado':'Error: '+(d.error||''));});
 }
