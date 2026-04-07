@@ -23,12 +23,14 @@ async function enviarWA(numero, mensaje) {
       body: JSON.stringify({ number: numero, whatsappId: WHATSAPP_ID, body: mensaje })
     });
     const d = await r.json();
-    console.log('WA enviado a', numero, ':', JSON.stringify(d));
+    console.log('WA ->', numero, JSON.stringify(d));
     return d;
   } catch(e) {
-    console.error('Error WA a', numero, ':', e.message);
+    console.error('Error WA:', e.message);
   }
 }
+
+function fmt(n) { return parseFloat(n).toFixed(2) + '€'; }
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -36,86 +38,67 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { token, accion, mensaje } = req.body || {};
+  const { token, accion, mensaje, metodo_pago, senal } = req.body || {};
   if (!token || !accion) return res.status(400).json({ error: 'Faltan datos' });
 
   try {
     const { data: pres, error } = await sb
       .from('presupuestos').select('*').eq('token_publico', token).single();
-
-    if (error || !pres) return res.status(404).json({ error: 'Presupuesto no encontrado' });
+    if (error || !pres) return res.status(404).json({ error: 'No encontrado' });
 
     const telCliente = normalizarTel(pres.cliente_telefono);
     const nombre = (pres.cliente_nombre || '').split(' ')[0];
-    const conds = {
-      '50_50': '50% al encargar · 50% al recoger',
-      '100_0': '100% al encargar',
-      '0_100': '100% al recoger',
-      'factura30': 'Factura a 30 días',
-      'factura60': 'Factura a 60 días'
-    };
-    const condTexto = conds[pres.condicion_pago] || pres.condicion_pago || '';
+    const senalFmt = senal > 0 ? fmt(senal) : null;
 
     // ── ACEPTAR ──
     if (accion === 'aceptar') {
-      await sb.from('presupuestos')
-        .update({ estado: 'aceptado', aceptado_por_cliente: true, notificado_interno: false })
-        .eq('id', pres.id);
+      await sb.from('presupuestos').update({
+        estado: 'aceptado',
+        aceptado_por_cliente: true,
+        notificado_interno: false,
+        metodo_pago_senal: metodo_pago || null
+      }).eq('id', pres.id);
 
-      // 1. WA al cliente — confirmación
-      if (telCliente) {
-        await enviarWA(telCliente,
-          `✅ ¡Perfecto ${nombre}!\n\n` +
-          `Hemos recibido tu confirmación del presupuesto *${pres.numero}*.\n\n` +
-          `Nos ponemos en contacto contigo en breve para coordinar los detalles.\n\n` +
-          (condTexto ? `💳 Condición acordada: ${condTexto}\n\n` : '') +
-          `Gracias por confiar en Print & Copy 🙌\n` +
-          `923 018 034 · printcopysalamanca.es`
-        );
-      }
+      // Mensajes según método
+      const msgCliente = {
+        bizum: `✅ ¡Perfecto ${nombre}!\n\nTu pedido ${pres.numero} está confirmado.\n\nTe enviamos ahora el enlace de pago por WhatsApp para abonar la señal de ${senalFmt}.\n\nEn cuanto lo recibamos arrancamos con tu pedido.\n\nPrint & Copy · 923 018 034`,
+        transf: `✅ ¡Perfecto ${nombre}!\n\nTu pedido ${pres.numero} está confirmado.\n\nRealiza una transferencia de ${senalFmt} a:\nES58 0049 5292 14 2616098558\nConcepto: ${pres.numero}\n\nAvisamos cuando lo recibamos y arrancamos.\n\nPrint & Copy · 923 018 034`,
+        efectivo: `✅ ¡Perfecto ${nombre}!\n\nTu pedido ${pres.numero} está confirmado.\n\nPasa por tienda (Av. Portugal 62) para abonar los ${senalFmt} y arrancamos.\n\nHorario: L-V 9:30-14:00 y 16:30-20:00 · S 10:00-14:00\n\nPrint & Copy · 923 018 034`,
+        pendiente: `✅ ¡Perfecto ${nombre}!\n\nTu pedido ${pres.numero} está confirmado.\n\nNos ponemos en contacto contigo hoy mismo para acordar el pago.\n\nPrint & Copy · 923 018 034`,
+        al_recoger: `✅ ¡Perfecto ${nombre}!\n\nTu pedido ${pres.numero} está en producción.\n\nPagas ${fmt(pres.total)} al recoger.\n\nPrint & Copy · 923 018 034`,
+      };
 
-      // 2. WA a Print & Copy — aviso interno
-      // Usamos el tel del cliente como número de origen para que Whaticket
-      // lo enrute dentro de la conversación existente con el cliente
-      await enviarWA(TEL_PRINTCOPY,
-        `✅ PRESUPUESTO ACEPTADO\n\n` +
-        `Cliente: ${pres.cliente_nombre}\n` +
-        `Tel: ${pres.cliente_telefono || '—'}\n` +
-        `Ref: ${pres.numero}\n` +
-        `Total: ${parseFloat(pres.total || 0).toFixed(2)}€\n\n` +
-        `Entra en el sistema para crear el pedido.`
-      );
+      const msgEmpresa = {
+        bizum: `✅ PEDIDO CONFIRMADO — ENVIAR ENLACE DE PAGO\n\nCliente: ${pres.cliente_nombre}\nTel: ${pres.cliente_telefono || '—'}\nRef: ${pres.numero}\nTotal: ${fmt(pres.total)} · Señal: ${senalFmt}\n\nMétodo: Bizum / Tarjeta\n⚠️ Enviar enlace de pago al cliente ahora.`,
+        transf: `✅ PEDIDO CONFIRMADO — ESPERAR TRANSFERENCIA\n\nCliente: ${pres.cliente_nombre}\nTel: ${pres.cliente_telefono || '—'}\nRef: ${pres.numero}\nTotal: ${fmt(pres.total)} · Señal: ${senalFmt}\n\nMétodo: Transferencia bancaria\nConcepto esperado: ${pres.numero}`,
+        efectivo: `✅ PEDIDO CONFIRMADO — COBRAR EN TIENDA\n\nCliente: ${pres.cliente_nombre}\nTel: ${pres.cliente_telefono || '—'}\nRef: ${pres.numero}\nTotal: ${fmt(pres.total)} · Señal: ${senalFmt}\n\nMétodo: Efectivo en tienda`,
+        pendiente: `✅ PEDIDO CONFIRMADO — ACORDAR PAGO CON CLIENTE\n\nCliente: ${pres.cliente_nombre}\nTel: ${pres.cliente_telefono || '—'}\nRef: ${pres.numero}\nTotal: ${fmt(pres.total)} · Señal: ${senalFmt}\n\nLlamar para acordar forma de pago.`,
+        al_recoger: `✅ PEDIDO CONFIRMADO — PAGO AL RECOGER\n\nCliente: ${pres.cliente_nombre}\nRef: ${pres.numero} · Total: ${fmt(pres.total)}\n\nEntra a producción directamente.`,
+      };
+
+      const metodo = metodo_pago || 'pendiente';
+      if (telCliente && msgCliente[metodo]) await enviarWA(telCliente, msgCliente[metodo]);
+      await enviarWA(TEL_PRINTCOPY, msgEmpresa[metodo] || msgEmpresa.pendiente);
 
       return res.status(200).json({ success: true });
     }
 
     // ── CAMBIOS ──
     if (accion === 'cambios') {
-      // 1. WA al cliente — acuse de recibo
       if (telCliente) {
         await enviarWA(telCliente,
-          `👋 Hola ${nombre}, hemos recibido tu consulta sobre el presupuesto *${pres.numero}*.\n\n` +
-          `Te respondemos hoy mismo en horario de tienda.\n\n` +
-          `Print & Copy · 923 018 034`
+          `👋 Hola ${nombre}, recibimos tu consulta sobre ${pres.numero}.\n\nTe respondemos hoy en horario de tienda.\n\nPrint & Copy · 923 018 034`
         );
       }
-
-      // 2. WA a Print & Copy — con el mensaje
       await enviarWA(TEL_PRINTCOPY,
-        `💬 CONSULTA EN PRESUPUESTO\n\n` +
-        `Cliente: ${pres.cliente_nombre}\n` +
-        `Tel: ${pres.cliente_telefono || '—'}\n` +
-        `Ref: ${pres.numero}\n\n` +
-        `Mensaje:\n"${mensaje}"\n\n` +
-        `Responde para cerrar la venta.`
+        `💬 CONSULTA — ${pres.numero}\n\nCliente: ${pres.cliente_nombre} · ${pres.cliente_telefono || '—'}\n\n"${mensaje}"`
       );
-
       return res.status(200).json({ success: true });
     }
 
     return res.status(400).json({ error: 'Accion no reconocida' });
   } catch (e) {
-    console.error('Error respuesta:', e);
+    console.error(e);
     return res.status(500).json({ error: e.message });
   }
 };
