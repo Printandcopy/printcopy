@@ -3780,8 +3780,9 @@ function actualizarBarraAvisos(){
   if(!pendientes.length){barra.style.display='none';return;}
   barra.style.display='flex';
   if(pendientes.length===1){
+    var horaUno=pendientes[0].updated_at?new Date(pendientes[0].updated_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
     txt.innerHTML='<span style="background:#27500A;color:#C0DD97;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;margin-right:8px">1</span>'
-      +pendientes[0].cliente_nombre+' aceptó '+pendientes[0].numero+' — pendiente de crear pedido';
+      +pendientes[0].cliente_nombre+' aceptó '+pendientes[0].numero+(horaUno?' a las '+horaUno:'')+'  — pendiente de crear pedido';
     btnVer.style.display='none';
     btnCrear.style.display='block';
     lista.style.display='none';
@@ -3792,8 +3793,9 @@ function actualizarBarraAvisos(){
     btnCrear.style.display='none';
     // Renderizar lista
     lista.innerHTML=pendientes.map(function(p){
+      var hora=p.updated_at?new Date(p.updated_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
       return '<div class="barra-item" onclick="verCotizacion(\''+p.id+'\')">'  
-        +'<span style="color:#C0DD97;font-size:12px">'+p.cliente_nombre+' · '+p.numero+' · '+parseFloat(p.total).toFixed(2)+'€</span>'
+        +'<span style="color:#C0DD97;font-size:12px">'+p.cliente_nombre+' · '+p.numero+' · '+parseFloat(p.total).toFixed(2)+'€'+(hora?' · '+hora:'')+' </span>'
         +'<span style="color:#EAF3DE;font-size:11px">Crear pedido →</span>'
         +'</div>';
     }).join('');

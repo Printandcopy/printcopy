@@ -292,6 +292,15 @@ async function cargar(){
     });
     document.getElementById('lineas-body').innerHTML=html||'<tr><td colspan="4" style="padding:12px;color:#888;text-align:center">Sin líneas</td></tr>';
     if(_pres.estado==='aceptado')mostrarOK('aceptado','Tu pedido ya está en producción. Gracias por confiar en Print & Copy.');
+    // Mostrar desglose señal si aplica
+    var condP=_pres.condicion_pago||'50_50';
+    var totalP=parseFloat(_pres.total||0);
+    var senalP=calcSenal(totalP,condP);
+    if(senalP>0&&senalP<totalP){
+      document.getElementById('desglose-senal').style.display='block';
+      document.getElementById('ds-senal').textContent=fmt(senalP);
+      document.getElementById('ds-resto').textContent=fmt(totalP-senalP);
+    }
     // Si 0_100 o factura ocultar señal — solo mostrar "Lo acuerdo con vosotros"
     var condPago=_pres.condicion_pago||'';
     if(condPago==='0_100'||condPago==='factura30'||condPago==='factura60'){

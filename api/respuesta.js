@@ -60,12 +60,49 @@ module.exports = async function handler(req, res) {
       }).eq('id', pres.id);
 
       // Mensajes según método
+      const totalFmt = fmt(pres.total);
+      const restoFmt = senal > 0 ? fmt(parseFloat(pres.total) - senal) : null;
+      const ahora = new Date().toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
       const msgCliente = {
-        bizum: `✅ ¡Perfecto ${nombre}!\n\nTu pedido ${pres.numero} está confirmado.\n\nTe enviamos ahora el enlace de pago por WhatsApp para abonar la señal de ${senalFmt}.\n\nEn cuanto lo recibamos arrancamos con tu pedido.\n\nPrint & Copy · 923 018 034`,
-        transf: `✅ ¡Perfecto ${nombre}!\n\nTu pedido ${pres.numero} está confirmado.\n\nRealiza una transferencia de ${senalFmt} a:\nES58 0049 5292 14 2616098558\nConcepto: ${pres.numero}\n\nAvisamos cuando lo recibamos y arrancamos.\n\nPrint & Copy · 923 018 034`,
-        efectivo: `✅ ¡Perfecto ${nombre}!\n\nTu pedido ${pres.numero} está confirmado.\n\nPasa por tienda (Av. Portugal 62) para abonar los ${senalFmt} y arrancamos.\n\nHorario: L-V 9:30-14:00 y 16:30-20:00 · S 10:00-14:00\n\nPrint & Copy · 923 018 034`,
-        pendiente: `✅ ¡Perfecto ${nombre}!\n\nTu pedido ${pres.numero} está confirmado.\n\nNos ponemos en contacto contigo hoy mismo para acordar el pago.\n\nPrint & Copy · 923 018 034`,
-        al_recoger: `✅ ¡Perfecto ${nombre}!\n\nTu pedido ${pres.numero} está en producción.\n\nPagas ${fmt(pres.total)} al recoger.\n\nPrint & Copy · 923 018 034`,
+        bizum: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
+          + `Ref: *${pres.numero}* · ${ahora}\n`
+          + `Total: ${totalFmt}\n\n`
+          + `💳 *Señal a pagar: ${senalFmt}*\n`
+          + (restoFmt ? `Resto al recoger: ${restoFmt}\n\n` : '\n')
+          + `Te enviamos ahora el enlace de pago seguro.\n`
+          + `En cuanto se confirme arrancamos con tu pedido.\n\n`
+          + `Print & Copy · 923 018 034`,
+        transf: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
+          + `Ref: *${pres.numero}* · ${ahora}\n`
+          + `Total: ${totalFmt}\n\n`
+          + `🏦 *Transferencia bancaria*\n`
+          + `Importe señal: *${senalFmt}*\n`
+          + `IBAN: ES58 0049 5292 14 2616098558\n`
+          + `Titular: Eventos Personalizados Salamanca SL\n`
+          + `Concepto: *${pres.numero}*\n\n`
+          + (restoFmt ? `Resto al recoger: ${restoFmt}\n\n` : '')
+          + `Avisamos en cuanto recibamos el ingreso.\n`
+          + `Print & Copy · 923 018 034`,
+        efectivo: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
+          + `Ref: *${pres.numero}* · ${ahora}\n`
+          + `Total: ${totalFmt}\n\n`
+          + `💵 *Pago en tienda: ${senalFmt}*\n`
+          + `Av. Portugal 62, Salamanca\n`
+          + `L-V 9:30-14:00 y 16:30-20:00 · S 10:00-14:00\n\n`
+          + (restoFmt ? `Resto al recoger: ${restoFmt}\n\n` : '')
+          + `Arrancamos en cuanto pases por tienda.\n`
+          + `Print & Copy · 923 018 034`,
+        pendiente: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
+          + `Ref: *${pres.numero}* · ${ahora}\n`
+          + `Total: ${totalFmt}\n\n`
+          + `Señal pendiente: *${senalFmt}*\n\n`
+          + `Nos ponemos en contacto contigo hoy mismo para acordar el pago.\n`
+          + `Print & Copy · 923 018 034`,
+        al_recoger: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
+          + `Ref: *${pres.numero}* · ${ahora}\n`
+          + `Total a pagar al recoger: *${totalFmt}*\n\n`
+          + `Tu pedido entra en producción ahora.\n`
+          + `Print & Copy · 923 018 034`,
       };
 
       const msgEmpresa = {
