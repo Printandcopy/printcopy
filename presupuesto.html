@@ -229,10 +229,11 @@ function mostrarOK(tipo){
   var ok=document.getElementById('estado-ok');
   ok.style.display='block';
   if(tipo==='aceptado'){
-    document.getElementById('ok-titulo').textContent='Presupuesto aceptado';
-    document.getElementById('ok-sub').textContent='Te contactamos en breve para confirmar los detalles. ¡Gracias!';
+    document.getElementById('ok-titulo').textContent='¡Presupuesto confirmado!';
+    document.getElementById('ok-sub').innerHTML='Te hemos enviado una confirmación por WhatsApp.<br>Nos ponemos en contacto contigo en breve.';
     document.getElementById('badge-estado').textContent='Aceptado';
     document.getElementById('badge-estado').style.background='#3B6D11';
+    window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
   }else if(tipo==='cambios'){
     document.getElementById('ok-titulo').textContent='Mensaje enviado';
     document.getElementById('ok-sub').textContent='Respondemos el mismo día en horario de tienda.';

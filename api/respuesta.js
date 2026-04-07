@@ -9,6 +9,12 @@ const WHATICKET_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6WyJjcm
 const WHATSAPP_ID = '74b01007-4608-4c29-a086-190786999f56';
 const TEL_PRINTCOPY = '34622305934';
 
+function normalizarTel(tel) {
+  if (!tel) return null;
+  const t = tel.toString().replace(/\s/g, '').replace(/^\+/, '');
+  return t.length === 9 && !t.startsWith('34') ? '34' + t : t;
+}
+
 async function enviarWA(numero, mensaje) {
   try {
     const r = await fetch('https://app.whaticket.com/api/messages/send', {
@@ -16,9 +22,11 @@ async function enviarWA(numero, mensaje) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WHATICKET_TOKEN}` },
       body: JSON.stringify({ number: numero, whatsappId: WHATSAPP_ID, body: mensaje })
     });
-    return await r.json();
+    const d = await r.json();
+    console.log('WA enviado a', numero, ':', JSON.stringify(d));
+    return d;
   } catch(e) {
-    console.error('Error WA:', e.message);
+    console.error('Error WA a', numero, ':', e.message);
   }
 }
 
@@ -33,12 +41,20 @@ module.exports = async function handler(req, res) {
 
   try {
     const { data: pres, error } = await sb
-      .from('presupuestos')
-      .select('*')
-      .eq('token_publico', token)
-      .single();
+      .from('presupuestos').select('*').eq('token_publico', token).single();
 
     if (error || !pres) return res.status(404).json({ error: 'Presupuesto no encontrado' });
+
+    const telCliente = normalizarTel(pres.cliente_telefono);
+    const nombre = (pres.cliente_nombre || '').split(' ')[0];
+    const conds = {
+      '50_50': '50% al encargar · 50% al recoger',
+      '100_0': '100% al encargar',
+      '0_100': '100% al recoger',
+      'factura30': 'Factura a 30 días',
+      'factura60': 'Factura a 60 días'
+    };
+    const condTexto = conds[pres.condicion_pago] || pres.condicion_pago || '';
 
     // ── ACEPTAR ──
     if (accion === 'aceptar') {
@@ -46,45 +62,45 @@ module.exports = async function handler(req, res) {
         .update({ estado: 'aceptado', aceptado_por_cliente: true, notificado_interno: false })
         .eq('id', pres.id);
 
-      // Notificar a Print & Copy
-      await enviarWA(TEL_PRINTCOPY,
-        `✅ PRESUPUESTO ACEPTADO\n\n` +
-        `Cliente: ${pres.cliente_nombre}\n` +
-        `Tel: ${pres.cliente_telefono || '—'}\n` +
-        `Ref: ${pres.numero}\n` +
-        `Total: ${parseFloat(pres.total).toFixed(2)}€\n\n` +
-        `Entra en el sistema para crear el pedido.`
-      );
-
-      // Confirmar al cliente
-      if (pres.cliente_telefono) {
-        const telCliente = pres.cliente_telefono.toString().replace(/\s/g, '').replace(/^\+/, '');
-        const telNorm = telCliente.length === 9 && !telCliente.startsWith('34') ? '34' + telCliente : telCliente;
-        const nombre = pres.cliente_nombre.split(' ')[0];
-        const conds = {
-          '50_50': '50% al encargar · 50% al recoger',
-          '100_0': '100% al encargar',
-          '0_100': '100% al recoger',
-          'factura30': 'Factura a 30 días',
-          'factura60': 'Factura a 60 días'
-        };
-        const condTexto = conds[pres.condicion_pago] || pres.condicion_pago || '';
-        await enviarWA(telNorm,
-          `✅ ¡Perfecto, ${nombre}!\n\n` +
+      // 1. WA al cliente — confirmación
+      if (telCliente) {
+        await enviarWA(telCliente,
+          `✅ ¡Perfecto ${nombre}!\n\n` +
           `Hemos recibido tu confirmación del presupuesto *${pres.numero}*.\n\n` +
-          `Nos ponemos en contacto contigo en breve para coordinar los detalles y el pago.\n\n` +
-          `💳 Condición: ${condTexto}\n\n` +
+          `Nos ponemos en contacto contigo en breve para coordinar los detalles.\n\n` +
+          (condTexto ? `💳 Condición acordada: ${condTexto}\n\n` : '') +
           `Gracias por confiar en Print & Copy 🙌\n` +
           `923 018 034 · printcopysalamanca.es`
         );
       }
 
-      return res.status(200).json({ success: true, accion: 'aceptar' });
+      // 2. WA a Print & Copy — aviso interno
+      // Usamos el tel del cliente como número de origen para que Whaticket
+      // lo enrute dentro de la conversación existente con el cliente
+      await enviarWA(TEL_PRINTCOPY,
+        `✅ PRESUPUESTO ACEPTADO\n\n` +
+        `Cliente: ${pres.cliente_nombre}\n` +
+        `Tel: ${pres.cliente_telefono || '—'}\n` +
+        `Ref: ${pres.numero}\n` +
+        `Total: ${parseFloat(pres.total || 0).toFixed(2)}€\n\n` +
+        `Entra en el sistema para crear el pedido.`
+      );
+
+      return res.status(200).json({ success: true });
     }
 
     // ── CAMBIOS ──
     if (accion === 'cambios') {
-      // Notificar a Print & Copy
+      // 1. WA al cliente — acuse de recibo
+      if (telCliente) {
+        await enviarWA(telCliente,
+          `👋 Hola ${nombre}, hemos recibido tu consulta sobre el presupuesto *${pres.numero}*.\n\n` +
+          `Te respondemos hoy mismo en horario de tienda.\n\n` +
+          `Print & Copy · 923 018 034`
+        );
+      }
+
+      // 2. WA a Print & Copy — con el mensaje
       await enviarWA(TEL_PRINTCOPY,
         `💬 CONSULTA EN PRESUPUESTO\n\n` +
         `Cliente: ${pres.cliente_nombre}\n` +
@@ -94,23 +110,12 @@ module.exports = async function handler(req, res) {
         `Responde para cerrar la venta.`
       );
 
-      // Confirmar al cliente que se recibió su mensaje
-      if (pres.cliente_telefono) {
-        const telCliente = pres.cliente_telefono.toString().replace(/\s/g, '').replace(/^\+/, '');
-        const telNorm = telCliente.length === 9 && !telCliente.startsWith('34') ? '34' + telCliente : telCliente;
-        const nombre = pres.cliente_nombre.split(' ')[0];
-        await enviarWA(telNorm,
-          `👋 Hola ${nombre}, hemos recibido tu mensaje sobre el presupuesto *${pres.numero}*.\n\n` +
-          `Te respondemos hoy mismo en horario de tienda.\n\n` +
-          `Print & Copy · 923 018 034`
-        );
-      }
-
-      return res.status(200).json({ success: true, accion: 'cambios' });
+      return res.status(200).json({ success: true });
     }
 
     return res.status(400).json({ error: 'Accion no reconocida' });
   } catch (e) {
+    console.error('Error respuesta:', e);
     return res.status(500).json({ error: e.message });
   }
 };

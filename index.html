@@ -3726,19 +3726,24 @@ cargarDatos();
 cargarPresupuestos();
 // Polling cada 60s para detectar presupuestos aceptados por el cliente
 setInterval(function(){
-  sb.from('presupuestos').select('id,numero,cliente_nombre,estado').eq('estado','aceptado').eq('notificado_interno',false).then(function(r){
+  var hace24h=new Date(Date.now()-86400000).toISOString();
+  sb.from('presupuestos').select('id,numero,cliente_nombre,estado,aceptado_por_cliente,updated_at')
+    .eq('estado','aceptado').eq('aceptado_por_cliente',true)
+    .gte('updated_at',hace24h).then(function(r){
     if(r.data&&r.data.length){
       r.data.forEach(function(p){
-        if(Notification.permission==='granted'){
+        var key='toast_'+p.id;
+        if(sessionStorage.getItem(key))return;
+        sessionStorage.setItem(key,'1');
+        if(Notification.permission==='granted')
           new Notification('✅ Presupuesto aceptado',{body:p.cliente_nombre+' aceptó '+p.numero,icon:'/favicon.ico'});
-        }
-        // Toast en pantalla
         var t=document.createElement('div');
-        t.style.cssText='position:fixed;bottom:20px;right:20px;background:#3B6D11;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2)';
-        t.innerHTML='✅ '+p.cliente_nombre+' aceptó <b>'+p.numero+'</b><br><span style="font-size:11px;font-weight:400;opacity:.85">Pulsa para ver y crear pedido</span>';
+        t.style.cssText='position:fixed;bottom:20px;right:20px;background:#3B6D11;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:280px';
+        t.innerHTML='✅ <b>'+p.cliente_nombre+'</b> aceptó '+p.numero+'<br><span style="font-size:11px;font-weight:400;opacity:.85">Pulsa para crear el pedido</span>';
         t.onclick=function(){verCotizacion(p.id);t.remove();};
         document.body.appendChild(t);
-        setTimeout(function(){if(t.parentNode)t.remove();},10000);
+        setTimeout(function(){if(t.parentNode)t.remove();},15000);
+        sb.from('presupuestos').update({notificado_interno:true}).eq('id',p.id).then(function(){});
       });
       cargarPresupuestos();
     }
