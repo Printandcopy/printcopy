@@ -3302,8 +3302,10 @@ function nvGuardar(estado,canal){
                 +'*TOTAL: '+total.toFixed(2)+'€* (IVA incluido)\n\n'
                 +'💳 Pago: '+condWA+'\n'
                 +'📅 Validez: '+validez+' días\n\n'
-                +'¿Alguna duda? Estamos aquí para ayudarte 😊\n\n'
-                +'Print & Copy · 923 018 034 · printcopysalamanca.es';
+                +'👉 *Ver y responder tu presupuesto:*\n'
+                +'https://printcopy.vercel.app/presupuesto.html?t='+tokenPublico+'\n\n'
+                +'Respondemos el mismo día en horario de tienda.\n'
+                +'Print & Copy · 923 018 034';
               fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({telefono:telNorm,mensaje:msgWA,nombre:nombre})})
                 .then(function(r){return r.json();})
