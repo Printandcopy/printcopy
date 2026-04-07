@@ -2735,9 +2735,11 @@ function cargarPresupuestos(){
           p.lineas=lineas.filter(function(l){return l.presupuesto_id===p.id;});
         });
         renderVentas();
+        actualizarBarraAvisos();
       });
     }else{
       renderVentas();
+      actualizarBarraAvisos();
     }
   });
 }
@@ -3692,12 +3694,12 @@ function cotRechazar(){
 }
 
 function abrirPrimerAceptado(){
-  var p=presupuestos.find(function(x){return x.estado==='aceptado'&&x.aceptado_por_cliente;});
+  var p=presupuestos.find(function(x){return x.estado==='aceptado'&&!x.convertido;});
   if(p)verCotizacion(p.id);
 }
 
 function actualizarBarraAvisos(){
-  var pendientes=presupuestos.filter(function(p){return p.estado==='aceptado'&&p.aceptado_por_cliente&&!p.convertido;});
+  var pendientes=presupuestos.filter(function(p){return p.estado==='aceptado'&&!p.convertido;});
   var barra=document.getElementById('barra-avisos');
   var txt=document.getElementById('barra-avisos-texto');
   var btnVer=document.getElementById('barra-ver-btn');
