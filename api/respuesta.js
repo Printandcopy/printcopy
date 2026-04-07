@@ -9,12 +9,17 @@ const WHATICKET_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzY29wZSI6WyJjcm
 const WHATSAPP_ID = '74b01007-4608-4c29-a086-190786999f56';
 const TEL_PRINTCOPY = '34622305934';
 
-async function notificarWA(mensaje) {
-  await fetch('https://app.whaticket.com/api/messages/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WHATICKET_TOKEN}` },
-    body: JSON.stringify({ number: TEL_PRINTCOPY, whatsappId: WHATSAPP_ID, body: mensaje })
-  });
+async function enviarWA(numero, mensaje) {
+  try {
+    const r = await fetch('https://app.whaticket.com/api/messages/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WHATICKET_TOKEN}` },
+      body: JSON.stringify({ number: numero, whatsappId: WHATSAPP_ID, body: mensaje })
+    });
+    return await r.json();
+  } catch(e) {
+    console.error('Error WA:', e.message);
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -35,28 +40,72 @@ module.exports = async function handler(req, res) {
 
     if (error || !pres) return res.status(404).json({ error: 'Presupuesto no encontrado' });
 
+    // ── ACEPTAR ──
     if (accion === 'aceptar') {
-      await sb.from('presupuestos').update({ estado: 'aceptado', aceptado_por_cliente: true, notificado_interno: false }).eq('id', pres.id);
-      await notificarWA(
-        `PRESUPUESTO ACEPTADO\n\n` +
+      await sb.from('presupuestos')
+        .update({ estado: 'aceptado', aceptado_por_cliente: true, notificado_interno: false })
+        .eq('id', pres.id);
+
+      // Notificar a Print & Copy
+      await enviarWA(TEL_PRINTCOPY,
+        `✅ PRESUPUESTO ACEPTADO\n\n` +
         `Cliente: ${pres.cliente_nombre}\n` +
         `Tel: ${pres.cliente_telefono || '—'}\n` +
         `Ref: ${pres.numero}\n` +
-        `Total: ${parseFloat(pres.total).toFixed(2)}EUR\n\n` +
-        `Accede al sistema para convertirlo en pedido.`
+        `Total: ${parseFloat(pres.total).toFixed(2)}€\n\n` +
+        `Entra en el sistema para crear el pedido.`
       );
+
+      // Confirmar al cliente
+      if (pres.cliente_telefono) {
+        const telCliente = pres.cliente_telefono.toString().replace(/\s/g, '').replace(/^\+/, '');
+        const telNorm = telCliente.length === 9 && !telCliente.startsWith('34') ? '34' + telCliente : telCliente;
+        const nombre = pres.cliente_nombre.split(' ')[0];
+        const conds = {
+          '50_50': '50% al encargar · 50% al recoger',
+          '100_0': '100% al encargar',
+          '0_100': '100% al recoger',
+          'factura30': 'Factura a 30 días',
+          'factura60': 'Factura a 60 días'
+        };
+        const condTexto = conds[pres.condicion_pago] || pres.condicion_pago || '';
+        await enviarWA(telNorm,
+          `✅ ¡Perfecto, ${nombre}!\n\n` +
+          `Hemos recibido tu confirmación del presupuesto *${pres.numero}*.\n\n` +
+          `Nos ponemos en contacto contigo en breve para coordinar los detalles y el pago.\n\n` +
+          `💳 Condición: ${condTexto}\n\n` +
+          `Gracias por confiar en Print & Copy 🙌\n` +
+          `923 018 034 · printcopysalamanca.es`
+        );
+      }
+
       return res.status(200).json({ success: true, accion: 'aceptar' });
     }
 
+    // ── CAMBIOS ──
     if (accion === 'cambios') {
-      await notificarWA(
-        `CONSULTA EN PRESUPUESTO\n\n` +
+      // Notificar a Print & Copy
+      await enviarWA(TEL_PRINTCOPY,
+        `💬 CONSULTA EN PRESUPUESTO\n\n` +
         `Cliente: ${pres.cliente_nombre}\n` +
         `Tel: ${pres.cliente_telefono || '—'}\n` +
         `Ref: ${pres.numero}\n\n` +
-        `Mensaje del cliente:\n"${mensaje}"\n\n` +
+        `Mensaje:\n"${mensaje}"\n\n` +
         `Responde para cerrar la venta.`
       );
+
+      // Confirmar al cliente que se recibió su mensaje
+      if (pres.cliente_telefono) {
+        const telCliente = pres.cliente_telefono.toString().replace(/\s/g, '').replace(/^\+/, '');
+        const telNorm = telCliente.length === 9 && !telCliente.startsWith('34') ? '34' + telCliente : telCliente;
+        const nombre = pres.cliente_nombre.split(' ')[0];
+        await enviarWA(telNorm,
+          `👋 Hola ${nombre}, hemos recibido tu mensaje sobre el presupuesto *${pres.numero}*.\n\n` +
+          `Te respondemos hoy mismo en horario de tienda.\n\n` +
+          `Print & Copy · 923 018 034`
+        );
+      }
+
       return res.status(200).json({ success: true, accion: 'cambios' });
     }
 
