@@ -48,7 +48,16 @@ module.exports = async function handler(req, res) {
 
     const telCliente = normalizarTel(pres.cliente_telefono);
     const nombre = (pres.cliente_nombre || '').split(' ')[0];
-    const senalFmt = senal > 0 ? fmt(senal) : null;
+    // Calcular señal en servidor para garantizar valor correcto
+    const senalNum = parseFloat(senal) || 0;
+    const totalNum = parseFloat(pres.total) || 0;
+    const condP = pres.condicion_pago || '50_50';
+    const senalCalc = senalNum > 0 ? senalNum : (
+      condP === '50_50' ? totalNum * 0.5 :
+      condP === '100_0' ? totalNum : 0
+    );
+    const senalFmt = senalCalc > 0 ? fmt(senalCalc) : fmt(totalNum);
+    const restoCalc = totalNum - senalCalc;
 
     // ── ACEPTAR ──
     if (accion === 'aceptar') {
@@ -61,7 +70,7 @@ module.exports = async function handler(req, res) {
 
       // Mensajes según método
       const totalFmt = fmt(pres.total);
-      const restoFmt = senal > 0 ? fmt(parseFloat(pres.total) - senal) : null;
+      const restoFmt = senalCalc > 0 && senalCalc < totalNum ? fmt(restoCalc) : null;
       const ahora = new Date().toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
       const msgCliente = {
         bizum: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
