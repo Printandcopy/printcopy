@@ -3601,7 +3601,7 @@ function verCotizacion(id){
     document.getElementById('cot-btn-rechazar').style.display='none';
 
     // Limpiar botones dinamicos de reenvio previos
-    ['cot-btn-wa-reenvio','cot-btn-email-reenvio'].forEach(function(id){
+    ['cot-btn-wa-reenvio','cot-btn-email-reenvio','cot-btn-enlace-reenvio'].forEach(function(id){
       var el=document.getElementById(id);if(el)el.remove();
     });
     var btnRow=document.getElementById('cot-btn-enviar').parentNode;
