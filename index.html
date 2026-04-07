@@ -279,7 +279,7 @@ textarea{resize:vertical;min-height:64px}
   .resguardo{padding:10mm}
 }
 
-</style>
+#barra-avisos{background:#3B6D11;padding:11px 20px;display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:56px;z-index:99}#barra-avisos-lista{display:none;flex-direction:column;gap:6px;border-top:1px solid #27500A;padding-top:8px;margin-top:8px;width:100%}.barra-item{display:flex;align-items:center;justify-content:space-between;background:#27500A;padding:8px 12px;border-radius:6px;cursor:pointer}.barra-item:hover{background:#173404}.barra-dot{width:8px;height:8px;background:#C0DD97;border-radius:50%;flex-shrink:0}.barra-badge{background:#27500A;color:#C0DD97;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}.barra-btn{background:#27500A;color:#C0DD97;font-size:12px;padding:5px 14px;border-radius:20px;white-space:nowrap;cursor:pointer;border:none;font-family:inherit}.barra-btn:hover{background:#173404}</style>
 </head>
 <body>
 <header>
@@ -304,12 +304,18 @@ textarea{resize:vertical;min-height:64px}
   </div>
 </header>
 <!-- BARRA AVISOS ACEPTADOS -->
-<div id="barra-avisos" style="display:none;background:#A32D2D;color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:56px;z-index:99;cursor:pointer" onclick="abrirPrimerAceptado()">
-  <div style="display:flex;align-items:center;gap:10px">
-    <span style="font-size:18px">🔔</span>
-    <span id="barra-avisos-texto" style="font-size:13px;font-weight:700"></span>
+<div id="barra-avisos">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="barra-dot"></div>
+      <span id="barra-avisos-texto" style="color:#EAF3DE;font-size:13px;font-weight:500"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="barra-btn" id="barra-ver-btn" onclick="toggleBarraLista()" style="display:none">Ver todos ↓</button>
+      <button class="barra-btn" id="barra-crear-btn" onclick="abrirPrimerAceptado()">Crear pedido →</button>
+    </div>
   </div>
-  <span style="font-size:12px;background:rgba(255,255,255,.2);padding:5px 14px;border-radius:20px;font-weight:700">Crear pedido →</span>
+  <div id="barra-avisos-lista"></div>
 </div>
 
 <!-- PRESUPUESTOS (Solicitudes + Cotizaciones) -->
@@ -3694,17 +3700,38 @@ function actualizarBarraAvisos(){
   var pendientes=presupuestos.filter(function(p){return p.estado==='aceptado'&&p.aceptado_por_cliente&&!p.convertido;});
   var barra=document.getElementById('barra-avisos');
   var txt=document.getElementById('barra-avisos-texto');
+  var btnVer=document.getElementById('barra-ver-btn');
+  var btnCrear=document.getElementById('barra-crear-btn');
+  var lista=document.getElementById('barra-avisos-lista');
   if(!barra)return;
-  if(pendientes.length){
-    barra.style.display='flex';
-    if(pendientes.length===1){
-      txt.textContent=pendientes[0].cliente_nombre+' aceptó '+pendientes[0].numero+' — pendiente de crear pedido';
-    } else {
-      txt.textContent=pendientes.length+' presupuestos aceptados pendientes de crear pedido';
-    }
+  if(!pendientes.length){barra.style.display='none';return;}
+  barra.style.display='flex';
+  if(pendientes.length===1){
+    txt.innerHTML='<span style="background:#27500A;color:#C0DD97;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;margin-right:8px">1</span>'
+      +pendientes[0].cliente_nombre+' aceptó '+pendientes[0].numero+' — pendiente de crear pedido';
+    btnVer.style.display='none';
+    btnCrear.style.display='block';
+    lista.style.display='none';
   } else {
-    barra.style.display='none';
+    txt.innerHTML='<span style="background:#27500A;color:#C0DD97;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;margin-right:8px">'+pendientes.length+'</span>'
+      +'presupuestos aceptados pendientes de crear pedido';
+    btnVer.style.display='block';
+    btnCrear.style.display='none';
+    // Renderizar lista
+    lista.innerHTML=pendientes.map(function(p){
+      return '<div class="barra-item" onclick="verCotizacion(\''+p.id+'\')">'  
+        +'<span style="color:#C0DD97;font-size:12px">'+p.cliente_nombre+' · '+p.numero+' · '+parseFloat(p.total).toFixed(2)+'€</span>'
+        +'<span style="color:#EAF3DE;font-size:11px">Crear pedido →</span>'
+        +'</div>';
+    }).join('');
   }
+}
+function toggleBarraLista(){
+  var lista=document.getElementById('barra-avisos-lista');
+  var btn=document.getElementById('barra-ver-btn');
+  var abierto=lista.style.display==='flex';
+  lista.style.display=abierto?'none':'flex';
+  btn.textContent=abierto?'Ver todos ↓':'Cerrar ↑';
 }
 
 function cotConvertir(){
