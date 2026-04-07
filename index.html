@@ -3275,12 +3275,12 @@ function nvCalcEnvio(){
   // Umbral 99€ + IVA = 119.79€ con IVA → comprobamos sin IVA (99€)
   var aviso=document.getElementById('nv-envio-aviso');
   if(totalSinEnvio<99){
-    // Añadir gastos de envío: 7€ + IVA = 8.47€
-    var costeEnvio=cV2R2(7*1.21);
+    // Añadir gastos de envío: 6€ + IVA = 7.26€
+    var costeEnvio=cV2R2(6*1.21);
     nvLineas.push({sec:'XR',desc:'Gastos de env\u00edo',total:costeEnvio,esEnvio:true,plazo:0});
     aviso.style.display='block';
     aviso.style.cssText='display:block;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:12px;background:#FFF8E6;border:1px solid #FAC775;color:#BA7517';
-    aviso.textContent='Gastos de env\u00edo a\u00f1adidos: 8,47 \u20ac (7 \u20ac + IVA) — pedido inferior a 99 \u20ac';
+    aviso.textContent='Gastos de env\u00edo a\u00f1adidos: 7,26 \u20ac (6 \u20ac + IVA) — pedido inferior a 99 \u20ac';
   } else {
     aviso.style.display='block';
     aviso.style.cssText='display:block;margin-top:8px;padding:8px 12px;border-radius:6px;font-size:12px;background:#EAF3DE;border:1px solid #C0DD97;color:#3B6D11';
@@ -3884,7 +3884,15 @@ function confirmarSenal(presId){
       var nombre=p.cliente_nombre.split(' ')[0];
       var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
       var resto=parseFloat(p.total)-senal;
-      var msg='Hola '+nombre+'!\n\nHemos recibido tu pago del presupuesto *'+p.numero+'*.\n\nTu pedido ya esta en produccion.\n'+(resto>0?'Quedan *'+resto.toFixed(2)+'EUR* al recoger.\n\n':'\n')+'Print & Copy - 923 018 034';
+      var totalFmt=parseFloat(p.total).toFixed(2);
+      var msg='Hola '+nombre+'!\n\n'
+        +'Hemos recibido tu pago del presupuesto *'+p.numero+'*.\n\n'
+        +'Total pedido: '+totalFmt+'EUR\n'
+        +'Recibido: *'+senal.toFixed(2)+'EUR*\n'
+        +(resto>0?'Pendiente al recoger: *'+resto.toFixed(2)+'EUR*\n\n':'\n')
+        +'Tu pedido ya esta en produccion.\n'
+        +'Te avisamos cuando este listo.\n\n'
+        +'Print & Copy - 923 018 034';
       fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA:',d.error);});
     }
   }
