@@ -106,6 +106,12 @@ textarea{width:100%;min-height:80px;font-size:13px;padding:9px;border:1px solid 
 .det{display:none;background:var(--g100);border-radius:var(--rs);padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8;border:1px solid var(--g200)}
 .btn-confirmar{width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r);padding:16px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:'DM Sans',sans-serif}
 .btn-confirmar:disabled{opacity:.5;cursor:default}
+/* Botón confirmar flotante en paso2 */
+#floating-confirmar{position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:12px 16px 14px;background:rgba(255,255,255,0.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 -4px 20px rgba(0,0,0,0.10);display:none;flex-direction:column;align-items:center;gap:8px}
+#floating-confirmar.visible{display:flex}
+#floating-confirmar .btn-confirmar{max-width:440px;margin-bottom:0}
+#floating-confirmar .btn-volver{max-width:440px;margin-top:4px}
+body.floating-confirmar-active{padding-bottom:110px}
 .btn-volver{width:100%;background:transparent;color:var(--g500);border:none;font-size:13px;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif}
 /* OK */
 .ok-box{display:none;text-align:center;padding:28px 24px;background:var(--green-light);border-radius:var(--rs)}
@@ -303,10 +309,10 @@ textarea{width:100%;min-height:80px;font-size:13px;padding:9px;border:1px solid 
           Puedes pagar en efectivo, con tarjeta o por Bizum.<br>
           L-V 9:30-14:00 y 16:30-20:00 · Sáb 10:00-14:00
         </div>
-        <button class="btn-confirmar" id="btn-confirmar" onclick="confirmarPago()" disabled>
+        <button class="btn-confirmar" id="btn-confirmar" onclick="confirmarPago()" disabled style="display:none">
           Confirmar y enviar pedido a producción
         </button>
-        <button class="btn-volver" onclick="volverPaso1()">← Volver</button>
+        <button class="btn-volver" onclick="volverPaso1()" style="display:none">← Volver</button>
       </div>
 
       <!-- OK -->
@@ -452,15 +458,22 @@ function mostrarPago(){
   if(senal<=0){confirmarDirecto();return;}
   document.getElementById('paso1').style.display='none';
   document.getElementById('paso2').style.display='block';
-  // Ocultar botón flotante permanentemente
+  // Ocultar botón flotante CTA y mostrar flotante confirmar
   var floatingCta=document.getElementById('floating-cta');
   if(floatingCta){floatingCta.style.display='none';document.body.classList.remove('floating-active');}
+  var floatingConf=document.getElementById('floating-confirmar');
+  if(floatingConf){floatingConf.classList.add('visible');document.body.classList.add('floating-confirmar-active');}
 }
 
 function volverPaso1(){
   document.getElementById('paso1').style.display='block';
   document.getElementById('paso2').style.display='none';
   _metodoSel=null;
+  // Ocultar flotante confirmar, mostrar flotante CTA
+  var floatingConf=document.getElementById('floating-confirmar');
+  if(floatingConf){floatingConf.classList.remove('visible');document.body.classList.remove('floating-confirmar-active');}
+  var floatingCta=document.getElementById('floating-cta');
+  if(floatingCta){floatingCta.style.display='';} // Restaurar para que IntersectionObserver lo maneje
 }
 
 function selMetodo(m){
@@ -471,17 +484,17 @@ function selMetodo(m){
   });
   var el=document.getElementById('m-'+m);if(el)el.classList.add('sel');
   var det=document.getElementById('det-'+m);if(det)det.style.display='block';
-  var btn=document.getElementById('btn-confirmar');
-  btn.disabled=false;
   var total=parseFloat(_pres.total||0);
   var senal=calcSenal(total,_pres.condicion_pago||'50_50');
   var txts={bizum:'Confirmar — recibir enlace de pago por WhatsApp',transf:'Confirmar — haré la transferencia',efectivo:'Confirmar — paso por tienda a pagar'};
-  btn.textContent=txts[m]||'Confirmar';
+  // Actualizar botón flotante
+  var btnFloat=document.getElementById('btn-confirmar-float');
+  if(btnFloat){btnFloat.disabled=false;btnFloat.textContent=txts[m]||'Confirmar';}
 }
 
 async function confirmarPago(){
   if(!_metodoSel)return;
-  var btn=document.getElementById('btn-confirmar');
+  var btn=document.getElementById('btn-confirmar-float');
   btn.textContent='Enviando...';btn.disabled=true;
   var total=parseFloat(_pres.total||0);
   var senal=calcSenal(total,_pres.condicion_pago||'50_50');
@@ -537,12 +550,11 @@ function mostrarOK(titulo,msg,metodo){
   document.getElementById('ok-box').style.display='block';
   document.getElementById('ok-title').textContent=titulo;
   
-  // CAMBIO 2: Ocultar botón flotante
+  // Ocultar TODOS los botones flotantes
   var floatingCta=document.getElementById('floating-cta');
-  if(floatingCta){
-    floatingCta.style.display='none';
-    document.body.classList.remove('floating-active');
-  }
+  if(floatingCta){floatingCta.style.display='none';document.body.classList.remove('floating-active');}
+  var floatingConf=document.getElementById('floating-confirmar');
+  if(floatingConf){floatingConf.classList.remove('visible');document.body.classList.remove('floating-confirmar-active');}
   
   // CAMBIO 1: Preparar redirección a WhatsApp
   var numero=_pres?_pres.numero:'';
@@ -606,6 +618,14 @@ async function enviarConsulta(){
 
 cargar();
 </script>
+
+<!-- BOTÓN FLOTANTE CONFIRMAR (paso2) -->
+<div id="floating-confirmar">
+  <button class="btn-confirmar" id="btn-confirmar-float" onclick="confirmarPago()" disabled>
+    Confirmar y enviar pedido a producción
+  </button>
+  <button class="btn-volver" onclick="volverPaso1()">← Volver</button>
+</div>
 
 <!-- BOTÓN FLOTANTE CTA — Agente Closer -->
 <div id="floating-cta" style="
