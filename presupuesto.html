@@ -452,6 +452,9 @@ function mostrarPago(){
   if(senal<=0){confirmarDirecto();return;}
   document.getElementById('paso1').style.display='none';
   document.getElementById('paso2').style.display='block';
+  // Ocultar botón flotante permanentemente
+  var floatingCta=document.getElementById('floating-cta');
+  if(floatingCta){floatingCta.style.display='none';document.body.classList.remove('floating-active');}
 }
 
 function volverPaso1(){
