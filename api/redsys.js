@@ -23,9 +23,8 @@ function firmar(order, params64, clave) {
   return hmac.digest('base64');
 }
 
-function httpsPost(hostname, path, body) {
+function httpsPost(hostname, path, bodyStr) {
   return new Promise((resolve, reject) => {
-    const bodyStr = JSON.stringify(body);
     const bodyBuf = Buffer.from(bodyStr, 'utf8');
     const options = {
       hostname,
@@ -39,16 +38,20 @@ function httpsPost(hostname, path, body) {
     };
     const req = https.request(options, (response) => {
       let data = '';
-      response.on('data', chunk => data += chunk);
-      response.on('end', () => {
-        try { resolve(JSON.parse(data)); }
-        catch(e) { reject(new Error('Respuesta no JSON: ' + data.slice(0, 300))); }
-      });
+      response.on('data', chunk => { data += chunk; });
+      response.on('end', () => { resolve(data); });
     });
     req.on('error', reject);
     req.write(bodyBuf);
     req.end();
   });
+}
+
+// Extraer valor de campo XML
+function extraerXML(xml, campo) {
+  const re = new RegExp('<' + campo + '>([^<]*)<\\/' + campo + '>', 'i');
+  const m = xml.match(re);
+  return m ? m[1].trim() : null;
 }
 
 module.exports = async function handler(req, res) {
@@ -63,7 +66,7 @@ module.exports = async function handler(req, res) {
   const concepto = body.concepto;
 
   if (!importe || !numero_pedido) {
-    return res.status(400).json({ error: 'Faltan datos: importe y numero_pedido requeridos' });
+    return res.status(400).json({ error: 'Faltan datos' });
   }
 
   const order = numero_pedido.replace(/[^a-zA-Z0-9]/g, '').slice(-12).padStart(4, '0');
@@ -85,33 +88,47 @@ module.exports = async function handler(req, res) {
   const params64 = Buffer.from(JSON.stringify(params)).toString('base64');
   const firma = firmar(order, params64, REDSYS_CLAVE);
 
+  const postBody = JSON.stringify({
+    DS_SIGNATUREVERSION: 'HMAC_SHA256_V1',
+    DS_MERCHANTPARAMETERS: params64,
+    DS_SIGNATURE: firma,
+  });
+
   try {
-    console.log('Llamando Redsys - order:', order, 'importe:', importeCentimos);
+    console.log('Redsys request - order:', order, 'importe:', importeCentimos);
+    const rawResponse = await httpsPost('sis.redsys.es', '/sis/rest/trataPeticionREST', postBody);
+    console.log('Redsys raw response:', rawResponse.slice(0, 500));
 
-    const data = await httpsPost('sis.redsys.es', '/sis/rest/trataPeticionREST', {
-      DS_SIGNATUREVERSION: 'HMAC_SHA256_V1',
-      DS_MERCHANTPARAMETERS: params64,
-      DS_SIGNATURE: firma,
-    });
+    let urlPago = null;
+    let errorId = null;
 
-    console.log('Redsys respuesta:', JSON.stringify(data));
-
-    if (data.DS_ERROR_ID) {
-      return res.status(400).json({ error: 'Error Redsys: ' + data.DS_ERROR_ID });
+    // Redsys puede responder JSON o XML
+    if (rawResponse.trim().startsWith('{')) {
+      // JSON
+      const data = JSON.parse(rawResponse);
+      if (data.DS_ERROR_ID) errorId = data.DS_ERROR_ID;
+      if (data.DS_MERCHANTPARAMETERS) {
+        const rp = JSON.parse(Buffer.from(data.DS_MERCHANTPARAMETERS, 'base64').toString());
+        urlPago = rp.Ds_UrlPago2Fases || rp.DS_URLPAGO2FASES;
+        console.log('Redsys JSON params:', JSON.stringify(rp));
+      }
+    } else if (rawResponse.includes('<?xml') || rawResponse.includes('<RETORNOXML>')) {
+      // XML
+      console.log('Redsys respondio XML');
+      const codigo = extraerXML(rawResponse, 'CODIGO');
+      urlPago = extraerXML(rawResponse, 'Ds_UrlPago2Fases');
+      errorId = codigo !== '0' ? codigo : null;
+      console.log('Redsys XML - codigo:', codigo, 'urlPago:', urlPago);
     }
 
-    const respParams = JSON.parse(Buffer.from(data.DS_MERCHANTPARAMETERS, 'base64').toString());
-    console.log('Redsys params:', JSON.stringify(respParams));
-
-    const urlPago = respParams.Ds_UrlPago2Fases
-      || respParams.DS_URLPAGO2FASES
-      || respParams.Ds_Url_Pago2Fases;
+    if (errorId) {
+      return res.status(400).json({ error: 'Error Redsys: ' + errorId });
+    }
 
     return res.status(200).json({
       success: true,
       url_pago: urlPago || null,
-      order,
-      respuesta: respParams.Ds_Response
+      order
     });
 
   } catch(e) {
@@ -119,4 +136,3 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: e.message });
   }
 };
-// redeploy Wed Apr  8 09:14:45 UTC 2026
