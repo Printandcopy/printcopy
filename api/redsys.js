@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const https = require('https');
 
 const REDSYS_FUC = process.env.REDSYS_FUC || '097435762';
 const REDSYS_TERMINAL = process.env.REDSYS_TERMINAL || '1';
@@ -54,17 +55,37 @@ module.exports = async function handler(req, res) {
   const firma = firmar(order, params64, REDSYS_CLAVE);
 
   try {
-    const response = await fetch(REDSYS_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        DS_SIGNATUREVERSION: 'HMAC_SHA256_V1',
-        DS_MERCHANTPARAMETERS: params64,
-        DS_SIGNATURE: firma,
-      })
+    // Llamada HTTPS nativa (compatible con todas las versiones de Node)
+    const postData = JSON.stringify({
+      DS_SIGNATUREVERSION: 'HMAC_SHA256_V1',
+      DS_MERCHANTPARAMETERS: params64,
+      DS_SIGNATURE: firma,
     });
 
-    const data = await response.json();
+    const data = await new Promise((resolve, reject) => {
+      const url = new URL(REDSYS_ENDPOINT);
+      const options = {
+        hostname: url.hostname,
+        port: 443,
+        path: url.pathname,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        }
+      };
+      const req = https.request(options, (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => {
+          try { resolve(JSON.parse(body)); }
+          catch(e) { reject(new Error('Respuesta no JSON: ' + body.slice(0,200))); }
+        });
+      });
+      req.on('error', reject);
+      req.write(postData);
+      req.end();
+    });
     console.log('Redsys respuesta raw:', JSON.stringify(data));
 
     if (data.DS_ERROR_ID) {
