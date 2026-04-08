@@ -18,7 +18,7 @@ module.exports = async function handler(req, res) {
 
     console.log('WA REQUEST -> tel:', tel, 'msg:', mensaje.slice(0, 50) + '...');
 
-    const response = await fetch('https://app.whaticket.com/api/messages/send', {
+    const response = await fetch('https://api.whaticket.com/api/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

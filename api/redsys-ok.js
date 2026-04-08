@@ -31,7 +31,7 @@ function verificarFirma(order, params64, firmaRecibida) {
 
 async function enviarWA(numero, mensaje) {
   try {
-    await fetch('https://app.whaticket.com/api/messages/send', {
+    await fetch('https://api.whaticket.com/api/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WHATICKET_TOKEN}` },
       body: JSON.stringify({ number: numero, whatsappId: WHATSAPP_ID, body: mensaje })

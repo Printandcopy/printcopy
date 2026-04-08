@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
     test: 'WhatsApp Whaticket',
     fecha: ahora,
     telefono_destino: tel,
-    whaticket_endpoint: 'https://app.whaticket.com/api/messages/send',
+    whaticket_endpoint: 'https://api.whaticket.com/api/v1/messages',
     whatsapp_id: WHATSAPP_ID,
     token_preview: WHATICKET_TOKEN.slice(0, 20) + '...',
     request: null,
@@ -35,7 +35,7 @@ module.exports = async function handler(req, res) {
     };
     resultado.request = bodyEnvio;
 
-    const response = await fetch('https://app.whaticket.com/api/messages/send', {
+    const response = await fetch('https://api.whaticket.com/api/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

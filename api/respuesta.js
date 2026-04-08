@@ -18,7 +18,7 @@ function normalizarTel(tel) {
 async function enviarWA(numero, mensaje) {
   try {
     console.log('WA SEND -> numero:', numero, 'msg:', mensaje.slice(0, 60) + '...');
-    const r = await fetch('https://app.whaticket.com/api/messages/send', {
+    const r = await fetch('https://api.whaticket.com/api/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WHATICKET_TOKEN}` },
       body: JSON.stringify({ number: numero, whatsappId: WHATSAPP_ID, body: mensaje })
