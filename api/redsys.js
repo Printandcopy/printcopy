@@ -69,7 +69,10 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Faltan datos' });
   }
 
-  const order = numero_pedido.replace(/[^a-zA-Z0-9]/g, '').slice(-12).padStart(4, '0');
+  // Añadir sufijo timestamp para evitar SIS0051 (orden repetida)
+  const ts = Date.now().toString(36).slice(-4).toUpperCase();
+  const orderBase = numero_pedido.replace(/[^a-zA-Z0-9]/g, '').slice(-8);
+  const order = (orderBase + ts).padStart(4, '0').slice(-12);
   const importeCentimos = Math.round(parseFloat(importe) * 100).toString();
 
   const params = {
