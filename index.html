@@ -3902,15 +3902,33 @@ function confirmarSenal(presId){
       var nombre=p.cliente_nombre.split(' ')[0];
       var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
       var resto=parseFloat(p.total)-senal;
-      var totalFmt=parseFloat(p.total).toFixed(2);
-      var msg='Hola '+nombre+'!\n\n'
-        +'Hemos recibido tu pago del presupuesto *'+p.numero+'*.\n\n'
-        +'Total pedido: '+totalFmt+'EUR\n'
-        +'Recibido: *'+senal.toFixed(2)+'EUR*\n'
-        +(resto>0?'Pendiente al recoger: *'+resto.toFixed(2)+'EUR*\n\n':'\n')
-        +'Tu pedido ya esta en produccion.\n'
-        +'Te avisamos cuando este listo.\n\n'
-        +'Print & Copy - 923 018 034';
+      var metodo=p.metodo_pago_senal||'transf';
+      
+      // Calcular fecha entrega
+      var fechaEntrega='';
+      if(p.fecha_entrega){
+        var fe=new Date(p.fecha_entrega);
+        var dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+        fechaEntrega='\n\n📅 Fecha estimada de entrega: *'+dias[fe.getDay()]+' '+fe.getDate()+'/'+(fe.getMonth()+1)+'*';
+      }
+      
+      // Mensajes según método - Agente Closer
+      var msg;
+      if(metodo==='efectivo'){
+        // 3C - Pago en tienda
+        msg='✅ ¡Pago inicial abonado, '+nombre+'! Gracias por pasarte.\n\n'
+          +'Ya estamos trabajando en tu pedido *'+p.numero+'*.\n\n'
+          +'📌 *Siguiente paso:* te enviamos la previa digital por aquí para que la revises. No producimos nada hasta que nos des el OK.'
+          +fechaEntrega
+          +(resto>0.01?'\n\nResto ('+resto.toFixed(2)+'€) al recoger tu pedido terminado.':'');
+      } else {
+        // 3A - Transferencia
+        msg='✅ ¡Pago inicial recibido, '+nombre+'!\n\n'
+          +'Ya estamos trabajando en tu pedido *'+p.numero+'*.\n\n'
+          +'📌 *Siguiente paso:* te enviamos la previa digital por aquí para que la revises. No producimos nada hasta que nos des el OK.'
+          +fechaEntrega
+          +(resto>0.01?'\n\nResto ('+resto.toFixed(2)+'€) al recoger tu pedido terminado.':'');
+      }
       fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA:',d.error);});
     }
   }
@@ -3924,7 +3942,13 @@ function reenviarDatosTransf(presId){
   var tel=p.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
   if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
   var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
-  var msg='Hola '+p.cliente_nombre.split(' ')[0]+'!\n\nDatos transferencia presupuesto *'+p.numero+'*:\n\nImporte: *'+senal.toFixed(2)+'EUR*\nIBAN: ES58 0049 5292 14 2616098558\nTitular: Eventos Personalizados Salamanca SL\nConcepto: *'+p.numero+'*\n\nArrancamos al recibirlo.\nPrint & Copy - 923 018 034';
+  var msg='🏦 *Datos para el pago inicial:*\n\n'
+    +'Ref: *'+p.numero+'*\n'
+    +'Importe: *'+senal.toFixed(2)+'€*\n'
+    +'IBAN: ES58 0049 5292 14 2616098558\n'
+    +'Titular: Eventos Personalizados Salamanca SL\n'
+    +'Concepto: *'+p.numero+'*\n\n'
+    +'📌 En cuanto recibamos el ingreso te enviamos la previa digital.';
   fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
     .then(function(r){return r.json();}).then(function(d){alert(d.success?'Datos reenviados':'Error: '+(d.error||''));});
 }

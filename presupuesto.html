@@ -552,13 +552,14 @@ function mostrarOK(titulo,msg,metodo){
   var floatingConf=document.getElementById('floating-confirmar');
   if(floatingConf){floatingConf.classList.remove('visible');document.body.classList.remove('floating-confirmar-active');}
   
-  // CAMBIO 1: Preparar redirección a WhatsApp (sin mensaje prellenado)
+  // Redirección a WhatsApp SIN mensaje prellenado (decisión Raúl)
   var urlWA='https://wa.me/34622305934';
   
-  document.getElementById('ok-sub').innerHTML=msg
-    +'<br><br><div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;color:var(--g500);font-size:13px">'
+  // Pantalla limpia: solo spinner + "Volviendo a WhatsApp..."
+  document.getElementById('ok-sub').innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;color:var(--g600);font-size:14px">'
     +'<svg width="18" height="18" viewBox="0 0 24 24" style="animation:spin 1s linear infinite"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>'
-    +'Volviendo a WhatsApp...</div>'
+    +'Volviendo a WhatsApp para continuar...</div>'
     +'<a id="btn-wa-manual" href="'+urlWA+'" style="display:none;margin-top:16px;padding:12px 24px;background:#25D366;color:white;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">Volver a WhatsApp</a>';
   
   document.getElementById('badge-estado').textContent='Aceptado';
