@@ -16,6 +16,8 @@ module.exports = async function handler(req, res) {
     let tel = telefono.replace(/\s/g, '').replace(/^\+/, '');
     if (tel.length === 9 && !tel.startsWith('34')) tel = '34' + tel;
 
+    console.log('WA REQUEST -> tel:', tel, 'msg:', mensaje.slice(0, 50) + '...');
+
     const response = await fetch('https://app.whaticket.com/api/messages/send', {
       method: 'POST',
       headers: {
@@ -30,13 +32,37 @@ module.exports = async function handler(req, res) {
     });
 
     const txt = await response.text();
-    console.log('WA whatsapp.js raw:', txt.slice(0,200));
+    const status = response.status;
+    console.log('WA RESPONSE -> status:', status, 'body:', txt.slice(0, 300));
+
+    // Detectar errores comunes
+    if (status === 401 || txt.includes('Unauthorized') || txt.includes('token')) {
+      console.error('WA ERROR: Token caducado o invalido');
+      return res.status(401).json({ success: false, error: 'Token Whaticket caducado', raw: txt.slice(0, 200) });
+    }
+    if (status === 404 || txt.includes('not found')) {
+      console.error('WA ERROR: Endpoint no encontrado');
+      return res.status(404).json({ success: false, error: 'Endpoint Whaticket no encontrado', raw: txt.slice(0, 200) });
+    }
+    if (txt.includes('<?xml') || txt.includes('<html')) {
+      console.error('WA ERROR: Respuesta XML/HTML inesperada');
+      return res.status(502).json({ success: false, error: 'Whaticket devolvio HTML/XML', raw: txt.slice(0, 200) });
+    }
+
     let data;
     try { data = JSON.parse(txt); } catch(e) { data = { raw: txt }; }
 
-    return res.status(200).json({ success: true, data: data });
+    // Verificar si Whaticket confirmo el envio
+    const enviado = status === 200 || status === 201 || (data && (data.id || data.messageId || data.success));
+    
+    return res.status(200).json({ 
+      success: enviado, 
+      status: status,
+      data: data 
+    });
 
   } catch (error) {
+    console.error('WA EXCEPTION:', error.message);
     return res.status(500).json({ error: 'Error interno', details: error.message });
   }
 };

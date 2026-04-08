@@ -17,16 +17,30 @@ function normalizarTel(tel) {
 
 async function enviarWA(numero, mensaje) {
   try {
+    console.log('WA SEND -> numero:', numero, 'msg:', mensaje.slice(0, 60) + '...');
     const r = await fetch('https://app.whaticket.com/api/messages/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WHATICKET_TOKEN}` },
       body: JSON.stringify({ number: numero, whatsappId: WHATSAPP_ID, body: mensaje })
     });
+    const status = r.status;
     const txt = await r.text();
-    console.log('WA raw ->', numero, txt.slice(0,200));
-    try { return JSON.parse(txt); } catch(e) { return { raw: txt }; }
+    console.log('WA RESPONSE -> status:', status, 'numero:', numero, 'body:', txt.slice(0, 250));
+    
+    // Detectar errores
+    if (status === 401 || txt.includes('Unauthorized')) {
+      console.error('WA ERROR: Token caducado');
+      return { error: 'token_caducado', raw: txt.slice(0, 100) };
+    }
+    if (txt.includes('<?xml') || txt.includes('<html')) {
+      console.error('WA ERROR: Respuesta XML/HTML');
+      return { error: 'respuesta_xml', raw: txt.slice(0, 100) };
+    }
+    
+    try { return JSON.parse(txt); } catch(e) { return { raw: txt, status: status }; }
   } catch(e) {
-    console.error('Error WA:', e.message);
+    console.error('WA EXCEPTION:', e.message);
+    return { error: e.message };
   }
 }
 
