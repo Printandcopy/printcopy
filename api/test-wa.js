@@ -31,7 +31,9 @@ module.exports = async function handler(req, res) {
     const bodyEnvio = {
       number: tel,
       whatsappId: WHATSAPP_ID,
-      body: mensaje
+      messages: [
+        { body: mensaje }
+      ]
     };
     resultado.request = bodyEnvio;
 

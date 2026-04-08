@@ -34,7 +34,7 @@ async function enviarWA(numero, mensaje) {
     await fetch('https://api.whaticket.com/api/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WHATICKET_TOKEN}` },
-      body: JSON.stringify({ number: numero, whatsappId: WHATSAPP_ID, body: mensaje })
+      body: JSON.stringify({ number: numero, whatsappId: WHATSAPP_ID, messages: [{ body: mensaje }] })
     });
   } catch(e) { console.error('WA error:', e.message); }
 }

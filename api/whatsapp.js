@@ -27,7 +27,9 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         number: tel,
         whatsappId: WHATSAPP_ID,
-        body: mensaje
+        messages: [
+          { body: mensaje }
+        ]
       })
     });
 
