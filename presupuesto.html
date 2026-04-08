@@ -420,22 +420,52 @@ async function confirmarPago(){
   btn.textContent='Enviando...';btn.disabled=true;
   var total=parseFloat(_pres.total||0);
   var senal=calcSenal(total,_pres.condicion_pago||'50_50');
+
+  // Si elige Bizum/Tarjeta — generar enlace Redsys Paygold
+  if(_metodoSel==='bizum'){
+    try{
+      // Primero registrar aceptacion en Supabase
+      await fetch('/api/respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:TOKEN,accion:'aceptar',metodo_pago:'bizum',senal:senal})});
+      // Generar enlace de pago Redsys
+      var tel=_pres.cliente_telefono?_pres.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,''):'';
+      if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+      var rp=await fetch('/api/redsys',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          importe:senal.toFixed(2),
+          numero_pedido:_pres.numero,
+          concepto:'Senal '+_pres.numero+' Print & Copy',
+          telefono:tel||null
+        })});
+      var dp=await rp.json();
+      if(dp.url_pago){
+        // Mostrar confirmacion con enlace de pago
+        mostrarOK('aceptado','Tu pedido esta confirmado. Completa el pago de '+fmt(senal)+' en el enlace que te acabamos de enviar por SMS. En cuanto lo recibamos arrancamos.');
+      } else {
+        // Fallback: aceptado pero pago manual
+        mostrarOK('aceptado','Pedido confirmado. Te enviamos el enlace de pago por WhatsApp en breve.');
+      }
+    }catch(e){
+      btn.textContent='Error — intentalo de nuevo';btn.disabled=false;
+    }
+    return;
+  }
+
+  // Resto de metodos — flujo normal
   try{
     var r=await fetch('/api/respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({token:TOKEN,accion:'aceptar',metodo_pago:_metodoSel,senal:senal})});
     var d=await r.json();
     if(d.success){
       var msgs={
-        bizum:'Te enviamos el enlace de pago por WhatsApp ahora mismo.',
         transf:'Cuando recibamos la transferencia de '+fmt(senal)+' avisamos y arrancamos.',
-        efectivo:'Cuando pases por tienda a abonar los '+fmt(senal)+' ponemos en marcha tu pedido.',
-        pendiente:'Te contactamos hoy mismo para acordar el pago.'
+        efectivo:'Cuando pases por tienda a abonar los '+fmt(senal)+' ponemos en marcha tu pedido.'
       };
-      mostrarOK('aceptado','¡Pedido confirmado! '+msgs[_metodoSel]);
+      mostrarOK('aceptado',msgs[_metodoSel]||'Pedido confirmado.');
     } else {
-      btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;
+      btn.textContent='Error — intentalo de nuevo';btn.disabled=false;
     }
-  }catch(e){btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
+  }catch(e){btn.textContent='Error — intentalo de nuevo';btn.disabled=false;}
 }
 
 async function confirmarDirecto(){
