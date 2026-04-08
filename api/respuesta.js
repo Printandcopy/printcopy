@@ -22,9 +22,9 @@ async function enviarWA(numero, mensaje) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WHATICKET_TOKEN}` },
       body: JSON.stringify({ number: numero, whatsappId: WHATSAPP_ID, body: mensaje })
     });
-    const d = await r.json();
-    console.log('WA ->', numero, JSON.stringify(d));
-    return d;
+    const txt = await r.text();
+    console.log('WA raw ->', numero, txt.slice(0,200));
+    try { return JSON.parse(txt); } catch(e) { return { raw: txt }; }
   } catch(e) {
     console.error('Error WA:', e.message);
   }

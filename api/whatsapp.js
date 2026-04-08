@@ -16,27 +16,23 @@ module.exports = async function handler(req, res) {
     let tel = telefono.replace(/\s/g, '').replace(/^\+/, '');
     if (tel.length === 9 && !tel.startsWith('34')) tel = '34' + tel;
 
-    const response = await fetch('https://api.whaticket.com/api/v1/messages', {
+    const response = await fetch('https://app.whaticket.com/api/messages/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + WHATICKET_TOKEN
       },
       body: JSON.stringify({
+        number: tel,
         whatsappId: WHATSAPP_ID,
-        messages: [{
-          number: tel,
-          name: nombre || 'Cliente',
-          body: mensaje
-        }]
+        body: mensaje
       })
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return res.status(response.status).json({ error: 'Error Whaticket', details: data });
-    }
+    const txt = await response.text();
+    console.log('WA whatsapp.js raw:', txt.slice(0,200));
+    let data;
+    try { data = JSON.parse(txt); } catch(e) { data = { raw: txt }; }
 
     return res.status(200).json({ success: true, data: data });
 
