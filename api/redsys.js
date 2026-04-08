@@ -3,7 +3,8 @@ const crypto = require('crypto');
 const REDSYS_FUC = process.env.REDSYS_FUC || '097435762';
 const REDSYS_TERMINAL = process.env.REDSYS_TERMINAL || '1';
 const REDSYS_CLAVE = process.env.REDSYS_CLAVE || 'bhPxVRrP/m9laYdEZwJu0yLbWAjb8pnC';
-const REDSYS_URL = 'https://sis.redsys.es/sis/realizarPago';
+// Endpoint correcto para Paygold REST en produccion
+const REDSYS_ENDPOINT = 'https://sis.redsys.es/sis/rest/trataPeticionREST';
 
 function encrypt3DES(key, data) {
   const keyBuffer = Buffer.from(key, 'base64');
@@ -29,10 +30,10 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { importe, numero_pedido, concepto, telefono, email } = req.body || {};
+  const { importe, numero_pedido, concepto } = req.body || {};
   if (!importe || !numero_pedido) return res.status(400).json({ error: 'Faltan datos' });
 
-  // Limpiar numero de pedido — max 12 chars alfanumérico, min 4
+  // Numero pedido: max 12 chars alfanumerico, empieza por letra o numero, min 4
   const order = numero_pedido.replace(/[^a-zA-Z0-9]/g, '').slice(-12).padStart(4, '0');
   const importeCentimos = Math.round(parseFloat(importe) * 100).toString();
 
@@ -41,7 +42,7 @@ module.exports = async function handler(req, res) {
     DS_MERCHANT_ORDER: order,
     DS_MERCHANT_MERCHANTCODE: REDSYS_FUC,
     DS_MERCHANT_CURRENCY: '978',
-    DS_MERCHANT_TRANSACTIONTYPE: 'F', // F = Paygold
+    DS_MERCHANT_TRANSACTIONTYPE: 'F',
     DS_MERCHANT_TERMINAL: REDSYS_TERMINAL,
     DS_MERCHANT_MERCHANTURL: 'https://printcopy.vercel.app/api/redsys-ok',
     DS_MERCHANT_URLOK: 'https://printcopy.vercel.app/pago-ok.html',
@@ -49,14 +50,11 @@ module.exports = async function handler(req, res) {
     DS_MERCHANT_PRODUCTDESCRIPTION: (concepto || 'Pedido Print & Copy').slice(0, 125),
   };
 
-  // No pasamos telefono a Redsys — mandamos el enlace nosotros por WhatsApp
-
   const params64 = Buffer.from(JSON.stringify(params)).toString('base64');
   const firma = firmar(order, params64, REDSYS_CLAVE);
 
   try {
-    // Llamada REST a Redsys para generar el enlace Paygold
-    const response = await fetch('https://sis.redsys.es/sis/rest/iniciaPeticionREST', {
+    const response = await fetch(REDSYS_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -67,24 +65,29 @@ module.exports = async function handler(req, res) {
     });
 
     const data = await response.json();
-    console.log('Redsys respuesta:', JSON.stringify(data));
+    console.log('Redsys respuesta raw:', JSON.stringify(data));
 
     if (data.DS_ERROR_ID) {
-      return res.status(400).json({ error: 'Error Redsys: ' + data.DS_ERROR_ID });
+      console.error('Error Redsys:', data.DS_ERROR_ID);
+      return res.status(400).json({ error: 'Error Redsys ' + data.DS_ERROR_ID });
     }
 
-    // Decodificar respuesta para obtener la URL de pago
+    // Decodificar respuesta
     const respParams = JSON.parse(Buffer.from(data.DS_MERCHANTPARAMETERS, 'base64').toString());
-    const urlPago = respParams.DS_URLPAGO2FASES;
+    console.log('Redsys params decodificados:', JSON.stringify(respParams));
+
+    // La URL puede venir como Ds_UrlPago2Fases o DS_URLPAGO2FASES
+    const urlPago = respParams.Ds_UrlPago2Fases || respParams.DS_URLPAGO2FASES || respParams.Ds_Url_Pago2Fases;
 
     return res.status(200).json({
       success: true,
-      url_pago: urlPago,
-      order: order
+      url_pago: urlPago || null,
+      order: order,
+      respuesta: respParams.Ds_Response
     });
 
   } catch(e) {
-    console.error('Error Redsys:', e.message);
+    console.error('Error llamada Redsys:', e.message);
     return res.status(500).json({ error: e.message });
   }
 };
