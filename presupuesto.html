@@ -3,365 +3,434 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Presupuesto — Print &amp; Copy Salamanca</title>
+<title>Presupuesto · Print & Copy</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
+:root{--green:#2D8B4E;--green-dark:#1E6B3A;--green-light:#E8F5EC;--orange:#E8870E;--orange-light:#FFF7ED;--orange-border:#FBBF6A;--g900:#1A1A1A;--g700:#404040;--g500:#6B6B6B;--g400:#9CA3AF;--g200:#E5E7EB;--g100:#F5F5F5;--star:#F59E0B;--r:12px;--rs:8px}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,sans-serif;background:#f0f0ec;min-height:100vh;padding:16px}
-.wrap{max-width:600px;margin:0 auto}
-.card{background:#fff;border-radius:12px;overflow:hidden;margin-bottom:12px;border:1px solid #e8e8e4}
-.topbar{background:#1a1a1a;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
-.topbar-logo{color:#fff;font-size:14px;font-weight:700}
-.topbar-sub{color:#aaa;font-size:11px;margin-top:2px}
-.badge{font-size:11px;padding:4px 10px;border-radius:20px;background:#185FA5;color:#fff}
-.body{padding:20px}
-.row2{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:16px}
-.label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
-.name{font-size:18px;font-weight:700;color:#1a1a1a}
-.meta{font-size:12px;color:#666;margin-top:2px}
-.numero{font-size:20px;font-weight:700;color:#185FA5;font-family:monospace}
-.validez-bar{margin-bottom:18px}
-.validez-row{display:flex;justify-content:space-between;font-size:11px;color:#888;margin-bottom:5px}
-.bar-bg{background:#f0f0ec;border-radius:3px;height:5px}
-.bar-fill{background:#BA7517;height:5px;border-radius:3px}
-table.lineas{width:100%;border-collapse:collapse}
-.lineas thead tr{background:#1a1a1a;color:#fff}
-.lineas thead th{padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.6px;text-align:left;font-weight:600}
-.lineas thead th:last-child{text-align:right}
-.lineas thead th:nth-child(2),.lineas thead th:nth-child(3){text-align:center}
-.lineas tbody tr:nth-child(even){background:#f9f9f7}
-.lineas tbody td{padding:11px 12px;font-size:13px;vertical-align:top;border-bottom:1px solid #f0f0ec}
-.lineas tbody td:nth-child(2),.lineas tbody td:nth-child(3){text-align:center;color:#666;font-size:11px}
-.lineas tbody td:last-child{text-align:right;color:#185FA5;font-weight:700}
-.lineas tfoot tr{background:#185FA5}
-.lineas tfoot td{padding:13px 12px;color:#fff;font-weight:700}
-.lineas tfoot td:last-child{text-align:right;font-size:18px}
-.conds{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-@media(max-width:400px){.conds{grid-template-columns:1fr}}
-.cond-box{border:1px solid #e8e8e4;border-radius:8px;padding:12px}
-.cond-val{font-size:13px;font-weight:600;color:#1a1a1a;line-height:1.7}
-.iban{font-size:11px;font-family:monospace;background:#f5f5f0;padding:6px 8px;border-radius:4px;margin:6px 0;word-break:break-all}
-.sep{border:none;border-top:1px solid #f0f0ec;margin:20px 0}
-/* BOTONES RESPUESTA */
-.btn-aceptar{width:100%;background:#3B6D11;color:#fff;border:none;border-radius:8px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
-.btn-cambio{width:100%;background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:8px;padding:14px;font-size:14px;cursor:pointer}
-.cambio-box{display:none;margin-top:10px;border:1px solid #FAC775;border-radius:8px;padding:14px;background:#FAEEDA}
-.cambio-label{font-size:12px;font-weight:700;color:#BA7517;margin-bottom:8px}
-textarea{width:100%;min-height:80px;font-size:13px;padding:9px;border:1px solid #ddd;border-radius:6px;resize:vertical;font-family:Arial,sans-serif}
-.btn-enviar{width:100%;margin-top:8px;background:#BA7517;color:#fff;border:none;border-radius:6px;padding:11px;font-size:13px;font-weight:700;cursor:pointer}
-/* PANTALLA PAGO */
-.pago-box{display:none;margin-top:14px}
-.pago-resumen{background:#f5f5f0;border-radius:8px;padding:14px;margin-bottom:14px}
-.pago-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px}
-.pago-row:last-child{margin-bottom:0;padding-top:8px;border-top:1px solid #e8e8e4;font-weight:700;font-size:15px}
-.metodos-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.metodo{border:1px solid #e8e8e4;border-radius:8px;padding:12px;text-align:center;cursor:pointer;transition:border .15s}
-.metodo.sel{border:2px solid #185FA5;background:#E6F1FB}
-.metodo-titulo{font-size:13px;font-weight:700;color:#1a1a1a}
-.metodo.sel .metodo-titulo{color:#185FA5}
-.metodo-sub{font-size:11px;color:#888;margin-top:3px}
-.metodo-detalle{display:none;background:#f9f9f7;border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8;border:1px solid #e8e8e4}
-.btn-confirmar{width:100%;background:#185FA5;color:#fff;border:none;border-radius:8px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px}
-.btn-volver{width:100%;background:#fff;color:#888;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:13px;cursor:pointer}
-/* ESTADO OK */
-.estado-ok{display:none;text-align:center;padding:24px;background:#EAF3DE;border-radius:8px;margin-top:10px}
-.estado-ok-icon{width:48px;height:48px;background:#3B6D11;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
-.estado-ok-icon svg{fill:#fff}
-.estado-ok-titulo{font-size:16px;font-weight:700;color:#3B6D11;margin-bottom:6px}
-.estado-ok-sub{font-size:13px;color:#555;line-height:1.6}
-.nota-responde{font-size:11px;color:#888;text-align:center;margin-top:10px}
-.contactos{display:flex;gap:10px;justify-content:center;margin-top:10px;flex-wrap:wrap}
-.contactos a{font-size:12px;text-decoration:none;border:1px solid #e8e8e4;padding:6px 14px;border-radius:6px;color:#666}
-.pie{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;padding-top:14px;border-top:1px solid #f0f0ec}
-.pie span{font-size:10px;color:#aaa}
-.loading{text-align:center;padding:40px;color:#888;font-size:14px}
-.error-box{text-align:center;padding:40px;color:#A32D2D;font-size:14px}
+body{font-family:'DM Sans',-apple-system,sans-serif;background:#F0F0F0;color:var(--g700);line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:480px;margin:0 auto;padding:16px}
+/* HEADER */
+.hdr{background:#fff;border-radius:var(--r) var(--r) 0 0;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--g200)}
+.hdr-logo h1{font-family:'DM Serif Display',serif;font-size:20px;color:var(--g900);letter-spacing:-.3px}
+.hdr-logo span{font-size:12px;color:var(--g500);font-weight:400}
+.badge{background:var(--green);color:#fff;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px}
+.badge.ok{background:var(--green)}
+/* SOCIAL PROOF */
+.sp{background:#fff;padding:12px 24px;border-bottom:1px solid var(--g200);display:flex;align-items:center;gap:8px;text-decoration:none}
+.sp-stars{color:var(--star);font-size:14px;letter-spacing:1px}
+.sp-txt{font-size:13px;color:var(--g500)}
+.sp-txt strong{color:var(--g900);font-weight:600}
+.sp-link{color:var(--green);font-size:13px;font-weight:500;text-decoration:none;margin-left:auto}
+/* CADUCIDAD */
+.exp{background:#fff;padding:10px 24px 12px;border-bottom:1px solid var(--g200)}
+.exp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:13px}
+.exp-label{color:var(--g500)}
+.exp-date{font-weight:600;color:var(--orange)}
+.exp-bar{background:var(--g100);border-radius:3px;height:4px}
+.exp-fill{background:var(--green);height:4px;border-radius:3px;width:100%;transition:width .4s}
+/* DATOS PRESUPUESTO */
+.bh{background:#fff;padding:20px 24px;border-bottom:1px solid var(--g200)}
+.bh-meta{display:flex;justify-content:space-between;align-items:flex-start}
+.bh-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--g400);font-weight:500;margin-bottom:4px}
+.bh-name{font-family:'DM Serif Display',serif;font-size:22px;color:var(--g900)}
+.bh-phone{font-size:13px;color:var(--g500);margin-top:2px}
+.bh-num{text-align:right}
+.bh-num strong{display:block;font-size:15px;font-weight:700;color:var(--green)}
+.bh-num span{font-size:12px;color:var(--g400)}
+/* LINEAS */
+.lines{background:#fff;padding:0 24px;border-bottom:1px solid var(--g200)}
+.lines-hdr{display:grid;grid-template-columns:1fr 40px 70px 75px;gap:8px;padding:12px 0;border-bottom:2px solid var(--g900);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--g500)}
+.line-row{display:grid;grid-template-columns:1fr 40px 70px 75px;gap:8px;padding:14px 0;align-items:start;border-bottom:1px solid var(--g100)}
+.line-name{font-weight:600;font-size:14px;color:var(--g900)}
+.line-qty,.line-plazo{font-size:14px;color:var(--g700);text-align:center;padding-top:2px}
+.line-price{font-size:15px;font-weight:700;color:var(--g900);text-align:right;padding-top:2px}
+/* TOTAL */
+.total{background:#fff;padding:20px 24px;border-bottom:1px solid var(--g200)}
+.total-row{display:flex;justify-content:space-between;align-items:center}
+.total-label{background:var(--green-light);padding:8px 16px;border-radius:var(--rs);font-size:14px;font-weight:600;color:var(--green-dark)}
+.total-amount{font-family:'DM Serif Display',serif;font-size:32px;color:var(--orange);letter-spacing:-1px}
+.delivery{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--g200)}
+.delivery-label{font-size:13px;color:var(--g500)}
+.delivery-label .hi{color:var(--green);font-weight:500}
+.delivery-date{font-weight:700;font-size:14px;color:var(--g900);background:var(--g100);padding:4px 12px;border-radius:6px}
+/* TRUST BANNER */
+.trust{background:var(--green-light);border-left:4px solid var(--green);padding:16px 24px;text-align:center}
+.trust p{font-size:15px;font-weight:600;color:var(--green-dark)}
+/* PAGO */
+.pago{background:#fff;border:2px solid var(--orange-border);padding:20px 24px}
+.pago-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--orange);margin-bottom:14px}
+.pago-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0}
+.pago-row+.pago-row{border-top:1px solid var(--g100)}
+.pago-lbl{font-size:14px;color:var(--g700)}
+.pago-lbl small{display:block;font-size:11px;color:var(--g400);margin-top:2px}
+.pago-amt{font-size:22px;font-weight:700;color:var(--orange)}
+.pago-amt.resto{font-size:18px;color:var(--g500)}
+/* PROCESO */
+.proc{background:#fff;padding:24px;border-bottom:1px solid var(--g200)}
+.proc-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--g400);margin-bottom:18px}
+.step{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;position:relative}
+.step:last-child{margin-bottom:0}
+.step-n{width:28px;height:28px;min-width:28px;border-radius:50%;background:var(--green);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.step-txt{font-size:14px;color:var(--g700);padding-top:3px}
+.step-txt strong{color:var(--g900)}
+.step-line{position:absolute;left:13px;top:30px;width:2px;height:calc(100% - 12px);background:var(--green-light)}
+.step:last-child .step-line{display:none}
+/* RESEÑAS */
+.reviews{background:#fff;padding:20px 24px;border-bottom:1px solid var(--g200)}
+.review{background:var(--g100);border-radius:var(--rs);padding:16px;margin-bottom:10px}
+.review:last-of-type{margin-bottom:0}
+.review-stars{color:var(--star);font-size:13px;letter-spacing:1px;margin-bottom:6px}
+.review-text{font-size:13px;color:var(--g700);font-style:italic;line-height:1.55;margin-bottom:6px}
+.review-author{font-size:12px;color:var(--g400);font-weight:500}
+.reviews-badge{text-align:center;margin-top:12px;font-size:11px;color:var(--g400)}
+/* CTA */
+.cta{background:#fff;padding:24px;border-bottom:1px solid var(--g200);text-align:center}
+.cta-nudge{font-size:14px;color:var(--g500);margin-bottom:16px}
+.btn-acepto{display:block;width:100%;padding:18px 24px;background:var(--green);color:#fff;border:none;border-radius:var(--r);font-size:18px;font-weight:700;cursor:pointer;margin-bottom:12px;font-family:'DM Sans',sans-serif}
+.btn-acepto small{display:block;font-size:13px;font-weight:400;opacity:.85;margin-top:4px}
+.btn-pregunta{display:block;width:100%;padding:12px;background:transparent;color:var(--g500);border:none;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline}
+/* CONSULTA */
+.consulta-box{display:none;background:var(--orange-light);border:1px solid var(--orange-border);border-radius:var(--rs);padding:16px;margin-top:12px;text-align:left}
+.consulta-label{font-size:13px;font-weight:600;color:var(--orange);margin-bottom:8px}
+textarea{width:100%;min-height:80px;font-size:13px;padding:9px;border:1px solid var(--g200);border-radius:6px;resize:vertical;font-family:'DM Sans',sans-serif}
+.btn-enviar{width:100%;margin-top:8px;background:var(--orange);color:#fff;border:none;border-radius:6px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+/* PASO 2 PAGO */
+.paso2{display:none;margin-top:0}
+.metodos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.metodo{border:1.5px solid var(--g200);border-radius:var(--rs);padding:14px;text-align:center;cursor:pointer;transition:border .15s,background .15s}
+.metodo.sel{border:2px solid var(--green);background:var(--green-light)}
+.metodo-tit{font-size:14px;font-weight:600;color:var(--g900)}
+.metodo.sel .metodo-tit{color:var(--green-dark)}
+.metodo-sub{font-size:11px;color:var(--g500);margin-top:3px}
+.det{display:none;background:var(--g100);border-radius:var(--rs);padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8;border:1px solid var(--g200)}
+.btn-confirmar{width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r);padding:16px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:'DM Sans',sans-serif}
+.btn-confirmar:disabled{opacity:.5;cursor:default}
+.btn-volver{width:100%;background:transparent;color:var(--g500);border:none;font-size:13px;cursor:pointer;text-decoration:underline;font-family:'DM Sans',sans-serif}
+/* OK */
+.ok-box{display:none;text-align:center;padding:28px 24px;background:var(--green-light);border-radius:var(--rs)}
+.ok-icon{width:52px;height:52px;background:var(--green);border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
+.ok-icon svg{fill:#fff}
+.ok-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--green-dark);margin-bottom:8px}
+.ok-sub{font-size:14px;color:var(--g700);line-height:1.6}
+/* FOOTER */
+.ftr{background:#fff;border-radius:0 0 var(--r) var(--r);padding:16px 24px;border-top:1px solid var(--g200)}
+.ftr-contact{display:flex;gap:10px;justify-content:center;margin-bottom:10px}
+.ftr-contact a{font-size:13px;text-decoration:none;border:1px solid var(--g200);padding:7px 16px;border-radius:6px;color:var(--g700)}
+.ftr-contact a.wa{color:#25D366;border-color:#25D366}
+.ftr-legal{font-size:10px;color:var(--g400);text-align:center;line-height:1.6}
+/* LOADING / ERROR */
+.loading{text-align:center;padding:40px;color:var(--g500);font-size:14px;background:#fff;border-radius:var(--r)}
+.error-box{text-align:center;padding:40px;color:#A32D2D;font-size:14px;background:#fff;border-radius:var(--r)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div id="loading" class="card"><div class="body loading">Cargando presupuesto...</div></div>
+  <div id="loading" class="loading">Cargando presupuesto...</div>
+  <div id="error-div" class="error-box" style="display:none">Presupuesto no encontrado o enlace caducado.</div>
   <div id="contenido" style="display:none">
 
-    <!-- TOPBAR -->
-    <div class="card">
-      <div class="topbar">
+    <!-- HEADER -->
+    <div class="hdr">
+      <div class="hdr-logo">
+        <h1>Print & Copy</h1>
+        <span>Av. Portugal 62 · Salamanca</span>
+      </div>
+      <div class="badge" id="badge-estado">Pendiente</div>
+    </div>
+
+    <!-- SOCIAL PROOF -->
+    <a href="https://www.google.com/maps/search/Print+Copy+Salamanca" target="_blank" class="sp">
+      <div class="sp-stars">★★★★★</div>
+      <div class="sp-txt"><strong>4,9 de 5 en Google</strong> · +760 opiniones</div>
+      <span class="sp-link">Ver →</span>
+    </a>
+
+    <!-- CADUCIDAD -->
+    <div class="exp">
+      <div class="exp-row">
+        <span class="exp-label">Validez del presupuesto</span>
+        <span class="exp-date" id="exp-date">—</span>
+      </div>
+      <div class="exp-bar"><div class="exp-fill" id="exp-fill"></div></div>
+    </div>
+
+    <!-- DATOS CLIENTE -->
+    <div class="bh">
+      <div class="bh-meta">
         <div>
-          <div class="topbar-logo">Print &amp; Copy</div>
-          <div class="topbar-sub">Av. Portugal 62 · Salamanca</div>
+          <div class="bh-label">Presupuesto para</div>
+          <div class="bh-name" id="cli-nombre">—</div>
+          <div class="bh-phone" id="cli-tel"></div>
         </div>
-        <div class="badge" id="badge-estado">Pendiente de respuesta</div>
-      </div>
-      <div class="body">
-        <div class="row2">
-          <div>
-            <div class="label">Presupuesto para</div>
-            <div class="name" id="cli-nombre">—</div>
-            <div class="meta" id="cli-tel"></div>
-          </div>
-          <div style="text-align:right">
-            <div class="numero" id="pres-numero">—</div>
-            <div class="meta">Emitido: <span id="pres-fecha">—</span></div>
-            <div class="meta">Válido hasta: <span id="pres-validez" style="color:#BA7517;font-weight:700">—</span></div>
-          </div>
-        </div>
-        <div class="validez-bar">
-          <div class="validez-row"><span>Tiempo restante</span><span id="dias-texto" style="color:#BA7517;font-weight:700">—</span></div>
-          <div class="bar-bg"><div class="bar-fill" id="bar-fill" style="width:0%"></div></div>
-        </div>
-        <table class="lineas">
-          <thead><tr>
-            <th>Descripción</th>
-            <th style="width:50px">Uds</th>
-            <th style="width:110px">Plazo</th>
-            <th style="width:90px">Importe</th>
-          </tr></thead>
-          <tbody id="lineas-body"></tbody>
-          <tfoot><tr>
-            <td colspan="3">TOTAL (IVA incluido)</td>
-            <td id="pres-total">—</td>
-          </tr></tfoot>
-        </table>
-        <div class="conds">
-          <div class="cond-box">
-            <div class="label">Condición de pago</div>
-            <div class="cond-val" id="cond-pago">—</div>
-            <div class="label" style="margin-top:10px">Formas de pago</div>
-            <div style="font-size:12px;color:#666;line-height:1.7">Bizum · Tarjeta · Transferencia · En tienda</div>
-          </div>
-          <div class="cond-box">
-            <div class="label">Datos bancarios</div>
-            <div class="iban">ES58 0049 5292 14 2616098558</div>
-            <div style="font-size:10px;color:#888">Banco Santander<br>Eventos Personalizados Salamanca SL</div>
-          </div>
-        </div>
-        <div class="pie" style="margin-top:14px">
-          <span>Eventos Personalizados Salamanca SL · CIF B04944500</span>
-          <span>printcopysalamanca.es · 923 018 034</span>
+        <div class="bh-num">
+          <strong id="pres-numero">—</strong>
+          <span id="pres-fecha">—</span>
         </div>
       </div>
     </div>
 
-    <!-- CARD RESPUESTA -->
-    <div class="card" id="card-respuesta">
-      <div class="body">
-        <div style="font-size:13px;color:#666;text-align:center;margin-bottom:14px">Da tu respuesta directamente desde aquí</div>
+    <!-- LINEAS -->
+    <div class="lines">
+      <div class="lines-hdr">
+        <span>Descripción</span>
+        <span style="text-align:center">Uds</span>
+        <span style="text-align:center">Plazo</span>
+        <span style="text-align:right">Importe</span>
+      </div>
+      <div id="lineas-body"></div>
+    </div>
 
-        <!-- PASO 1: botones iniciales -->
-        <div id="paso1">
-          <!-- BLOQUE CONFIANZA -->
-          <div style="background:#f9f9f7;border-radius:8px;padding:14px 16px;margin-bottom:14px;border:1px solid #e8e8e4">
-            <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px">Cómo funciona tu pedido</div>
-            <div style="display:flex;flex-direction:column;gap:10px">
-              <div style="display:flex;align-items:flex-start;gap:10px">
-                <div style="width:22px;height:22px;background:#185FA5;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">1</div>
-                <div style="font-size:13px;color:#555;line-height:1.5">Confirmas el presupuesto y pagas la señal</div>
-              </div>
-              <div style="display:flex;align-items:flex-start;gap:10px">
-                <div style="width:22px;height:22px;background:#185FA5;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">2</div>
-                <div style="font-size:13px;color:#555;line-height:1.5">Te enviamos la <strong style="color:#1a1a1a">previa digital</strong> para que la revises y apruebes</div>
-              </div>
-              <div style="display:flex;align-items:flex-start;gap:10px">
-                <div style="width:22px;height:22px;background:#185FA5;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">3</div>
-                <div style="font-size:13px;color:#555;line-height:1.5">Hacemos <strong style="color:#1a1a1a">todos los cambios que necesites</strong> hasta que quede exactamente como quieres</div>
-              </div>
-              <div style="display:flex;align-items:flex-start;gap:10px">
-                <div style="width:22px;height:22px;background:#3B6D11;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">4</div>
-                <div style="font-size:13px;color:#555;line-height:1.5">Con tu aprobación final imprimimos y te avisamos para recoger</div>
-              </div>
-            </div>
-            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e8e8e4;font-size:12px;color:#3B6D11;font-weight:700">
-              No imprimimos nada sin tu visto bueno.
-            </div>
-            <a href="https://www.google.com/maps/place/Print+%26+Copy+Salamanca" target="_blank" style="display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;background:#fff;border:1px solid #e8e8e4;border-radius:8px;text-decoration:none">
-              <div style="display:flex;gap:2px">
-                <span style="color:#F9AB00;font-size:16px">&#9733;</span>
-                <span style="color:#F9AB00;font-size:16px">&#9733;</span>
-                <span style="color:#F9AB00;font-size:16px">&#9733;</span>
-                <span style="color:#F9AB00;font-size:16px">&#9733;</span>
-                <span style="color:#F9AB00;font-size:16px">&#9733;</span>
-              </div>
-              <div>
-                <div style="font-size:13px;font-weight:700;color:#1a1a1a">4,9 de 5 en Google</div>
-                <div style="font-size:11px;color:#888">+760 opiniones verificadas - Ver reseñas</div>
-              </div>
-            </a>
-          </div>
-          <div id="desglose-senal" style="display:none;background:#EAF3DE;border-radius:8px;padding:12px 14px;margin-bottom:10px;font-size:13px;border:1px solid #C0DD97">
-            <div style="font-size:11px;color:#3B6D11;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Resumen de pago</div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-              <span style="color:#555">Pagas ahora (señal)</span>
-              <span id="ds-senal" style="font-weight:700;color:#3B6D11;font-size:15px">—</span>
-            </div>
-            <div style="display:flex;justify-content:space-between">
-              <span style="color:#555">Pagas al recoger</span>
-              <span id="ds-resto" style="font-weight:700;color:#185FA5;font-size:15px">—</span>
-            </div>
-          </div>
-          <button class="btn-aceptar" onclick="mostrarPago()">
-            Acepto el presupuesto
-          </button>
-          <button class="btn-cambio" onclick="toggleCambio()">
-            Tengo una pregunta antes de confirmar
-          </button>
-          <div class="cambio-box" id="cambio-box">
-            <div class="cambio-label">Cuéntanos qué necesitas y te respondemos hoy:</div>
-            <textarea id="cambio-texto" placeholder="Ej: me gustaría más cantidad, cambiar el material..."></textarea>
-            <button class="btn-enviar" onclick="enviarCambio()">Enviar mensaje</button>
-          </div>
-          <div class="nota-responde">Respondemos el mismo día en horario de tienda</div>
-          <div class="contactos">
-            <a href="tel:923018034">923 018 034</a>
-            <a href="https://wa.me/34622305934" style="color:#25D366;border-color:#25D366">WhatsApp</a>
-          </div>
-        </div>
-
-        <!-- PASO 2: selección de pago -->
-        <div class="pago-box" id="paso2">
-          <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px">Selecciona cómo pagas la señal</div>
-          <div style="font-size:12px;color:#888;margin-bottom:14px">Una vez confirmado pasamos tu pedido a producción</div>
-
-          <!-- RESUMEN SEÑAL -->
-          <div class="pago-resumen">
-            <div class="pago-row"><span style="color:#666">Total presupuesto</span><span id="pg-total">—</span></div>
-            <div class="pago-row"><span style="color:#666">Condición pactada</span><span id="pg-cond" style="font-size:12px">—</span></div>
-            <div class="pago-row"><span>Señal a pagar ahora</span><span id="pg-senal" style="color:#3B6D11">—</span></div>
-          </div>
-
-          <!-- MÉTODOS -->
-          <div class="metodos-grid">
-            <div class="metodo" id="m-bizum" onclick="selMetodo('bizum')">
-              <div class="metodo-titulo">Bizum / Tarjeta</div>
-              <div class="metodo-sub">Pago online seguro</div>
-            </div>
-            <div class="metodo" id="m-transf" onclick="selMetodo('transf')">
-              <div class="metodo-titulo">Transferencia</div>
-              <div class="metodo-sub">IBAN Santander</div>
-            </div>
-            <div class="metodo" id="m-efectivo" onclick="selMetodo('efectivo')">
-              <div class="metodo-titulo">Pago en tienda</div>
-              <div class="metodo-sub">Efectivo, tarjeta o Bizum</div>
-            </div>
-
-          </div>
-
-          <!-- DETALLE SEGÚN MÉTODO -->
-          <div class="metodo-detalle" id="detalle-bizum">
-            <strong>Pago con Bizum o Tarjeta</strong><br>
-            Te enviamos un enlace de pago seguro por WhatsApp para completar el pago de <strong id="d-senal-biz">—</strong>.<br><br>
-            Recibirás confirmación en cuanto se procese. Tu pedido entrará en producción automáticamente.
-          </div>
-          <div class="metodo-detalle" id="detalle-transf">
-            <strong>Transferencia bancaria</strong><br>
-            Realiza una transferencia de <strong id="d-senal-tr">—</strong> a:<br><br>
-            <span style="font-family:monospace;background:#f0f0ec;padding:4px 6px;border-radius:4px">ES58 0049 5292 14 2616098558</span><br>
-            Banco Santander · Eventos Personalizados Salamanca SL<br><br>
-            Indica en el concepto: <strong id="d-numero-tr">—</strong><br>
-            Avisamos cuando recibamos el ingreso.
-          </div>
-          <div class="metodo-detalle" id="detalle-efectivo">
-            <strong>Pago en tienda</strong><br>
-            Pásate por <strong>Av. Portugal 62, Salamanca</strong> para abonar <strong id="d-senal-ef">—</strong>.<br>
-            Puedes pagar en efectivo, con tarjeta o por Bizum en tienda.<br><br>
-            Horario: L-V 9:30-14:00 y 16:30-20:00 · Sáb 10:00-14:00<br><br>
-            Tu pedido entrará en producción en cuanto pases.
-          </div>
-
-
-          <button class="btn-confirmar" id="btn-confirmar" onclick="confirmarPago()" disabled style="opacity:.5">
-            Confirmar y enviar pedido a producción
-          </button>
-          <button class="btn-volver" onclick="volverPaso1()">← Volver</button>
-        </div>
-
-        <!-- ESTADO OK -->
-        <div class="estado-ok" id="estado-ok">
-          <div class="estado-ok-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-          </div>
-          <div class="estado-ok-titulo" id="ok-titulo">¡Pedido confirmado!</div>
-          <div class="estado-ok-sub" id="ok-sub">Te hemos enviado confirmación por WhatsApp.</div>
-        </div>
-
+    <!-- TOTAL + ENTREGA -->
+    <div class="total">
+      <div class="total-row">
+        <span class="total-label">TOTAL (IVA incluido)</span>
+        <span class="total-amount" id="pres-total">—</span>
+      </div>
+      <div class="delivery" id="delivery-row" style="display:none">
+        <span class="delivery-label"><span class="hi">Confirmando hoy</span>, listo el</span>
+        <span class="delivery-date" id="delivery-date">—</span>
       </div>
     </div>
+
+    <!-- TRUST -->
+    <div class="trust">
+      <p>🛡️ Tú apruebas antes de producir. Sin sorpresas.</p>
+    </div>
+
+    <!-- PAGO -->
+    <div class="pago" id="pago-split" style="display:none">
+      <div class="pago-title" id="pago-cond-title">Condición de pago</div>
+      <div class="pago-row">
+        <div class="pago-lbl">Ahora solo pagas<small>La señal para arrancar tu pedido</small></div>
+        <div class="pago-amt" id="pago-senal">—</div>
+      </div>
+      <div class="pago-row" id="pago-resto-row">
+        <div class="pago-lbl">Al recoger tu pedido<small>Cuando esté listo y perfecto</small></div>
+        <div class="pago-amt resto" id="pago-resto">—</div>
+      </div>
+    </div>
+
+    <!-- PROCESO -->
+    <div class="proc">
+      <div class="proc-title">Proceso para realizar tu pedido</div>
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-txt">Confirmas y pagas la <strong>señal hoy</strong></div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-txt">Te enviamos la <strong>previa digital</strong> para que la revises y apruebes</div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-txt">Revisamos contigo hasta que quede <strong>exactamente como quieres</strong></div>
+        <div class="step-line"></div>
+      </div>
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-txt">Con tu aprobación final producimos y <strong>te avisamos para recoger</strong></div>
+      </div>
+    </div>
+
+    <!-- RESEÑAS -->
+    <div class="reviews">
+      <div class="review">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">"Me enviaron la previa, cambié un detalle y al día siguiente lo tenía perfecto. Súper fácil todo el proceso."</div>
+        <div class="review-author">— María G. · Google</div>
+      </div>
+      <div class="review">
+        <div class="review-stars">★★★★★</div>
+        <div class="review-text">"Tenía dudas con el diseño pero me hicieron varias opciones hasta que quedó como quería. Muy profesionales."</div>
+        <div class="review-author">— Carlos R. · Google</div>
+      </div>
+      <div class="reviews-badge">Valoraciones reales de Google · 760 opiniones verificadas</div>
+    </div>
+
+    <!-- CTA ZONA -->
+    <div class="cta">
+      <!-- PASO 1 -->
+      <div id="paso1">
+        <p class="cta-nudge">Ya lo tienes decidido. Solo falta darle al botón.</p>
+        <button class="btn-acepto" onclick="mostrarPago()">
+          Acepto el presupuesto
+          <small id="btn-sub">Selecciona cómo pagar</small>
+        </button>
+        <button class="btn-pregunta" onclick="toggleConsulta()">Tengo una pregunta antes de confirmar</button>
+        <div class="consulta-box" id="consulta-box">
+          <div class="consulta-label">Cuéntanos qué necesitas y te respondemos hoy:</div>
+          <textarea id="consulta-txt" placeholder="Ej: me gustaría cambiar el material, ajustar el precio..."></textarea>
+          <button class="btn-enviar" onclick="enviarConsulta()">Enviar mensaje</button>
+        </div>
+      </div>
+
+      <!-- PASO 2: selección método -->
+      <div class="paso2" id="paso2">
+        <p style="font-size:14px;font-weight:600;color:var(--g900);margin-bottom:4px">Selecciona cómo pagas la señal</p>
+        <p style="font-size:13px;color:var(--g500);margin-bottom:16px">Una vez confirmado tu pedido entra en producción</p>
+        <div class="metodos">
+          <div class="metodo" id="m-bizum" onclick="selMetodo('bizum')">
+            <div class="metodo-tit">Bizum / Tarjeta</div>
+            <div class="metodo-sub">Pago online seguro</div>
+          </div>
+          <div class="metodo" id="m-transf" onclick="selMetodo('transf')">
+            <div class="metodo-tit">Transferencia</div>
+            <div class="metodo-sub">IBAN Santander</div>
+          </div>
+          <div class="metodo" id="m-efectivo" onclick="selMetodo('efectivo')">
+            <div class="metodo-tit">Pago en tienda</div>
+            <div class="metodo-sub">Efectivo, tarjeta o Bizum</div>
+          </div>
+        </div>
+        <div class="det" id="det-bizum">
+          <strong>Pago con Bizum o Tarjeta</strong><br>
+          Te enviamos un enlace de pago seguro por WhatsApp. Pagas <strong id="d-biz">—</strong> y en cuanto se confirme arrancamos.
+        </div>
+        <div class="det" id="det-transf">
+          <strong>Transferencia bancaria</strong><br>
+          Transfiere <strong id="d-tr">—</strong> a:<br>
+          <code style="background:var(--g200);padding:2px 6px;border-radius:4px;font-size:12px">ES58 0049 5292 14 2616098558</code><br>
+          Titular: Eventos Personalizados Salamanca SL<br>
+          Concepto: <strong id="d-tr-num">—</strong>
+        </div>
+        <div class="det" id="det-efectivo">
+          <strong>Pago en tienda</strong><br>
+          Pásate por <strong>Av. Portugal 62, Salamanca</strong> para abonar <strong id="d-ef">—</strong>.<br>
+          Puedes pagar en efectivo, con tarjeta o por Bizum.<br>
+          L-V 9:30-14:00 y 16:30-20:00 · Sáb 10:00-14:00
+        </div>
+        <button class="btn-confirmar" id="btn-confirmar" onclick="confirmarPago()" disabled>
+          Confirmar y enviar pedido a producción
+        </button>
+        <button class="btn-volver" onclick="volverPaso1()">← Volver</button>
+      </div>
+
+      <!-- OK -->
+      <div class="ok-box" id="ok-box">
+        <div class="ok-icon"><svg width="26" height="26" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg></div>
+        <div class="ok-title" id="ok-title">¡Pedido confirmado!</div>
+        <div class="ok-sub" id="ok-sub">Te hemos enviado confirmación por WhatsApp.</div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="ftr">
+      <div class="ftr-contact">
+        <a href="tel:923018034">923 018 034</a>
+        <a href="https://wa.me/34622305934" class="wa">WhatsApp</a>
+      </div>
+      <div class="ftr-legal">Eventos Personalizados Salamanca SL · CIF B04944500 · printcopysalamanca.es · Respondemos el mismo día en horario de tienda</div>
+    </div>
+
   </div>
-  <div id="error-div" class="card" style="display:none"><div class="body error-box">Presupuesto no encontrado o enlace caducado.</div></div>
 </div>
 <script>
 var TOKEN=new URLSearchParams(window.location.search).get('t')||location.pathname.split('/').pop();
 var CONDS={'50_50':'50% al encargar · 50% al recoger','100_0':'100% al encargar','0_100':'100% al recoger','factura30':'Factura a 30 días','factura60':'Factura a 60 días'};
-var _pres=null;
-var _metodoSel=null;
+var _pres=null,_metodoSel=null;
 
-function fmt(n){return parseFloat(n).toFixed(2).replace('.',',')+'€';}
+function fmt(n){return parseFloat(n).toFixed(2).replace('.',',')+'\u20ac';}
 function fmtDate(s){if(!s)return'—';var d=new Date(s);return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();}
+function diasSemana(d){return['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'][d.getDay()];}
 
 function calcSenal(total,cond){
-  if(cond==='50_50')return total*0.5;
+  if(cond==='50_50')return Math.round(total*50)/100;
   if(cond==='100_0')return total;
-  if(cond==='0_100')return 0;
-  return 0; // crédito/factura
+  return 0;
 }
 
 async function cargar(){
   try{
     var r=await fetch('/api/presupuesto?token='+TOKEN);
     var d=await r.json();
-    if(!r.ok||!d.presupuesto){document.getElementById('loading').style.display='none';document.getElementById('error-div').style.display='block';return;}
+    if(!r.ok||!d.presupuesto){
+      document.getElementById('loading').style.display='none';
+      document.getElementById('error-div').style.display='block';
+      return;
+    }
     _pres=d.presupuesto;
     var lins=d.lineas||[];
     document.getElementById('loading').style.display='none';
     document.getElementById('contenido').style.display='block';
+
+    // Datos cliente
     document.getElementById('cli-nombre').textContent=_pres.cliente_nombre||'—';
     if(_pres.cliente_telefono)document.getElementById('cli-tel').textContent=_pres.cliente_telefono;
     document.getElementById('pres-numero').textContent=_pres.numero||'—';
     document.getElementById('pres-fecha').textContent=fmtDate(_pres.created_at);
     document.getElementById('pres-total').textContent=fmt(_pres.total||0);
-    document.getElementById('cond-pago').textContent=CONDS[_pres.condicion_pago]||_pres.condicion_pago||'—';
-    var validezDias=parseInt(_pres.validez_dias)||30;
-    var fechaExp=new Date(_pres.created_at);fechaExp.setDate(fechaExp.getDate()+validezDias);
-    var diasRestantes=Math.max(0,Math.ceil((fechaExp-new Date())/(1000*60*60*24)));
+
+    // Caducidad
+    var validezDias=parseInt(_pres.validez_dias)||15;
+    var fechaEmision=new Date(_pres.created_at);
+    var fechaExp=new Date(fechaEmision);fechaExp.setDate(fechaExp.getDate()+validezDias);
+    var hoy=new Date();
+    var diasRestantes=Math.max(0,Math.ceil((fechaExp-hoy)/(1000*60*60*24)));
     var pct=Math.min(100,Math.round((diasRestantes/validezDias)*100));
-    document.getElementById('pres-validez').textContent=fmtDate(fechaExp.toISOString().split('T')[0]);
-    document.getElementById('dias-texto').textContent=diasRestantes+' días';
-    document.getElementById('bar-fill').style.width=pct+'%';
-    if(pct<30)document.getElementById('bar-fill').style.background='#A32D2D';
+    document.getElementById('exp-date').textContent='Quedan '+diasRestantes+' días · '+fmtDate(fechaExp.toISOString().split('T')[0]);
+    document.getElementById('exp-fill').style.width=pct+'%';
+    if(pct<40)document.getElementById('exp-fill').style.background='#E8870E';
+    if(pct<20)document.getElementById('exp-fill').style.background='#A32D2D';
+
+    // Líneas
     var html='';
-    lins.forEach(function(l,i){
-      html+='<tr><td><div style="font-size:13px">'+l.descripcion+'</div></td>';
-      html+='<td>'+(l.cantidad||1)+'</td>';
-      html+='<td>'+(l.plazo?l.plazo+' días lab.':'A consultar')+'</td>';
-      html+='<td>'+fmt(l.subtotal||0)+'</td></tr>';
+    var maxPlazo=3;
+    lins.forEach(function(l){
+      if(l.plazo&&l.plazo>maxPlazo)maxPlazo=l.plazo;
+      html+='<div class="line-row">'
+        +'<div><div class="line-name">'+l.descripcion+'</div></div>'
+        +'<span class="line-qty">'+(l.cantidad||1)+'</span>'
+        +'<span class="line-plazo">'+(l.plazo?l.plazo+' días':'—')+'</span>'
+        +'<span class="line-price">'+fmt(l.subtotal||0)+'</span>'
+        +'</div>';
     });
-    document.getElementById('lineas-body').innerHTML=html||'<tr><td colspan="4" style="padding:12px;color:#888;text-align:center">Sin líneas</td></tr>';
-    if(_pres.estado==='aceptado')mostrarOK('aceptado','Tu pedido ya está en producción. Gracias por confiar en Print & Copy.');
-    var condP=_pres.condicion_pago||'50_50';
-    var totalP=parseFloat(_pres.total||0);
-    var senalP=calcSenal(totalP,condP);
-    if(senalP>0&&senalP<totalP){
-      var dsEl=document.getElementById('desglose-senal');
-      if(dsEl){
-        dsEl.style.display='block';
-        document.getElementById('ds-senal').textContent=fmt(senalP);
-        document.getElementById('ds-resto').textContent=fmt(totalP-senalP);
+    document.getElementById('lineas-body').innerHTML=html||'<div style="padding:16px;color:var(--g400);text-align:center">Sin líneas</div>';
+
+    // Fecha entrega estimada
+    var fechaEnt=new Date();fechaEnt.setDate(fechaEnt.getDate()+maxPlazo);
+    while(fechaEnt.getDay()===0||fechaEnt.getDay()===6){fechaEnt.setDate(fechaEnt.getDate()+1);}
+    document.getElementById('delivery-date').textContent=diasSemana(fechaEnt)+' '+fechaEnt.getDate()+'/'+(fechaEnt.getMonth()+1)+'/'+fechaEnt.getFullYear();
+    document.getElementById('delivery-row').style.display='flex';
+
+    // Pago split
+    var total=parseFloat(_pres.total||0);
+    var cond=_pres.condicion_pago||'50_50';
+    var senal=calcSenal(total,cond);
+    var resto=total-senal;
+    if(senal>0){
+      document.getElementById('pago-split').style.display='block';
+      document.getElementById('pago-cond-title').textContent='Condición de pago: '+(CONDS[cond]||cond);
+      document.getElementById('pago-senal').textContent=fmt(senal);
+      if(resto>0.01){
+        document.getElementById('pago-resto').textContent=fmt(resto);
+      } else {
+        document.getElementById('pago-resto-row').style.display='none';
       }
+      document.getElementById('btn-sub').textContent='Elige cómo pagar la señal de '+fmt(senal);
+    } else {
+      document.getElementById('btn-sub').textContent='Confirma para pasar a producción';
     }
-    // Mostrar desglose señal si aplica
-    var condP=_pres.condicion_pago||'50_50';
-    var totalP=parseFloat(_pres.total||0);
-    var senalP=calcSenal(totalP,condP);
-    if(senalP>0&&senalP<totalP){
-      document.getElementById('desglose-senal').style.display='block';
-      document.getElementById('ds-senal').textContent=fmt(senalP);
-      document.getElementById('ds-resto').textContent=fmt(totalP-senalP);
+
+    // Detalles métodos
+    document.getElementById('d-biz').textContent=fmt(senal);
+    document.getElementById('d-tr').textContent=fmt(senal);
+    document.getElementById('d-tr-num').textContent=_pres.numero;
+    document.getElementById('d-ef').textContent=fmt(senal);
+
+    // Si ya está aceptado
+    if(_pres.estado==='aceptado'){
+      mostrarOK('¡Pedido ya confirmado!','Tu pedido está en producción. Gracias por confiar en Print & Copy.');
     }
-    // Si 0_100 o factura ocultar señal — solo mostrar "Lo acuerdo con vosotros"
-    var condPago=_pres.condicion_pago||'';
-    if(condPago==='0_100'||condPago==='factura30'||condPago==='factura60'){
+
+    // Si 0_100 o factura ocultar opciones de señal
+    if(cond==='0_100'||cond==='factura30'||cond==='factura60'){
       document.getElementById('m-bizum').style.display='none';
       document.getElementById('m-transf').style.display='none';
-      document.getElementById('m-efectivo').style.display='none';
     }
+
   }catch(e){
     document.getElementById('loading').style.display='none';
     document.getElementById('error-div').style.display='block';
@@ -372,19 +441,7 @@ function mostrarPago(){
   var total=parseFloat(_pres.total||0);
   var cond=_pres.condicion_pago||'50_50';
   var senal=calcSenal(total,cond);
-  document.getElementById('pg-total').textContent=fmt(total);
-  document.getElementById('pg-cond').textContent=CONDS[cond]||cond;
-  // Si no hay señal (0_100, factura) saltar directo a confirmación
-  if(senal<=0){
-    confirmarDirecto();
-    return;
-  }
-  document.getElementById('pg-senal').textContent=fmt(senal);
-  // Rellenar detalles de cada método
-  document.getElementById('d-senal-biz').textContent=fmt(senal);
-  document.getElementById('d-senal-tr').textContent=fmt(senal);
-  document.getElementById('d-senal-ef').textContent=fmt(senal);
-  document.getElementById('d-numero-tr').textContent=_pres.numero;
+  if(senal<=0){confirmarDirecto();return;}
   document.getElementById('paso1').style.display='none';
   document.getElementById('paso2').style.display='block';
 }
@@ -399,19 +456,16 @@ function selMetodo(m){
   _metodoSel=m;
   ['bizum','transf','efectivo'].forEach(function(k){
     var el=document.getElementById('m-'+k);if(el)el.classList.remove('sel');
-    var det=document.getElementById('detalle-'+k);if(det)det.style.display='none';
+    var det=document.getElementById('det-'+k);if(det)det.style.display='none';
   });
-  document.getElementById('m-'+m).classList.add('sel');
-  document.getElementById('detalle-'+m).style.display='block';
+  var el=document.getElementById('m-'+m);if(el)el.classList.add('sel');
+  var det=document.getElementById('det-'+m);if(det)det.style.display='block';
   var btn=document.getElementById('btn-confirmar');
   btn.disabled=false;
-  btn.style.opacity='1';
-  var textos={
-    bizum:'Confirmar y enviar pedido a producción',
-    transf:'Confirmar — haré la transferencia',
-    efectivo:'Confirmar — paso por tienda a pagar'
-  };
-  btn.textContent=textos[m]||'Confirmar';
+  var total=parseFloat(_pres.total||0);
+  var senal=calcSenal(total,_pres.condicion_pago||'50_50');
+  var txts={bizum:'Confirmar — recibir enlace de pago por WhatsApp',transf:'Confirmar — haré la transferencia',efectivo:'Confirmar — paso por tienda a pagar'};
+  btn.textContent=txts[m]||'Confirmar';
 }
 
 async function confirmarPago(){
@@ -421,90 +475,63 @@ async function confirmarPago(){
   var total=parseFloat(_pres.total||0);
   var senal=calcSenal(total,_pres.condicion_pago||'50_50');
 
-  // Si elige Bizum/Tarjeta — generar enlace Redsys Paygold
   if(_metodoSel==='bizum'){
     try{
-      // Primero registrar aceptacion en Supabase
       await fetch('/api/respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({token:TOKEN,accion:'aceptar',metodo_pago:'bizum',senal:senal})});
-      // Generar enlace de pago Redsys
       var tel=_pres.cliente_telefono?_pres.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,''):'';
       if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
       var rp=await fetch('/api/redsys',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          importe:senal.toFixed(2),
-          numero_pedido:_pres.numero,
-          concepto:'Senal '+_pres.numero+' Print & Copy',
-          telefono:tel||null
-        })});
+        body:JSON.stringify({importe:senal.toFixed(2),numero_pedido:_pres.numero,concepto:'Senal '+_pres.numero+' Print & Copy'})});
       var dp=await rp.json();
       if(dp.url_pago){
-        // Mandar enlace de pago por WhatsApp
         var nombre=(_pres.cliente_nombre||'').split(' ')[0];
-        var msgPago='Hola '+nombre+'!\n\n'
-          +'Aqui tienes tu enlace de pago seguro para confirmar el pedido *'+_pres.numero+'*:\n\n'
-          +dp.url_pago+'\n\n'
-          +'Importe: *'+fmt(senal)+'*\n'
-          +'Puedes pagar con Bizum o tarjeta.\n\n'
-          +'En cuanto confirmemos el pago arrancamos con tu pedido.\n'
-          +'Print & Copy - 923 018 034';
-        await fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({telefono:tel,mensaje:msgPago,nombre:_pres.cliente_nombre})});
-        mostrarOK('aceptado','Pedido confirmado. Te hemos enviado el enlace de pago por WhatsApp. En cuanto lo recibamos arrancamos con tu pedido.');
+        var msgPago='Hola '+nombre+'!\n\nAquí tienes tu enlace de pago seguro para *'+_pres.numero+'*:\n\n'+dp.url_pago+'\n\nImporte: *'+fmt(senal)+'*\nPuedes pagar con Bizum o tarjeta.\n\nEn cuanto confirmemos el pago arrancamos.\nPrint & Copy - 923 018 034';
+        if(tel)await fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msgPago,nombre:_pres.cliente_nombre})});
+        mostrarOK('¡Pedido confirmado!','Te hemos enviado el enlace de pago por WhatsApp. En cuanto lo recibamos arrancamos con tu pedido.');
       } else {
-        // Fallback: aceptado pero pago manual
-        mostrarOK('aceptado','Pedido confirmado. Te enviamos el enlace de pago por WhatsApp en breve.');
+        mostrarOK('¡Pedido confirmado!','Te enviamos el enlace de pago por WhatsApp en breve. Print & Copy - 923 018 034');
       }
-    }catch(e){
-      btn.textContent='Error — intentalo de nuevo';btn.disabled=false;
-    }
+    }catch(e){btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
     return;
   }
 
-  // Resto de metodos — flujo normal
   try{
     var r=await fetch('/api/respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({token:TOKEN,accion:'aceptar',metodo_pago:_metodoSel,senal:senal})});
     var d=await r.json();
     if(d.success){
-      var msgs={
-        transf:'Cuando recibamos la transferencia de '+fmt(senal)+' avisamos y arrancamos.',
-        efectivo:'Cuando pases por tienda a abonar los '+fmt(senal)+' ponemos en marcha tu pedido.'
-      };
-      mostrarOK('aceptado',msgs[_metodoSel]||'Pedido confirmado.');
-    } else {
-      btn.textContent='Error — intentalo de nuevo';btn.disabled=false;
-    }
-  }catch(e){btn.textContent='Error — intentalo de nuevo';btn.disabled=false;}
+      var msgs={transf:'Cuando recibamos la transferencia de '+fmt(senal)+' avisamos y arrancamos.',efectivo:'Cuando pases por tienda a abonar los '+fmt(senal)+' ponemos en marcha tu pedido.'};
+      mostrarOK('¡Pedido confirmado!',msgs[_metodoSel]||'Pedido confirmado.');
+    } else {btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
+  }catch(e){btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
 }
 
 async function confirmarDirecto(){
-  // Para 0_100 o crédito — acepta sin selección de método
   var r=await fetch('/api/respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({token:TOKEN,accion:'aceptar',metodo_pago:'al_recoger',senal:0})});
   var d=await r.json();
-  if(d.success)mostrarOK('aceptado','Tu pedido entra en producción. Pagas al recoger.');
+  if(d.success)mostrarOK('¡Pedido confirmado!','Tu pedido entra en producción. Pagas al recoger.');
 }
 
-function mostrarOK(tipo,msg){
+function mostrarOK(titulo,msg){
   document.getElementById('paso1').style.display='none';
   document.getElementById('paso2').style.display='none';
-  var ok=document.getElementById('estado-ok');
-  ok.style.display='block';
-  document.getElementById('ok-sub').innerHTML=(msg||'')+'<br><br><span style="font-size:12px;color:#888">Ya puedes cerrar esta página.</span>';
+  document.getElementById('ok-box').style.display='block';
+  document.getElementById('ok-title').textContent=titulo;
+  document.getElementById('ok-sub').innerHTML=msg+'<br><br><span style="font-size:12px;color:var(--g400)">Ya puedes cerrar esta página.</span>';
   document.getElementById('badge-estado').textContent='Aceptado';
-  document.getElementById('badge-estado').style.background='#3B6D11';
-  ok.scrollIntoView({behavior:'smooth',block:'center'});
+  document.getElementById('ok-box').scrollIntoView({behavior:'smooth',block:'center'});
 }
 
-function toggleCambio(){
-  var box=document.getElementById('cambio-box');
+function toggleConsulta(){
+  var box=document.getElementById('consulta-box');
   box.style.display=box.style.display==='block'?'none':'block';
   if(box.style.display==='block')box.querySelector('textarea').focus();
 }
 
-async function enviarCambio(){
-  var txt=document.getElementById('cambio-texto').value.trim();
+async function enviarConsulta(){
+  var txt=document.getElementById('consulta-txt').value.trim();
   if(!txt)return;
   var btn=document.querySelector('.btn-enviar');
   btn.textContent='Enviando...';btn.disabled=true;
@@ -512,7 +539,7 @@ async function enviarCambio(){
     var r=await fetch('/api/respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({token:TOKEN,accion:'cambios',mensaje:txt})});
     var d=await r.json();
-    if(d.success)mostrarOK('cambios','Hemos recibido tu consulta. Te respondemos hoy mismo en horario de tienda.');
+    if(d.success)mostrarOK('Mensaje enviado','Hemos recibido tu consulta. Te respondemos hoy mismo en horario de tienda.');
     else{btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
   }catch(e){btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
 }
