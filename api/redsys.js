@@ -49,9 +49,7 @@ module.exports = async function handler(req, res) {
     DS_MERCHANT_PRODUCTDESCRIPTION: (concepto || 'Pedido Print & Copy').slice(0, 125),
   };
 
-  // Si hay telefono o email, Redsys envía el enlace directamente al cliente
-  if (telefono) params.DS_MERCHANT_CUSTOMER_MOBILE = telefono;
-  if (email) params.DS_MERCHANT_CUSTOMER_MAIL = email;
+  // No pasamos telefono a Redsys — mandamos el enlace nosotros por WhatsApp
 
   const params64 = Buffer.from(JSON.stringify(params)).toString('base64');
   const firma = firmar(order, params64, REDSYS_CLAVE);

@@ -439,8 +439,18 @@ async function confirmarPago(){
         })});
       var dp=await rp.json();
       if(dp.url_pago){
-        // Mostrar confirmacion con enlace de pago
-        mostrarOK('aceptado','Tu pedido esta confirmado. Completa el pago de '+fmt(senal)+' en el enlace que te acabamos de enviar por SMS. En cuanto lo recibamos arrancamos.');
+        // Mandar enlace de pago por WhatsApp
+        var nombre=(_pres.cliente_nombre||'').split(' ')[0];
+        var msgPago='Hola '+nombre+'!\n\n'
+          +'Aqui tienes tu enlace de pago seguro para confirmar el pedido *'+_pres.numero+'*:\n\n'
+          +dp.url_pago+'\n\n'
+          +'Importe: *'+fmt(senal)+'*\n'
+          +'Puedes pagar con Bizum o tarjeta.\n\n'
+          +'En cuanto confirmemos el pago arrancamos con tu pedido.\n'
+          +'Print & Copy - 923 018 034';
+        await fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({telefono:tel,mensaje:msgPago,nombre:_pres.cliente_nombre})});
+        mostrarOK('aceptado','Pedido confirmado. Te hemos enviado el enlace de pago por WhatsApp. En cuanto lo recibamos arrancamos con tu pedido.');
       } else {
         // Fallback: aceptado pero pago manual
         mostrarOK('aceptado','Pedido confirmado. Te enviamos el enlace de pago por WhatsApp en breve.');
