@@ -100,7 +100,7 @@ module.exports = async function handler(req, res) {
   try {
     console.log('Redsys request - order:', order, 'importe:', importeCentimos);
     const rawResponse = await httpsPost('sis.redsys.es', '/sis/rest/trataPeticionREST', postBody);
-    console.log('Redsys raw response:', rawResponse.slice(0, 500));
+    console.log('Redsys raw response (primeros 800):', rawResponse.slice(0, 800));
 
     let urlPago = null;
     let errorId = null;
@@ -109,20 +109,25 @@ module.exports = async function handler(req, res) {
     if (rawResponse.trim().startsWith('{')) {
       // JSON
       const data = JSON.parse(rawResponse);
+      console.log('Redsys JSON keys:', Object.keys(data));
       if (data.DS_ERROR_ID) errorId = data.DS_ERROR_ID;
-      if (data.DS_MERCHANTPARAMETERS) {
-        const rp = JSON.parse(Buffer.from(data.DS_MERCHANTPARAMETERS, 'base64').toString());
-        urlPago = rp.Ds_UrlPago2Fases || rp.DS_URLPAGO2FASES;
-        console.log('Redsys JSON params:', JSON.stringify(rp));
+      if (data.Ds_MerchantParameters || data.DS_MERCHANTPARAMETERS) {
+        const params64 = data.Ds_MerchantParameters || data.DS_MERCHANTPARAMETERS;
+        const rp = JSON.parse(Buffer.from(params64, 'base64').toString());
+        console.log('Redsys decoded params:', JSON.stringify(rp));
+        // Buscar URL en todas las variantes posibles
+        urlPago = rp.Ds_UrlPago2Fases || rp.DS_URLPAGO2FASES || rp.Ds_Url_Pago_2Fases || rp.DS_URL_PAGO_2FASES || rp.Ds_UrlPago || rp.DS_URLPAGO;
       }
-    } else if (rawResponse.includes('<?xml') || rawResponse.includes('<RETORNOXML>')) {
+    } else if (rawResponse.includes('<?xml') || rawResponse.includes('<RETORNOXML>') || rawResponse.includes('<CODIGO>')) {
       // XML
       console.log('Redsys respondio XML');
       const codigo = extraerXML(rawResponse, 'CODIGO');
-      urlPago = extraerXML(rawResponse, 'Ds_UrlPago2Fases');
-      errorId = codigo !== '0' ? codigo : null;
+      urlPago = extraerXML(rawResponse, 'Ds_UrlPago2Fases') || extraerXML(rawResponse, 'DS_URLPAGO2FASES') || extraerXML(rawResponse, 'Ds_Url_Pago_2Fases');
+      errorId = codigo && codigo !== '0' ? codigo : null;
       console.log('Redsys XML - codigo:', codigo, 'urlPago:', urlPago);
     }
+
+    console.log('Redsys FINAL - urlPago:', urlPago, 'errorId:', errorId);
 
     if (errorId) {
       return res.status(400).json({ error: 'Error Redsys: ' + errorId });
