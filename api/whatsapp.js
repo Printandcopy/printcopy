@@ -25,10 +25,9 @@ module.exports = async function handler(req, res) {
         'Authorization': 'Bearer ' + WHATICKET_TOKEN
       },
       body: JSON.stringify({
-        number: tel,
         whatsappId: WHATSAPP_ID,
         messages: [
-          { body: mensaje }
+          { number: tel, body: mensaje }
         ]
       })
     });
