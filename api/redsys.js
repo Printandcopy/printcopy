@@ -74,17 +74,17 @@ module.exports = async function handler(req, res) {
           'Content-Length': Buffer.byteLength(postData)
         }
       };
-      const req = https.request(options, (res) => {
+      const httpReq = https.request(options, (httpRes) => {
         let body = '';
-        res.on('data', chunk => body += chunk);
-        res.on('end', () => {
+        httpRes.on('data', chunk => body += chunk);
+        httpRes.on('end', () => {
           try { resolve(JSON.parse(body)); }
           catch(e) { reject(new Error('Respuesta no JSON: ' + body.slice(0,200))); }
         });
       });
-      req.on('error', reject);
-      req.write(postData);
-      req.end();
+      httpReq.on('error', reject);
+      httpReq.write(postData);
+      httpReq.end();
     });
     console.log('Redsys respuesta raw:', JSON.stringify(data));
 
