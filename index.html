@@ -3384,10 +3384,11 @@ function nvGuardar(estado,canal){
               var condLabelsWA={'50_50':'50% al encargar · 50% al recoger','100_0':'100% al encargar','0_100':'100% al recoger','factura30':'Factura 30 días','factura60':'Factura 60 días'};
               var condWA=condLabelsWA[condicion]||condicion;
               var lineasWA=nvLineas.map(function(l){return '• '+l.desc+' — '+l.total.toFixed(2)+'€'+(l.plazo?' ('+l.plazo+' días)':'');}).join('\n');
-              var msgWA='Hola '+nombre.split(' ')[0]+'!\n\n'
-                +'Tienes un presupuesto de Print & Copy esperandote:\n\n'
+              var msgWA='Hola '+nombre.split(' ')[0]+' 👋\n\n'
+                +'Ya tienes listo tu presupuesto:\n'
                 +'https://printcopy.vercel.app/presupuesto.html?t='+tokenPublico+'\n\n'
-                +'Print & Copy - 923 018 034';
+                +'El presupuesto es válido 7 días.\n\n'
+                +'¿Alguna duda? Te la resuelvo por aquí en un momento.';
               fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({telefono:telNorm,mensaje:msgWA,nombre:nombre})})
                 .then(function(r){return r.json();})
@@ -3720,10 +3721,19 @@ function cotReenviarEnlace(){
     if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
     var url='https://printcopy.vercel.app/presupuesto.html?t='+token;
     var nombre=p.cliente_nombre.split(' ')[0];
-    var msg='Hola '+nombre+'!\n\n'
-      +'Tienes un presupuesto de Print & Copy esperandote:\n\n'
+    // Calcular fecha entrega formateada
+    var fechaEntrega='';
+    if(p.fecha_entrega){
+      var fe=new Date(p.fecha_entrega);
+      var dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+      fechaEntrega=dias[fe.getDay()]+' '+fe.getDate()+'/'+(fe.getMonth()+1);
+    }
+    var msg='Hola '+nombre+' 👋\n\n'
+      +'Ya tienes listo tu presupuesto:\n'
       +url+'\n\n'
-      +'Print & Copy - 923 018 034';
+      +(fechaEntrega?'📅 Confirmando hoy lo tendrías para el '+fechaEntrega+'.\n':'')
+      +'El presupuesto es válido 7 días.\n\n'
+      +'¿Alguna duda? Te la resuelvo por aquí en un momento.';
     fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
       .then(function(r){return r.json();})

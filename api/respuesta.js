@@ -52,7 +52,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { token, accion, mensaje, metodo_pago, senal } = req.body || {};
+  const { token, accion, mensaje, metodo_pago, senal, url_pago } = req.body || {};
   if (!token || !accion) return res.status(400).json({ error: 'Faltan datos' });
 
   try {
@@ -82,51 +82,52 @@ module.exports = async function handler(req, res) {
         metodo_pago_senal: metodo_pago || null
       }).eq('id', pres.id);
 
-      // Mensajes según método
+      // Mensajes según método - Optimizados por Agente Closer
       const totalFmt = fmt(pres.total);
       const restoFmt = senalCalc > 0 && senalCalc < totalNum ? fmt(restoCalc) : null;
-      const ahora = new Date().toLocaleString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      
+      // Mensaje Bizum fusionado con enlace
+      const bizumMsg = url_pago
+        ? `✅ ¡Pedido confirmado, ${nombre}!\n\n`
+          + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
+          + `💳 *Realiza tu pago inicial aquí:*\n`
+          + `${url_pago}\n`
+          + `Importe: *${senalFmt}* · Bizum o tarjeta\n\n`
+          + `📌 *Siguiente paso:* en cuanto se confirme el pago te enviamos la previa digital para que la revises antes de producir.\n\n`
+          + (restoFmt ? `Resto (${restoFmt}) al recoger tu pedido terminado.` : '')
+        : `✅ ¡Pedido confirmado, ${nombre}!\n\n`
+          + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
+          + `💳 Te enviamos el enlace de pago en breve.\n`
+          + `Importe: *${senalFmt}* · Bizum o tarjeta\n\n`
+          + `📌 *Siguiente paso:* en cuanto se confirme el pago te enviamos la previa digital para que la revises antes de producir.`;
+      
       const msgCliente = {
-        bizum: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
-          + `Ref: *${pres.numero}* · ${ahora}\n`
-          + `Total: ${totalFmt}\n\n`
-          + `💳 *Señal a pagar: ${senalFmt}*\n`
-          + (restoFmt ? `Resto al recoger: ${restoFmt}\n\n` : '\n')
-          + `Te enviamos ahora el enlace de pago seguro.\n`
-          + `En cuanto se confirme arrancamos con tu pedido.\n\n`
-          + `Print & Copy · 923 018 034`,
+        bizum: bizumMsg,
         transf: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
-          + `Ref: *${pres.numero}* · ${ahora}\n`
-          + `Total: ${totalFmt}\n\n`
-          + `🏦 *Transferencia bancaria*\n`
-          + `Importe señal: *${senalFmt}*\n`
+          + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
+          + `🏦 *Datos para el pago inicial:*\n`
+          + `Importe: *${senalFmt}*\n`
           + `IBAN: ES58 0049 5292 14 2616098558\n`
           + `Titular: Eventos Personalizados Salamanca SL\n`
           + `Concepto: *${pres.numero}*\n\n`
-          + (restoFmt ? `Resto al recoger: ${restoFmt}\n\n` : '')
-          + `Avisamos en cuanto recibamos el ingreso.\n`
-          + `Print & Copy · 923 018 034`,
+          + `📌 *Siguiente paso:* en cuanto recibamos el ingreso te enviamos la previa digital para que la revises antes de producir.\n\n`
+          + (restoFmt ? `Resto (${restoFmt}) al recoger tu pedido terminado.` : ''),
         efectivo: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
-          + `Ref: *${pres.numero}* · ${ahora}\n`
-          + `Total: ${totalFmt}\n\n`
-          + `🏪 *Pago en tienda: ${senalFmt}*\n`
-          + `Efectivo, tarjeta o Bizum\n`
-          + `Av. Portugal 62, Salamanca\n`
-          + `L-V 9:30-14:00 y 16:30-20:00 · Sáb 10:00-14:00\n\n`
-          + (restoFmt ? `Resto al recoger: ${restoFmt}\n\n` : '')
-          + `Arrancamos en cuanto pases.\n`
-          + `Print & Copy · 923 018 034`,
+          + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
+          + `🏪 *Te esperamos en tienda para el pago inicial:*\n`
+          + `Importe: *${senalFmt}*\n`
+          + `📍 Av. Portugal 62, Salamanca\n`
+          + `🕐 L-V 10:00-14:00 y 17:00-20:00\n\n`
+          + `📌 *Siguiente paso:* cuando pases por tienda y abonemos el pago inicial, te enviamos la previa digital para que la revises antes de producir.\n\n`
+          + (restoFmt ? `Resto (${restoFmt}) al recoger tu pedido terminado.` : ''),
         pendiente: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
-          + `Ref: *${pres.numero}* · ${ahora}\n`
-          + `Total: ${totalFmt}\n\n`
-          + `Señal pendiente: *${senalFmt}*\n\n`
-          + `Nos ponemos en contacto contigo hoy mismo para acordar el pago.\n`
-          + `Print & Copy · 923 018 034`,
+          + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
+          + `Pago inicial pendiente: *${senalFmt}*\n\n`
+          + `Nos ponemos en contacto contigo hoy mismo para acordar el pago.`,
         al_recoger: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
-          + `Ref: *${pres.numero}* · ${ahora}\n`
-          + `Total a pagar al recoger: *${totalFmt}*\n\n`
-          + `Tu pedido entra en producción ahora.\n`
-          + `Print & Copy · 923 018 034`,
+          + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
+          + `📌 *Siguiente paso:* te enviamos la previa digital para que la revises antes de producir.\n\n`
+          + `Pago completo al recoger tu pedido terminado.`,
       };
 
       const msgEmpresa = {

@@ -501,26 +501,22 @@ async function confirmarPago(){
 
   if(_metodoSel==='bizum'){
     try{
-      await fetch('/api/respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({token:TOKEN,accion:'aceptar',metodo_pago:'bizum',senal:senal})});
-      var tel=_pres.cliente_telefono?_pres.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,''):'';
-      if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+      // PRIMERO: obtener enlace Redsys
       console.log('REDSYS: solicitando enlace, senal:', senal);
       var rp=await fetch('/api/redsys',{method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({importe:senal.toFixed(2),numero_pedido:_pres.numero,concepto:'Senal '+_pres.numero+' Print & Copy'})});
       var dp=await rp.json();
       console.log('REDSYS respuesta:', dp);
-      if(dp.url_pago){
-        var nombre=(_pres.cliente_nombre||'').split(' ')[0];
-        var msgPago='Hola '+nombre+'!\n\nAquí tienes tu enlace de pago seguro para *'+_pres.numero+'*:\n\n'+dp.url_pago+'\n\nImporte: *'+fmt(senal)+'*\nPuedes pagar con Bizum o tarjeta.\n\nEn cuanto confirmemos el pago arrancamos.\nPrint & Copy - 923 018 034';
-        console.log('WA enlace: enviando a', tel);
-        var waRes=await fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msgPago,nombre:_pres.cliente_nombre})});
-        var waData=await waRes.json();
-        console.log('WA enlace respuesta:', waData);
-        mostrarOK('¡Pedido confirmado!','Te hemos enviado el enlace de pago por WhatsApp. En cuanto lo recibamos arrancamos con tu pedido.','bizum');
+      var urlPago=dp.url_pago||null;
+      
+      // LUEGO: confirmar pedido pasando el enlace (mensaje único fusionado)
+      await fetch('/api/respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:TOKEN,accion:'aceptar',metodo_pago:'bizum',senal:senal,url_pago:urlPago})});
+      
+      if(urlPago){
+        mostrarOK('¡Pedido confirmado!','Te hemos enviado el enlace de pago por WhatsApp.','bizum');
       } else {
-        console.log('REDSYS: no devolvió url_pago', dp);
-        mostrarOK('¡Pedido confirmado!','Te enviamos el enlace de pago por WhatsApp en breve. Print & Copy - 923 018 034','bizum');
+        mostrarOK('¡Pedido confirmado!','Te enviamos el enlace de pago por WhatsApp en breve.','bizum');
       }
     }catch(e){console.error('Error bizum:', e);btn.textContent='Error — inténtalo de nuevo';btn.disabled=false;}
     return;

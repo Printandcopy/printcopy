@@ -76,18 +76,29 @@ module.exports = async function handler(req, res) {
 
         // WA a Print & Copy
         await enviarWA(TEL_PRINTCOPY,
-          `Pago recibido - Redsys\n\nCliente: ${pres.cliente_nombre}\nRef: ${pres.numero}\nImporte cobrado: ${importe.toFixed(2)}EUR\n\nSenal cobrada automaticamente. Pasar a produccion.`
+          `💳 Pago recibido - Redsys\n\nCliente: ${pres.cliente_nombre}\nRef: ${pres.numero}\nImporte cobrado: ${importe.toFixed(2)}€\n\nSeñal cobrada automáticamente. Pasar a producción.`
         );
 
-        // WA al cliente
+        // WA al cliente - Mensaje optimizado Agente Closer
         if (pres.cliente_telefono) {
           const tel = pres.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
           const telNorm = tel.length === 9 && !tel.startsWith('34') ? '34'+tel : tel;
           const nombre = pres.cliente_nombre.split(' ')[0];
+          
+          // Calcular fecha entrega
+          let fechaEntregaTxt = '';
+          if (pres.fecha_entrega) {
+            const fe = new Date(pres.fecha_entrega);
+            const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+            fechaEntregaTxt = `\n📅 Fecha estimada de entrega: *${dias[fe.getDay()]} ${fe.getDate()}/${fe.getMonth()+1}*`;
+          }
+          
           await enviarWA(telNorm,
-            `Pago confirmado, ${nombre}!\n\nHemos recibido tu pago de ${importe.toFixed(2)}EUR para el pedido ${pres.numero}.\n\nTu pedido ya esta en produccion.`
-            + (resto > 0.01 ? `\nResta ${resto.toFixed(2)}EUR al recoger.\n\n` : '\n\n')
-            + `Te avisamos cuando este listo.\nPrint & Copy - 923 018 034`
+            `✅ ¡Pago confirmado, ${nombre}!\n\n`
+            + `Ya estamos trabajando en tu pedido *${pres.numero}*.\n\n`
+            + `📌 *Siguiente paso:* te enviamos la previa digital por aquí para que la revises. No producimos nada hasta que nos des el OK.`
+            + fechaEntregaTxt
+            + (resto > 0.01 ? `\n\nResto (${resto.toFixed(2)}€) al recoger tu pedido terminado.` : '')
           );
         }
       }
