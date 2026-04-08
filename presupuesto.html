@@ -556,17 +556,8 @@ function mostrarOK(titulo,msg,metodo){
   var floatingConf=document.getElementById('floating-confirmar');
   if(floatingConf){floatingConf.classList.remove('visible');document.body.classList.remove('floating-confirmar-active');}
   
-  // CAMBIO 1: Preparar redirección a WhatsApp
-  var numero=_pres?_pres.numero:'';
-  var mensajesWA={
-    bizum:'✅ He confirmado '+numero+'. Esperando enlace de pago.',
-    transf:'✅ He confirmado '+numero+'. Haré la transferencia.',
-    efectivo:'✅ He confirmado '+numero+'. Paso por tienda a pagar.',
-    al_recoger:'✅ He confirmado '+numero+'. Pago al recoger.',
-    default:'✅ He confirmado '+numero+'. ¿Cuál es el siguiente paso?'
-  };
-  var msgWA=encodeURIComponent(mensajesWA[metodo]||mensajesWA.default);
-  var urlWA='https://wa.me/34622305934?text='+msgWA;
+  // CAMBIO 1: Preparar redirección a WhatsApp (sin mensaje prellenado)
+  var urlWA='https://wa.me/34622305934';
   
   document.getElementById('ok-sub').innerHTML=msg
     +'<br><br><div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;color:var(--g500);font-size:13px">'
