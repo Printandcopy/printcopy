@@ -7,8 +7,8 @@ const WHATSAPP_ID = '74b01007-4608-4c29-a086-190786999f56';
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   
-  // Obtener teléfono de query o usar el de Print & Copy
-  let tel = req.query.tel || '622305934';
+  // Obtener teléfono de query o usar el de Raúl para pruebas
+  let tel = req.query.tel || '658797090';
   tel = tel.replace(/\s/g, '').replace(/^\+/, '');
   if (tel.length === 9 && !tel.startsWith('34')) tel = '34' + tel;
 
