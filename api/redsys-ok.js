@@ -31,12 +31,103 @@ function verificarFirma(order, params64, firmaRecibida) {
 
 async function enviarWA(numero, mensaje) {
   try {
-    await fetch('https://api.whaticket.com/api/v1/messages', {
+    const r = await fetch('https://api.whaticket.com/api/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${WHATICKET_TOKEN}` },
       body: JSON.stringify({ whatsappId: WHATSAPP_ID, messages: [{ number: numero, body: mensaje }] })
     });
-  } catch(e) { console.error('WA error:', e.message); }
+    const data = await r.json();
+    console.log('WA enviado a', numero, ':', data);
+    return data;
+  } catch(e) { 
+    console.error('WA error:', e.message);
+    return { error: e.message };
+  }
+}
+
+// Función para crear pedido automáticamente
+async function crearPedidoDesdePresupuesto(pres, senal) {
+  try {
+    // Obtener líneas del presupuesto
+    const { data: lineas } = await sb.from('presupuesto_lineas')
+      .select('*').eq('presupuesto_id', pres.id);
+    
+    if (!lineas || !lineas.length) {
+      console.log('No hay líneas para crear pedido');
+      return [];
+    }
+
+    const totalGlobal = parseFloat(pres.total) || 0;
+    let maxPlazo = 3;
+    lineas.forEach(l => { if (l.plazo && l.plazo > maxPlazo) maxPlazo = l.plazo; });
+    
+    // Calcular fecha entrega
+    const fechaAuto = new Date();
+    fechaAuto.setDate(fechaAuto.getDate() + maxPlazo);
+    while (fechaAuto.getDay() === 0 || fechaAuto.getDay() === 6) {
+      fechaAuto.setDate(fechaAuto.getDate() + 1);
+    }
+    const fecha = fechaAuto.toISOString().split('T')[0];
+    
+    // Buscar cliente
+    const { data: clienteArr } = await sb.from('clientes')
+      .select('id').eq('telefono', pres.cliente_telefono).limit(1);
+    const clienteId = clienteArr && clienteArr[0] ? clienteArr[0].id : null;
+    
+    const senalTotal = senal || 0;
+    const pagoEst = senalTotal >= totalGlobal ? 'pagado' : senalTotal > 0 ? 'senal' : 'pendiente';
+    
+    const pedidosCreados = [];
+    
+    for (const lin of lineas) {
+      const sec = lin.seccion || 'XR';
+      
+      // Obtener y actualizar contador
+      const { data: contData } = await sb.from('contadores')
+        .select('valor').eq('seccion', sec).single();
+      const nv = (contData ? contData.valor : 0) + 1;
+      await sb.from('contadores').update({ valor: nv }).eq('seccion', sec);
+      
+      const numPed = sec + '-' + String(nv).padStart(4, '0');
+      const proporcion = totalGlobal > 0 ? ((parseFloat(lin.subtotal) || 0) / totalGlobal) : 1;
+      
+      const ped = {
+        id: numPed,
+        cliente_id: clienteId,
+        cliente_nombre: pres.cliente_nombre,
+        cliente_tel: pres.cliente_telefono,
+        cliente_email: pres.cliente_email || '',
+        seccion: sec,
+        operario: 'Sistema',
+        fecha_creacion: new Date().toISOString(),
+        fecha_entrega: fecha,
+        fecha_tipo: 'aprox',
+        descripcion: lin.descripcion,
+        notas: 'Auto desde ' + pres.numero + ' | Bizum/Tarjeta',
+        total: parseFloat(lin.subtotal) || 0,
+        senal: Math.round((senalTotal * proporcion) * 100) / 100,
+        pago: pagoEst,
+        condiciones: pres.condicion_pago || '50_50',
+        fase: 1,
+        presupuesto_origen: pres.numero
+      };
+      
+      await sb.from('pedidos').insert([ped]);
+      pedidosCreados.push(numPed);
+    }
+    
+    // Marcar presupuesto como convertido
+    await sb.from('presupuestos').update({
+      convertido: true,
+      senal_cobrada: true
+    }).eq('id', pres.id);
+    
+    console.log('Pedidos creados:', pedidosCreados);
+    return pedidosCreados;
+  } catch (e) {
+    console.error('Error creando pedido:', e);
+    return [];
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -70,6 +161,9 @@ module.exports = async function handler(req, res) {
       const pres = presArr && presArr[0];
 
       if (pres) {
+        console.log('Presupuesto encontrado:', pres.numero);
+        
+        // Actualizar presupuesto
         await sb.from('presupuestos').update({
           senal_cobrada: true,
           metodo_pago_senal: 'bizum'
@@ -78,9 +172,18 @@ module.exports = async function handler(req, res) {
         const total = parseFloat(pres.total) || 0;
         const resto = total - importe;
 
+        // CREAR PEDIDO AUTOMÁTICAMENTE
+        const pedidosCreados = await crearPedidoDesdePresupuesto(pres, importe);
+        console.log('Pedidos auto-creados:', pedidosCreados);
+
         // WA a Print & Copy
         await enviarWA(TEL_PRINTCOPY,
-          `💳 Pago recibido - Redsys\n\nCliente: ${pres.cliente_nombre}\nRef: ${pres.numero}\nImporte cobrado: ${importe.toFixed(2)}€\n\nSeñal cobrada automáticamente. Pasar a producción.`
+          `💳 Pago recibido - Redsys\n\n`
+          + `Cliente: ${pres.cliente_nombre}\n`
+          + `Ref: ${pres.numero}\n`
+          + `Importe cobrado: ${importe.toFixed(2)}€\n\n`
+          + `✅ Pedido creado automáticamente: ${pedidosCreados.join(', ') || 'error'}\n`
+          + `Ya está en taller.`
         );
 
         // WA al cliente - Mensaje optimizado Agente Closer v2
@@ -89,7 +192,6 @@ module.exports = async function handler(req, res) {
           const telNorm = tel.length === 9 && !tel.startsWith('34') ? '34'+tel : tel;
           const nombre = pres.cliente_nombre.split(' ')[0];
           
-          // Obtener plazo en días del presupuesto
           const plazoDias = pres.plazo_dias || 5;
           
           await enviarWA(telNorm,
@@ -100,6 +202,8 @@ module.exports = async function handler(req, res) {
             + (resto > 0.01 ? `\n\nResto (${resto.toFixed(2)}€) al recoger tu pedido terminado.` : '')
           );
         }
+      } else {
+        console.log('Presupuesto NO encontrado para order:', order);
       }
     }
 
