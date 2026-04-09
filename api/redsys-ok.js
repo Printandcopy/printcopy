@@ -196,8 +196,7 @@ module.exports = async function handler(req, res) {
           
           await enviarWA(telNorm,
             `✅ ¡Pago confirmado, ${nombre}!\n\n`
-            + `Ya estamos preparando la previa digital de tu pedido *${pres.numero}*.\n\n`
-            + `📌 Te la enviamos por aquí para que la revises. Cuando nos des el OK, arrancamos producción.\n\n`
+            + `📌 Arrancamos con tu pedido *${pres.numero}*. En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n`
             + `⏱️ *Plazo de producción:* ${plazoDias} días laborables desde tu aprobación.`
             + (resto > 0.01 ? `\n\nResto (${resto.toFixed(2)}€) al recoger tu pedido terminado.` : '')
           );

@@ -93,13 +93,13 @@ module.exports = async function handler(req, res) {
           + `💳 *Paga aquí de forma segura:*\n`
           + `${url_pago}\n`
           + `Importe: *${senalFmt}* · Bizum o tarjeta\n\n`
-          + `📌 *Siguiente paso:* en cuanto se confirme el pago te enviamos la previa digital para que la revises antes de producir.\n\n`
+          + `📌 *Siguiente paso:* en cuanto se confirme el pago arrancamos con tu pedido y te enviamos la previa digital para que la revises antes de producir.\n\n`
           + (restoFmt ? `Resto (${restoFmt}) al recoger tu pedido terminado.` : '')
         : `✅ ¡Pedido confirmado, ${nombre}!\n\n`
           + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
           + `💳 Te enviamos el enlace de pago en breve.\n`
           + `Importe: *${senalFmt}* · Bizum o tarjeta\n\n`
-          + `📌 *Siguiente paso:* en cuanto se confirme el pago te enviamos la previa digital para que la revises antes de producir.`;
+          + `📌 *Siguiente paso:* en cuanto se confirme el pago arrancamos con tu pedido y te enviamos la previa digital para que la revises antes de producir.`;
       
       const msgCliente = {
         bizum: bizumMsg,
@@ -110,7 +110,7 @@ module.exports = async function handler(req, res) {
           + `IBAN: ES58 0049 5292 14 2616098558\n`
           + `Titular: Eventos Personalizados Salamanca SL\n`
           + `Concepto: *${pres.numero}*\n\n`
-          + `📌 *Siguiente paso:* en cuanto recibamos el ingreso te enviamos la previa digital para que la revises antes de producir.\n\n`
+          + `📌 *Siguiente paso:* en cuanto recibamos la transferencia arrancamos con tu pedido y te enviamos la previa digital para que la revises antes de producir.\n\n`
           + (restoFmt ? `Resto (${restoFmt}) al recoger tu pedido terminado.` : ''),
         efectivo: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
           + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
@@ -118,7 +118,7 @@ module.exports = async function handler(req, res) {
           + `Importe: *${senalFmt}*\n`
           + `📍 Av. Portugal 62, Salamanca\n`
           + `🕐 L-V 10:00-14:00 y 17:00-20:00\n\n`
-          + `📌 *Siguiente paso:* cuando pases por tienda y abonemos el pago inicial, te enviamos la previa digital para que la revises antes de producir.\n\n`
+          + `📌 *Siguiente paso:* cuando pases por tienda y abonemos el pago arrancamos con tu pedido y te enviamos la previa digital para que la revises antes de producir.\n\n`
           + (restoFmt ? `Resto (${restoFmt}) al recoger tu pedido terminado.` : ''),
         pendiente: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
           + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
@@ -126,7 +126,7 @@ module.exports = async function handler(req, res) {
           + `Nos ponemos en contacto contigo hoy mismo para acordar el pago.`,
         al_recoger: `✅ ¡Pedido confirmado, ${nombre}!\n\n`
           + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
-          + `📌 *Siguiente paso:* te enviamos la previa digital para que la revises antes de producir.\n\n`
+          + `📌 *Siguiente paso:* arrancamos con tu pedido y te enviamos la previa digital para que la revises antes de producir.\n\n`
           + `Pago completo al recoger tu pedido terminado.`,
       };
 
