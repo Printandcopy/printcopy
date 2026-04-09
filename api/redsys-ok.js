@@ -154,12 +154,12 @@ module.exports = async function handler(req, res) {
     const pagoOk = respuesta >= 0 && respuesta <= 99;
     console.log('Redsys notificacion - order:', order, 'respuesta:', respuesta, 'ok:', pagoOk);
 
-    if (pagoOk) {
-      // Buscar presupuesto por numero de orden
-      const { data: presArr } = await sb.from('presupuestos')
-        .select('*').ilike('numero', '%' + order.replace(/^0+/, '') + '%');
-      const pres = presArr && presArr[0];
+    // Buscar presupuesto por numero de orden
+    const { data: presArr } = await sb.from('presupuestos')
+      .select('*').ilike('numero', '%' + order.replace(/^0+/, '') + '%');
+    const pres = presArr && presArr[0];
 
+    if (pagoOk) {
       if (pres) {
         console.log('Presupuesto encontrado:', pres.numero);
         
@@ -203,6 +203,51 @@ module.exports = async function handler(req, res) {
         }
       } else {
         console.log('Presupuesto NO encontrado para order:', order);
+      }
+    } else {
+      // PAGO FALLIDO - Avisar al cliente
+      console.log('Pago FALLIDO - respuesta:', respuesta);
+      
+      if (pres && pres.cliente_telefono) {
+        const tel = pres.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
+        const telNorm = tel.length === 9 && !tel.startsWith('34') ? '34'+tel : tel;
+        const nombre = pres.cliente_nombre.split(' ')[0];
+        
+        // Calcular señal
+        const total = parseFloat(pres.total) || 0;
+        const condicion = pres.condicion_pago || '50_50';
+        let porcentaje = 50;
+        if (condicion === '100_0') porcentaje = 100;
+        else if (condicion === '0_100') porcentaje = 0;
+        const senal = Math.round(total * porcentaje) / 100;
+        
+        // Generar nuevo enlace de pago
+        const redsysRes = await fetch('https://printcopy.vercel.app/api/redsys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ presupuesto_id: pres.id, importe: senal })
+        });
+        const redsysData = await redsysRes.json();
+        const nuevoEnlace = redsysData.url || '';
+        
+        await enviarWA(telNorm,
+          `⚠️ ${nombre}, parece que el pago no se ha completado.\n\n`
+          + `Puede que se haya cancelado o que falte confirmar en tu banco.\n\n`
+          + (nuevoEnlace 
+            ? `💳 Puedes intentarlo de nuevo aquí:\n${nuevoEnlace}\n\n`
+            : `💳 Vuelve a acceder a tu presupuesto para reintentar el pago.\n\n`)
+          + `Si tienes algún problema me dices por aquí 👇`
+        );
+        
+        // Avisar también a Print & Copy
+        await enviarWA(TEL_PRINTCOPY,
+          `⚠️ Pago FALLIDO - Redsys\n\n`
+          + `Cliente: ${pres.cliente_nombre}\n`
+          + `Tel: ${pres.cliente_telefono}\n`
+          + `Ref: ${pres.numero}\n`
+          + `Código error: ${respuesta}\n\n`
+          + `Se ha enviado WA al cliente con nuevo enlace.`
+        );
       }
     }
 
