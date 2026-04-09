@@ -40,6 +40,10 @@ async function enviarWA(numero, mensaje) {
 }
 
 module.exports = async function handler(req, res) {
+  console.log('=== REDSYS-OK LLAMADO ===', new Date().toISOString());
+  console.log('Method:', req.method);
+  console.log('Body keys:', req.body ? Object.keys(req.body) : 'sin body');
+  
   if (req.method !== 'POST') return res.status(405).end();
 
   const { Ds_MerchantParameters, Ds_Signature } = req.body || {};
