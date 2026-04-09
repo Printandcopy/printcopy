@@ -209,7 +209,7 @@ body.floating-confirmar-active{padding-bottom:110px}
     <div class="pago" id="pago-split" style="display:none">
       <div class="pago-title" id="pago-cond-title">Condición de pago</div>
       <div class="pago-row">
-        <div class="pago-lbl">Ahora solo pagas<small>La señal para arrancar tu pedido</small></div>
+        <div class="pago-lbl">Ahora solo pagas<small>El pago inicial para arrancar tu pedido</small></div>
         <div class="pago-amt" id="pago-senal">—</div>
       </div>
       <div class="pago-row" id="pago-resto-row">
@@ -223,7 +223,7 @@ body.floating-confirmar-active{padding-bottom:110px}
       <div class="proc-title">Proceso para realizar tu pedido</div>
       <div class="step">
         <div class="step-n">1</div>
-        <div class="step-txt">Confirmas y pagas la <strong>señal hoy</strong></div>
+        <div class="step-txt">Confirmas y pagas el <strong>pago inicial hoy</strong></div>
         <div class="step-line"></div>
       </div>
       <div class="step">
@@ -276,7 +276,7 @@ body.floating-confirmar-active{padding-bottom:110px}
 
       <!-- PASO 2: selección método -->
       <div class="paso2" id="paso2">
-        <p style="font-size:14px;font-weight:600;color:var(--g900);margin-bottom:4px">Selecciona cómo pagas la señal</p>
+        <p style="font-size:14px;font-weight:600;color:var(--g900);margin-bottom:4px">Selecciona cómo pagas</p>
         <p style="font-size:13px;color:var(--g500);margin-bottom:16px">Una vez confirmado tu pedido entra en producción</p>
         <div class="metodos">
           <div class="metodo" id="m-bizum" onclick="selMetodo('bizum')">
@@ -416,7 +416,7 @@ async function cargar(){
       } else {
         document.getElementById('pago-resto-row').style.display='none';
       }
-      document.getElementById('btn-sub').textContent='Elige cómo pagar la señal de '+fmt(senal);
+      document.getElementById('btn-sub').textContent='Elige cómo pagar '+fmt(senal);
     } else {
       document.getElementById('btn-sub').textContent='Confirma para pasar a producción';
     }
@@ -654,7 +654,7 @@ cargar();
     line-height: 1.3;
   ">
     Acepto el presupuesto
-    <span style="display:block;font-size:12px;font-weight:400;opacity:0.85;margin-top:2px">Elige cómo pagar la señal</span>
+    <span style="display:block;font-size:12px;font-weight:400;opacity:0.85;margin-top:2px">Elige cómo pagar</span>
   </a>
 </div>
 
