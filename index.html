@@ -3387,8 +3387,8 @@ function nvGuardar(estado,canal){
               var msgWA='Hola '+nombre.split(' ')[0]+' 👋\n\n'
                 +'Ya tienes listo tu presupuesto:\n'
                 +'https://printcopy.vercel.app/presupuesto.html?t='+tokenPublico+'\n\n'
-                +'El presupuesto es válido 7 días.\n\n'
-                +'¿Alguna duda? Te la resuelvo por aquí en un momento.';
+                +'Presupuesto válido 7 días.\n\n'
+                +'Ábrelo y si tienes alguna duda me dices 👇';
               fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({telefono:telNorm,mensaje:msgWA,nombre:nombre})})
                 .then(function(r){return r.json();})
@@ -3731,9 +3731,9 @@ function cotReenviarEnlace(){
     var msg='Hola '+nombre+' 👋\n\n'
       +'Ya tienes listo tu presupuesto:\n'
       +url+'\n\n'
-      +(fechaEntrega?'📅 Confirmando hoy lo tendrías para el '+fechaEntrega+'.\n':'')
-      +'El presupuesto es válido 7 días.\n\n'
-      +'¿Alguna duda? Te la resuelvo por aquí en un momento.';
+      +(fechaEntrega?'📅 Entrega aproximada: *'+fechaEntrega+'*\n':'')
+      +'Presupuesto válido 7 días.\n\n'
+      +'Ábrelo y si tienes alguna duda me dices 👇';
     fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
       .then(function(r){return r.json();})
@@ -3904,29 +3904,24 @@ function confirmarSenal(presId){
       var resto=parseFloat(p.total)-senal;
       var metodo=p.metodo_pago_senal||'transf';
       
-      // Calcular fecha entrega
-      var fechaEntrega='';
-      if(p.fecha_entrega){
-        var fe=new Date(p.fecha_entrega);
-        var dias=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-        fechaEntrega='\n\n📅 Fecha estimada de entrega: *'+dias[fe.getDay()]+' '+fe.getDate()+'/'+(fe.getMonth()+1)+'*';
-      }
+      // Obtener plazo en días
+      var plazoDias=p.plazo_dias||5;
       
-      // Mensajes según método - Agente Closer
+      // Mensajes según método - Agente Closer v2
       var msg;
       if(metodo==='efectivo'){
         // 3C - Pago en tienda
-        msg='✅ ¡Pago inicial abonado, '+nombre+'! Gracias por pasarte.\n\n'
-          +'Ya estamos trabajando en tu pedido *'+p.numero+'*.\n\n'
-          +'📌 *Siguiente paso:* te enviamos la previa digital por aquí para que la revises. No producimos nada hasta que nos des el OK.'
-          +fechaEntrega
+        msg='✅ ¡Pago inicial abonado, '+nombre+'! Gracias por pasarte 🙌\n\n'
+          +'Ya estamos preparando la previa digital de tu pedido *'+p.numero+'*.\n\n'
+          +'📌 Te la enviamos por aquí para que la revises. Cuando nos des el OK, arrancamos producción.\n\n'
+          +'⏱️ *Plazo de producción:* '+plazoDias+' días laborables desde tu aprobación.'
           +(resto>0.01?'\n\nResto ('+resto.toFixed(2)+'€) al recoger tu pedido terminado.':'');
       } else {
         // 3A - Transferencia
         msg='✅ ¡Pago inicial recibido, '+nombre+'!\n\n'
-          +'Ya estamos trabajando en tu pedido *'+p.numero+'*.\n\n'
-          +'📌 *Siguiente paso:* te enviamos la previa digital por aquí para que la revises. No producimos nada hasta que nos des el OK.'
-          +fechaEntrega
+          +'Ya estamos preparando la previa digital de tu pedido *'+p.numero+'*.\n\n'
+          +'📌 Te la enviamos por aquí para que la revises. Cuando nos des el OK, arrancamos producción.\n\n'
+          +'⏱️ *Plazo de producción:* '+plazoDias+' días laborables desde tu aprobación.'
           +(resto>0.01?'\n\nResto ('+resto.toFixed(2)+'€) al recoger tu pedido terminado.':'');
       }
       fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA:',d.error);});

@@ -79,25 +79,20 @@ module.exports = async function handler(req, res) {
           `💳 Pago recibido - Redsys\n\nCliente: ${pres.cliente_nombre}\nRef: ${pres.numero}\nImporte cobrado: ${importe.toFixed(2)}€\n\nSeñal cobrada automáticamente. Pasar a producción.`
         );
 
-        // WA al cliente - Mensaje optimizado Agente Closer
+        // WA al cliente - Mensaje optimizado Agente Closer v2
         if (pres.cliente_telefono) {
           const tel = pres.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
           const telNorm = tel.length === 9 && !tel.startsWith('34') ? '34'+tel : tel;
           const nombre = pres.cliente_nombre.split(' ')[0];
           
-          // Calcular fecha entrega
-          let fechaEntregaTxt = '';
-          if (pres.fecha_entrega) {
-            const fe = new Date(pres.fecha_entrega);
-            const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-            fechaEntregaTxt = `\n📅 Fecha estimada de entrega: *${dias[fe.getDay()]} ${fe.getDate()}/${fe.getMonth()+1}*`;
-          }
+          // Obtener plazo en días del presupuesto
+          const plazoDias = pres.plazo_dias || 5;
           
           await enviarWA(telNorm,
             `✅ ¡Pago confirmado, ${nombre}!\n\n`
-            + `Ya estamos trabajando en tu pedido *${pres.numero}*.\n\n`
-            + `📌 *Siguiente paso:* te enviamos la previa digital por aquí para que la revises. No producimos nada hasta que nos des el OK.`
-            + fechaEntregaTxt
+            + `Ya estamos preparando la previa digital de tu pedido *${pres.numero}*.\n\n`
+            + `📌 Te la enviamos por aquí para que la revises. Cuando nos des el OK, arrancamos producción.\n\n`
+            + `⏱️ *Plazo de producción:* ${plazoDias} días laborables desde tu aprobación.`
             + (resto > 0.01 ? `\n\nResto (${resto.toFixed(2)}€) al recoger tu pedido terminado.` : '')
           );
         }

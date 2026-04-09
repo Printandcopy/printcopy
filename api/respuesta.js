@@ -90,7 +90,7 @@ module.exports = async function handler(req, res) {
       const bizumMsg = url_pago
         ? `✅ ¡Pedido confirmado, ${nombre}!\n\n`
           + `📋 Ref: *${pres.numero}* · Total: ${totalFmt}\n\n`
-          + `💳 *Realiza tu pago inicial aquí:*\n`
+          + `💳 *Paga aquí de forma segura:*\n`
           + `${url_pago}\n`
           + `Importe: *${senalFmt}* · Bizum o tarjeta\n\n`
           + `📌 *Siguiente paso:* en cuanto se confirme el pago te enviamos la previa digital para que la revises antes de producir.\n\n`
