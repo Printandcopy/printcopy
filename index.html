@@ -974,7 +974,6 @@ textarea{resize:vertical;min-height:64px}
   <div class="modal" style="max-width:580px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px"><div id="mp-title"></div><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-pedido')">✕ Cerrar</button></div>
     <div id="mp-body"></div>
-    <div id="mp-comms" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"></div>
     <div class="btn-row" style="margin-top:14px;flex-wrap:wrap">
       <button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button>
       <button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir</button>
@@ -1540,14 +1539,6 @@ function verPedido(id){
   }).join('')+'</div>';
 
   document.getElementById('mp-body').innerHTML=html;
-
-  var commHtml='';
-  if(p.fase===5&&p.clienteTel){
-    commHtml='<button class="btn btn-sm" style="background:#25D366;color:white;border:none" onclick="enviarWA(\'listo\')">Avisar: pedido listo</button>';
-    if(pend>0)commHtml+=' <button class="btn btn-sm" style="background:#128C7E;color:white;border:none" onclick="enviarWA(\'recuerdo\')">Recordar pago</button>';
-  }
-  document.getElementById('mp-comms').innerHTML=commHtml;
-
   document.getElementById('modal-pedido').classList.add('open');
 }
 function setFaseModal(id,fase){
