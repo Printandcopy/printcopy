@@ -1098,6 +1098,21 @@ var PAGOS=[
   {value:'transferencia',label:'Transferencia'}
 ];
 
+var TIENDA={
+  nombre:'Print & Copy',
+  razon_social:'Eventos Personalizados Salamanca SL',
+  cif:'B04944500',
+  direccion:'Av. Portugal 62, 37005 Salamanca',
+  tel_fijo:'923 018 034',
+  tel_whatsapp:'622 305 934',
+  web:'printcopysalamanca.es',
+  email:'printcopyonline@gmail.com',
+  iban:'ES58 0049 5292 14 2616098558',
+  banco:'Banco Santander',
+  horario:'L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00',
+  google_review:'https://g.page/r/CWmxJawMlrReEBM/review'
+};
+
 function calcNivel(c){
   // Restringido, Premium y Crédito son manuales, no se tocan
   if(c.nivel==='restringido'||c.nivel==='premium'||c.nivel==='credito')return c.nivel;
@@ -1721,23 +1736,25 @@ function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');gener
 // ══════════════════════════════════════════════════════════════
 // COMUNICACIONES - WhatsApp y Email
 // ══════════════════════════════════════════════════════════════
-var MSG_TEMPLATES={
-  listo:{
-    asunto:'Tu pedido está listo - Print & Copy',
-    wa:'Hola {nombre}! 👋\n\nTu pedido *{id}* está *listo para recoger* en Print & Copy.\n\n📦 {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\n¡Te esperamos! 🙌',
-    email:'Hola {nombre},\n\nTe informamos que tu pedido {id} ya está listo para recoger.\n\n📦 Trabajo: {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 Puedes pasar a recogerlo en:\nAv. Portugal 62, Salamanca\nHorario: L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\n¡Gracias por confiar en Print & Copy!\n\nUn saludo,\nEl equipo de Print & Copy'
-  },
-  recuerdo:{
-    asunto:'Recordatorio: Tu pedido está pendiente - Print & Copy',
-    wa:'Hola {nombre}! 👋\n\nTe recordamos que tu pedido *{id}* está *pendiente de recoger* en Print & Copy.\n\n📦 {descripcion}\n💰 Pendiente: {pendiente_num}€\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\n¿Alguna duda? Escríbenos 😊',
-    email:'Hola {nombre},\n\nTe recordamos que tienes un pedido pendiente de recoger en Print & Copy.\n\n📦 Pedido: {id}\n📦 Trabajo: {descripcion}\n💰 Pendiente de pago: {pendiente_num}€\n\n📍 Dirección:\nAv. Portugal 62, Salamanca\nHorario: L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nUn saludo,\nEl equipo de Print & Copy'
-  },
-  confirmacion:{
-    asunto:'Confirmación de pedido - Print & Copy',
-    wa:'Hola {nombre}! 👋\n\nGracias por tu pedido en Print & Copy.\n\n📋 *Pedido {id}*\n📦 {descripcion}\n📅 Entrega: {entrega}\n💰 Total: {total}€{pendiente}\n\nTe avisaremos cuando esté listo. ¡Gracias! 🙌',
-    email:'Hola {nombre},\n\nGracias por tu pedido en Print & Copy. Aquí tienes los detalles:\n\n📋 Pedido: {id}\n📦 Trabajo: {descripcion}\n📅 Fecha entrega estimada: {entrega}\n💰 Total: {total}€{pendiente}\n\nTe contactaremos cuando esté listo para recoger.\n\n¡Gracias por confiar en nosotros!\n\nUn saludo,\nEl equipo de Print & Copy'
-  }
-};
+function getMsgTemplates(){
+  return {
+    listo:{
+      asunto:'Tu pedido está listo - '+TIENDA.nombre,
+      wa:'Hola {nombre}! 👋\n\nTu pedido *{id}* está *listo para recoger* en '+TIENDA.nombre+'.\n\n📦 {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 '+TIENDA.direccion+'\n⏰ '+TIENDA.horario+'\n\n¡Te esperamos! 🙌',
+      email:'Hola {nombre},\n\nTe informamos que tu pedido {id} ya está listo para recoger.\n\n📦 Trabajo: {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 Puedes pasar a recogerlo en:\n'+TIENDA.direccion+'\nHorario: '+TIENDA.horario+'\n\n¡Gracias por confiar en '+TIENDA.nombre+'!\n\nUn saludo,\nEl equipo de '+TIENDA.nombre
+    },
+    recuerdo:{
+      asunto:'Recordatorio: Tu pedido está pendiente - '+TIENDA.nombre,
+      wa:'Hola {nombre}! 👋\n\nTe recordamos que tu pedido *{id}* está *pendiente de recoger* en '+TIENDA.nombre+'.\n\n📦 {descripcion}\n💰 Pendiente: {pendiente_num}€\n\n📍 '+TIENDA.direccion+'\n⏰ '+TIENDA.horario+'\n\n¿Alguna duda? Escríbenos 😊',
+      email:'Hola {nombre},\n\nTe recordamos que tienes un pedido pendiente de recoger en '+TIENDA.nombre+'.\n\n📦 Pedido: {id}\n📦 Trabajo: {descripcion}\n💰 Pendiente de pago: {pendiente_num}€\n\n📍 Dirección:\n'+TIENDA.direccion+'\nHorario: '+TIENDA.horario+'\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nUn saludo,\nEl equipo de '+TIENDA.nombre
+    },
+    confirmacion:{
+      asunto:'Confirmación de pedido - '+TIENDA.nombre,
+      wa:'Hola {nombre}! 👋\n\nGracias por tu pedido en '+TIENDA.nombre+'.\n\n📋 *Pedido {id}*\n📦 {descripcion}\n📅 Entrega: {entrega}\n💰 Total: {total}€{pendiente}\n\nTe avisaremos cuando esté listo. ¡Gracias! 🙌',
+      email:'Hola {nombre},\n\nGracias por tu pedido en '+TIENDA.nombre+'. Aquí tienes los detalles:\n\n📋 Pedido: {id}\n📦 Trabajo: {descripcion}\n📅 Fecha entrega estimada: {entrega}\n💰 Total: {total}€{pendiente}\n\nTe contactaremos cuando esté listo para recoger.\n\n¡Gracias por confiar en nosotros!\n\nUn saludo,\nEl equipo de '+TIENDA.nombre
+    }
+  };
+}
 
 function renderBotonesComm(p){
   var html='';
@@ -1765,7 +1782,7 @@ function renderBotonesComm(p){
 
 function prepararMensaje(tipo){
   var p=_pedidoModal;if(!p)return null;
-  var tpl=MSG_TEMPLATES[tipo];if(!tpl)return null;
+  var tpl=getMsgTemplates()[tipo];if(!tpl)return null;
   var pend=p.total-(p.senal||0);
   var pendStr=pend>0?'\n⚠️ Pendiente de pago: '+pend.toFixed(2)+'€':'';
   var entrega=p.fechaEntrega?formatDate(p.fechaEntrega):'A convenir';
@@ -3083,19 +3100,19 @@ function solContactarWA(){
   var tel=_solActual.telefono.replace(/\s/g,'').replace(/^\+/,'');
   if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
   var nombre=_solActual.nombre||'';
-  var msg='Hola '+nombre.split(' ')[0]+' 👋\n\nTe escribimos desde Print & Copy.\n\n';
+  var msg='Hola '+nombre.split(' ')[0]+' 👋\n\nTe escribimos desde '+TIENDA.nombre+'.\n\n';
   if(_solActual.necesita)msg+='Hemos recibido tu consulta sobre: '+_solActual.necesita.substring(0,100)+'...\n\n';
-  msg+='¿En qué podemos ayudarte?\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00';
+  msg+='¿En qué podemos ayudarte?\n\n📍 '+TIENDA.direccion+'\n⏰ '+TIENDA.horario;
   window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg));
 }
 
 function solContactarEmail(){
   if(!_solActual||!_solActual.email)return;
   var nombre=_solActual.nombre||'';
-  var asunto='Re: Consulta Print & Copy';
-  var cuerpo='Hola '+nombre.split(' ')[0]+',\n\nTe escribimos desde Print & Copy en respuesta a tu consulta.\n\n';
+  var asunto='Re: Consulta '+TIENDA.nombre;
+  var cuerpo='Hola '+nombre.split(' ')[0]+',\n\nTe escribimos desde '+TIENDA.nombre+' en respuesta a tu consulta.\n\n';
   if(_solActual.necesita)cuerpo+='Nos comentabas que necesitas: '+_solActual.necesita+'\n\n';
-  cuerpo+='¿Cuándo te vendría bien que hablemos?\n\nUn saludo,\nPrint & Copy\n📍 Av. Portugal 62, Salamanca\n📞 923 01 80 34';
+  cuerpo+='¿Cuándo te vendría bien que hablemos?\n\nUn saludo,\n'+TIENDA.nombre+'\n📍 '+TIENDA.direccion+'\n📞 '+TIENDA.tel_fijo;
   window.open('mailto:'+_solActual.email+'?subject='+encodeURIComponent(asunto)+'&body='+encodeURIComponent(cuerpo));
 }
 
@@ -4409,9 +4426,9 @@ function cotSeguimientoWA(tipo){
   var total=parseFloat(_cotActual.total)||0;
   var msg='';
   if(tipo==='recordar'){
-    msg='Hola '+nombre+' 👋\n\nTe escribimos desde Print & Copy.\n\nQueremos saber si pudiste revisar el presupuesto *'+numero+'* por *'+total.toFixed(2)+'€*.\n\n¿Tienes alguna duda o quieres que lo ajustemos?\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00';
+    msg='Hola '+nombre+' 👋\n\nTe escribimos desde '+TIENDA.nombre+'.\n\nQueremos saber si pudiste revisar el presupuesto *'+numero+'* por *'+total.toFixed(2)+'€*.\n\n¿Tienes alguna duda o quieres que lo ajustemos?\n\n📍 '+TIENDA.direccion+'\n⏰ '+TIENDA.horario;
   }else if(tipo==='urgente'){
-    msg='Hola '+nombre+' ⚡\n\nTe recordamos que el presupuesto *'+numero+'* está próximo a vencer.\n\nSi quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total.toFixed(2)+'€*\n\n📍 Print & Copy · 923 01 80 34';
+    msg='Hola '+nombre+' ⚡\n\nTe recordamos que el presupuesto *'+numero+'* está próximo a vencer.\n\nSi quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total.toFixed(2)+'€*\n\n📍 '+TIENDA.nombre+' · '+TIENDA.tel_fijo;
   }
   var btn=event.target;var txtOrig=btn.textContent;btn.disabled=true;btn.textContent='Enviando...';
   fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:nombre})}).then(function(r){return r.json();}).then(function(d){
@@ -4425,9 +4442,9 @@ function cotSeguimientoEmail(){
   var nombre=_cotActual.cliente_nombre||'';
   var numero=_cotActual.numero;
   var total=parseFloat(_cotActual.total)||0;
-  var msg='Hola '+nombre+',\n\nTe escribimos desde Print & Copy para saber si pudiste revisar el presupuesto '+numero+' por '+total.toFixed(2)+'€.\n\n¿Tienes alguna duda? ¿Quieres que hagamos algún ajuste?\n\nEstamos a tu disposición.\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n📞 923 01 80 34 / 658 79 70 90\n\nUn saludo,\nPrint & Copy';
+  var msg='Hola '+nombre+',\n\nTe escribimos desde '+TIENDA.nombre+' para saber si pudiste revisar el presupuesto '+numero+' por '+total.toFixed(2)+'€.\n\n¿Tienes alguna duda? ¿Quieres que hagamos algún ajuste?\n\nEstamos a tu disposición.\n\n📍 '+TIENDA.direccion+'\n⏰ '+TIENDA.horario+'\n📞 '+TIENDA.tel_fijo+' / '+TIENDA.tel_whatsapp+'\n\nUn saludo,\n'+TIENDA.nombre;
   var btn=event.target;var txtOrig=btn.textContent;btn.disabled=true;btn.textContent='Enviando...';
-  fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({destinatario:_cotActual.cliente_email,asunto:'Seguimiento presupuesto '+numero+' - Print & Copy',mensaje:msg})}).then(function(r){return r.json();}).then(function(d){
+  fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({destinatario:_cotActual.cliente_email,asunto:'Seguimiento presupuesto '+numero+' - '+TIENDA.nombre,mensaje:msg})}).then(function(r){return r.json();}).then(function(d){
     if(d.success){btn.textContent='✓ Enviado';btn.style.background='#3B6D11';setTimeout(function(){btn.textContent=txtOrig;btn.style.background='';btn.disabled=false;},2000);}
     else{alert('Error: '+(d.error||'desconocido'));btn.textContent=txtOrig;btn.disabled=false;}
   }).catch(function(e){alert('Error: '+e.message);btn.textContent=txtOrig;btn.disabled=false;});
