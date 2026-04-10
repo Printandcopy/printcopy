@@ -1938,6 +1938,15 @@ function guardarEdicionCliente(){
   var sector=document.getElementById('ec-sector').value;
   var pagoVal=document.getElementById('ec-pago').value;
   var nivelSel=document.getElementById('ec-nivel').value;
+  
+  // Validar que condiciones de crédito requieren nivel crédito o premium
+  var requiereCredito=(pagoVal==='0_100'||pagoVal==='credito_total');
+  var tieneCredito=(nivelSel==='credito'||nivelSel==='premium');
+  if(requiereCredito && !tieneCredito){
+    alert('La condición de pago "'+pagoLabel(pagoVal)+'" requiere que el cliente tenga nivel Crédito o Premium');
+    return;
+  }
+  
   var condText=pagoLabel(pagoVal);
   
   if(isNew){
@@ -3217,9 +3226,16 @@ function nvSelCliente(id){
   document.getElementById('nv-tel').value=c.telefono||'';
   document.getElementById('nv-email').value=c.email||'';
   document.getElementById('nv-sector').value=c.sector||'';
-  // Cargar condicion de pago del cliente
+  // Cargar condicion de pago del cliente (solo si tiene permiso)
   if(c.pago&&document.getElementById('nv-condicion')){
-    document.getElementById('nv-condicion').value=c.pago;
+    var requiereCredito=(c.pago==='0_100'||c.pago==='credito_total');
+    var tieneCredito=(c.nivel==='credito'||c.nivel==='premium');
+    if(requiereCredito && !tieneCredito){
+      // Cliente tiene condición de crédito asignada pero no tiene nivel, usar estándar
+      document.getElementById('nv-condicion').value='50_50';
+    }else{
+      document.getElementById('nv-condicion').value=c.pago;
+    }
   }
   document.getElementById('nv-buscar').value='';
   document.getElementById('nv-resultados').style.display='none';
