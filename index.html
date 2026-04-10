@@ -925,7 +925,7 @@ textarea{resize:vertical;min-height:64px}
         <div class="card">
           <div class="form-grid">
             <div class="field"><label>Validez días</label><input type="number" id="nv-validez" value="30" min="1"></div>
-            <div class="field"><label>Condición pago</label><select id="nv-condicion" onchange="nvCalcPendiente()"><option value="50_50">50% · 50%</option><option value="0_100">100% recoger</option><option value="transferencia">Transferencia</option></select></div>
+            <div class="field"><label>Condición pago</label><select id="nv-condicion" onchange="nvCalcPendiente()"><option value="50_50">50% · 50%</option><option value="0_100">100% recoger</option><option value="transferencia">Transferencia</option><option value="credito_senal">💳 Crédito señal</option><option value="credito_total">💳 Crédito total</option></select></div>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
@@ -979,6 +979,31 @@ textarea{resize:vertical;min-height:64px}
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="closeModal('modal-cobro-senal')">Cancelar</button>
       <button class="btn btn-success" onclick="ejecutarCobro()">✓ Confirmar cobro</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Cobro Resto (fase Cobrado) -->
+<div class="modal-overlay" id="modal-cobro-resto">
+  <div class="modal" style="max-width:360px">
+    <h3 style="margin-bottom:16px">💰 Cobrar resto del pedido</h3>
+    <div id="cobro-resto-info" style="background:#f5f5f5;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#444"></div>
+    <div class="field" style="margin-bottom:12px">
+      <label style="font-weight:600">Importe cobrado (€)</label>
+      <input type="number" id="cobro-resto-importe" step="0.01" min="0" style="font-size:18px;font-weight:700;color:#185FA5;text-align:right">
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <label style="font-weight:600">Método de pago</label>
+      <div class="radio-group" style="margin-top:6px">
+        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="efectivo"> 💵 Efectivo</label>
+        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="tarjeta"> 💳 Tarjeta</label>
+        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="bizum" checked> 📱 Bizum</label>
+        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="transferencia"> 🏦 Transf.</label>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cobro-resto')">Cancelar</button>
+      <button class="btn btn-success" onclick="ejecutarCobroResto()">✓ Cobrado — pasar a Cobrado</button>
     </div>
   </div>
 </div>
@@ -1097,9 +1122,11 @@ var NIVELES={
   restringido:{label:'Restringido',emoji:'🔴',bg:'#FCEBEB',color:'#A32D2D',border:'#f7c1c1'}
 };
 var PAGOS=[
-  {value:'50_50',   label:'50% al encargar · 50% al recoger',  default:true},
-  {value:'0_100',   label:'100% al recoger'},
-  {value:'transferencia',label:'Transferencia'}
+  {value:'50_50',        label:'50% al encargar · 50% al recoger', default:true},
+  {value:'0_100',        label:'100% al recoger'},
+  {value:'transferencia',label:'Transferencia'},
+  {value:'credito_senal',label:'Crédito señal — 100% al recoger'},
+  {value:'credito_total', label:'Crédito total — Factura posterior'}
 ];
 
 function calcNivel(c){
@@ -1541,15 +1568,20 @@ function setFaseModal(id,fase){
     }
   }
   
-  // Al pasar a Cobrado (6), verificar que no hay pendiente
+  // Al pasar a Cobrado (6), abrir modal de cobro
   if(fase===6 && pendiente>0.01){
-    var cobrarStr=prompt('Pendiente de cobro: '+pendiente.toFixed(2)+'€\n\nIntroduce el importe cobrado ahora:',pendiente.toFixed(2));
-    if(cobrarStr===null)return;
-    var cobrado=parseFloat(cobrarStr.replace(',','.'))||0;
-    if(cobrado<=0){alert('Debes introducir el importe cobrado');return;}
-    var nuevaSenal=(p.senal||0)+cobrado;
-    p.senal=nuevaSenal;
-    sb.from('pedidos').update({senal:nuevaSenal,pago:'pagado'}).eq('id',id).then(function(){});
+    // Abrir modal de cobro resto — la función continuará desde ejecutarCobroResto()
+    window._cobroRestoId=id;
+    window._cobroRestoFase=fase;
+    window._cobroRestoPendiente=pendiente;
+    document.getElementById('cobro-resto-info').innerHTML=
+      '<strong>'+p.id+'</strong> — '+p.clienteNombre+
+      '<br><span style="color:#888">Total: '+cV2Fmt(p.total)+
+      ' · Pagado: '+cV2Fmt(p.senal||0)+
+      ' · <strong style="color:#A32D2D">Pendiente: '+cV2Fmt(pendiente)+'</strong></span>';
+    document.getElementById('cobro-resto-importe').value=pendiente.toFixed(2);
+    document.getElementById('modal-cobro-resto').classList.add('open');
+    return; // El flujo continúa en ejecutarCobroResto()
   }
   
   // Al pasar a Recogido (7), marcar fecha y enviar WA reseña
@@ -1570,6 +1602,27 @@ function setFaseModal(id,fase){
   p.fase=fase;
   _pedidoModal=p;
   sb.from('pedidos').update({fase:fase}).eq('id',id).then(function(){});
+  verPedido(id);
+  renderTaller();
+}
+
+function ejecutarCobroResto(){
+  var id=window._cobroRestoId;
+  var fase=window._cobroRestoFase;
+  var cobrado=parseFloat(document.getElementById('cobro-resto-importe').value)||0;
+  if(cobrado<=0){alert('El importe debe ser mayor que 0');return;}
+  var metodo=document.querySelector('input[name="cobro-resto-metodo"]:checked').value;
+  var p=pedidos.find(function(x){return x.id===id;});
+  if(!p){closeModal('modal-cobro-resto');return;}
+  var nuevaSenal=cV2R2((p.senal||0)+cobrado);
+  p.senal=nuevaSenal;
+  p.pago='pagado';
+  p.metodo_pago_resto=metodo;
+  sb.from('pedidos').update({senal:nuevaSenal,pago:'pagado',metodo_pago_resto:metodo,fase:fase}).eq('id',id).then(function(){});
+  closeModal('modal-cobro-resto');
+  logCambioFase(id,p.fase,fase);
+  p.fase=fase;
+  _pedidoModal=p;
   verPedido(id);
   renderTaller();
 }
@@ -3734,9 +3787,21 @@ function nvCalcPendiente(){
       info='<b>Condición 100% recoger:</b> No es necesario cobrar señal. El cliente pagará todo al recoger.';
     }else if(condicion==='transferencia'){
       info='<b>Condición Transferencia:</b> No cobrar ahora. El cliente pagará por transferencia (factura).';
+    }else if(condicion==='credito_senal'){
+      info='<b>💳 Crédito señal:</b> No cobra señal. El cliente paga el <strong>100% al recoger</strong>. Requiere nivel Crédito.';
+      document.getElementById('nv-senal').value='0';
+      document.getElementById('nv-pendiente').textContent=cV2Fmt(total);
+    }else if(condicion==='credito_total'){
+      info='<b>💳 Crédito total:</b> No cobra nada ahora. Se facturará después. Requiere nivel Crédito.';
+      document.getElementById('nv-senal').value='0';
+      document.getElementById('nv-pendiente').textContent=cV2Fmt(total);
     }
     infoDiv.innerHTML=info;
   }
+  // Bloquear/desbloquear campo señal según condición
+  var esCredito=condicion==='credito_senal'||condicion==='credito_total'||condicion==='transferencia';
+  var senalInput=document.getElementById('nv-senal');
+  if(senalInput){senalInput.disabled=esCredito;senalInput.style.opacity=esCredito?'0.4':'1';}
 }
 
 function crearClienteSiNoExiste(nombre,tel,email,sector){
@@ -3989,13 +4054,17 @@ function nvCrearPedido(){
   
   // Calcular estado de pago automáticamente
   var pagoEstado='pendiente';
-  if(senal>=totalGlobal)pagoEstado='pagado';
+  if(condicion==='credito_senal')pagoEstado='credito_senal';
+  else if(condicion==='credito_total')pagoEstado='credito_total';
+  else if(senal>=totalGlobal)pagoEstado='pagado';
   else if(senal>0)pagoEstado='senal';
   
   // Validar señal según condición de pago
   if(condicion==='50_50'&&senal<totalGlobal*0.5){
     alert('La condición 50/50 requiere cobrar al menos '+cV2Fmt(totalGlobal*0.5)+' de señal');return;
   }
+  // Crédito: forzar señal a 0
+  if(condicion==='credito_senal'||condicion==='credito_total')senal=0;
   
   if(!confirm('¿Crear '+nvLineas.length+' pedido(s)?'))return;
   
