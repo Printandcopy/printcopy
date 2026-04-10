@@ -3156,7 +3156,7 @@ function toggleBandejaCard(card,id){
 function cogerPedido(id){
   var p=pedidos.find(function(x){return x.id===id;});
   if(!p)return;
-  var operario=window._operarioActual||'Marilia';
+  var operario=document.getElementById('current-user').value||'Marilia';
   if(!confirm('¿Coger pedido '+id+' y asignarlo a '+operario+'?'))return;
   p.fase=1;
   p.operario=operario;
