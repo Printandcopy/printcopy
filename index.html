@@ -959,7 +959,7 @@ textarea{resize:vertical;min-height:64px}
   <div class="modal" style="max-width:580px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px">
       <div id="cot-title"></div>
-      <div style="display:flex;gap:6px"><button class="btn btn-secondary btn-sm" onclick="generarPDFPresupuesto()">📄 PDF</button><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-cot')">✕ Cerrar</button></div>
+      <div style="display:flex;gap:6px"><button class="btn btn-secondary btn-sm" id="cot-btn-editar" onclick="cotEditar()">✏️ Editar</button><button class="btn btn-secondary btn-sm" onclick="generarPDFPresupuesto()">📄 PDF</button><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-cot')">✕ Cerrar</button></div>
     </div>
     <div id="cot-body"></div>
     <div id="cot-comms" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"></div>
@@ -3106,6 +3106,7 @@ function renderPedidosKanban(list){
 function nuevaVenta(){
   nvLineas=[];_nvCat=null;_nvRes=null;
   window._solIdParaPresupuesto=null;
+  window._editandoPresupuestoId=null;
   document.getElementById('nv-nombre').value='';
   document.getElementById('nv-tel').value='';
   document.getElementById('nv-email').value='';
@@ -3643,9 +3644,35 @@ function nvGuardar(estado,canal){
   
   // Crear cliente si no existe (por teléfono)
   if(!clienteExiste){
-    sb.from('clientes').insert([{nombre:nombre,telefono:tel,email:email||'',sector:sector||'',nivel:'nuevo',pago:'50_50'}]).select().then(function(rc){
+    sb.from('clientes').insert([{nombre:nombre,telefono:tel,email:email||'',sector:sector||'',pago:'50_50'}]).select().then(function(rc){
       if(rc.data&&rc.data[0])clientes.push(rc.data[0]);
     });
+  }
+  
+  // Si estamos editando, actualizar en lugar de crear
+  if(window._editandoPresupuestoId){
+    var presId=window._editandoPresupuestoId;
+    var dataUpdate={cliente_nombre:nombre,cliente_telefono:tel,cliente_email:email,cliente_sector:sector,subtotal:sub,descuento_pct:dto,total:total,validez_dias:validez,fecha_expiracion:fechaExp,notas:document.getElementById('nv-notas').value.trim(),condicion_pago:condicion,incluye_montaje:incluyeMontaje};
+    if(incluyeMontaje){
+      dataUpdate.direccion_montaje=document.getElementById('nv-montaje-dir').value.trim();
+      dataUpdate.fecha_montaje=document.getElementById('nv-montaje-fecha').value||null;
+      dataUpdate.horario_montaje=document.getElementById('nv-montaje-hora').value.trim();
+      dataUpdate.notas_montaje=document.getElementById('nv-montaje-notas').value.trim();
+    }
+    sb.from('presupuestos').update(dataUpdate).eq('id',presId).then(function(r){
+      if(r.error){alert('Error: '+r.error.message);return;}
+      // Eliminar líneas antiguas y crear nuevas
+      sb.from('presupuesto_lineas').delete().eq('presupuesto_id',presId).then(function(){
+        var lineasDB=nvLineas.map(function(l,i){return{presupuesto_id:presId,seccion:l.seccion||l.sec,descripcion:l.desc,cantidad:l.cantidad||l.unidades||1,precio_unitario:l.total/(l.cantidad||l.unidades||1),subtotal:l.total,plazo:l.plazo||3,orden:i};});
+        sb.from('presupuesto_lineas').insert(lineasDB).then(function(){
+          window._editandoPresupuestoId=null;
+          closeModal('modal-venta');
+          cargarPresupuestos();
+          alert('Presupuesto actualizado correctamente');
+        });
+      });
+    });
+    return;
   }
   
   sb.from('contador_global').select('valor').eq('tipo','presupuesto').single().then(function(r){
@@ -4018,6 +4045,43 @@ function setCotEstado(id,estado){
     cargarPresupuestos();
     verCotizacion(id);
   });
+}
+
+function cotEditar(){
+  if(!_cotActual)return;
+  var p=_cotActual;
+  // Cerrar modal cotización
+  closeModal('modal-cot');
+  // Limpiar y abrir modal nuevo presupuesto
+  nuevaVenta();
+  // Marcar que estamos editando este presupuesto
+  window._editandoPresupuestoId=p.id;
+  // Rellenar datos cliente
+  document.getElementById('nv-nombre').value=p.cliente_nombre||'';
+  document.getElementById('nv-tel').value=p.cliente_telefono||'';
+  document.getElementById('nv-email').value=p.cliente_email||'';
+  document.getElementById('nv-sector').value=p.cliente_sector||'';
+  // Rellenar notas, validez, condición
+  document.getElementById('nv-notas').value=p.notas||'';
+  document.getElementById('nv-validez').value=p.validez||30;
+  document.getElementById('nv-condicion').value=p.condicion_pago||'50_50';
+  // Cargar líneas del presupuesto
+  nvLineas=[];
+  if(p.lineas&&p.lineas.length){
+    p.lineas.forEach(function(l){
+      nvLineas.push({
+        seccion:l.seccion||'TX',
+        desc:l.descripcion||'',
+        total:parseFloat(l.subtotal)||0,
+        plazo:l.plazo||3,
+        cantidad:l.cantidad||1,
+        producto:l.producto||''
+      });
+    });
+  }
+  nvRenderLineas();
+  // Cambiar título del modal
+  document.querySelector('#modal-venta h3').textContent='Editar presupuesto '+p.numero;
 }
 
 function renderBotonesCotComm(p){
