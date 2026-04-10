@@ -4693,17 +4693,19 @@ function actualizarBarraAvisos(){
       var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
       var bdr=urgente?'border-left:3px solid #EF9F27;':'';
       var hora=p.updated_at?new Date(p.updated_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
-      var diasTxt=urgente?(' · <span style="color:#FAC775;font-weight:700">'+dias+'d sin pago</span>'):'aceptado'+(hora?' '+hora:'');
-      return '<div style="background:#1a2a4a;'+bdr+'border-radius:6px;padding:10px 12px;margin:4px 20px">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
-        '<div>'+
-          '<div style="font-size:13px;color:#93C5FD;font-weight:600">'+p.cliente_nombre+' <span style="color:#C0DD97;font-size:12px;font-weight:400">'+p.numero+'</span></div>'+
-          '<div style="font-size:12px;color:#9FE1CB;margin-top:2px"><strong>'+senal.toFixed(2)+'€</strong> · '+diasTxt+'</div>'+
-        '</div>'+
-        '<div style="display:flex;gap:6px">'+
-          '<button style="background:#1e3a6e;color:#93C5FD;border:1px solid #3b6ea8;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer" onclick=\'reenviarDatosTransf(\'+p.id+\')\'> Reenviar datos</button>'+
-          '<button style="background:#3B6D11;color:#EAF3DE;border:none;border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer;font-weight:700" onclick=\'confirmarSenal(\'+p.id+\')\'>✓ Cobrada</button>'+
-        '</div></div></div>';
+      var diasTxt=urgente?(' &middot; <span style="color:#FAC775;font-weight:700">'+dias+'d sin pago</span>'):'aceptado'+(hora?' '+hora:'');
+      return [
+        '<div style="background:#1a2a4a;'+bdr+'border-radius:6px;padding:10px 12px;margin:4px 20px">',
+        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">',
+        '<div>',
+        '<div style="font-size:13px;color:#93C5FD;font-weight:600">'+p.cliente_nombre+' <span style="color:#C0DD97;font-size:12px;font-weight:400">'+p.numero+'</span></div>',
+        '<div style="font-size:12px;color:#9FE1CB;margin-top:2px"><strong>'+senal.toFixed(2)+'&euro;</strong> &middot; '+diasTxt+'</div>',
+        '</div>',
+        '<div style="display:flex;gap:6px">',
+        '<button class="btn-reenviar-transf" data-pid="'+p.id+'" style="background:#1e3a6e;color:#93C5FD;border:1px solid #3b6ea8;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer"> Reenviar datos</button>',
+        '<button class="btn-cobrada" data-pid="'+p.id+'" style="background:#3B6D11;color:#EAF3DE;border:none;border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer;font-weight:700">&check; Cobrada</button>',
+        '</div></div></div>'
+      ].join('');
     }).join('');
   }
   if(pendEfectivo.length){
@@ -4714,22 +4716,35 @@ function actualizarBarraAvisos(){
       var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
       var bdr=urgente?'border-left:3px solid #EF9F27;':'';
       var hora=p.updated_at?new Date(p.updated_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}):'';
-      var diasTxt=urgente?(' · <span style="color:#FAC775;font-weight:700">'+dias+'d sin pago</span>'):'aceptado'+(hora?' '+hora:'');
-      return '<div style="background:#2a2000;'+bdr+'border-radius:6px;padding:10px 12px;margin:4px 20px">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">'+
-        '<div>'+
-          '<div style="font-size:13px;color:#FCD34D;font-weight:600">'+p.cliente_nombre+' <span style="color:#C0DD97;font-size:12px;font-weight:400">'+p.numero+'</span></div>'+
-          '<div style="font-size:12px;color:#9FE1CB;margin-top:2px"><strong>'+senal.toFixed(2)+'€</strong> · '+diasTxt+'</div>'+
-        '</div>'+
-        '<div style="display:flex;gap:6px">'+
-          '<button style="background:#3d2a00;color:#FCD34D;border:1px solid #7a5500;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer" onclick=\'recordatorioEfectivo(\'+p.id+\')\'>WA recordatorio</button>'+
-          '<button style="background:#3B6D11;color:#EAF3DE;border:none;border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer;font-weight:700" onclick=\'confirmarSenal(\'+p.id+\')\'>✓ Cobrada</button>'+
-        '</div></div></div>';
+      var diasTxt=urgente?(' &middot; <span style="color:#FAC775;font-weight:700">'+dias+'d sin pago</span>'):'aceptado'+(hora?' '+hora:'');
+      return [
+        '<div style="background:#2a2000;'+bdr+'border-radius:6px;padding:10px 12px;margin:4px 20px">',
+        '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">',
+        '<div>',
+        '<div style="font-size:13px;color:#FCD34D;font-weight:600">'+p.cliente_nombre+' <span style="color:#C0DD97;font-size:12px;font-weight:400">'+p.numero+'</span></div>',
+        '<div style="font-size:12px;color:#9FE1CB;margin-top:2px"><strong>'+senal.toFixed(2)+'&euro;</strong> &middot; '+diasTxt+'</div>',
+        '</div>',
+        '<div style="display:flex;gap:6px">',
+        '<button class="btn-recordatorio-efectivo" data-pid="'+p.id+'" style="background:#3d2a00;color:#FCD34D;border:1px solid #7a5500;border-radius:5px;padding:5px 10px;font-size:11px;cursor:pointer">WA recordatorio</button>',
+        '<button class="btn-cobrada" data-pid="'+p.id+'" style="background:#3B6D11;color:#EAF3DE;border:none;border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer;font-weight:700">&check; Cobrada</button>',
+        '</div></div></div>'
+      ].join('');
     }).join('');
   }
   html+='<div style="height:8px"></div>';
   lista.innerHTML=html;
 }
+// Event delegation para botones de la barra de avisos
+document.addEventListener('click',function(e){
+  var btn=e.target.closest('button');
+  if(!btn)return;
+  var pid=btn.getAttribute('data-pid');
+  if(!pid)return;
+  if(btn.classList.contains('btn-cobrada')){confirmarSenal(pid);}
+  else if(btn.classList.contains('btn-reenviar-transf')){reenviarDatosTransf(pid);}
+  else if(btn.classList.contains('btn-recordatorio-efectivo')){recordatorioEfectivo(pid);}
+});
+
 function toggleBarraLista(){
   var lista=document.getElementById('barra-avisos-lista');
   var btn=document.getElementById('barra-ver-btn');
