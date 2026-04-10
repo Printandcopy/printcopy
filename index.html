@@ -1204,7 +1204,7 @@ function fillClient(id){
   document.getElementById('f-pago-tipo').value=pago;
   mostrarHistorialCliente(id);
 }
-document.addEventListener('click',function(e){if(!e.target.closest('.search-box'))document.getElementById('search-results').style.display='none';});
+document.addEventListener('click',function(e){var sr=document.getElementById('search-results');if(sr&&!e.target.closest('.search-box'))sr.style.display='none';});
 document.addEventListener('click',function(e){var sr=document.getElementById('sol-resultados');if(sr&&!e.target.closest('#sol-nombre')&&!e.target.closest('#sol-resultados'))sr.style.display='none';});
 
 function mostrarHistorialCliente(id){
