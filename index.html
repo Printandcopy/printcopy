@@ -95,16 +95,16 @@ textarea{resize:vertical;min-height:64px}
 .mc-day{width:26px;height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;gap:1px}
 .mc-name{font-size:9px;color:#aaa;text-transform:uppercase}
 .mc-num{font-size:13px;font-weight:500;color:#666}
-.mc-weekend{opacity:0.35}
-.mc-weekend .mc-num{color:#aaa;font-weight:400}
-.mc-hoy{background:#B5D4F4}
-.mc-hoy .mc-num{color:#0C447C;font-weight:700}
-.mc-entrega{background:#C0DD97}
-.mc-entrega .mc-num{color:#27500A;font-weight:700}
-.mc-hoy-entrega{background:#97C459}
-.mc-hoy-entrega .mc-num{color:#173404;font-weight:700}
-.mc-vencido{background:#F7C1C1}
-.mc-vencido .mc-num{color:#791F1F;font-weight:700}
+.mc-weekend{opacity:0.4}
+.mc-weekend .mc-num{color:#999;font-weight:400}
+.mc-hoy{background:#B5D4F4 !important;opacity:1 !important}
+.mc-hoy .mc-num{color:#0C447C !important;font-weight:700 !important}
+.mc-entrega{background:#C0DD97 !important;opacity:1 !important}
+.mc-entrega .mc-num{color:#27500A !important;font-weight:700 !important}
+.mc-hoy-entrega{background:#97C459 !important;opacity:1 !important}
+.mc-hoy-entrega .mc-num{color:#173404 !important;font-weight:700 !important}
+.mc-vencido{background:#F7C1C1 !important;opacity:1 !important}
+.mc-vencido .mc-num{color:#791F1F !important;font-weight:700 !important}
 
 .fase-stepper{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
 .fase-step{padding:4px 9px;border-radius:5px;border:0.5px solid #ddd;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#888}
@@ -461,6 +461,19 @@ textarea{resize:vertical;min-height:64px}
     </div>
     <div style="display:flex;gap:6px;align-items:center">
       <input type="text" id="pedidos-buscar" placeholder="Buscar..." oninput="renderPedidosActivos()" style="width:120px;padding:4px 8px;font-size:11px;border:1px solid #ddd;border-radius:4px">
+      <select class="sort-select" id="pedidos-seccion" onchange="renderPedidosActivos()">
+        <option value="all">Todas secciones</option>
+        <option value="XR">Xerox (XR)</option>
+        <option value="PL">Plotter (PL)</option>
+        <option value="TX">Textil (TX)</option>
+        <option value="UV">UV (UV)</option>
+        <option value="SUB">Sublimación (SUB)</option>
+        <option value="SE">Serigrafía (SE)</option>
+        <option value="VI">Vinilo (VI)</option>
+        <option value="DT">DTF (DT)</option>
+        <option value="IM">Imprenta (IM)</option>
+        <option value="NEON">Neón (NEON)</option>
+      </select>
       <select class="sort-select" id="pedidos-filtro" onchange="renderPedidosActivos()">
         <option value="activos">Activos</option>
         <option value="hoy">Entrega hoy</option>
@@ -2906,6 +2919,8 @@ function renderVentas(){
 
 function renderPedidosActivos(){
   var f=document.getElementById('pedidos-filtro').value;
+  var secSel=document.getElementById('pedidos-seccion');
+  var secFiltro=secSel?secSel.value:'all';
   var buscar=(document.getElementById('pedidos-buscar').value||'').toLowerCase();
   var hoy=new Date().toISOString().split('T')[0];
   var semana=new Date(Date.now()+7*24*60*60*1000).toISOString().split('T')[0];
@@ -2917,6 +2932,9 @@ function renderPedidosActivos(){
   else if(f==='semana')list=pedidos.filter(function(p){return p.fechaEntrega&&p.fechaEntrega<=semana&&p.fechaEntrega>=hoy;});
   else if(f==='terminados')list=pedidos.filter(function(p){return p.fase>=5;});
   else list=pedidos;
+  
+  // Filtro por sección
+  if(secFiltro!=='all')list=list.filter(function(p){return p.seccion===secFiltro;});
   
   // Filtro por búsqueda
   if(buscar){
