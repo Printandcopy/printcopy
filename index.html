@@ -4567,6 +4567,9 @@ function confirmarSenal(presId){
   var senalTeorica=calcSenal(parseFloat(pres.total)||0,pres.condicion_pago);
   document.getElementById('modal-cobro-info').innerHTML='<strong>'+pres.numero+'</strong> — '+pres.cliente_nombre+'<br><span style="color:#888">Total: '+cV2Fmt(parseFloat(pres.total)||0)+' · Señal teórica: <strong>'+cV2Fmt(senalTeorica)+'</strong></span>';
   document.getElementById('cobro-importe').value=senalTeorica.toFixed(2);
+  // Seleccionar transferencia por defecto al abrir
+  var radios=document.querySelectorAll('input[name="cobro-metodo"]');
+  radios.forEach(function(r){r.checked=r.value==='transferencia';});
   document.getElementById('modal-cobro-senal').classList.add('open');
 }
 function ejecutarCobro(){
@@ -4576,7 +4579,9 @@ function ejecutarCobro(){
   if(!pres){alert('Error: presupuesto no encontrado en memoria. Recarga la página.');return;}
   var importeReal=parseFloat(document.getElementById('cobro-importe').value)||0;
   if(importeReal<=0){alert('El importe debe ser mayor que 0');return;}
-  var metodo=document.querySelector('input[name="cobro-metodo"]:checked').value;
+  var metodoEl=document.querySelector('input[name="cobro-metodo"]:checked');
+  if(!metodoEl){alert('Selecciona un método de pago');return;}
+  var metodo=metodoEl.value;
   closeModal('modal-cobro-senal');
   
   function crear(p){
