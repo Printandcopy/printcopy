@@ -82,6 +82,30 @@ textarea{resize:vertical;min-height:64px}
 .taller-body{padding:10px 14px}
 .taller-body p{font-size:13px;color:#444;margin-bottom:4px;line-height:1.5}
 .taller-body strong{color:#1a1a1a;font-weight:500}
+
+/* Mini Calendario */
+.entrega-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.entrega-texto{font-size:12px;color:#888;text-align:right;min-width:65px}
+.et-dias{font-size:13px;font-weight:600;color:#1a1a1a}
+.et-fecha{font-size:11px;color:#888;display:flex;align-items:center;gap:4px;justify-content:flex-end}
+.entrega-texto.es-hoy .et-dias{color:#3B6D11}
+.entrega-texto.es-manana .et-dias{color:#185FA5}
+.entrega-texto.es-vencido .et-dias{color:#A32D2D}
+.mini-cal{display:flex;gap:2px;background:#f5f5f0;padding:4px 5px;border-radius:6px;font-family:monospace}
+.mc-day{width:18px;height:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:3px;gap:0}
+.mc-name{font-size:8px;color:#aaa;text-transform:uppercase}
+.mc-num{font-size:10px;font-weight:500;color:#666}
+.mc-weekend{opacity:0.35}
+.mc-weekend .mc-num{color:#aaa;font-weight:400}
+.mc-hoy{background:#E6F1FB}
+.mc-hoy .mc-num{color:#185FA5;font-weight:600}
+.mc-entrega{background:#EAF3DE}
+.mc-entrega .mc-num{color:#3B6D11;font-weight:600}
+.mc-hoy-entrega{background:#C0DD97}
+.mc-hoy-entrega .mc-num{color:#27500A;font-weight:700}
+.mc-vencido{background:#FCEBEB}
+.mc-vencido .mc-num{color:#A32D2D;font-weight:600}
+
 .fase-stepper{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
 .fase-step{padding:4px 9px;border-radius:5px;border:0.5px solid #ddd;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#888}
 .fase-step.current{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
@@ -1575,14 +1599,86 @@ function miniCard(p){var pend=p.total-(p.senal||0);return'<div style="display:fl
 function renderOperarioSelector(){document.getElementById('operario-btns').innerHTML=OPERARIOS.map(function(op){return'<button class="op-btn'+(op===currentOperario?' active':'')+'" onclick="selectOperario(\''+op+'\',this)">'+op+'</button>';}).join('');}
 function selectOperario(op,el){currentOperario=op;document.querySelectorAll('.op-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderOperario();}
 function renderOperario(){var list=applySecFilter(pedidos).filter(function(p){return p.operario===currentOperario&&p.fase<4;});list.sort(function(a,b){return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;});document.getElementById('taller-list').innerHTML=list.length?'<div style="font-size:13px;color:#666;margin-bottom:10px">Pedidos activos de <strong>'+currentOperario+'</strong>: '+list.length+'</div>'+list.map(tarjetaTaller).join(''):'<div class="empty-state">No hay pedidos activos para '+currentOperario+'</div>';}
+function buildMiniCalendario(fechaEntrega, fechaTipo){
+  var hoy = new Date(); hoy.setHours(0,0,0,0);
+  var fe = fechaEntrega ? new Date(fechaEntrega + "T00:00:00") : null;
+  
+  // Calcular diferencia en días laborables
+  var diffMs = fe ? fe.getTime() - hoy.getTime() : null;
+  var diffDias = diffMs !== null ? Math.round(diffMs / 86400000) : null;
+  
+  // Texto de días
+  var diasTexto = '';
+  var diasClase = '';
+  var fechaTexto = '';
+  
+  if (!fe) {
+    diasTexto = 'Sin fecha';
+    diasClase = '';
+    fechaTexto = '';
+  } else if (diffDias < 0) {
+    diasTexto = 'Vencido';
+    diasClase = 'es-vencido';
+    fechaTexto = diffDias === -1 ? 'Ayer' : 'Hace ' + Math.abs(diffDias) + ' días';
+  } else if (diffDias === 0) {
+    diasTexto = 'Hoy';
+    diasClase = 'es-hoy';
+    var dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    fechaTexto = dias[fe.getDay()] + ' ' + fe.getDate();
+  } else if (diffDias === 1) {
+    diasTexto = 'Mañana';
+    diasClase = 'es-manana';
+    var dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    fechaTexto = dias[fe.getDay()] + ' ' + fe.getDate();
+  } else {
+    diasTexto = 'En ' + diffDias + ' días';
+    diasClase = '';
+    var dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+    fechaTexto = dias[fe.getDay()] + ' ' + fe.getDate();
+  }
+  
+  // Construir los 7 días del calendario (desde hoy - 1 hasta hoy + 5)
+  var calDias = '';
+  var diasNombres = ['D','L','M','X','J','V','S'];
+  for (var i = -1; i <= 5; i++) {
+    var d = new Date(hoy);
+    d.setDate(d.getDate() + i);
+    var dNum = d.getDate();
+    var dNombre = diasNombres[d.getDay()];
+    var esHoy = d.getTime() === hoy.getTime();
+    var esEntrega = fe && d.getTime() === fe.getTime();
+    var esWeekend = d.getDay() === 0 || d.getDay() === 6;
+    var esVencido = fe && d.getTime() === fe.getTime() && diffDias < 0;
+    
+    var clases = 'mc-day';
+    if (esWeekend) clases += ' mc-weekend';
+    if (esHoy && esEntrega) clases += ' mc-hoy-entrega';
+    else if (esHoy) clases += ' mc-hoy';
+    else if (esVencido) clases += ' mc-vencido';
+    else if (esEntrega) clases += ' mc-entrega';
+    
+    calDias += '<div class="' + clases + '"><span class="mc-name">' + dNombre + '</span><span class="mc-num">' + dNum + '</span></div>';
+  }
+  
+  var fijaTag = fechaTipo === 'fija' ? '<span style="color:#A32D2D;font-size:10px;font-weight:700">FIJA</span>' : '';
+  
+  return '<div class="entrega-wrap">' +
+    '<div class="entrega-texto ' + diasClase + '">' +
+      '<div class="et-dias">' + diasTexto + '</div>' +
+      '<div class="et-fecha">' + fechaTexto + fijaTag + '</div>' +
+    '</div>' +
+    '<div class="mini-cal">' + calDias + '</div>' +
+  '</div>';
+}
+
 function tarjetaTaller(p){
   var pend=p.total-(p.senal||0),hoy=new Date();hoy.setHours(0,0,0,0);
   var fe=p.fechaEntrega?new Date(p.fechaEntrega+"T00:00:00"):null;
   var urgente=fe&&fe<hoy&&p.fase<4?"delivery-urgent":fe&&(fe.getTime()-hoy.getTime())<=86400000&&p.fase<4?"delivery-soon":"";
-  var fentrega=p.fechaEntrega?(p.fechaTipo==="fija"?"⚠️ ":"~")+formatDate(p.fechaEntrega):"Sin fecha";
+  var miniCal=buildMiniCalendario(p.fechaEntrega, p.fechaTipo);
   var pendPill=pend>0?"<span class=\"pendiente-pill\">"+pend.toFixed(2)+"€ pdte</span>":"<span class=\"pagado-pill\">Pagado</span>";
   var presBadge=p.presupuestoId?"<span class=\"pres-badge\" onclick=\"event.stopPropagation();filtrarPorPresupuesto("+JSON.stringify(p.presupuestoId)+")\" >📦 "+p.presupuestoId+"</span>":"";
-  return"<div class=\"taller-card "+urgente+"\" onclick=\"verPedido("+JSON.stringify(p.id)+")\" ><div class=\"taller-header\"><div style=\"display:flex;align-items:center;gap:7px;flex-wrap:wrap\"><span style=\"font-size:13px;font-weight:700;font-family:monospace\">"+p.id+"</span><span class=\"badge sec-"+p.seccion+"\">"+SECS[p.seccion]+"</span><span class=\"fase-badge fase-"+p.fase+"\">"+FASES[p.fase]+"</span>"+(p.fechaTipo==="fija"?"<span style=\"font-size:11px;color:#A32D2D;font-weight:700\">ENTREGA FIJA</span>":"")+pendPill+"<span class=\"operario-pill\">"+p.operario+"</span>"+presBadge+"</div><div style=\"font-size:12px;color:#888;flex-shrink:0\">"+fentrega+"</div></div><div class=\"taller-body\"><p><strong>Cliente:</strong> "+p.clienteNombre+(p.clienteTel?" · "+p.clienteTel:"")+"</p><p><strong>Pedido:</strong> "+formatDateTime(p.fechaCreacion)+"</p><p><strong>Trabajo:</strong> "+p.descripcion+"</p>"+(p.notas?"<p><strong>Notas:</strong> "+p.notas+"</p>":"")+"<p><strong>Total:</strong> "+p.total.toFixed(2)+"€ | <strong>Pagado:</strong> "+(p.senal||0).toFixed(2)+"€ | <strong style=\"color:"+(pend>0?"#A32D2D":"#3B6D11")+"\">Pendiente: "+pend.toFixed(2)+"€</strong></p></div></div>";
+  return"<div class=\"taller-card "+urgente+"\" onclick=\"verPedido("+JSON.stringify(p.id)+")\" ><div class=\"taller-header\"><div style=\"display:flex;align-items:center;gap:7px;flex-wrap:wrap\"><span style=\"font-size:13px;font-weight:700;font-family:monospace\">"+p.id+"</span><span class=\"badge sec-"+p.seccion+"\">"+SECS[p.seccion]+"</span><span class=\"fase-badge fase-"+p.fase+"\">"+FASES[p.fase]+"</span>"+pendPill+"<span class=\"operario-pill\">"+p.operario+"</span>"+presBadge+"</div>"+miniCal+"</div><div class=\"taller-body\"><p><strong>Cliente:</strong> "+p.clienteNombre+(p.clienteTel?" · "+p.clienteTel:"")+"</p><p><strong>Pedido:</strong> "+formatDateTime(p.fechaCreacion)+"</p><p><strong>Trabajo:</strong> "+p.descripcion+"</p>"+(p.notas?"<p><strong>Notas:</strong> "+p.notas+"</p>":"")+"<p><strong>Total:</strong> "+p.total.toFixed(2)+"€ | <strong>Pagado:</strong> "+(p.senal||0).toFixed(2)+"€ | <strong style=\"color:"+(pend>0?"#A32D2D":"#3B6D11")+"\">Pendiente: "+pend.toFixed(2)+"€</strong></p></div></div>";
 }
 
 function filtrarPorPresupuesto(presId){
