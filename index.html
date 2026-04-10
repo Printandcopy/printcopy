@@ -4538,8 +4538,13 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
             total:parseFloat(lin.subtotal)||0,senal:cV2R2(senalTotal*proporcion),
             pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:1};
           sb.from('pedidos').insert([ped]).then(function(ri){
-            if(ri.error){console.error('Error insert pedido auto:',ri.error.message);res(null);}
-            else{res(numPed);}
+            if(ri.error){
+              console.error('Error insert pedido auto:',ri.error.message);
+              alert('Error al crear pedido: '+ri.error.message+'
+
+Revisa que todas las columnas existen en la BD.');
+              res(null);
+            }else{res(numPed);}
           });
         });
       });
@@ -4571,8 +4576,9 @@ function confirmarSenal(presId){
 }
 function ejecutarCobro(){
   var presId=_cobroPresId;
+  if(!presId){alert('Error: no hay presupuesto seleccionado. Cierra y vuelve a intentarlo.');return;}
   var pres=presupuestos.find(function(p){return p.id===presId;});
-  if(!pres)return;
+  if(!pres){alert('Error: presupuesto no encontrado en memoria. Recarga la página.');return;}
   var importeReal=parseFloat(document.getElementById('cobro-importe').value)||0;
   if(importeReal<=0){alert('El importe debe ser mayor que 0');return;}
   var metodo=document.querySelector('input[name="cobro-metodo"]:checked').value;
@@ -4608,7 +4614,14 @@ function ejecutarCobro(){
     });
   }
   if(pres.lineas&&pres.lineas.length){crear(pres);}
-  else{sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',pres.id).then(function(r){pres.lineas=r.data||[];crear(pres);});}
+  else{
+    sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',pres.id).then(function(r){
+      if(r.error){alert('Error al cargar líneas del presupuesto: '+r.error.message);return;}
+      pres.lineas=r.data||[];
+      if(!pres.lineas.length){alert('Este presupuesto no tiene líneas. Cierra el modal y vuelve a abrir el presupuesto.');return;}
+      crear(pres);
+    });
+  }
 }
 
 function reenviarDatosTransf(presId){
