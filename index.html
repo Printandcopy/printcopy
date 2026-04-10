@@ -505,10 +505,6 @@ textarea{resize:vertical;min-height:64px}
         <option value="TX">Textil (TX)</option>
         <option value="UV">UV (UV)</option>
         <option value="SUB">Sublimación (SUB)</option>
-        <option value="SE">Serigrafía (SE)</option>
-        <option value="VI">Vinilo (VI)</option>
-        <option value="DT">DTF (DT)</option>
-        <option value="IM">Imprenta (IM)</option>
         <option value="NEON">Neón (NEON)</option>
       </select>
       <select class="sort-select" id="pedidos-filtro" onchange="renderPedidosActivos()">
@@ -554,10 +550,7 @@ textarea{resize:vertical;min-height:64px}
         <option value="TX">Textil (TX)</option>
         <option value="UV">UV (UV)</option>
         <option value="SUB">Sublimación (SUB)</option>
-        <option value="SE">Serigrafía (SE)</option>
-        <option value="VI">Vinilo (VI)</option>
-        <option value="DT">DTF (DT)</option>
-        <option value="IM">Imprenta (IM)</option>
+        <option value="NEON">Neón (NEON)</option>
       </select>
     </div>
     <div class="filter-row"><span class="filter-label">Fase</span>
@@ -3125,7 +3118,7 @@ function renderPedidosKanban(list){
   });
   
   // Ordenar secciones
-  var secOrden=['XR','PL','TX','UV','SUB','SE','VI','DT','IM','NEON'];
+  var secOrden=['XR','PL','TX','UV','SUB','NEON'];
   var secsConPedidos=secOrden.filter(function(s){return grupos[s]&&grupos[s].length>0;});
   
   if(!secsConPedidos.length){
