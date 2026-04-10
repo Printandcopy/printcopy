@@ -924,7 +924,7 @@ textarea{resize:vertical;min-height:64px}
         <div class="card"><div class="card-title">Notas</div><textarea id="nv-notas" rows="2" placeholder="Observaciones..."></textarea></div>
         <div class="card">
           <div class="form-grid">
-            <div class="field"><label>Validez días</label><input type="number" id="nv-validez" value="30" min="1"></div>
+            <div class="field"><label>Validez días</label><input type="number" id="nv-validez" value="15" min="1"></div>
             <div class="field"><label>Condición pago</label><select id="nv-condicion" onchange="nvCalcPendiente()"><option value="50_50">50% · 50%</option><option value="0_100">100% recoger</option><option value="transferencia">Transferencia</option><option value="credito_senal">💳 Crédito señal</option><option value="credito_total">💳 Crédito total</option></select></div>
           </div>
         </div>
@@ -3379,7 +3379,7 @@ function nuevaVenta(){
   document.getElementById('nv-operario').value='Marilia';
   document.getElementById('nv-notas').value='';
   document.getElementById('nv-dto').value='0';
-  document.getElementById('nv-validez').value='30';
+  document.getElementById('nv-validez').value='15';
   document.getElementById('nv-condicion').value='50_50';
   // Pago
   document.getElementById('nv-senal').value='0';
@@ -4196,7 +4196,7 @@ function verCotizacion(id){
     html+='<div class="stat-card"><div class="sv" style="font-size:14px">'+p.cliente_nombre+'</div><div class="sl">Cliente</div></div>';
     html+='<div class="stat-card"><div class="sv" style="font-size:13px">'+(p.usuario_creador||'&mdash;')+'</div><div class="sl">Creado por</div></div>';
     html+='<div class="stat-card"><div class="sv" style="font-size:12px">'+formatDateTime(p.created_at)+'</div><div class="sl">Fecha y hora</div></div>';
-    html+='<div class="stat-card"><div class="sv" style="font-size:13px">'+(p.validez||'30 d&iacute;as')+'</div><div class="sl">Validez</div></div>';
+    html+='<div class="stat-card"><div class="sv" style="font-size:13px">'+(p.validez||'15 d&iacute;as')+'</div><div class="sl">Validez</div></div>';
     html+='</div>';
 
     if(p.cliente_telefono||p.cliente_email){
@@ -4328,7 +4328,7 @@ function cotEditar(){
   document.getElementById('nv-sector').value=p.cliente_sector||'';
   // Rellenar notas, validez, condición
   document.getElementById('nv-notas').value=p.notas||'';
-  document.getElementById('nv-validez').value=p.validez||30;
+  document.getElementById('nv-validez').value=p.validez||15;
   document.getElementById('nv-condicion').value=p.condicion_pago||'50_50';
   // Cargar líneas del presupuesto
   nvLineas=[];
@@ -4816,7 +4816,7 @@ function generarPDFPresupuesto(soloHTML){
 
   var condLabels={'50_50':'50% al encargar \u00b7 50% al recoger','0_100':'100% al recoger','transferencia':'Transferencia'};
   var condText=condLabels[p.condicion_pago]||p.condicion_pago||'50% al encargar \u00b7 50% al recoger';
-  var validezText=p.validez_dias||p.validez||30;
+  var validezText=p.validez_dias||p.validez||15;
   var fechaExp=p.fecha_expiracion?formatDate(p.fecha_expiracion):'\u2014';
   var hoy=new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'});
 
