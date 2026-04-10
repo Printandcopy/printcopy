@@ -3976,17 +3976,19 @@ function nvCrearPedido(){
   function crearPedidos(clienteId){
     var combinadoId=null;
     
-    // Pre-calcular señales con ajuste de redondeo
+    // Pre-calcular señales proporcionales con ajuste de redondeo
     var senalesLinea=[];
+    var totalBruto=nvLineas.reduce(function(s,l){return s+l.total;},0);
     var sumaSenal=0;
     nvLineas.forEach(function(lin,idx){
       if(idx<nvLineas.length-1){
-        var proporcion=lin.total/totalGlobal;
+        // Proporción sobre total bruto (sin dto) para que sea exacta por línea
+        var proporcion=totalBruto>0?(lin.total/totalBruto):1/nvLineas.length;
         var senalLin=cV2R2(senal*proporcion);
         senalesLinea.push(senalLin);
         sumaSenal+=senalLin;
       }else{
-        // Último absorbe diferencia de redondeo
+        // Último absorbe diferencia de redondeo (garantiza suma exacta)
         senalesLinea.push(cV2R2(senal-sumaSenal));
       }
     });
