@@ -972,8 +972,8 @@ textarea{resize:vertical;min-height:64px}
       <div class="radio-group" style="margin-top:6px">
         <label class="radio-opt"><input type="radio" name="cobro-metodo" value="efectivo"> 💵 Efectivo</label>
         <label class="radio-opt"><input type="radio" name="cobro-metodo" value="tarjeta"> 💳 Tarjeta</label>
-        <label class="radio-opt"><input type="radio" name="cobro-metodo" value="bizum" checked> 📱 Bizum</label>
-        <label class="radio-opt"><input type="radio" name="cobro-metodo" value="transferencia"> 🏦 Transf.</label>
+        <label class="radio-opt"><input type="radio" name="cobro-metodo" value="bizum"> 📱 Bizum</label>
+        <label class="radio-opt"><input type="radio" name="cobro-metodo" value="transferencia" checked> 🏦 Transf.</label>
       </div>
     </div>
     <div class="btn-row">
@@ -1609,22 +1609,26 @@ function setFaseModal(id,fase){
 function ejecutarCobroResto(){
   var id=window._cobroRestoId;
   var fase=window._cobroRestoFase;
+  if(!id||!fase){closeModal('modal-cobro-resto');return;}
   var cobrado=parseFloat(document.getElementById('cobro-resto-importe').value)||0;
   if(cobrado<=0){alert('El importe debe ser mayor que 0');return;}
   var metodo=document.querySelector('input[name="cobro-resto-metodo"]:checked').value;
   var p=pedidos.find(function(x){return x.id===id;});
-  if(!p){closeModal('modal-cobro-resto');return;}
+  if(!p){closeModal('modal-cobro-resto');alert('Error: pedido no encontrado, recarga la página');return;}
   var nuevaSenal=cV2R2((p.senal||0)+cobrado);
   p.senal=nuevaSenal;
   p.pago='pagado';
   p.metodo_pago_resto=metodo;
-  sb.from('pedidos').update({senal:nuevaSenal,pago:'pagado',metodo_pago_resto:metodo,fase:fase}).eq('id',id).then(function(){});
+  var faseAnterior=p.fase;
+  sb.from('pedidos').update({senal:nuevaSenal,pago:'pagado',metodo_pago_resto:metodo,fase:fase}).eq('id',id).then(function(r){
+    if(r&&r.error){alert('Error al guardar cobro: '+r.error.message);return;}
+    p.senal=nuevaSenal;p.pago='pagado';p.fase=fase;
+    _pedidoModal=p;
+    logCambioFase(id,faseAnterior,fase);
+    verPedido(id);
+    renderTaller();
+  });
   closeModal('modal-cobro-resto');
-  logCambioFase(id,p.fase,fase);
-  p.fase=fase;
-  _pedidoModal=p;
-  verPedido(id);
-  renderTaller();
 }
 
 function logCambioFase(pedidoId,faseAnterior,faseNueva){
@@ -3798,8 +3802,8 @@ function nvCalcPendiente(){
     }
     infoDiv.innerHTML=info;
   }
-  // Bloquear/desbloquear campo señal según condición
-  var esCredito=condicion==='credito_senal'||condicion==='credito_total'||condicion==='transferencia';
+  // Bloquear campo señal solo para crédito (transferencia puede tener señal)
+  var esCredito=condicion==='credito_senal'||condicion==='credito_total';
   var senalInput=document.getElementById('nv-senal');
   if(senalInput){senalInput.disabled=esCredito;senalInput.style.opacity=esCredito?'0.4':'1';}
 }
@@ -4113,33 +4117,24 @@ function nvCrearPedido(){
                 fecha_tipo:fechaTipo,
                 descripcion:lin.desc,
                 notas:document.getElementById('nv-notas').value.trim(),
-      incluye_envio:document.getElementById('nv-envio')&&document.getElementById('nv-envio').checked,
-      envio_nombre:document.getElementById('nv-envio-nombre')?(document.getElementById('nv-envio-nombre').value.trim()||null):null,
-      envio_tel:document.getElementById('nv-envio-tel')?(document.getElementById('nv-envio-tel').value.trim()||null):null,
-      envio_direccion:document.getElementById('nv-envio-dir')?(document.getElementById('nv-envio-dir').value.trim()||null):null,
-      envio_cp:document.getElementById('nv-envio-cp')?(document.getElementById('nv-envio-cp').value.trim()||null):null,
-      envio_notas:document.getElementById('nv-envio-notas')?(document.getElementById('nv-envio-notas').value.trim()||null):null,
                 total:lin.total,
                 senal:senalLinea,
                 pago:pagoEstado,
                 metodo_pago:metodoPago,
                 condiciones:condicion,
-                fase:0,
-                combinado_id:combinadoId,
-                incluye_montaje:incluyeMontaje
+                fase:0
               };
-              if(incluyeMontaje){
-                ped.direccion_montaje=document.getElementById('nv-montaje-dir').value.trim();
-                ped.fecha_montaje=document.getElementById('nv-montaje-fecha').value||null;
-                ped.horario_montaje=document.getElementById('nv-montaje-hora').value.trim();
-                ped.notas_montaje=document.getElementById('nv-montaje-notas').value.trim();
-              }
-              sb.from('pedidos').insert([ped]).then(function(){res(numPed);});
+              sb.from('pedidos').insert([ped]).then(function(ri){
+                if(ri.error){console.error('Error insert pedido:',ri.error.message);alert('Error al crear pedido: '+ri.error.message);res(null);}
+                else{res(numPed);}
+              });
             });
           });
         });
       });
       Promise.all(proms).then(function(nums){
+        var validos=nums.filter(function(n){return n!=null;});
+        if(!validos.length){return;} // todos fallaron, mensajes ya mostrados
         // Marcar presupuesto como convertido si venía de cotConvertir
         if(window._presupuestoParaConvertir){
           sb.from('presupuestos').update({estado:'aceptado',convertido:true}).eq('id',window._presupuestoParaConvertir).then(function(){
@@ -4151,8 +4146,8 @@ function nvCrearPedido(){
         // Ir a pantalla Pedidos para ver el nuevo pedido
         setTimeout(function(){
           showScreen('ventas');
-          var ultimoPed=pedidos.find(function(p){return p.id===nums[0];});
-          if(ultimoPed && confirm('Pedidos creados: '+nums.join(', ')+'\n\n¿Imprimir resguardo?')){
+          var ultimoPed=pedidos.find(function(p){return p.id===validos[0];});
+          if(ultimoPed && confirm('Pedidos creados: '+validos.join(', ')+'\n\n¿Imprimir resguardo?')){
             generarResguardo(ultimoPed);
           }
         },500);
@@ -4164,10 +4159,11 @@ function nvCrearPedido(){
         var nc=(r.data?r.data.valor:0)+1;
         sb.from('contador_global').update({valor:nc}).eq('tipo','combinado').then(function(){
           sb.from('combinados').insert([{numero:'COMB-'+String(nc).padStart(6,'0'),total:totalGlobal,estado:'activo'}]).select().then(function(r2){
-            combinadoId=r2.data[0].id;hacerPedidos();
-          });
-        });
-      });
+            if(r2.data&&r2.data[0])combinadoId=r2.data[0].id;
+            hacerPedidos();
+          }).catch(function(){hacerPedidos();});
+        }).catch(function(){hacerPedidos();});
+      }).catch(function(){hacerPedidos();});
     }else{hacerPedidos();}
   }
   
@@ -4540,9 +4536,11 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
             fecha_entrega:fecha,fecha_tipo:'aprox',descripcion:lin.descripcion,
             notas:'Auto desde '+pres.numero+(metodo?' | '+metodo:''),
             total:parseFloat(lin.subtotal)||0,senal:cV2R2(senalTotal*proporcion),
-            pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:1,
-            presupuesto_origen:pres.numero};
-          sb.from('pedidos').insert([ped]).then(function(){res(numPed);});
+            pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:1};
+          sb.from('pedidos').insert([ped]).then(function(ri){
+            if(ri.error){console.error('Error insert pedido auto:',ri.error.message);res(null);}
+            else{res(numPed);}
+          });
         });
       });
     });
