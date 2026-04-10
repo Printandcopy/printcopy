@@ -277,10 +277,8 @@ textarea{resize:vertical;min-height:64px}
 .pres-rechazado{background:#FCEBEB;color:#A32D2D}
 .pres-card{background:#fff;border-radius:8px;border:0.5px solid #ddd;margin-bottom:8px;padding:12px 16px;cursor:pointer;transition:box-shadow .15s}
 .pres-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
-.bandeja-card{background:#fff;border-radius:10px;border:0.5px solid #e0e0e0;margin-bottom:10px;padding:14px 16px;cursor:pointer;transition:all .15s}
-.bandeja-card:hover{border-color:#ccc}
-.bandeja-card.bandeja-open{border:2px solid #185FA5;cursor:default}
-.bandeja-header{display:flex;align-items:center;justify-content:space-between}
+.bandeja-card{background:#fff;border-radius:10px;border:0.5px solid #e0e0e0;margin-bottom:10px;padding:14px 16px;transition:all .15s}
+.bandeja-card:hover{border-color:#bbb}
 /* Layout modal venta */
 .venta-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
 @media(max-width:900px){.venta-grid{grid-template-columns:1fr}}
@@ -3122,31 +3120,22 @@ function renderPedidosActivos(){
   document.getElementById('pedidos-list').innerHTML=list.map(function(p){
     var tiempoRel=tiempoRelativo(p.fechaCreacion);
     var secColor=SEC_COLORS[p.seccion]||{bg:'#f1f1f1',color:'#666'};
-    var fechaEnt=p.fechaEntrega?((p.fechaTipo==='fija'?'⚠️ ':'')+'Entrega: '+formatDate(p.fechaEntrega)):'';
-    return '<div class="bandeja-card" onclick="toggleBandejaCard(this,\''+p.id+'\')">'+
-      '<div class="bandeja-header">'+
-        '<div style="display:flex;align-items:center;gap:10px">'+
-          '<span style="font-family:monospace;font-weight:600;font-size:14px">'+p.id+'</span>'+
-          '<span style="background:'+secColor.bg+';color:'+secColor.color+';padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500">'+SECS[p.seccion]+'</span>'+
-        '</div>'+
-        '<span style="font-size:12px;color:#888">'+tiempoRel+'</span>'+
-      '</div>'+
-      '<div style="margin-top:8px;font-size:14px;font-weight:500">'+p.clienteNombre+'</div>'+
-      '<div style="margin-top:4px;font-size:13px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.descripcion+'</div>'+
-      (fechaEnt?'<div style="margin-top:6px;font-size:12px;color:'+(p.fechaTipo==='fija'?'#A32D2D':'#666')+'">'+fechaEnt+'</div>':'')+
-      '<div class="bandeja-expand" style="display:none">'+
-        '<div style="border-top:1px solid #eee;margin-top:12px;padding-top:12px">'+
-          (p.clienteTel?'<div style="font-size:13px;color:#666;margin-bottom:8px">📞 '+p.clienteTel+'</div>':'')+
-          '<div style="font-size:13px;line-height:1.5">'+p.descripcion+'</div>'+
-          '<div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#888">'+
-            '<span>Atendió: <strong style="color:#1a1a1a">'+(p.creadoPor||p.operario||'—')+'</strong></span>'+
-            '<span>'+formatDateTime(p.fechaCreacion)+'</span>'+
+    var miniCal=buildMiniCalendario(p.fechaEntrega, p.fechaTipo);
+    return '<div class="bandeja-card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+            '<span style="font-family:monospace;font-weight:700;font-size:14px">'+p.id+'</span>'+
+            '<span style="background:'+secColor.bg+';color:'+secColor.color+';padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500">'+SECS[p.seccion]+'</span>'+
+            '<span style="font-size:11px;color:#888">'+tiempoRel+'</span>'+
           '</div>'+
-          '<div style="margin-top:14px">'+
-            '<button class="btn btn-primary" onclick="event.stopPropagation();cogerPedido(\''+p.id+'\')" style="width:100%">✓ Coger pedido</button>'+
-          '</div>'+
+          '<div style="margin-top:6px;font-size:14px;font-weight:500">'+p.clienteNombre+(p.clienteTel?' <span style="font-weight:400;color:#666;font-size:12px">'+p.clienteTel+'</span>':'')+'</div>'+
+          '<div style="margin-top:4px;font-size:13px;color:#555">'+p.descripcion+'</div>'+
+          '<div style="margin-top:6px;font-size:11px;color:#888">Atendió: <strong style="color:#333">'+(p.creadoPor||p.operario||'—')+'</strong></div>'+
         '</div>'+
+        miniCal+
       '</div>'+
+      '<button class="btn btn-primary" onclick="cogerPedido(\''+p.id+'\')" style="width:100%;margin-top:12px">✓ Coger pedido</button>'+
     '</div>';
   }).join('');
 }
