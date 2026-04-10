@@ -1775,7 +1775,7 @@ function llamarCliente(){
 }
 function setFilter(el){var f=el.dataset.f,v=el.dataset.v;activeFilters[f]=v;document.querySelectorAll('.filter-btn[data-f="'+f+'"]').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderTaller();}
 function getSecGlobal(){return document.getElementById('sec-global').value||'all';}
-function applySecFilter(list){var s=getSecGlobal();var filtered=list.filter(function(p){return p.fase>=0;});return s==='all'?filtered:filtered.filter(function(p){return p.seccion===s;});}
+function applySecFilter(list){var s=getSecGlobal();var filtered=list.filter(function(p){return p.fase>=1;});return s==='all'?filtered:filtered.filter(function(p){return p.seccion===s;});}
 function pasaFiltroEntrega(p){
   var v=activeFilters.entrega;if(v==='all')return true;if(!p.fechaEntrega)return false;
   var hoy=new Date();hoy.setHours(0,0,0,0);var fe=new Date(p.fechaEntrega+'T00:00:00');
