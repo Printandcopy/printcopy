@@ -4524,7 +4524,7 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
       var sec=lin.seccion||'XR';
       sb.from('contadores').select('valor').eq('seccion',sec).single().then(function(r){
         var nv=(r.data?r.data.valor:0)+1;
-        sb.from('contadores').update({valor:nv}).eq('seccion',sec).then(function(){
+        sb.from('contadores').upsert([{seccion:sec,valor:nv}],{onConflict:'seccion'}).then(function(){
           var numPed=sec+'-'+String(nv).padStart(4,'0');
           var proporcion=totalGlobal>0?((parseFloat(lin.subtotal)||0)/totalGlobal):1;
           var ped={id:numPed,cliente_id:clienteId,cliente_nombre:pres.cliente_nombre,
@@ -4535,9 +4535,9 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
             total:parseFloat(lin.subtotal)||0,senal:cV2R2(senalTotal*proporcion),
             pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:0};
           sb.from('pedidos').insert([ped]).then(function(ri){
-            if(ri.error){
-              console.error('Error insert pedido auto:',ri.error.message);
-              alert('Error al crear pedido: '+ri.error.message+'\n\nRevisa que todas las columnas existen en la BD.');
+            if(ri&&ri.error){
+              console.error('Error insert pedido:',ri.error.message);
+              alert('Error al crear pedido: '+ri.error.message);
               res(null);
             }else{res(numPed);}
           });
@@ -4545,7 +4545,7 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
       });
     });
   });
-  Promise.all(proms).then(function(nums){
+    Promise.all(proms).then(function(nums){
     sb.from('presupuestos').update({convertido:true,senal_cobrada:senalTotal>0}).eq('id',pres.id).then(function(){
       cargarDatos();actualizarBarraAvisos();
       var t=document.createElement('div');
@@ -4562,7 +4562,7 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
 var _cobroPresId=null;
 function confirmarSenal(presId){
   var pres=presupuestos.find(function(p){return p.id===presId;});
-  if(!pres)return;
+  if(!pres){alert('Presupuesto no encontrado (id: '+presId+'). Recarga la página.');return;}
   _cobroPresId=presId;
   var senalTeorica=calcSenal(parseFloat(pres.total)||0,pres.condicion_pago);
   document.getElementById('modal-cobro-info').innerHTML='<strong>'+pres.numero+'</strong> — '+pres.cliente_nombre+'<br><span style="color:#888">Total: '+cV2Fmt(parseFloat(pres.total)||0)+' · Señal teórica: <strong>'+cV2Fmt(senalTeorica)+'</strong></span>';
