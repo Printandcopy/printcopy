@@ -1239,6 +1239,7 @@ function guardarPedido(){
   var pagoVal=document.getElementById('f-pago-tipo').value;
   var condText=pagoLabel(pagoVal);
   var cliente=currentClientId?clientes.find(function(c){return c.id===currentClientId;}):null;
+  if(!cliente&&tel)cliente=clientes.find(function(c){return c.telefono===tel;});
   if(!cliente)cliente=clientes.find(function(c){return c.nombre.toLowerCase()===nombre.toLowerCase();});
   if(!cliente){
     var newC={nombre:nombre,telefono:tel,email:email,condiciones:condText,sector:sector,nivel:'nuevo',pago:pagoVal,creado:new Date().toISOString()};
@@ -1248,7 +1249,6 @@ function guardarPedido(){
       email:newC.email,
       condiciones:newC.condiciones,
       sector:newC.sector||'',
-      nivel:newC.nivel||'nuevo',
       pago:newC.pago||'50_50'
     }]).select().then(function(r){
       if(r.error){alert('Error: '+r.error.message);return;}
@@ -1973,6 +1973,11 @@ function guardarEdicionCliente(){
   var condText=pagoLabel(pagoVal);
   
   if(isNew){
+    // Verificar teléfono único
+    if(tel){
+      var existe=clientes.find(function(c){return c.telefono===tel;});
+      if(existe){alert('El teléfono '+tel+' ya está registrado para: '+existe.nombre);return;}
+    }
     // Crear nuevo cliente
     var newData={nombre:nombre,telefono:tel,email:email,sector:sector,condiciones:condText,pago:pagoVal};
     sb.from('clientes').insert([newData]).select().then(function(r){
@@ -2768,7 +2773,7 @@ function guardarSolicitud(){
     // Crear cliente si no existe
     var clienteExiste=clientes.find(function(c){return c.telefono===tel;});
     if(!clienteExiste){
-      sb.from('clientes').insert([{nombre:nombre,telefono:tel,email:email||'',sector:sector||'',nivel:'nuevo',pago:'50_50'}]).select().then(function(rc){
+      sb.from('clientes').insert([{nombre:nombre,telefono:tel,email:email||'',sector:sector||'',pago:'50_50'}]).select().then(function(rc){
         if(rc.data&&rc.data[0])clientes.push(rc.data[0]);
       });
     }
@@ -3950,7 +3955,7 @@ function nvCrearPedido(){
   
   if(cliente){crearPedidos(cliente.id);}
   else{
-    sb.from('clientes').insert([{nombre:nombre,telefono:tel,email:email,sector:sector,nivel:'nuevo',pago:'50_50'}]).select().then(function(r){
+    sb.from('clientes').insert([{nombre:nombre,telefono:tel,email:email,sector:sector,pago:'50_50'}]).select().then(function(r){
       if(r.error){alert('Error al crear cliente');return;}
       clientes.push(r.data[0]);crearPedidos(r.data[0].id);
     });
