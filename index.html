@@ -1032,7 +1032,7 @@ textarea{resize:vertical;min-height:64px}
 // ── SUPABASE ──
 var sb=supabase.createClient('https://ffiyprmbrznofoprvvik.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg');
 var COND_STD='50% al encargar · 50% al recoger';
-var FASES=['Nuevo','Atendido','Previas env.','Previas OK','Producción','Terminado','Cobrado'];
+var FASES=['Nuevo','Atendido','Previas env.','Previas OK','Producción','Terminado','Cobrado','Recogido'];
 var SECS={TX:'Textil',PL:'Plotter',UV:'Impresión UV',SUB:'Sublimación',NEON:'Neones',XR:'Xerox'};
 var OPERARIOS=['Marilia','Álvaro','Charo','Raúl','Bea'];
 var SECTORES={particular:'Particular',hosteleria:'Hostelería',comercio:'Comercio',eventos:'Eventos y fiestas',empresa:'Empresas / Industria',inmobiliaria:'Inmobiliaria',educacion:'Educación',salud:'Salud y bienestar',servicios:'Servicios profesionales',asociaciones:'Asociaciones y clubs',admin_publica:'Administración pública'};
@@ -1486,6 +1486,7 @@ function verPedido(id){
 function setFaseModal(id,fase){
   var p=pedidos.find(function(x){return x.id===id;});
   if(!p)return;
+  var faseAnterior=p.fase;
   var pendiente=(p.total||0)-(p.senal||0);
   
   // Al pasar a Terminado (5) con pendiente, avisar
@@ -1501,17 +1502,65 @@ function setFaseModal(id,fase){
     if(cobrarStr===null)return;
     var cobrado=parseFloat(cobrarStr.replace(',','.'))||0;
     if(cobrado<=0){alert('Debes introducir el importe cobrado');return;}
-    // Actualizar señal con el nuevo cobro
     var nuevaSenal=(p.senal||0)+cobrado;
     p.senal=nuevaSenal;
     sb.from('pedidos').update({senal:nuevaSenal,pago:'pagado'}).eq('id',id).then(function(){});
   }
+  
+  // Al pasar a Recogido (7), marcar fecha y enviar WA reseña
+  if(fase===7){
+    p.recogido=true;
+    p.fecha_recogido=new Date().toISOString();
+    sb.from('pedidos').update({recogido:true,fecha_recogido:p.fecha_recogido}).eq('id',id).then(function(){
+      // Enviar WA pidiendo reseña Google (solo si tiene teléfono)
+      if(p.clienteTel){
+        setTimeout(function(){enviarWAResena(p);},500);
+      }
+    });
+  }
+  
+  // Registrar cambio en log
+  logCambioFase(id,faseAnterior,fase);
   
   p.fase=fase;
   _pedidoModal=p;
   sb.from('pedidos').update({fase:fase}).eq('id',id).then(function(){});
   verPedido(id);
   renderTaller();
+}
+
+function logCambioFase(pedidoId,faseAnterior,faseNueva){
+  var logData={
+    pedido_id:pedidoId,
+    fase_anterior:faseAnterior,
+    fase_nueva:faseNueva,
+    usuario:window._usuarioActual||'sistema',
+    accion:'cambio_fase',
+    detalle:'Fase: '+FASES[faseAnterior]+' → '+FASES[faseNueva]
+  };
+  sb.from('pedido_log').insert([logData]).then(function(r){
+    if(r.error)console.error('Error log:',r.error);
+  });
+}
+
+function enviarWAResena(p){
+  if(!confirm('¿Enviar WhatsApp pidiendo reseña en Google?'))return;
+  var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+  if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+  var nombre=(p.clienteNombre||'').split(' ')[0];
+  var msg='¡Hola '+nombre+'! 👋\n\n'
+    +'Gracias por recoger tu pedido en Print & Copy. Esperamos que todo esté perfecto. 🙌\n\n'
+    +'Si tienes un momento, nos ayudaría mucho una reseña en Google:\n'
+    +'https://g.page/r/printcopysalamanca/review\n\n'
+    +'¡Gracias y hasta pronto! 😊';
+  fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.clienteNombre})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.success)alert('WhatsApp de reseña enviado');
+      else console.error('Error WA reseña:',d.error);
+    })
+    .catch(function(e){console.error('Error WA:',e);});
 }
 function toggleCheckModal(id,field,val){var p=pedidos.find(function(x){return x.id===id;});if(!p)return;p[field]=val;var col=field==='ropaOk'?'ropa_ok':'dtf_ok';var upd={};upd[col]=val;sb.from('pedidos').update(upd).eq('id',id).then(function(){});}
 function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');generarResguardo(_pedidoModal);}}
@@ -1672,7 +1721,7 @@ function pasaFiltroEntrega(p){
   return true;
 }
 function renderTaller(){renderStats();if(currentView==='lista')renderLista();else if(currentView==='semana')renderSemana();else if(currentView==='mes')renderMes();else renderOperario();}
-function renderStats(){var all=applySecFilter(pedidos),activos=all.filter(function(p){return p.fase<4;}),totalPend=all.reduce(function(s,p){return s+(p.total-(p.senal||0));},0),urgentes=activos.filter(function(p){return p.fechaTipo==='fija';}).length,listos=activos.filter(function(p){return p.fase===3;}).length;document.getElementById('taller-stats').innerHTML='<div class="stat-card"><div class="sv">'+activos.length+'</div><div class="sl">Activos</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+listos+'</div><div class="sl">Listos para recoger</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPend.toFixed(0)+'€</div><div class="sl">Pendiente cobro</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+urgentes+'</div><div class="sl">Entregas fijas</div></div>';}
+function renderStats(){var all=applySecFilter(pedidos),activos=all.filter(function(p){return p.fase<5;}),totalPend=all.reduce(function(s,p){return s+(p.total-(p.senal||0));},0),urgentes=activos.filter(function(p){return p.fechaTipo==='fija';}).length,listos=all.filter(function(p){return p.fase===5||p.fase===6;}).length;document.getElementById('taller-stats').innerHTML='<div class="stat-card"><div class="sv">'+activos.length+'</div><div class="sl">Activos</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+listos+'</div><div class="sl">Listos para recoger</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPend.toFixed(0)+'€</div><div class="sl">Pendiente cobro</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+urgentes+'</div><div class="sl">Entregas fijas</div></div>';}
 function renderLista(){var list=applySecFilter(pedidos);var secSel=document.getElementById('seccion-select');var secFiltro=secSel?secSel.value:'all';if(secFiltro!=='all')list=list.filter(function(p){return p.seccion===secFiltro;});if(activeFilters.fase!=='all')list=list.filter(function(p){return String(p.fase)===activeFilters.fase;});list=list.filter(function(p){return pasaFiltroEntrega(p);});if(activeFilters.pago==='pendiente')list=list.filter(function(p){return(p.total-(p.senal||0))>0;});if(activeFilters.pago==='pagado')list=list.filter(function(p){return(p.total-(p.senal||0))<=0;});var sort=document.getElementById('sort-select').value||'entrega';list.sort(function(a,b){if(sort==='entrega')return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;if(sort==='creacion')return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);if(sort==='seccion')return a.seccion>b.seccion?1:-1;if(sort==='pendiente')return(b.total-(b.senal||0))-(a.total-(a.senal||0));return 0;});document.getElementById('taller-list').innerHTML=list.length?list.map(tarjetaTaller).join(''):'<div class="empty-state">No hay pedidos con estos filtros</div>';}
 function renderSemana(){var sfase=activeFilters.sfase;var list=applySecFilter(pedidos).filter(function(p){return sfase==='activos'?p.fase<4:sfase==='3'?p.fase===3:true;});var hoy=new Date();hoy.setHours(0,0,0,0);var dias=[];for(var i=0;i<7;i++){var d=new Date(hoy);d.setDate(d.getDate()+i);dias.push(d);}var sinFecha=list.filter(function(p){return!p.fechaEntrega&&p.fase<4;});var html='<div class="semana-grid">';dias.forEach(function(dia){var key=dia.toISOString().split('T')[0],esHoy=dia.getTime()===hoy.getTime(),peds=list.filter(function(p){return p.fechaEntrega===key;}),dn=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dia.getDay()];html+='<div class="dia-col"><div class="dia-header'+(esHoy?' hoy':'')+'"><div class="dn">'+dn+'</div><div class="dd">'+dia.getDate()+'/'+(dia.getMonth()+1)+'</div></div><div class="dia-cards">'+(peds.length?peds.map(function(p){return'<div class="dia-mini dm-'+p.seccion+(p.fechaTipo==='fija'?' dm-fija':'')+'" onclick="verPedido(\''+p.id+'\')"><div style="font-weight:700;font-family:monospace;font-size:10px">'+p.id+'</div><div>'+p.clienteNombre.split(' ')[0]+'</div></div>';}).join(''):'<div style="font-size:11px;color:#ddd;text-align:center;padding:6px">—</div>')+'</div></div>';});html+='</div>';var vencidos=list.filter(function(p){return p.fechaEntrega&&new Date(p.fechaEntrega+'T00:00:00')<hoy&&p.fase<4;});if(vencidos.length)html+='<div class="sin-fecha"><div class="sin-fecha-title" style="color:#A32D2D">⚠️ Vencidos ('+vencidos.length+')</div>'+vencidos.map(miniCard).join('')+'</div>';if(sinFecha.length)html+='<div class="sin-fecha"><div class="sin-fecha-title">Sin fecha ('+sinFecha.length+')</div>'+sinFecha.map(miniCard).join('')+'</div>';document.getElementById('taller-list').innerHTML=html;}
 function renderMes(){var hoy=new Date();hoy.setHours(0,0,0,0);var ref=new Date(hoy.getFullYear(),hoy.getMonth()+mesOffset,1),año=ref.getFullYear(),mes=ref.getMonth(),primerDia=new Date(año,mes,1),ultimoDia=new Date(año,mes+1,0),nombreMes=primerDia.toLocaleDateString('es-ES',{month:'long',year:'numeric'}),startDow=(primerDia.getDay()+6)%7,totalCeldas=startDow+ultimoDia.getDate(),semanas=Math.ceil(totalCeldas/7),list=applySecFilter(pedidos);var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><button class="btn btn-secondary btn-sm" onclick="mesOffset--;renderTaller()">← Anterior</button><span style="font-size:14px;font-weight:600;text-transform:capitalize">'+nombreMes+'</span><button class="btn btn-secondary btn-sm" onclick="mesOffset++;renderTaller()">Siguiente →</button></div><div class="mes-grid">'+['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(function(d){return'<div style="background:#f5f5f0;text-align:center;padding:5px 2px;font-size:11px;font-weight:600;color:#888">'+d+'</div>';}).join('');for(var s=0;s<semanas;s++){for(var dow=0;dow<7;dow++){var cellIdx=s*7+dow,diaNum=cellIdx-startDow+1;if(diaNum<1||diaNum>ultimoDia.getDate()){html+='<div class="mes-cell otro-mes"></div>';continue;}var fechaKey=año+'-'+String(mes+1).padStart(2,'0')+'-'+String(diaNum).padStart(2,'0'),esHoy2=new Date(año,mes,diaNum).getTime()===hoy.getTime(),peds=list.filter(function(p){return p.fechaEntrega===fechaKey;});html+='<div class="mes-cell"><div class="mes-day-num'+(esHoy2?' hoy':'')+'">'+diaNum+'</div>'+peds.slice(0,3).map(function(p){return'<div class="dia-mini dm-'+p.seccion+(p.fechaTipo==='fija'?' dm-fija':'')+'" onclick="verPedido(\''+p.id+'\')" title="'+p.clienteNombre+'"><span style="font-size:10px;font-weight:700;font-family:monospace">'+p.id+'</span> <span style="font-size:10px;opacity:.8">'+p.clienteNombre.split(' ')[0]+'</span></div>';}).join('')+(peds.length>3?'<div style="font-size:10px;color:#aaa">+'+(peds.length-3)+' más</div>':'')+'</div>';}}html+='</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><div class="stat-card"><div class="sv">'+list.filter(function(p){return p.fechaEntrega&&p.fechaEntrega.startsWith(año+'-'+String(mes+1).padStart(2,'0'));}).length+'</div><div class="sl">Entregas este mes</div></div></div>';document.getElementById('taller-list').innerHTML=html;}
