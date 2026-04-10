@@ -3122,6 +3122,7 @@ function renderPedidosActivos(){
   document.getElementById('pedidos-list').innerHTML=list.map(function(p){
     var tiempoRel=tiempoRelativo(p.fechaCreacion);
     var secColor=SEC_COLORS[p.seccion]||{bg:'#f1f1f1',color:'#666'};
+    var fechaEnt=p.fechaEntrega?((p.fechaTipo==='fija'?'⚠️ ':'')+'Entrega: '+formatDate(p.fechaEntrega)):'';
     return '<div class="bandeja-card" onclick="toggleBandejaCard(this,\''+p.id+'\')">'+
       '<div class="bandeja-header">'+
         '<div style="display:flex;align-items:center;gap:10px">'+
@@ -3132,6 +3133,7 @@ function renderPedidosActivos(){
       '</div>'+
       '<div style="margin-top:8px;font-size:14px;font-weight:500">'+p.clienteNombre+'</div>'+
       '<div style="margin-top:4px;font-size:13px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.descripcion+'</div>'+
+      (fechaEnt?'<div style="margin-top:6px;font-size:12px;color:'+(p.fechaTipo==='fija'?'#A32D2D':'#666')+'">'+fechaEnt+'</div>':'')+
       '<div class="bandeja-expand" style="display:none">'+
         '<div style="border-top:1px solid #eee;margin-top:12px;padding-top:12px">'+
           (p.clienteTel?'<div style="font-size:13px;color:#666;margin-bottom:8px">📞 '+p.clienteTel+'</div>':'')+
@@ -3140,9 +3142,8 @@ function renderPedidosActivos(){
             '<span>Atendió: <strong style="color:#1a1a1a">'+(p.creadoPor||p.operario||'—')+'</strong></span>'+
             '<span>'+formatDateTime(p.fechaCreacion)+'</span>'+
           '</div>'+
-          '<div style="margin-top:14px;display:flex;gap:8px">'+
-            '<button class="btn btn-primary" onclick="event.stopPropagation();cogerPedido(\''+p.id+'\')" style="flex:1">✓ Coger pedido</button>'+
-            '<button class="btn btn-secondary" onclick="event.stopPropagation();verPedido(\''+p.id+'\')">Ver más</button>'+
+          '<div style="margin-top:14px">'+
+            '<button class="btn btn-primary" onclick="event.stopPropagation();cogerPedido(\''+p.id+'\')" style="width:100%">✓ Coger pedido</button>'+
           '</div>'+
         '</div>'+
       '</div>'+
