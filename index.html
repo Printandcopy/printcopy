@@ -1667,16 +1667,24 @@ function buildMiniCalendario(fechaEntrega, fechaTipo){
   var hoy = new Date(); hoy.setHours(0,0,0,0);
   var fe = fechaEntrega ? new Date(fechaEntrega + "T00:00:00") : null;
   
-  // Calcular diferencia en días laborables
-  var diffMs = fe ? fe.getTime() - hoy.getTime() : null;
+  // Si la fecha cae en fin de semana, ajustar al lunes siguiente para mostrar
+  var feAjustada = fe ? new Date(fe) : null;
+  if (feAjustada) {
+    if (feAjustada.getDay() === 0) feAjustada.setDate(feAjustada.getDate() + 1); // Domingo -> Lunes
+    else if (feAjustada.getDay() === 6) feAjustada.setDate(feAjustada.getDate() + 2); // Sábado -> Lunes
+  }
+  
+  // Calcular diferencia en días
+  var diffMs = feAjustada ? feAjustada.getTime() - hoy.getTime() : null;
   var diffDias = diffMs !== null ? Math.round(diffMs / 86400000) : null;
   
   // Texto de días
   var diasTexto = '';
   var diasClase = '';
   var fechaTexto = '';
+  var dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   
-  if (!fe) {
+  if (!feAjustada) {
     diasTexto = 'Sin fecha';
     diasClase = '';
     fechaTexto = '';
@@ -1687,18 +1695,15 @@ function buildMiniCalendario(fechaEntrega, fechaTipo){
   } else if (diffDias === 0) {
     diasTexto = 'Hoy';
     diasClase = 'es-hoy';
-    var dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-    fechaTexto = dias[fe.getDay()] + ' ' + fe.getDate();
+    fechaTexto = dias[feAjustada.getDay()] + ' ' + feAjustada.getDate();
   } else if (diffDias === 1) {
     diasTexto = 'Mañana';
     diasClase = 'es-manana';
-    var dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-    fechaTexto = dias[fe.getDay()] + ' ' + fe.getDate();
+    fechaTexto = dias[feAjustada.getDay()] + ' ' + feAjustada.getDate();
   } else {
     diasTexto = 'En ' + diffDias + ' días';
     diasClase = '';
-    var dias = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-    fechaTexto = dias[fe.getDay()] + ' ' + fe.getDate();
+    fechaTexto = dias[feAjustada.getDay()] + ' ' + feAjustada.getDate();
   }
   
   // Construir los 7 días del calendario (desde hoy - 1 hasta hoy + 5)
@@ -1710,9 +1715,9 @@ function buildMiniCalendario(fechaEntrega, fechaTipo){
     var dNum = d.getDate();
     var dNombre = diasNombres[d.getDay()];
     var esHoy = d.getTime() === hoy.getTime();
-    var esEntrega = fe && d.getTime() === fe.getTime();
+    var esEntrega = feAjustada && d.getTime() === feAjustada.getTime();
     var esWeekend = d.getDay() === 0 || d.getDay() === 6;
-    var esVencido = fe && d.getTime() === fe.getTime() && diffDias < 0;
+    var esVencido = feAjustada && d.getTime() === feAjustada.getTime() && diffDias < 0;
     
     var clases = 'mc-day';
     if (esWeekend) clases += ' mc-weekend';
@@ -3018,16 +3023,22 @@ function setPedidosView(v,el){
 function buildKanbanMiniCal(fechaEntrega){
   var hoy=new Date();hoy.setHours(0,0,0,0);
   var fe=fechaEntrega?new Date(fechaEntrega+'T00:00:00'):null;
-  var diffMs=fe?fe.getTime()-hoy.getTime():null;
+  // Ajustar fin de semana al lunes
+  var feAjustada=fe?new Date(fe):null;
+  if(feAjustada){
+    if(feAjustada.getDay()===0)feAjustada.setDate(feAjustada.getDate()+1);
+    else if(feAjustada.getDay()===6)feAjustada.setDate(feAjustada.getDate()+2);
+  }
+  var diffMs=feAjustada?feAjustada.getTime()-hoy.getTime():null;
   var diffDias=diffMs!==null?Math.round(diffMs/86400000):null;
   var html='';
   for(var i=-1;i<=5;i++){
     var d=new Date(hoy);d.setDate(d.getDate()+i);
     var dNum=d.getDate();
     var esHoy=d.getTime()===hoy.getTime();
-    var esEntrega=fe&&d.getTime()===fe.getTime();
+    var esEntrega=feAjustada&&d.getTime()===feAjustada.getTime();
     var esWeekend=d.getDay()===0||d.getDay()===6;
-    var esVencido=fe&&d.getTime()===fe.getTime()&&diffDias<0;
+    var esVencido=feAjustada&&d.getTime()===feAjustada.getTime()&&diffDias<0;
     var cls='kc-mc';
     if(esWeekend)cls+=' kc-weekend';
     if(esHoy&&esEntrega)cls+=' kc-hoy-entrega';
