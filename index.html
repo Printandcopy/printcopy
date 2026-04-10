@@ -1503,14 +1503,6 @@ function verPedido(id){
   }).join('')+'</div>';
 
   document.getElementById('mp-body').innerHTML=html;
-
-  var commHtml='';
-  if(p.fase===5&&p.clienteTel){
-    commHtml='<button class="btn btn-sm" style="background:#25D366;color:white;border:none" onclick="enviarWA(\'listo\')">Avisar: pedido listo</button>';
-    if(pend>0)commHtml+=' <button class="btn btn-sm" style="background:#128C7E;color:white;border:none" onclick="enviarWA(\'recuerdo\')">Recordar pago</button>';
-  }
-  document.getElementById('mp-comms').innerHTML=commHtml;
-
   document.getElementById('modal-pedido').classList.add('open');
 }
 function setFaseModal(id,fase){
