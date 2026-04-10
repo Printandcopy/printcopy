@@ -4429,13 +4429,11 @@ cargarPresupuestos();
 // Polling cada 60s para detectar presupuestos aceptados por el cliente
 setInterval(function(){
   var hace24h=new Date(Date.now()-86400000).toISOString();
-  sb.from('presupuestos').select('id,numero,cliente_nombre,estado,aceptado_por_cliente,updated_at')
-    .eq('estado','aceptado').eq('aceptado_por_cliente',true)
+  sb.from('presupuestos').select('id,numero,cliente_nombre,estado,aceptado_por_cliente,notificado_interno,updated_at')
+    .eq('estado','aceptado').eq('aceptado_por_cliente',true).neq('notificado_interno',true)
     .gte('updated_at',hace24h).then(function(r){
     if(r.data&&r.data.length){
       r.data.forEach(function(p){
-        // Ya usa notificado_interno en BD, no hace falta sessionStorage
-        if(p.notificado_interno)return;
         sb.from('presupuestos').update({notificado_interno:true}).eq('id',p.id).then(function(){});
         if(Notification.permission==='granted')
           new Notification('✅ Presupuesto aceptado',{body:p.cliente_nombre+' aceptó '+p.numero,icon:'/favicon.ico'});
