@@ -974,63 +974,12 @@ textarea{resize:vertical;min-height:64px}
   <div class="modal" style="max-width:580px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px"><div id="mp-title"></div><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-pedido')">✕ Cerrar</button></div>
     <div id="mp-body"></div>
-    <div class="btn-row" style="margin-top:14px;flex-wrap:wrap">
-      <button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button>
-      <button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir</button>
-      <button class="btn" style="background:#BA7517;color:white;border:none" onclick="editarPedido()">✏️ Editar</button>
-      <button class="btn btn-danger" onclick="anularPedido()">✗ Anular</button>
-    </div>
+    <div id="mp-comms" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"></div>
+    <div class="btn-row" style="margin-top:14px"><button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button><button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir resguardo</button></div>
   </div>
 </div>
 <div class="modal-overlay" id="modal-cliente">
   <div class="modal"><h3 id="mc-title"></h3><div id="mc-body"></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-cliente')">Cerrar</button></div></div>
-</div>
-
-<div class="modal-overlay" id="modal-editar-pedido">
-  <div class="modal" style="max-width:520px">
-    <h3>Editar pedido <span id="ep-id" style="font-family:monospace"></span></h3>
-    <div class="form-grid" style="margin-bottom:10px">
-      <div class="field"><label>Descripción *</label><textarea id="ep-desc" rows="3"></textarea></div>
-    </div>
-    <div class="form-grid" style="margin-bottom:10px">
-      <div class="field"><label>Total (€)</label><input type="number" id="ep-total" step="0.01" min="0"></div>
-      <div class="field"><label>Pagado (€)</label><input type="number" id="ep-senal" step="0.01" min="0"></div>
-    </div>
-    <div class="form-grid" style="margin-bottom:10px">
-      <div class="field"><label>Fecha entrega</label><input type="date" id="ep-fecha"></div>
-      <div class="field"><label>Tipo fecha</label>
-        <select id="ep-ftipo">
-          <option value="aprox">Aproximada</option>
-          <option value="fija">Fija (urgente)</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-grid" style="margin-bottom:10px">
-      <div class="field"><label>Operario</label>
-        <select id="ep-operario">
-          <option value="Marilia">Marilia</option>
-          <option value="Raúl">Raúl</option>
-          <option value="Carlos">Carlos</option>
-          <option value="Alba">Alba</option>
-        </select>
-      </div>
-      <div class="field"><label>Sección</label>
-        <select id="ep-seccion">
-          <option value="XR">Xerox</option>
-          <option value="PL">Plotter</option>
-          <option value="TX">Textil</option>
-          <option value="UV">UV</option>
-          <option value="SUB">Sublimación</option>
-          <option value="NEON">Neón</option>
-        </select>
-      </div>
-    </div>
-    <div class="field" style="margin-bottom:10px"><label>Notas</label><textarea id="ep-notas" rows="2"></textarea></div>
-    <div class="btn-row">
-      <button class="btn btn-secondary" onclick="closeModal('modal-editar-pedido')">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarEdicionPedido()">Guardar cambios</button>
-    </div>
-  </div>
 </div>
 
 <div class="modal-overlay" id="modal-editar-cliente">
@@ -1096,21 +1045,6 @@ var PAGOS=[
   {value:'0_100',   label:'100% al recoger'},
   {value:'transferencia',label:'Transferencia'}
 ];
-
-var TIENDA={
-  nombre:'Print & Copy',
-  razon_social:'Eventos Personalizados Salamanca SL',
-  cif:'B04944500',
-  direccion:'Av. Portugal 62, 37005 Salamanca',
-  tel_fijo:'923 018 034',
-  tel_whatsapp:'622 305 934',
-  web:'printcopysalamanca.es',
-  email:'printcopyonline@gmail.com',
-  iban:'ES58 0049 5292 14 2616098558',
-  banco:'Banco Santander',
-  horario:'L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00',
-  google_review:'https://g.page/r/CWmxJawMlrReEBM/review'
-};
 
 function calcNivel(c){
   // Restringido, Premium y Crédito son manuales, no se tocan
@@ -1196,13 +1130,6 @@ function showScreen(id,el){
   if(id==='analytics')renderAnalytics();
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-
-function validarEmail(email){
-  if(!email)return true; // Email opcional
-  var regex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regex.test(email);
-}
-
 document.addEventListener('click',function(e){if(e.target.classList.contains('modal-overlay')&&!window.getSelection().toString())e.target.classList.remove('open');});
 // Tabulacion dentro de modales
 document.addEventListener('keydown',function(e){
@@ -1277,7 +1204,7 @@ function fillClient(id){
   document.getElementById('f-pago-tipo').value=pago;
   mostrarHistorialCliente(id);
 }
-document.addEventListener('click',function(e){var sr=document.getElementById('search-results');if(sr&&!e.target.closest('.search-box'))sr.style.display='none';});
+document.addEventListener('click',function(e){if(!e.target.closest('.search-box'))document.getElementById('search-results').style.display='none';});
 document.addEventListener('click',function(e){var sr=document.getElementById('sol-resultados');if(sr&&!e.target.closest('#sol-nombre')&&!e.target.closest('#sol-resultados'))sr.style.display='none';});
 
 function mostrarHistorialCliente(id){
@@ -1539,6 +1466,14 @@ function verPedido(id){
   }).join('')+'</div>';
 
   document.getElementById('mp-body').innerHTML=html;
+
+  var commHtml='';
+  if(p.fase===5&&p.clienteTel){
+    commHtml='<button class="btn btn-sm" style="background:#25D366;color:white;border:none" onclick="enviarWA(\'listo\')">Avisar: pedido listo</button>';
+    if(pend>0)commHtml+=' <button class="btn btn-sm" style="background:#128C7E;color:white;border:none" onclick="enviarWA(\'recuerdo\')">Recordar pago</button>';
+  }
+  document.getElementById('mp-comms').innerHTML=commHtml;
+
   document.getElementById('modal-pedido').classList.add('open');
 }
 function setFaseModal(id,fase){
@@ -1620,144 +1555,57 @@ function enviarWAResena(p){
     })
     .catch(function(e){console.error('Error WA:',e);});
 }
-
-function editarPedido(){
-  if(!_pedidoModal)return;
-  var p=_pedidoModal;
-  document.getElementById('ep-id').textContent=p.id;
-  document.getElementById('ep-desc').value=p.descripcion||'';
-  document.getElementById('ep-total').value=p.total||0;
-  document.getElementById('ep-senal').value=p.senal||0;
-  document.getElementById('ep-fecha').value=p.fechaEntrega||'';
-  document.getElementById('ep-ftipo').value=p.fechaTipo||'aprox';
-  document.getElementById('ep-operario').value=p.operario||'Marilia';
-  document.getElementById('ep-seccion').value=p.seccion||'XR';
-  document.getElementById('ep-notas').value=p.notas||'';
-  closeModal('modal-pedido');
-  document.getElementById('modal-editar-pedido').classList.add('open');
-}
-
-function guardarEdicionPedido(){
-  if(!_pedidoModal)return;
-  var p=_pedidoModal;
-  var desc=document.getElementById('ep-desc').value.trim();
-  if(!desc){alert('La descripción es obligatoria');return;}
-  
-  var totalNuevo=parseFloat(document.getElementById('ep-total').value)||0;
-  var senalNueva=parseFloat(document.getElementById('ep-senal').value)||0;
-  var fechaNueva=document.getElementById('ep-fecha').value||null;
-  var ftipoNuevo=document.getElementById('ep-ftipo').value;
-  var operarioNuevo=document.getElementById('ep-operario').value;
-  var seccionNueva=document.getElementById('ep-seccion').value;
-  var notasNuevas=document.getElementById('ep-notas').value.trim();
-  
-  // Registrar en log
-  var cambios=[];
-  if(p.descripcion!==desc)cambios.push('Descripción');
-  if(p.total!==totalNuevo)cambios.push('Total: '+p.total+'→'+totalNuevo);
-  if(p.senal!==senalNueva)cambios.push('Pagado: '+p.senal+'→'+senalNueva);
-  if(p.fechaEntrega!==fechaNueva)cambios.push('Fecha entrega');
-  if(p.operario!==operarioNuevo)cambios.push('Operario: '+p.operario+'→'+operarioNuevo);
-  if(p.seccion!==seccionNueva)cambios.push('Sección: '+p.seccion+'→'+seccionNueva);
-  
-  if(cambios.length){
-    sb.from('pedido_log').insert([{
-      pedido_id:p.id,
-      fase_anterior:p.fase,
-      fase_nueva:p.fase,
-      usuario:window._usuarioActual||'sistema',
-      accion:'edicion',
-      detalle:'Editado: '+cambios.join(', ')
-    }]).then(function(){});
-  }
-  
-  // Actualizar objeto local
-  p.descripcion=desc;
-  p.total=totalNuevo;
-  p.senal=senalNueva;
-  p.fechaEntrega=fechaNueva;
-  p.fechaTipo=ftipoNuevo;
-  p.operario=operarioNuevo;
-  p.seccion=seccionNueva;
-  p.notas=notasNuevas;
-  
-  // Actualizar BD
-  sb.from('pedidos').update({
-    descripcion:desc,
-    total:totalNuevo,
-    senal:senalNueva,
-    fecha_entrega:fechaNueva,
-    fecha_tipo:ftipoNuevo,
-    operario:operarioNuevo,
-    seccion:seccionNueva,
-    notas:notasNuevas
-  }).eq('id',p.id).then(function(r){
-    if(r.error){alert('Error: '+r.error.message);return;}
-    closeModal('modal-editar-pedido');
-    renderTaller();
-    alert('Pedido actualizado');
-  });
-}
-
-function anularPedido(){
-  if(!_pedidoModal)return;
-  var p=_pedidoModal;
-  
-  var motivo=prompt('Motivo de anulación (obligatorio):');
-  if(!motivo||!motivo.trim()){alert('Debes indicar el motivo de anulación');return;}
-  
-  if(!confirm('¿Seguro que quieres ANULAR el pedido '+p.id+'?\n\nMotivo: '+motivo+'\n\nEsta acción no se puede deshacer.'))return;
-  
-  // Registrar en log
-  sb.from('pedido_log').insert([{
-    pedido_id:p.id,
-    fase_anterior:p.fase,
-    fase_nueva:-1,
-    usuario:window._usuarioActual||'sistema',
-    accion:'anulacion',
-    detalle:'ANULADO - Motivo: '+motivo
-  }]).then(function(){});
-  
-  // Marcar como anulado (fase -1 o eliminar)
-  sb.from('pedidos').update({fase:-1,notas:(p.notas?p.notas+'\n\n':'')+'[ANULADO '+new Date().toLocaleDateString()+'] '+motivo}).eq('id',p.id).then(function(r){
-    if(r.error){alert('Error: '+r.error.message);return;}
-    p.fase=-1;
-    closeModal('modal-pedido');
-    renderTaller();
-    alert('Pedido '+p.id+' anulado');
-  });
-}
-
 function toggleCheckModal(id,field,val){var p=pedidos.find(function(x){return x.id===id;});if(!p)return;p[field]=val;var col=field==='ropaOk'?'ropa_ok':'dtf_ok';var upd={};upd[col]=val;sb.from('pedidos').update(upd).eq('id',id).then(function(){});}
 function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');generarResguardo(_pedidoModal);}}
 
 // ══════════════════════════════════════════════════════════════
 // COMUNICACIONES - WhatsApp y Email
 // ══════════════════════════════════════════════════════════════
-function getMsgTemplates(){
-  return {
-    listo:{
-      asunto:'Tu pedido está listo - '+TIENDA.nombre,
-      wa:'Hola {nombre}! 👋\n\nTu pedido *{id}* está *listo para recoger* en '+TIENDA.nombre+'.\n\n📦 {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 '+TIENDA.direccion+'\n⏰ '+TIENDA.horario+'\n\n¡Te esperamos! 🙌',
-      email:'Hola {nombre},\n\nTe informamos que tu pedido {id} ya está listo para recoger.\n\n📦 Trabajo: {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 Puedes pasar a recogerlo en:\n'+TIENDA.direccion+'\nHorario: '+TIENDA.horario+'\n\n¡Gracias por confiar en '+TIENDA.nombre+'!\n\nUn saludo,\nEl equipo de '+TIENDA.nombre
-    },
-    recuerdo:{
-      asunto:'Recordatorio: Tu pedido está pendiente - '+TIENDA.nombre,
-      wa:'Hola {nombre}! 👋\n\nTe recordamos que tu pedido *{id}* está *pendiente de recoger* en '+TIENDA.nombre+'.\n\n📦 {descripcion}\n💰 Pendiente: {pendiente_num}€\n\n📍 '+TIENDA.direccion+'\n⏰ '+TIENDA.horario+'\n\n¿Alguna duda? Escríbenos 😊',
-      email:'Hola {nombre},\n\nTe recordamos que tienes un pedido pendiente de recoger en '+TIENDA.nombre+'.\n\n📦 Pedido: {id}\n📦 Trabajo: {descripcion}\n💰 Pendiente de pago: {pendiente_num}€\n\n📍 Dirección:\n'+TIENDA.direccion+'\nHorario: '+TIENDA.horario+'\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nUn saludo,\nEl equipo de '+TIENDA.nombre
-    },
-    confirmacion:{
-      asunto:'Confirmación de pedido - '+TIENDA.nombre,
-      wa:'Hola {nombre}! 👋\n\nGracias por tu pedido en '+TIENDA.nombre+'.\n\n📋 *Pedido {id}*\n📦 {descripcion}\n📅 Entrega: {entrega}\n💰 Total: {total}€{pendiente}\n\nTe avisaremos cuando esté listo. ¡Gracias! 🙌',
-      email:'Hola {nombre},\n\nGracias por tu pedido en '+TIENDA.nombre+'. Aquí tienes los detalles:\n\n📋 Pedido: {id}\n📦 Trabajo: {descripcion}\n📅 Fecha entrega estimada: {entrega}\n💰 Total: {total}€{pendiente}\n\nTe contactaremos cuando esté listo para recoger.\n\n¡Gracias por confiar en nosotros!\n\nUn saludo,\nEl equipo de '+TIENDA.nombre
-    }
-  };
-}
+var MSG_TEMPLATES={
+  listo:{
+    asunto:'Tu pedido está listo - Print & Copy',
+    wa:'Hola {nombre}! 👋\n\nTu pedido *{id}* está *listo para recoger* en Print & Copy.\n\n📦 {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\n¡Te esperamos! 🙌',
+    email:'Hola {nombre},\n\nTe informamos que tu pedido {id} ya está listo para recoger.\n\n📦 Trabajo: {descripcion}\n💰 Total: {total}€{pendiente}\n\n📍 Puedes pasar a recogerlo en:\nAv. Portugal 62, Salamanca\nHorario: L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\n¡Gracias por confiar en Print & Copy!\n\nUn saludo,\nEl equipo de Print & Copy'
+  },
+  recuerdo:{
+    asunto:'Recordatorio: Tu pedido está pendiente - Print & Copy',
+    wa:'Hola {nombre}! 👋\n\nTe recordamos que tu pedido *{id}* está *pendiente de recoger* en Print & Copy.\n\n📦 {descripcion}\n💰 Pendiente: {pendiente_num}€\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\n¿Alguna duda? Escríbenos 😊',
+    email:'Hola {nombre},\n\nTe recordamos que tienes un pedido pendiente de recoger en Print & Copy.\n\n📦 Pedido: {id}\n📦 Trabajo: {descripcion}\n💰 Pendiente de pago: {pendiente_num}€\n\n📍 Dirección:\nAv. Portugal 62, Salamanca\nHorario: L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n\nSi tienes alguna duda, no dudes en contactarnos.\n\nUn saludo,\nEl equipo de Print & Copy'
+  },
+  confirmacion:{
+    asunto:'Confirmación de pedido - Print & Copy',
+    wa:'Hola {nombre}! 👋\n\nGracias por tu pedido en Print & Copy.\n\n📋 *Pedido {id}*\n📦 {descripcion}\n📅 Entrega: {entrega}\n💰 Total: {total}€{pendiente}\n\nTe avisaremos cuando esté listo. ¡Gracias! 🙌',
+    email:'Hola {nombre},\n\nGracias por tu pedido en Print & Copy. Aquí tienes los detalles:\n\n📋 Pedido: {id}\n📦 Trabajo: {descripcion}\n📅 Fecha entrega estimada: {entrega}\n💰 Total: {total}€{pendiente}\n\nTe contactaremos cuando esté listo para recoger.\n\n¡Gracias por confiar en nosotros!\n\nUn saludo,\nEl equipo de Print & Copy'
+  }
+};
 
+function renderBotonesComm(p){
+  var html='';
+  var tel=p.clienteTel?p.clienteTel.replace(/\s/g,''):'';
+  var email=p.clienteEmail||'';
+  if(tel||email){
+    html+='<div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;width:100%;margin-bottom:4px">Comunicar al cliente</div>';
+    if(tel){
+      html+='<button class="btn btn-sm" style="background:#25D366;color:white;border:none" onclick="enviarWA(\'listo\')">📱 WA: Listo</button>';
+      html+='<button class="btn btn-sm" style="background:#128C7E;color:white;border:none" onclick="enviarWA(\'recuerdo\')">📱 WA: Recordar</button>';
+      html+='<button class="btn btn-sm" style="background:#075E54;color:white;border:none" onclick="enviarWA(\'confirmacion\')">📱 WA: Confirmar</button>';
+    }
+    if(email){
+      html+='<button class="btn btn-sm" style="background:#EA4335;color:white;border:none" onclick="enviarEmail(\'listo\')">✉️ Email: Listo</button>';
+      html+='<button class="btn btn-sm" style="background:#D93025;color:white;border:none" onclick="enviarEmail(\'recuerdo\')">✉️ Email: Recordar</button>';
+    }
+    if(tel){
+      html+='<button class="btn btn-sm btn-secondary" onclick="llamarCliente()">📞 Llamar</button>';
+    }
+  }else{
+    html+='<div style="font-size:12px;color:#aaa;font-style:italic">Sin datos de contacto</div>';
+  }
+  document.getElementById('mp-comms').innerHTML=html;
+}
 
 function prepararMensaje(tipo){
   var p=_pedidoModal;if(!p)return null;
-  var tpl=getMsgTemplates()[tipo];if(!tpl)return null;
+  var tpl=MSG_TEMPLATES[tipo];if(!tpl)return null;
   var pend=p.total-(p.senal||0);
   var pendStr=pend>0?'\n⚠️ Pendiente de pago: '+pend.toFixed(2)+'€':'';
   var entrega=p.fechaEntrega?formatDate(p.fechaEntrega):'A convenir';
@@ -1854,7 +1702,7 @@ function llamarCliente(){
 }
 function setFilter(el){var f=el.dataset.f,v=el.dataset.v;activeFilters[f]=v;document.querySelectorAll('.filter-btn[data-f="'+f+'"]').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderTaller();}
 function getSecGlobal(){return document.getElementById('sec-global').value||'all';}
-function applySecFilter(list){var s=getSecGlobal();var filtered=list.filter(function(p){return p.fase>=0;});return s==='all'?filtered:filtered.filter(function(p){return p.seccion===s;});}
+function applySecFilter(list){var s=getSecGlobal();return s==='all'?list:list.filter(function(p){return p.seccion===s;});}
 function pasaFiltroEntrega(p){
   var v=activeFilters.entrega;if(v==='all')return true;if(!p.fechaEntrega)return false;
   var hoy=new Date();hoy.setHours(0,0,0,0);var fe=new Date(p.fechaEntrega+'T00:00:00');
@@ -2113,7 +1961,6 @@ function guardarEdicionCliente(){
   if(!nombre){alert('El nombre es obligatorio');return;}
   var tel=document.getElementById('ec-tel').value.trim();
   var email=document.getElementById('ec-email').value.trim();
-  if(email&&!validarEmail(email)){alert('El email no tiene un formato válido');return;}
   var sector=document.getElementById('ec-sector').value;
   var pagoVal=document.getElementById('ec-pago').value;
   var condText=pagoLabel(pagoVal);
@@ -2913,7 +2760,6 @@ function guardarSolicitud(){
     if(!tel){alert('Teléfono obligatorio');return;}
     
     var email=document.getElementById('sol-email').value.trim();
-    if(email&&!validarEmail(email)){alert('El email no tiene un formato válido');return;}
     var sector=document.getElementById('sol-sector').value;
     var requiereVisita=document.getElementById('sol-requiere-visita').checked;
     
@@ -3077,19 +2923,19 @@ function solContactarWA(){
   var tel=_solActual.telefono.replace(/\s/g,'').replace(/^\+/,'');
   if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
   var nombre=_solActual.nombre||'';
-  var msg='Hola '+nombre.split(' ')[0]+' 👋\n\nTe escribimos desde '+TIENDA.nombre+'.\n\n';
+  var msg='Hola '+nombre.split(' ')[0]+' 👋\n\nTe escribimos desde Print & Copy.\n\n';
   if(_solActual.necesita)msg+='Hemos recibido tu consulta sobre: '+_solActual.necesita.substring(0,100)+'...\n\n';
-  msg+='¿En qué podemos ayudarte?\n\n📍 '+TIENDA.direccion+'\n⏰ '+TIENDA.horario;
+  msg+='¿En qué podemos ayudarte?\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00';
   window.open('https://wa.me/'+tel+'?text='+encodeURIComponent(msg));
 }
 
 function solContactarEmail(){
   if(!_solActual||!_solActual.email)return;
   var nombre=_solActual.nombre||'';
-  var asunto='Re: Consulta '+TIENDA.nombre;
-  var cuerpo='Hola '+nombre.split(' ')[0]+',\n\nTe escribimos desde '+TIENDA.nombre+' en respuesta a tu consulta.\n\n';
+  var asunto='Re: Consulta Print & Copy';
+  var cuerpo='Hola '+nombre.split(' ')[0]+',\n\nTe escribimos desde Print & Copy en respuesta a tu consulta.\n\n';
   if(_solActual.necesita)cuerpo+='Nos comentabas que necesitas: '+_solActual.necesita+'\n\n';
-  cuerpo+='¿Cuándo te vendría bien que hablemos?\n\nUn saludo,\n'+TIENDA.nombre+'\n📍 '+TIENDA.direccion+'\n📞 '+TIENDA.tel_fijo;
+  cuerpo+='¿Cuándo te vendría bien que hablemos?\n\nUn saludo,\nPrint & Copy\n📍 Av. Portugal 62, Salamanca\n📞 923 01 80 34';
   window.open('mailto:'+_solActual.email+'?subject='+encodeURIComponent(asunto)+'&body='+encodeURIComponent(cuerpo));
 }
 
@@ -3826,12 +3672,10 @@ function nvGuardar(estado,canal){
   var fecha=document.getElementById('nv-fecha').value;
   if(tipoFecha==='fija'&&!fecha){alert('Fecha obligatoria cuando es fija');return;}
   
-  var email=document.getElementById('nv-email').value.trim();
-  if(email&&!validarEmail(email)){alert('El email no tiene un formato válido');return;}
-  
   // Verificar si el teléfono ya existe (solo si es cliente nuevo)
   var clienteExiste=clientes.find(function(c){return c.telefono===tel;});
   
+  var email=document.getElementById('nv-email').value.trim();
   var sector=document.getElementById('nv-sector').value;
   var validez=parseInt(document.getElementById('nv-validez').value)||15;
   var hoy=new Date();
@@ -4405,9 +4249,9 @@ function cotSeguimientoWA(tipo){
   var total=parseFloat(_cotActual.total)||0;
   var msg='';
   if(tipo==='recordar'){
-    msg='Hola '+nombre+' 👋\n\nTe escribimos desde '+TIENDA.nombre+'.\n\nQueremos saber si pudiste revisar el presupuesto *'+numero+'* por *'+total.toFixed(2)+'€*.\n\n¿Tienes alguna duda o quieres que lo ajustemos?\n\n📍 '+TIENDA.direccion+'\n⏰ '+TIENDA.horario;
+    msg='Hola '+nombre+' 👋\n\nTe escribimos desde Print & Copy.\n\nQueremos saber si pudiste revisar el presupuesto *'+numero+'* por *'+total.toFixed(2)+'€*.\n\n¿Tienes alguna duda o quieres que lo ajustemos?\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00';
   }else if(tipo==='urgente'){
-    msg='Hola '+nombre+' ⚡\n\nTe recordamos que el presupuesto *'+numero+'* está próximo a vencer.\n\nSi quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total.toFixed(2)+'€*\n\n📍 '+TIENDA.nombre+' · '+TIENDA.tel_fijo;
+    msg='Hola '+nombre+' ⚡\n\nTe recordamos que el presupuesto *'+numero+'* está próximo a vencer.\n\nSi quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total.toFixed(2)+'€*\n\n📍 Print & Copy · 923 01 80 34';
   }
   var btn=event.target;var txtOrig=btn.textContent;btn.disabled=true;btn.textContent='Enviando...';
   fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:nombre})}).then(function(r){return r.json();}).then(function(d){
@@ -4421,9 +4265,9 @@ function cotSeguimientoEmail(){
   var nombre=_cotActual.cliente_nombre||'';
   var numero=_cotActual.numero;
   var total=parseFloat(_cotActual.total)||0;
-  var msg='Hola '+nombre+',\n\nTe escribimos desde '+TIENDA.nombre+' para saber si pudiste revisar el presupuesto '+numero+' por '+total.toFixed(2)+'€.\n\n¿Tienes alguna duda? ¿Quieres que hagamos algún ajuste?\n\nEstamos a tu disposición.\n\n📍 '+TIENDA.direccion+'\n⏰ '+TIENDA.horario+'\n📞 '+TIENDA.tel_fijo+' / '+TIENDA.tel_whatsapp+'\n\nUn saludo,\n'+TIENDA.nombre;
+  var msg='Hola '+nombre+',\n\nTe escribimos desde Print & Copy para saber si pudiste revisar el presupuesto '+numero+' por '+total.toFixed(2)+'€.\n\n¿Tienes alguna duda? ¿Quieres que hagamos algún ajuste?\n\nEstamos a tu disposición.\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 11:00-14:00\n📞 923 01 80 34 / 658 79 70 90\n\nUn saludo,\nPrint & Copy';
   var btn=event.target;var txtOrig=btn.textContent;btn.disabled=true;btn.textContent='Enviando...';
-  fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({destinatario:_cotActual.cliente_email,asunto:'Seguimiento presupuesto '+numero+' - '+TIENDA.nombre,mensaje:msg})}).then(function(r){return r.json();}).then(function(d){
+  fetch('/api/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({destinatario:_cotActual.cliente_email,asunto:'Seguimiento presupuesto '+numero+' - Print & Copy',mensaje:msg})}).then(function(r){return r.json();}).then(function(d){
     if(d.success){btn.textContent='✓ Enviado';btn.style.background='#3B6D11';setTimeout(function(){btn.textContent=txtOrig;btn.style.background='';btn.disabled=false;},2000);}
     else{alert('Error: '+(d.error||'desconocido'));btn.textContent=txtOrig;btn.disabled=false;}
   }).catch(function(e){alert('Error: '+e.message);btn.textContent=txtOrig;btn.disabled=false;});
@@ -4806,4 +4650,3 @@ function generarPDFPresupuesto(soloHTML){
 
 </body>
 </html>
-<!-- deploy Fri Apr 10 19:44:38 UTC 2026 -->
