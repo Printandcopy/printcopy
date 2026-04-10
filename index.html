@@ -958,6 +958,31 @@ textarea{resize:vertical;min-height:64px}
   </div>
 </div>
 
+<!-- MODAL: Cobro Señal -->
+<div class="modal-overlay" id="modal-cobro-senal">
+  <div class="modal" style="max-width:360px">
+    <h3 style="margin-bottom:16px">💰 Confirmar cobro de señal</h3>
+    <div id="modal-cobro-info" style="background:#f5f5f5;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#444"></div>
+    <div class="field" style="margin-bottom:12px">
+      <label style="font-weight:600">Importe cobrado (€)</label>
+      <input type="number" id="cobro-importe" step="0.01" min="0" style="font-size:18px;font-weight:700;color:#185FA5;text-align:right">
+    </div>
+    <div class="field" style="margin-bottom:16px">
+      <label style="font-weight:600">Método de pago</label>
+      <div class="radio-group" style="margin-top:6px">
+        <label class="radio-opt"><input type="radio" name="cobro-metodo" value="efectivo"> 💵 Efectivo</label>
+        <label class="radio-opt"><input type="radio" name="cobro-metodo" value="tarjeta"> 💳 Tarjeta</label>
+        <label class="radio-opt"><input type="radio" name="cobro-metodo" value="bizum" checked> 📱 Bizum</label>
+        <label class="radio-opt"><input type="radio" name="cobro-metodo" value="transferencia"> 🏦 Transf.</label>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-cobro-senal')">Cancelar</button>
+      <button class="btn btn-success" onclick="ejecutarCobro()">✓ Confirmar cobro</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODALES -->
 <div class="modal-overlay" id="modal-resguardo">
   <div class="modal"><h3>Resguardo del pedido</h3><div id="print-area"></div>
@@ -4446,7 +4471,7 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
             fecha_entrega:fecha,fecha_tipo:'aprox',descripcion:lin.descripcion,
             notas:'Auto desde '+pres.numero+(metodo?' | '+metodo:''),
             total:parseFloat(lin.subtotal)||0,senal:cV2R2(senalTotal*proporcion),
-            pago:pagoEst,condiciones:pres.condicion_pago||'50_50',fase:1,
+            pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:1,
             presupuesto_origen:pres.numero};
           sb.from('pedidos').insert([ped]).then(function(){res(numPed);});
         });
@@ -4467,19 +4492,24 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
   });
 }
 
+var _cobroPresId=null;
 function confirmarSenal(presId){
   var pres=presupuestos.find(function(p){return p.id===presId;});
   if(!pres)return;
+  _cobroPresId=presId;
   var senalTeorica=calcSenal(parseFloat(pres.total)||0,pres.condicion_pago);
-  var importeStr=prompt('Importe cobrado (€):\n\n'+pres.numero+' - '+pres.cliente_nombre+'\nSeñal teórica: '+senalTeorica.toFixed(2)+'€',senalTeorica.toFixed(2));
-  if(importeStr===null)return;
-  var importeReal=parseFloat(importeStr.replace(',','.'))||0;
+  document.getElementById('modal-cobro-info').innerHTML='<strong>'+pres.numero+'</strong> — '+pres.cliente_nombre+'<br><span style="color:#888">Total: '+cV2Fmt(parseFloat(pres.total)||0)+' · Señal teórica: <strong>'+cV2Fmt(senalTeorica)+'</strong></span>';
+  document.getElementById('cobro-importe').value=senalTeorica.toFixed(2);
+  document.getElementById('modal-cobro-senal').classList.add('open');
+}
+function ejecutarCobro(){
+  var presId=_cobroPresId;
+  var pres=presupuestos.find(function(p){return p.id===presId;});
+  if(!pres)return;
+  var importeReal=parseFloat(document.getElementById('cobro-importe').value)||0;
   if(importeReal<=0){alert('El importe debe ser mayor que 0');return;}
-  var metodoOpciones=['efectivo','tarjeta','bizum','transferencia'];
-  var metodoIdx=prompt('Método de pago:\n1. Efectivo\n2. Tarjeta\n3. Bizum\n4. Transferencia\n\nIntroduce número (1-4):','4');
-  if(metodoIdx===null)return;
-  var metodo=metodoOpciones[parseInt(metodoIdx)-1]||'transferencia';
-  if(!confirm('Confirmar cobro de '+importeReal.toFixed(2)+'€ ('+metodo+') y crear pedido(s)?'))return;
+  var metodo=document.querySelector('input[name="cobro-metodo"]:checked').value;
+  closeModal('modal-cobro-senal');
   
   function crear(p){
     var senal=importeReal;
