@@ -1197,6 +1197,13 @@ function showScreen(id,el){
   if(id==='analytics')renderAnalytics();
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function validarEmail(email){
+  if(!email)return true; // Email opcional
+  var regex=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return regex.test(email);
+}
+
 document.addEventListener('click',function(e){if(e.target.classList.contains('modal-overlay')&&!window.getSelection().toString())e.target.classList.remove('open');});
 // Tabulacion dentro de modales
 document.addEventListener('keydown',function(e){
@@ -2138,6 +2145,7 @@ function guardarEdicionCliente(){
   if(!nombre){alert('El nombre es obligatorio');return;}
   var tel=document.getElementById('ec-tel').value.trim();
   var email=document.getElementById('ec-email').value.trim();
+  if(email&&!validarEmail(email)){alert('El email no tiene un formato válido');return;}
   var sector=document.getElementById('ec-sector').value;
   var pagoVal=document.getElementById('ec-pago').value;
   var condText=pagoLabel(pagoVal);
@@ -2937,6 +2945,7 @@ function guardarSolicitud(){
     if(!tel){alert('Teléfono obligatorio');return;}
     
     var email=document.getElementById('sol-email').value.trim();
+    if(email&&!validarEmail(email)){alert('El email no tiene un formato válido');return;}
     var sector=document.getElementById('sol-sector').value;
     var requiereVisita=document.getElementById('sol-requiere-visita').checked;
     
@@ -3849,10 +3858,12 @@ function nvGuardar(estado,canal){
   var fecha=document.getElementById('nv-fecha').value;
   if(tipoFecha==='fija'&&!fecha){alert('Fecha obligatoria cuando es fija');return;}
   
+  var email=document.getElementById('nv-email').value.trim();
+  if(email&&!validarEmail(email)){alert('El email no tiene un formato válido');return;}
+  
   // Verificar si el teléfono ya existe (solo si es cliente nuevo)
   var clienteExiste=clientes.find(function(c){return c.telefono===tel;});
   
-  var email=document.getElementById('nv-email').value.trim();
   var sector=document.getElementById('nv-sector').value;
   var validez=parseInt(document.getElementById('nv-validez').value)||15;
   var hoy=new Date();
