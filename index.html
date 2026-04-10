@@ -974,10 +974,47 @@ textarea{resize:vertical;min-height:64px}
   <div class="modal" style="max-width:580px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px"><div id="mp-title"></div><button class="btn btn-secondary btn-sm" onclick="closeModal('modal-pedido')">✕ Cerrar</button></div>
     <div id="mp-body"></div>
-    <div id="mp-comms" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"></div>
-    <div class="btn-row" style="margin-top:14px"><button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button><button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir resguardo</button></div>
+    <div class="btn-row" style="margin-top:14px;flex-wrap:wrap">
+      <button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button>
+      <button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir</button>
+      <button class="btn" style="background:#BA7517;color:white;border:none" onclick="editarPedido()">✏️ Editar</button>
+      <button class="btn btn-danger" onclick="anularPedido()">✗ Anular</button>
+    </div>
   </div>
 </div>
+
+<div class="modal-overlay" id="modal-editar-pedido">
+  <div class="modal" style="max-width:520px">
+    <h3>Editar pedido <span id="ep-id" style="font-family:monospace"></span></h3>
+    <div class="form-grid" style="margin-bottom:10px">
+      <div class="field" style="grid-column:1/-1"><label>Descripción *</label><textarea id="ep-desc" rows="3"></textarea></div>
+    </div>
+    <div class="form-grid" style="margin-bottom:10px">
+      <div class="field"><label>Total (€)</label><input type="number" id="ep-total" step="0.01" min="0"></div>
+      <div class="field"><label>Pagado (€)</label><input type="number" id="ep-senal" step="0.01" min="0"></div>
+    </div>
+    <div class="form-grid" style="margin-bottom:10px">
+      <div class="field"><label>Fecha entrega</label><input type="date" id="ep-fecha"></div>
+      <div class="field"><label>Tipo fecha</label>
+        <select id="ep-ftipo"><option value="aprox">Aproximada</option><option value="fija">Fija (urgente)</option></select>
+      </div>
+    </div>
+    <div class="form-grid" style="margin-bottom:10px">
+      <div class="field"><label>Operario</label>
+        <select id="ep-operario"><option value="Marilia">Marilia</option><option value="Raúl">Raúl</option><option value="Carlos">Carlos</option><option value="Alba">Alba</option></select>
+      </div>
+      <div class="field"><label>Sección</label>
+        <select id="ep-seccion"><option value="XR">Xerox</option><option value="PL">Plotter</option><option value="TX">Textil</option><option value="UV">UV</option><option value="SUB">Sublimación</option><option value="NEON">Neón</option></select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:10px"><label>Notas</label><textarea id="ep-notas" rows="2"></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('modal-editar-pedido')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEdicionPedido()">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-cliente">
   <div class="modal"><h3 id="mc-title"></h3><div id="mc-body"></div><div class="btn-row"><button class="btn btn-secondary" onclick="closeModal('modal-cliente')">Cerrar</button></div></div>
 </div>
@@ -1558,6 +1595,54 @@ function enviarWAResena(p){
 function toggleCheckModal(id,field,val){var p=pedidos.find(function(x){return x.id===id;});if(!p)return;p[field]=val;var col=field==='ropaOk'?'ropa_ok':'dtf_ok';var upd={};upd[col]=val;sb.from('pedidos').update(upd).eq('id',id).then(function(){});}
 function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');generarResguardo(_pedidoModal);}}
 
+function editarPedido(){
+  if(!_pedidoModal)return;
+  var p=_pedidoModal;
+  document.getElementById('ep-id').textContent=p.id;
+  document.getElementById('ep-desc').value=p.descripcion||'';
+  document.getElementById('ep-total').value=p.total||0;
+  document.getElementById('ep-senal').value=p.senal||0;
+  document.getElementById('ep-fecha').value=p.fechaEntrega||'';
+  document.getElementById('ep-ftipo').value=p.fechaTipo||'aprox';
+  document.getElementById('ep-operario').value=p.operario||'Marilia';
+  document.getElementById('ep-seccion').value=p.seccion||'XR';
+  document.getElementById('ep-notas').value=p.notas||'';
+  closeModal('modal-pedido');
+  document.getElementById('modal-editar-pedido').classList.add('open');
+}
+
+function guardarEdicionPedido(){
+  if(!_pedidoModal)return;
+  var p=_pedidoModal;
+  var desc=document.getElementById('ep-desc').value.trim();
+  if(!desc){alert('La descripción es obligatoria');return;}
+  var totalNuevo=parseFloat(document.getElementById('ep-total').value)||0;
+  var senalNueva=parseFloat(document.getElementById('ep-senal').value)||0;
+  var fechaNueva=document.getElementById('ep-fecha').value||null;
+  var ftipoNuevo=document.getElementById('ep-ftipo').value;
+  var operarioNuevo=document.getElementById('ep-operario').value;
+  var seccionNueva=document.getElementById('ep-seccion').value;
+  var notasNuevas=document.getElementById('ep-notas').value.trim();
+  p.descripcion=desc;p.total=totalNuevo;p.senal=senalNueva;p.fechaEntrega=fechaNueva;
+  p.fechaTipo=ftipoNuevo;p.operario=operarioNuevo;p.seccion=seccionNueva;p.notas=notasNuevas;
+  sb.from('pedidos').update({descripcion:desc,total:totalNuevo,senal:senalNueva,fecha_entrega:fechaNueva,fecha_tipo:ftipoNuevo,operario:operarioNuevo,seccion:seccionNueva,notas:notasNuevas}).eq('id',p.id).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    closeModal('modal-editar-pedido');renderTaller();alert('Pedido actualizado');
+  });
+}
+
+function anularPedido(){
+  if(!_pedidoModal)return;
+  var p=_pedidoModal;
+  var motivo=prompt('Motivo de anulación (obligatorio):');
+  if(!motivo||!motivo.trim()){alert('Debes indicar el motivo de anulación');return;}
+  if(!confirm('¿Seguro que quieres ANULAR el pedido '+p.id+'?\n\nMotivo: '+motivo+'\n\nEsta acción no se puede deshacer.'))return;
+  sb.from('pedidos').update({fase:-1,notas:(p.notas?p.notas+'\n\n':'')+'[ANULADO '+new Date().toLocaleDateString()+'] '+motivo}).eq('id',p.id).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    p.fase=-1;closeModal('modal-pedido');renderTaller();alert('Pedido '+p.id+' anulado');
+  });
+}
+
 // ══════════════════════════════════════════════════════════════
 // COMUNICACIONES - WhatsApp y Email
 // ══════════════════════════════════════════════════════════════
@@ -1702,7 +1787,7 @@ function llamarCliente(){
 }
 function setFilter(el){var f=el.dataset.f,v=el.dataset.v;activeFilters[f]=v;document.querySelectorAll('.filter-btn[data-f="'+f+'"]').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderTaller();}
 function getSecGlobal(){return document.getElementById('sec-global').value||'all';}
-function applySecFilter(list){var s=getSecGlobal();return s==='all'?list:list.filter(function(p){return p.seccion===s;});}
+function applySecFilter(list){var s=getSecGlobal();var filtered=list.filter(function(p){return p.fase>=0;});return s==='all'?filtered:filtered.filter(function(p){return p.seccion===s;});}
 function pasaFiltroEntrega(p){
   var v=activeFilters.entrega;if(v==='all')return true;if(!p.fechaEntrega)return false;
   var hoy=new Date();hoy.setHours(0,0,0,0);var fe=new Date(p.fechaEntrega+'T00:00:00');
