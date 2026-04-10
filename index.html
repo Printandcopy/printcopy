@@ -4540,9 +4540,7 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
           sb.from('pedidos').insert([ped]).then(function(ri){
             if(ri.error){
               console.error('Error insert pedido auto:',ri.error.message);
-              alert('Error al crear pedido: '+ri.error.message+'
-
-Revisa que todas las columnas existen en la BD.');
+              alert('Error al crear pedido: '+ri.error.message+'\n\nRevisa que todas las columnas existen en la BD.');
               res(null);
             }else{res(numPed);}
           });
