@@ -277,6 +277,10 @@ textarea{resize:vertical;min-height:64px}
 .pres-rechazado{background:#FCEBEB;color:#A32D2D}
 .pres-card{background:#fff;border-radius:8px;border:0.5px solid #ddd;margin-bottom:8px;padding:12px 16px;cursor:pointer;transition:box-shadow .15s}
 .pres-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.bandeja-card{background:#fff;border-radius:10px;border:0.5px solid #e0e0e0;margin-bottom:10px;padding:14px 16px;cursor:pointer;transition:all .15s}
+.bandeja-card:hover{border-color:#ccc}
+.bandeja-card.bandeja-open{border:2px solid #185FA5;cursor:default}
+.bandeja-header{display:flex;align-items:center;justify-content:space-between}
 /* Layout modal venta */
 .venta-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
 @media(max-width:900px){.venta-grid{grid-template-columns:1fr}}
@@ -490,34 +494,26 @@ textarea{resize:vertical;min-height:64px}
   <div class="taller-top">
     <div style="display:flex;gap:10px;align-items:center">
       <h2 style="font-size:16px;font-weight:600;margin:0">Pedidos</h2>
+      <span id="pedidos-count" style="background:#FCEBEB;color:#A32D2D;padding:2px 10px;border-radius:12px;font-size:13px;font-weight:500"></span>
       <button class="btn btn-primary" onclick="nuevaVenta()">+ Nuevo pedido</button>
-      <div class="view-tabs" style="margin-left:10px">
-        <button class="view-tab active" onclick="setPedidosView('lista',this)">Lista</button>
-        <button class="view-tab" onclick="setPedidosView('kanban',this)">Por sección</button>
-      </div>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
-      <input type="text" id="pedidos-buscar" placeholder="Buscar..." oninput="renderPedidosActivos()" style="width:120px;padding:4px 8px;font-size:11px;border:1px solid #ddd;border-radius:4px">
+      <select class="sort-select" id="pedidos-vista" onchange="renderPedidosActivos()">
+        <option value="sin_asignar">Sin asignar</option>
+        <option value="todos">Todos</option>
+      </select>
       <select class="sort-select" id="pedidos-seccion" onchange="renderPedidosActivos()">
         <option value="all">Todas secciones</option>
-        <option value="XR">Xerox (XR)</option>
-        <option value="PL">Plotter (PL)</option>
-        <option value="TX">Textil (TX)</option>
-        <option value="UV">UV (UV)</option>
-        <option value="SUB">Sublimación (SUB)</option>
-        <option value="NEON">Neón (NEON)</option>
-      </select>
-      <select class="sort-select" id="pedidos-filtro" onchange="renderPedidosActivos()">
-        <option value="activos">Activos</option>
-        <option value="hoy">Entrega hoy</option>
-        <option value="semana">Esta semana</option>
-        <option value="terminados">Terminados</option>
-        <option value="all">Todos</option>
+        <option value="XR">Xerox</option>
+        <option value="PL">Plotter</option>
+        <option value="TX">Textil</option>
+        <option value="UV">UV</option>
+        <option value="SUB">Sublimación</option>
+        <option value="NEON">Neón</option>
       </select>
       <button class="btn btn-secondary btn-sm" onclick="cargarDatos()">↻</button>
     </div>
   </div>
-  <div class="stat-row" id="pedidos-stats"></div>
   <div id="pedidos-list"></div>
 </div>
 
@@ -3095,63 +3091,121 @@ function renderVentas(){
 }
 
 function renderPedidosActivos(){
-  var f=document.getElementById('pedidos-filtro').value;
+  var vista=document.getElementById('pedidos-vista').value;
   var secSel=document.getElementById('pedidos-seccion');
   var secFiltro=secSel?secSel.value:'all';
-  var buscar=(document.getElementById('pedidos-buscar').value||'').toLowerCase();
-  var hoy=new Date().toISOString().split('T')[0];
-  var semana=new Date(Date.now()+7*24*60*60*1000).toISOString().split('T')[0];
+  
+  // Filtrar según vista
   var list;
-  
-  // Filtro por estado
-  if(f==='activos')list=pedidos.filter(function(p){return p.fase<6;});
-  else if(f==='hoy')list=pedidos.filter(function(p){return p.fechaEntrega===hoy;});
-  else if(f==='semana')list=pedidos.filter(function(p){return p.fechaEntrega&&p.fechaEntrega<=semana&&p.fechaEntrega>=hoy;});
-  else if(f==='terminados')list=pedidos.filter(function(p){return p.fase>=5;});
-  else list=pedidos;
-  
-  // Filtro por sección (solo en vista lista)
-  if(currentPedidosView==='lista' && secFiltro!=='all')list=list.filter(function(p){return p.seccion===secFiltro;});
-  
-  // Filtro por búsqueda
-  if(buscar){
-    list=list.filter(function(p){
-      return (p.id&&p.id.toLowerCase().includes(buscar))||(p.clienteNombre&&p.clienteNombre.toLowerCase().includes(buscar))||(p.clienteTel&&p.clienteTel.includes(buscar));
-    });
+  if(vista==='sin_asignar'){
+    list=pedidos.filter(function(p){return p.fase===0;});
+  }else{
+    list=pedidos.filter(function(p){return p.fase>=0&&p.fase<7;});
   }
   
+  // Filtro por sección
+  if(secFiltro!=='all')list=list.filter(function(p){return p.seccion===secFiltro;});
+  
+  // Ordenar por fecha creación (más recientes primero)
   list.sort(function(a,b){return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);});
   
-  var activos=pedidos.filter(function(p){return p.fase<6;}).length;
-  var entregaHoy=pedidos.filter(function(p){return p.fechaEntrega===hoy;}).length;
-  var pendCobro=pedidos.filter(function(p){return p.fase===5;}).length;
-  var valActivo=pedidos.filter(function(p){return p.fase<6;}).reduce(function(s,p){return s+(parseFloat(p.total)||0);},0);
+  // Contador
+  var sinAsignar=pedidos.filter(function(p){return p.fase===0;}).length;
+  document.getElementById('pedidos-count').textContent=sinAsignar;
+  document.getElementById('pedidos-count').style.display=sinAsignar>0?'':'none';
   
-  document.getElementById('pedidos-stats').innerHTML='<div class="stat-card"><div class="sv">'+activos+'</div><div class="sl">Activos</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+entregaHoy+'</div><div class="sl">Entrega hoy</div></div><div class="stat-card"><div class="sv" style="color:#3B6D11">'+pendCobro+'</div><div class="sl">Pend. cobro</div></div><div class="stat-card"><div class="sv">'+valActivo.toFixed(0)+'€</div><div class="sl">Valor</div></div>';
-  
-  if(currentPedidosView==='kanban'){
-    renderPedidosKanban(list);
+  if(!list.length){
+    document.getElementById('pedidos-list').innerHTML='<div class="empty-state" style="padding:30px;color:#888;font-size:14px;text-align:center">'+(vista==='sin_asignar'?'🎉 No hay pedidos pendientes de asignar':'Sin pedidos')+'</div>';
     return;
   }
   
-  if(!list.length){document.getElementById('pedidos-list').innerHTML='<div class="empty-state" style="padding:15px;color:#888;font-size:13px">Sin pedidos</div>';return;}
-  
   document.getElementById('pedidos-list').innerHTML=list.map(function(p){
-    var fechaHora=p.fechaCreacion?formatDateTime(p.fechaCreacion):'';
-    var faseNombre=FASES[p.fase]||'Desconocido';
-    var faseColor=['#666','#185FA5','#BA7517','#9C27B0','#E65100','#3B6D11','#888'][p.fase]||'#666';
-    return '<div class="pres-card" onclick="verPedido(\''+p.id+'\')"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div style="display:flex;align-items:center;gap:10px"><span style="font-family:monospace;font-weight:700;font-size:14px">'+p.id+'</span><span style="background:'+faseColor+'22;color:'+faseColor+';padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600">'+faseNombre+'</span></div><span style="font-size:15px;font-weight:700;color:#185FA5">'+cV2Fmt(p.total||0)+'</span></div><div style="margin-top:8px;font-size:13px"><strong>'+(p.clienteNombre||'')+'</strong>'+(p.clienteTel?' · <span style="color:#666">'+p.clienteTel+'</span>':'')+'</div><div style="margin-top:4px;font-size:12px;color:#555">'+(p.descripcion||'')+'</div><div style="margin-top:4px;font-size:11px;color:#888">Creado: '+fechaHora+(p.fechaEntrega?' · Entrega: '+formatDate(p.fechaEntrega):'')+'</div></div>';
+    var tiempoRel=tiempoRelativo(p.fechaCreacion);
+    var secColor=SEC_COLORS[p.seccion]||{bg:'#f1f1f1',color:'#666'};
+    return '<div class="bandeja-card" onclick="toggleBandejaCard(this,\''+p.id+'\')">'+
+      '<div class="bandeja-header">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<span style="font-family:monospace;font-weight:600;font-size:14px">'+p.id+'</span>'+
+          '<span style="background:'+secColor.bg+';color:'+secColor.color+';padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500">'+SECS[p.seccion]+'</span>'+
+        '</div>'+
+        '<span style="font-size:12px;color:#888">'+tiempoRel+'</span>'+
+      '</div>'+
+      '<div style="margin-top:8px;font-size:14px;font-weight:500">'+p.clienteNombre+'</div>'+
+      '<div style="margin-top:4px;font-size:13px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.descripcion+'</div>'+
+      '<div class="bandeja-expand" style="display:none">'+
+        '<div style="border-top:1px solid #eee;margin-top:12px;padding-top:12px">'+
+          (p.clienteTel?'<div style="font-size:13px;color:#666;margin-bottom:8px">📞 '+p.clienteTel+'</div>':'')+
+          '<div style="font-size:13px;line-height:1.5">'+p.descripcion+'</div>'+
+          '<div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#888">'+
+            '<span>Atendió: <strong style="color:#1a1a1a">'+(p.creadoPor||p.operario||'—')+'</strong></span>'+
+            '<span>'+formatDateTime(p.fechaCreacion)+'</span>'+
+          '</div>'+
+          '<div style="margin-top:14px;display:flex;gap:8px">'+
+            '<button class="btn btn-primary" onclick="event.stopPropagation();cogerPedido(\''+p.id+'\')" style="flex:1">✓ Coger pedido</button>'+
+            '<button class="btn btn-secondary" onclick="event.stopPropagation();verPedido(\''+p.id+'\')">Ver más</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
   }).join('');
 }
+
+function toggleBandejaCard(card,id){
+  var expand=card.querySelector('.bandeja-expand');
+  var isOpen=expand.style.display!=='none';
+  // Cerrar todas
+  document.querySelectorAll('.bandeja-expand').forEach(function(e){e.style.display='none';});
+  document.querySelectorAll('.bandeja-card').forEach(function(c){c.classList.remove('bandeja-open');});
+  // Abrir esta si estaba cerrada
+  if(!isOpen){
+    expand.style.display='block';
+    card.classList.add('bandeja-open');
+  }
+}
+
+function cogerPedido(id){
+  var p=pedidos.find(function(x){return x.id===id;});
+  if(!p)return;
+  var operario=window._operarioActual||'Marilia';
+  if(!confirm('¿Coger pedido '+id+' y asignarlo a '+operario+'?'))return;
+  p.fase=1;
+  p.operario=operario;
+  sb.from('pedidos').update({fase:1,operario:operario}).eq('id',id).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    renderPedidosActivos();
+    alert('Pedido '+id+' asignado a '+operario);
+  });
+}
+
+function tiempoRelativo(fecha){
+  if(!fecha)return '';
+  var ahora=new Date();
+  var f=new Date(fecha);
+  var diffMs=ahora-f;
+  var diffMin=Math.floor(diffMs/60000);
+  var diffHoras=Math.floor(diffMs/3600000);
+  var diffDias=Math.floor(diffMs/86400000);
+  if(diffMin<1)return 'ahora';
+  if(diffMin<60)return 'hace '+diffMin+' min';
+  if(diffHoras<24)return 'hace '+diffHoras+'h';
+  if(diffDias===1)return 'ayer';
+  return 'hace '+diffDias+' días';
+}
+
+var SEC_COLORS={
+  XR:{bg:'#EEEDFE',color:'#534AB7'},
+  PL:{bg:'#E1F5EE',color:'#0F6E56'},
+  TX:{bg:'#FAEEDA',color:'#BA7517'},
+  UV:{bg:'#E6F1FB',color:'#185FA5'},
+  SUB:{bg:'#FBEAF0',color:'#993556'},
+  NEON:{bg:'#FAECE7',color:'#993C1D'}
+};
 
 var currentPedidosView='lista';
 function setPedidosView(v,el){
   currentPedidosView=v;
   document.querySelectorAll('#screen-ventas .view-tab').forEach(function(t){t.classList.remove('active');});
   el.classList.add('active');
-  // Ocultar selector de sección en vista kanban
-  var secSelect=document.getElementById('pedidos-seccion');
-  if(secSelect)secSelect.style.display=v==='kanban'?'none':'';
   renderPedidosActivos();
 }
 
