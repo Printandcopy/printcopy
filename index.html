@@ -4666,26 +4666,20 @@ function reenviarEnlacePago(presId){
 
 function actualizarBarraAvisos(){
   var ahora=new Date();
-  var credito=['0_100','transferencia'];
-  var todos=presupuestos.filter(function(p){return p.estado==='aceptado'&&!p.convertido;});
+  var credito=['0_100','transferencia','credito_senal','credito_total'];
+  // convertido puede ser null en BD — tratarlo como false
+  var todos=presupuestos.filter(function(p){return p.estado==='aceptado'&&!p.convertido&&p.convertido!==true;});
   var barra=document.getElementById('barra-avisos');
   var txt=document.getElementById('barra-avisos-texto');
   var btnVer=document.getElementById('barra-ver-btn');
   var btnCrear=document.getElementById('barra-crear-btn');
   var lista=document.getElementById('barra-avisos-lista');
   if(!barra)return;
-  // Auto-crear pedido para clientes credito (solo si no está ya convertido)
-  todos.forEach(function(p){
-    if(credito.indexOf(p.condicion_pago)>=0 && !p.convertido){
-      // Marcar convertido inmediatamente en BD para evitar duplicados entre pestañas
-      sb.from('presupuestos').update({convertido:true}).eq('id',p.id).then(function(){
-        if(p.lineas&&p.lineas.length){crearPedidoDesdePresupuesto(p,0,'credito');}
-        else{sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',p.id).then(function(r){p.lineas=r.data||[];crearPedidoDesdePresupuesto(p,0,'credito');});}
-      });
-    }
-  });
-  var pendCobro=todos.filter(function(p){return credito.indexOf(p.condicion_pago)<0&&!p.senal_cobrada&&p.condicion_pago==='50_50';});
-  var listosPedido=todos.filter(function(p){return p.senal_cobrada||p.condicion_pago==='0_100';});
+  // Los presupuestos de crédito se muestran en "Listos para crear pedido" — NO auto-crear para evitar duplicados
+  // pendCobro: aceptados, no convertidos, que necesitan cobro de señal antes de crear pedido
+  var pendCobro=todos.filter(function(p){return credito.indexOf(p.condicion_pago)<0&&!p.senal_cobrada;});
+  // listosPedido: ya tienen señal cobrada O son de crédito (no necesitan señal)
+  var listosPedido=todos.filter(function(p){return p.senal_cobrada||credito.indexOf(p.condicion_pago)>=0;});
   if(!todos.length){barra.style.display='none';return;}
   barra.style.display='flex';
   var totalCount=todos.length;
