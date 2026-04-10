@@ -1318,6 +1318,10 @@ function finalizarGuardar(cliente){
       if(idx>=carritoItems.length){
         // Todos creados
         mostrarResguardoCombinado(pedidosCreados,presId);
+        // Marcar presupuesto como convertido si venía de una cotización
+        if(presId){
+          sb.from('presupuestos').update({estado:'aceptado',convertido:true}).eq('id',presId).then(function(){cargarPresupuestos();});
+        }
         window._presupuestoId=null;window._carritoData=null;limpiarCarrito();
         document.getElementById('btn-guardar').textContent='Guardar y generar resguardo';
         document.getElementById('btn-guardar').disabled=false;
