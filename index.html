@@ -97,14 +97,14 @@ textarea{resize:vertical;min-height:64px}
 .mc-num{font-size:10px;font-weight:500;color:#666}
 .mc-weekend{opacity:0.35}
 .mc-weekend .mc-num{color:#aaa;font-weight:400}
-.mc-hoy{background:#E6F1FB}
-.mc-hoy .mc-num{color:#185FA5;font-weight:600}
-.mc-entrega{background:#EAF3DE}
-.mc-entrega .mc-num{color:#3B6D11;font-weight:600}
-.mc-hoy-entrega{background:#C0DD97}
-.mc-hoy-entrega .mc-num{color:#27500A;font-weight:700}
-.mc-vencido{background:#FCEBEB}
-.mc-vencido .mc-num{color:#A32D2D;font-weight:600}
+.mc-hoy{background:#B5D4F4}
+.mc-hoy .mc-num{color:#0C447C;font-weight:700}
+.mc-entrega{background:#C0DD97}
+.mc-entrega .mc-num{color:#27500A;font-weight:700}
+.mc-hoy-entrega{background:#97C459}
+.mc-hoy-entrega .mc-num{color:#173404;font-weight:700}
+.mc-vencido{background:#F7C1C1}
+.mc-vencido .mc-num{color:#791F1F;font-weight:700}
 
 .fase-stepper{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
 .fase-step{padding:4px 9px;border-radius:5px;border:0.5px solid #ddd;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#888}
@@ -496,6 +496,20 @@ textarea{resize:vertical;min-height:64px}
   </div>
   <div class="stat-row" id="taller-stats"></div>
   <div id="filtros-lista" class="taller-filters">
+    <div class="filter-row"><span class="filter-label">Sección</span>
+      <select class="sort-select" id="seccion-select" onchange="renderTaller()">
+        <option value="all">Todas</option>
+        <option value="XR">Xerox (XR)</option>
+        <option value="PL">Plotter (PL)</option>
+        <option value="TX">Textil (TX)</option>
+        <option value="UV">UV (UV)</option>
+        <option value="SUB">Sublimación (SUB)</option>
+        <option value="SE">Serigrafía (SE)</option>
+        <option value="VI">Vinilo (VI)</option>
+        <option value="DT">DTF (DT)</option>
+        <option value="IM">Imprenta (IM)</option>
+      </select>
+    </div>
     <div class="filter-row"><span class="filter-label">Fase</span>
       <button class="filter-btn active" data-f="fase" data-v="all" onclick="setFilter(this)">Todos</button>
       <button class="filter-btn" data-f="fase" data-v="0" onclick="setFilter(this)">Nuevo</button>
@@ -1592,7 +1606,7 @@ function pasaFiltroEntrega(p){
 }
 function renderTaller(){renderStats();if(currentView==='lista')renderLista();else if(currentView==='semana')renderSemana();else if(currentView==='mes')renderMes();else renderOperario();}
 function renderStats(){var all=applySecFilter(pedidos),activos=all.filter(function(p){return p.fase<4;}),totalPend=all.reduce(function(s,p){return s+(p.total-(p.senal||0));},0),urgentes=activos.filter(function(p){return p.fechaTipo==='fija';}).length,listos=activos.filter(function(p){return p.fase===3;}).length;document.getElementById('taller-stats').innerHTML='<div class="stat-card"><div class="sv">'+activos.length+'</div><div class="sl">Activos</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+listos+'</div><div class="sl">Listos para recoger</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPend.toFixed(0)+'€</div><div class="sl">Pendiente cobro</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+urgentes+'</div><div class="sl">Entregas fijas</div></div>';}
-function renderLista(){var list=applySecFilter(pedidos);if(activeFilters.fase!=='all')list=list.filter(function(p){return String(p.fase)===activeFilters.fase;});list=list.filter(function(p){return pasaFiltroEntrega(p);});if(activeFilters.pago==='pendiente')list=list.filter(function(p){return(p.total-(p.senal||0))>0;});if(activeFilters.pago==='pagado')list=list.filter(function(p){return(p.total-(p.senal||0))<=0;});var sort=document.getElementById('sort-select').value||'entrega';list.sort(function(a,b){if(sort==='entrega')return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;if(sort==='creacion')return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);if(sort==='seccion')return a.seccion>b.seccion?1:-1;if(sort==='pendiente')return(b.total-(b.senal||0))-(a.total-(a.senal||0));return 0;});document.getElementById('taller-list').innerHTML=list.length?list.map(tarjetaTaller).join(''):'<div class="empty-state">No hay pedidos con estos filtros</div>';}
+function renderLista(){var list=applySecFilter(pedidos);var secSel=document.getElementById('seccion-select');var secFiltro=secSel?secSel.value:'all';if(secFiltro!=='all')list=list.filter(function(p){return p.seccion===secFiltro;});if(activeFilters.fase!=='all')list=list.filter(function(p){return String(p.fase)===activeFilters.fase;});list=list.filter(function(p){return pasaFiltroEntrega(p);});if(activeFilters.pago==='pendiente')list=list.filter(function(p){return(p.total-(p.senal||0))>0;});if(activeFilters.pago==='pagado')list=list.filter(function(p){return(p.total-(p.senal||0))<=0;});var sort=document.getElementById('sort-select').value||'entrega';list.sort(function(a,b){if(sort==='entrega')return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;if(sort==='creacion')return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);if(sort==='seccion')return a.seccion>b.seccion?1:-1;if(sort==='pendiente')return(b.total-(b.senal||0))-(a.total-(a.senal||0));return 0;});document.getElementById('taller-list').innerHTML=list.length?list.map(tarjetaTaller).join(''):'<div class="empty-state">No hay pedidos con estos filtros</div>';}
 function renderSemana(){var sfase=activeFilters.sfase;var list=applySecFilter(pedidos).filter(function(p){return sfase==='activos'?p.fase<4:sfase==='3'?p.fase===3:true;});var hoy=new Date();hoy.setHours(0,0,0,0);var dias=[];for(var i=0;i<7;i++){var d=new Date(hoy);d.setDate(d.getDate()+i);dias.push(d);}var sinFecha=list.filter(function(p){return!p.fechaEntrega&&p.fase<4;});var html='<div class="semana-grid">';dias.forEach(function(dia){var key=dia.toISOString().split('T')[0],esHoy=dia.getTime()===hoy.getTime(),peds=list.filter(function(p){return p.fechaEntrega===key;}),dn=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dia.getDay()];html+='<div class="dia-col"><div class="dia-header'+(esHoy?' hoy':'')+'"><div class="dn">'+dn+'</div><div class="dd">'+dia.getDate()+'/'+(dia.getMonth()+1)+'</div></div><div class="dia-cards">'+(peds.length?peds.map(function(p){return'<div class="dia-mini dm-'+p.seccion+(p.fechaTipo==='fija'?' dm-fija':'')+'" onclick="verPedido(\''+p.id+'\')"><div style="font-weight:700;font-family:monospace;font-size:10px">'+p.id+'</div><div>'+p.clienteNombre.split(' ')[0]+'</div></div>';}).join(''):'<div style="font-size:11px;color:#ddd;text-align:center;padding:6px">—</div>')+'</div></div>';});html+='</div>';var vencidos=list.filter(function(p){return p.fechaEntrega&&new Date(p.fechaEntrega+'T00:00:00')<hoy&&p.fase<4;});if(vencidos.length)html+='<div class="sin-fecha"><div class="sin-fecha-title" style="color:#A32D2D">⚠️ Vencidos ('+vencidos.length+')</div>'+vencidos.map(miniCard).join('')+'</div>';if(sinFecha.length)html+='<div class="sin-fecha"><div class="sin-fecha-title">Sin fecha ('+sinFecha.length+')</div>'+sinFecha.map(miniCard).join('')+'</div>';document.getElementById('taller-list').innerHTML=html;}
 function renderMes(){var hoy=new Date();hoy.setHours(0,0,0,0);var ref=new Date(hoy.getFullYear(),hoy.getMonth()+mesOffset,1),año=ref.getFullYear(),mes=ref.getMonth(),primerDia=new Date(año,mes,1),ultimoDia=new Date(año,mes+1,0),nombreMes=primerDia.toLocaleDateString('es-ES',{month:'long',year:'numeric'}),startDow=(primerDia.getDay()+6)%7,totalCeldas=startDow+ultimoDia.getDate(),semanas=Math.ceil(totalCeldas/7),list=applySecFilter(pedidos);var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><button class="btn btn-secondary btn-sm" onclick="mesOffset--;renderTaller()">← Anterior</button><span style="font-size:14px;font-weight:600;text-transform:capitalize">'+nombreMes+'</span><button class="btn btn-secondary btn-sm" onclick="mesOffset++;renderTaller()">Siguiente →</button></div><div class="mes-grid">'+['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(function(d){return'<div style="background:#f5f5f0;text-align:center;padding:5px 2px;font-size:11px;font-weight:600;color:#888">'+d+'</div>';}).join('');for(var s=0;s<semanas;s++){for(var dow=0;dow<7;dow++){var cellIdx=s*7+dow,diaNum=cellIdx-startDow+1;if(diaNum<1||diaNum>ultimoDia.getDate()){html+='<div class="mes-cell otro-mes"></div>';continue;}var fechaKey=año+'-'+String(mes+1).padStart(2,'0')+'-'+String(diaNum).padStart(2,'0'),esHoy2=new Date(año,mes,diaNum).getTime()===hoy.getTime(),peds=list.filter(function(p){return p.fechaEntrega===fechaKey;});html+='<div class="mes-cell"><div class="mes-day-num'+(esHoy2?' hoy':'')+'">'+diaNum+'</div>'+peds.slice(0,3).map(function(p){return'<div class="dia-mini dm-'+p.seccion+(p.fechaTipo==='fija'?' dm-fija':'')+'" onclick="verPedido(\''+p.id+'\')" title="'+p.clienteNombre+'"><span style="font-size:10px;font-weight:700;font-family:monospace">'+p.id+'</span> <span style="font-size:10px;opacity:.8">'+p.clienteNombre.split(' ')[0]+'</span></div>';}).join('')+(peds.length>3?'<div style="font-size:10px;color:#aaa">+'+(peds.length-3)+' más</div>':'')+'</div>';}}html+='</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><div class="stat-card"><div class="sv">'+list.filter(function(p){return p.fechaEntrega&&p.fechaEntrega.startsWith(año+'-'+String(mes+1).padStart(2,'0'));}).length+'</div><div class="sl">Entregas este mes</div></div></div>';document.getElementById('taller-list').innerHTML=html;}
 function miniCard(p){var pend=p.total-(p.senal||0);return'<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f5f5f5;font-size:12px;cursor:pointer" onclick="verPedido(\''+p.id+'\')"><span style="font-family:monospace;font-weight:700">'+p.id+'</span><span class="badge sec-'+p.seccion+'">'+p.seccion+'</span><span>'+p.clienteNombre.split(' ')[0]+'</span><span class="fase-badge fase-'+p.fase+'" style="font-size:10px">'+FASES[p.fase]+'</span>'+(pend>0?'<span class="pendiente-pill">'+pend.toFixed(0)+'€</span>':'')+'</div>';}
