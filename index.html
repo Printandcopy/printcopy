@@ -952,7 +952,7 @@ textarea{resize:vertical;min-height:64px}
     <div id="cot-comms" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"></div>
     <div class="btn-row" style="margin-top:14px;flex-wrap:wrap">
       <button class="btn btn-primary" id="cot-btn-enviar" onclick="cotEnviar()">📤 Marcar enviado</button>
-      <button class="btn btn-success" id="cot-btn-convertir" onclick="cotConvertir()">✓ Convertir a pedido</button>
+      <!-- Botón convertir eliminado: usar barra de avisos → Cobrada -->
       <button class="btn btn-danger" id="cot-btn-rechazar" onclick="cotRechazar()">✗ Rechazar</button>
     </div>
   </div>
@@ -4237,7 +4237,7 @@ function verCotizacion(id){
     document.getElementById('cot-comms').innerHTML='';
 
     document.getElementById('cot-btn-enviar').style.display='none';
-    document.getElementById('cot-btn-convertir').style.display='none';
+    // cot-btn-convertir eliminado
     document.getElementById('cot-btn-rechazar').style.display='none';
 
     // Limpiar botones dinamicos de reenvio previos
@@ -4284,14 +4284,11 @@ function verCotizacion(id){
         bEM.onclick=function(){cotReenviar('email');};
         btnRow.appendChild(bEM);
       }
-      document.getElementById('cot-btn-convertir').style.display='inline-block';
-      document.getElementById('cot-btn-convertir').textContent='Convertir a pedido';
+      // cot-btn-convertir eliminado
       document.getElementById('cot-btn-rechazar').style.display='inline-block';
       document.getElementById('cot-btn-rechazar').textContent='Rechazada';
     }else if(p.estado==='aceptado'){
-      document.getElementById('cot-btn-convertir').style.display='inline-block';
-      document.getElementById('cot-btn-convertir').textContent='✓ Crear pedido';
-      document.getElementById('cot-btn-convertir').style.cssText='background:#3B6D11;color:#fff;border:none;font-size:14px;padding:10px 20px;border-radius:6px;cursor:pointer';
+      // cot-btn-convertir eliminado
       // Alerta si fue aceptado por el cliente via web
       if(p.aceptado_por_cliente){
         var alertDiv=document.getElementById('cot-alerta-cliente');
