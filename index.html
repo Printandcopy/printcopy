@@ -929,11 +929,13 @@ textarea{resize:vertical;min-height:64px}
             <div class="field"><label>Señal (€)</label><input type="number" id="nv-senal" value="0" step="0.01" min="0" oninput="nvCalcPendiente()"></div>
             <div class="field"><label style="color:#A32D2D;font-weight:600">Queda por cobrar</label><div id="nv-pendiente" style="font-size:16px;font-weight:700;color:#A32D2D;padding:7px 0">0,00 €</div></div>
           </div>
+          <div class="field" style="margin-top:8px"><label>Método de pago</label><select id="nv-metodo-pago"><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option><option value="bizum">Bizum</option><option value="transferencia">Transferencia</option></select></div>
           <div class="radio-group" style="margin-top:8px">
             <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="pagado"> Cobrado 100%</label>
             <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="senal"> Señal pagada</label>
             <label class="radio-opt"><input type="radio" name="nv-pago-estado" value="pendiente" checked> Por cobrar</label>
           </div>
+          <button class="btn btn-success" onclick="nvCrearPedido()" style="width:100%;margin-top:12px">✓ Confirmar cobro y crear pedido</button>
         </div>
         <div id="nv-cross" class="card" style="display:none"><div class="card-title">💡 Cross-selling</div><div id="nv-cross-content"></div></div>
         <div class="card"><div class="card-title">Notas</div><textarea id="nv-notas" rows="2" placeholder="Observaciones..."></textarea></div>
@@ -949,7 +951,7 @@ textarea{resize:vertical;min-height:64px}
             <button class="btn btn-primary" onclick="nvGuardar('enviado','email')" style="flex:1">📧 Guardar + Email</button>
             <button class="btn" onclick="nvGuardar('enviado','whatsapp')" style="flex:1;background:#25D366;color:white">📱 Guardar + WA</button>
           </div>
-          <button class="btn btn-success" onclick="document.getElementById('nv-pago-card').style.display='block';nvCrearPedido()" style="width:100%">✓ Crear pedido directo</button>
+          <button class="btn btn-success" id="nv-btn-crear-directo" onclick="nvMostrarPanelPago()" style="width:100%">✓ Crear pedido directo</button>
         </div>
       </div>
     </div>
@@ -3122,6 +3124,7 @@ function nuevaVenta(){
   // Montaje
   document.getElementById('nv-montaje').checked=false;
   document.getElementById('nv-pago-card').style.display='none';
+  document.getElementById('nv-btn-crear-directo').style.display='block';
   document.getElementById('nv-montaje-fields').style.display='none';
   if(document.getElementById('nv-envio')){document.getElementById('nv-envio').checked=false;}
   if(document.getElementById('nv-envio-fields')){document.getElementById('nv-envio-fields').style.display='none';}
@@ -3137,6 +3140,27 @@ function nuevaVenta(){
   document.getElementById('nv-montaje-notas').value='';
   nvRenderLineas();
   document.getElementById('modal-venta').classList.add('open');
+}
+
+function nvMostrarPanelPago(){
+  // Validar que hay líneas
+  if(!nvLineas.length){alert('Añade al menos un producto');return;}
+  // Validar cliente
+  var tel=document.getElementById('nv-tel').value.trim();
+  if(!tel){alert('El teléfono del cliente es obligatorio');return;}
+  // Calcular total y pre-rellenar señal según condición
+  var total=nvLineas.reduce(function(s,l){return s+l.total;},0);
+  var dto=parseFloat(document.getElementById('nv-dto').value)||0;
+  total=total*(1-dto/100);
+  var condicion=document.getElementById('nv-condicion').value;
+  var senalSugerida=0;
+  if(condicion==='50_50')senalSugerida=Math.round(total*0.5*100)/100;
+  else if(condicion==='100_0')senalSugerida=total;
+  document.getElementById('nv-senal').value=senalSugerida.toFixed(2);
+  nvCalcPendiente();
+  // Mostrar panel y ocultar botón
+  document.getElementById('nv-pago-card').style.display='block';
+  document.getElementById('nv-btn-crear-directo').style.display='none';
 }
 
 function abrirVentaDesdeCarrito(){
@@ -3490,6 +3514,15 @@ function nvCalcPendiente(){
   var senal=parseFloat(document.getElementById('nv-senal').value)||0;
   var pendiente=cV2R2(total-senal);
   document.getElementById('nv-pendiente').textContent=cV2Fmt(pendiente);
+  // Sincronizar estado de pago automáticamente
+  var radios=document.querySelectorAll('input[name="nv-pago-estado"]');
+  if(pendiente<=0){
+    radios.forEach(function(r){r.checked=(r.value==='pagado');});
+  }else if(senal>0){
+    radios.forEach(function(r){r.checked=(r.value==='senal');});
+  }else{
+    radios.forEach(function(r){r.checked=(r.value==='pendiente');});
+  }
 }
 
 function crearClienteSiNoExiste(nombre,tel,email,sector){
@@ -3708,19 +3741,48 @@ function nvCrearPedido(){
   var operario=document.getElementById('nv-operario').value;
   var condicion=document.getElementById('nv-condicion').value;
   var senal=parseFloat(document.getElementById('nv-senal').value)||0;
+  var metodoPago=document.getElementById('nv-metodo-pago')?document.getElementById('nv-metodo-pago').value:'efectivo';
   var pagoEstado=document.querySelector('input[name="nv-pago-estado"]:checked').value;
   var incluyeMontaje=document.getElementById('nv-montaje').checked;
   var sub=nvLineas.reduce(function(s,l){return s+l.total;},0);
   var dto=parseFloat(document.getElementById('nv-dto').value)||0;
   var totalGlobal=cV2R2(sub*(1-dto/100));
   
-  // Crear cliente si no existe (por teléfono)
+  // Validar señal según condición de pago
   var cliente=clientes.find(function(c){return c.telefono===tel;});
+  var tieneCredito=cliente&&(cliente.nivel==='credito'||cliente.nivel==='premium');
+  
+  if(condicion==='50_50'&&senal<totalGlobal*0.5){
+    if(!tieneCredito){alert('La condición 50/50 requiere cobrar al menos '+cV2Fmt(totalGlobal*0.5)+' de señal');return;}
+    if(!confirm('Cliente con crédito. ¿Crear pedido sin cobrar señal?'))return;
+  }
+  if(condicion==='100_0'&&senal<totalGlobal){
+    if(!tieneCredito){alert('La condición 100% requiere cobrar '+cV2Fmt(totalGlobal)+' antes de crear el pedido');return;}
+    if(!confirm('Cliente con crédito. ¿Crear pedido sin cobrar el total?'))return;
+  }
+  if((condicion==='factura30'||condicion==='factura60')&&!tieneCredito){
+    alert('Solo clientes con nivel crédito pueden usar factura a 30/60 días');return;
+  }
   
   if(!confirm('¿Crear '+nvLineas.length+' pedido(s)?'))return;
   
   function crearPedidos(clienteId){
     var combinadoId=null;
+    
+    // Pre-calcular señales con ajuste de redondeo
+    var senalesLinea=[];
+    var sumaSenal=0;
+    nvLineas.forEach(function(lin,idx){
+      if(idx<nvLineas.length-1){
+        var proporcion=lin.total/totalGlobal;
+        var senalLin=cV2R2(senal*proporcion);
+        senalesLinea.push(senalLin);
+        sumaSenal+=senalLin;
+      }else{
+        // Último absorbe diferencia de redondeo
+        senalesLinea.push(cV2R2(senal-sumaSenal));
+      }
+    });
     
     function hacerPedidos(){
       var proms=nvLineas.map(function(lin,idx){
@@ -3730,9 +3792,7 @@ function nvCrearPedido(){
             var nv=(r.data?r.data.valor:0)+1;
             sb.from('contadores').update({valor:nv}).eq('seccion',sec).then(function(){
               var numPed=sec+'-'+String(nv).padStart(4,'0');
-              // Repartir señal proporcionalmente
-              var proporcion=lin.total/totalGlobal;
-              var senalLinea=cV2R2(senal*proporcion);
+              var senalLinea=senalesLinea[idx];
               var ped={
                 id:numPed,
                 cliente_id:clienteId,
@@ -3754,6 +3814,7 @@ function nvCrearPedido(){
       envio_notas:document.getElementById('nv-envio-notas')?(document.getElementById('nv-envio-notas').value.trim()||null):null,
                 total:lin.total,
                 senal:senalLinea,
+                metodo_pago:metodoPago,
                 pago:pagoEstado,
                 condiciones:condicion,
                 fase:0,
@@ -3772,6 +3833,13 @@ function nvCrearPedido(){
         });
       });
       Promise.all(proms).then(function(nums){
+        // Marcar presupuesto como convertido si venía de cotConvertir
+        if(window._presupuestoParaConvertir){
+          sb.from('presupuestos').update({estado:'aceptado',convertido:true}).eq('id',window._presupuestoParaConvertir).then(function(){
+            cargarPresupuestos();
+          });
+          window._presupuestoParaConvertir=null;
+        }
         closeModal('modal-venta');cargarDatos();
         // Guardar último pedido creado para imprimir
         setTimeout(function(){
@@ -4152,11 +4220,20 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
 function confirmarSenal(presId){
   var pres=presupuestos.find(function(p){return p.id===presId;});
   if(!pres)return;
-  if(!confirm('Confirmar cobro y pasar a taller?\n'+pres.numero+' - '+pres.cliente_nombre))return;
+  var senalTeorica=calcSenal(parseFloat(pres.total)||0,pres.condicion_pago);
+  var importeStr=prompt('Importe cobrado (€):\n\n'+pres.numero+' - '+pres.cliente_nombre+'\nSeñal teórica: '+senalTeorica.toFixed(2)+'€',senalTeorica.toFixed(2));
+  if(importeStr===null)return;
+  var importeReal=parseFloat(importeStr.replace(',','.'))||0;
+  if(importeReal<=0){alert('El importe debe ser mayor que 0');return;}
+  var metodoOpciones=['efectivo','tarjeta','bizum','transferencia'];
+  var metodoIdx=prompt('Método de pago:\n1. Efectivo\n2. Tarjeta\n3. Bizum\n4. Transferencia\n\nIntroduce número (1-4):','4');
+  if(metodoIdx===null)return;
+  var metodo=metodoOpciones[parseInt(metodoIdx)-1]||'transferencia';
+  if(!confirm('Confirmar cobro de '+importeReal.toFixed(2)+'€ ('+metodo+') y crear pedido(s)?'))return;
+  
   function crear(p){
-    var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
+    var senal=importeReal;
     var resto=parseFloat(p.total)-senal;
-    var metodo=p.metodo_pago_senal||'transf';
     var plazoDias=p.plazo_dias||5;
     
     crearPedidoDesdePresupuesto(p,senal,metodo,function(numsPedido){
@@ -4237,15 +4314,14 @@ function actualizarBarraAvisos(){
   var btnCrear=document.getElementById('barra-crear-btn');
   var lista=document.getElementById('barra-avisos-lista');
   if(!barra)return;
-  // Auto-crear pedido para clientes credito
+  // Auto-crear pedido para clientes credito (solo si no está ya convertido)
   todos.forEach(function(p){
-    if(credito.indexOf(p.condicion_pago)>=0){
-      var key='autocred_'+p.id;
-      if(!sessionStorage.getItem(key)){
-        sessionStorage.setItem(key,'1');
+    if(credito.indexOf(p.condicion_pago)>=0 && !p.convertido){
+      // Marcar convertido inmediatamente en BD para evitar duplicados entre pestañas
+      sb.from('presupuestos').update({convertido:true}).eq('id',p.id).then(function(){
         if(p.lineas&&p.lineas.length){crearPedidoDesdePresupuesto(p,0,'credito');}
         else{sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',p.id).then(function(r){p.lineas=r.data||[];crearPedidoDesdePresupuesto(p,0,'credito');});}
-      }
+      });
     }
   });
   var pendCobro=todos.filter(function(p){return credito.indexOf(p.condicion_pago)<0&&!p.senal_cobrada&&(p.condicion_pago==='50_50'||p.condicion_pago==='100_0');});
@@ -4323,13 +4399,14 @@ function cotConvertir(){
   document.getElementById('nv-fecha').value=fechaEntrega.toISOString().split('T')[0];
   closeModal('modal-cot');
   nvRenderLineas();
-  // Marcar presupuesto como convertido
-  sb.from('presupuestos').update({estado:'aceptado',convertido:true}).eq('id',_cotActual.id).then(function(){cargarPresupuestos();});
+  // Guardar referencia del presupuesto para marcar convertido SOLO cuando se cree el pedido
+  window._presupuestoParaConvertir=_cotActual.id;
   // Mostrar modal de nuevo pedido con bloque pago visible si tiene señal
   var condPago=_cotActual.condicion_pago||'50_50';
   var tieneSenal=(condPago==='50_50'||condPago==='100_0');
   if(tieneSenal){
     document.getElementById('nv-pago-card').style.display='block';
+    document.getElementById('nv-btn-crear-directo').style.display='none';
     // Aviso en el modal
     var avisoEl=document.getElementById('nv-aviso-senal');
     if(!avisoEl){
@@ -4357,9 +4434,9 @@ setInterval(function(){
     .gte('updated_at',hace24h).then(function(r){
     if(r.data&&r.data.length){
       r.data.forEach(function(p){
-        var key='toast_'+p.id;
-        if(sessionStorage.getItem(key))return;
-        sessionStorage.setItem(key,'1');
+        // Ya usa notificado_interno en BD, no hace falta sessionStorage
+        if(p.notificado_interno)return;
+        sb.from('presupuestos').update({notificado_interno:true}).eq('id',p.id).then(function(){});
         if(Notification.permission==='granted')
           new Notification('✅ Presupuesto aceptado',{body:p.cliente_nombre+' aceptó '+p.numero,icon:'/favicon.ico'});
         var t=document.createElement('div');
@@ -4368,7 +4445,6 @@ setInterval(function(){
         t.onclick=function(){verCotizacion(p.id);t.remove();};
         document.body.appendChild(t);
         setTimeout(function(){if(t.parentNode)t.remove();},15000);
-        sb.from('presupuestos').update({notificado_interno:true}).eq('id',p.id).then(function(){});
       });
       cargarPresupuestos();
     }
