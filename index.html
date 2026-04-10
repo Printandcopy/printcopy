@@ -3842,9 +3842,9 @@ function calcSenal(total,cond){
   return 0;
 }
 
-function crearPedidoDesdePresupuesto(pres,senal,metodo){
+function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
   var lins=pres.lineas||[];
-  if(!lins.length)return;
+  if(!lins.length){if(callback)callback([]);return;}
   var totalGlobal=parseFloat(pres.total)||0;
   var maxPlazo=3;
   lins.forEach(function(l){if(l.plazo&&l.plazo>maxPlazo)maxPlazo=l.plazo;});
@@ -3886,6 +3886,7 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo){
       t.onclick=function(){t.remove();};
       document.body.appendChild(t);
       setTimeout(function(){if(t.parentNode)t.remove();},12000);
+      if(callback)callback(nums);
     });
   });
 }
@@ -3895,35 +3896,34 @@ function confirmarSenal(presId){
   if(!pres)return;
   if(!confirm('Confirmar cobro y pasar a taller?\n'+pres.numero+' - '+pres.cliente_nombre))return;
   function crear(p){
-    crearPedidoDesdePresupuesto(p,calcSenal(parseFloat(p.total)||0,p.condicion_pago),p.metodo_pago_senal);
-    if(p.cliente_telefono){
-      var tel=p.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
-      if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
-      var nombre=p.cliente_nombre.split(' ')[0];
-      var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
-      var resto=parseFloat(p.total)-senal;
-      var metodo=p.metodo_pago_senal||'transf';
-      
-      // Obtener plazo en días
-      var plazoDias=p.plazo_dias||5;
-      
-      // Mensajes según método - Agente Closer v2
-      var msg;
-      if(metodo==='efectivo'){
-        // 3C - Pago en tienda
-        msg='✅ ¡Pago inicial abonado, '+nombre+'! Gracias por pasarte 🙌\n\n'
-          +'📌 Arrancamos con tu pedido *'+p.numero+'*. En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n'
-          +'⏱️ *Plazo de producción:* '+plazoDias+' días laborables desde tu aprobación.'
-          +(resto>0.01?'\n\nResto ('+resto.toFixed(2)+'€) al recoger tu pedido terminado.':'');
-      } else {
-        // 3A - Transferencia
-        msg='✅ ¡Pago inicial recibido, '+nombre+'!\n\n'
-          +'📌 Arrancamos con tu pedido *'+p.numero+'*. En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n'
-          +'⏱️ *Plazo de producción:* '+plazoDias+' días laborables desde tu aprobación.'
-          +(resto>0.01?'\n\nResto ('+resto.toFixed(2)+'€) al recoger tu pedido terminado.':'');
+    var senal=calcSenal(parseFloat(p.total)||0,p.condicion_pago);
+    var resto=parseFloat(p.total)-senal;
+    var metodo=p.metodo_pago_senal||'transf';
+    var plazoDias=p.plazo_dias||5;
+    
+    crearPedidoDesdePresupuesto(p,senal,metodo,function(numsPedido){
+      // Enviar WA DESPUÉS de crear pedidos, con número de pedido
+      if(p.cliente_telefono && numsPedido && numsPedido.length){
+        var tel=p.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
+        if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+        var nombre=p.cliente_nombre.split(' ')[0];
+        var numPedStr=numsPedido.join(', ');
+        
+        var msg;
+        if(metodo==='efectivo'){
+          msg='✅ ¡Pago inicial abonado, '+nombre+'! Gracias por pasarte 🙌\n\n'
+            +'📌 Arrancamos con tu pedido *'+numPedStr+'*. En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n'
+            +'⏱️ *Plazo de producción:* '+plazoDias+' días laborables desde tu aprobación.'
+            +(resto>0.01?'\n\nResto ('+resto.toFixed(2)+'€) al recoger tu pedido terminado.':'');
+        } else {
+          msg='✅ ¡Pago inicial recibido, '+nombre+'!\n\n'
+            +'📌 Arrancamos con tu pedido *'+numPedStr+'*. En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n'
+            +'⏱️ *Plazo de producción:* '+plazoDias+' días laborables desde tu aprobación.'
+            +(resto>0.01?'\n\nResto ('+resto.toFixed(2)+'€) al recoger tu pedido terminado.':'');
+        }
+        fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA:',d.error);});
       }
-      fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA:',d.error);});
-    }
+    });
   }
   if(pres.lineas&&pres.lineas.length){crear(pres);}
   else{sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',pres.id).then(function(r){pres.lineas=r.data||[];crear(pres);});}

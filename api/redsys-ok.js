@@ -187,16 +187,17 @@ module.exports = async function handler(req, res) {
         );
 
         // WA al cliente - Mensaje optimizado Agente Closer v2
-        if (pres.cliente_telefono) {
+        if (pres.cliente_telefono && pedidosCreados && pedidosCreados.length) {
           const tel = pres.cliente_telefono.toString().replace(/\s/g,'').replace(/^\+/,'');
           const telNorm = tel.length === 9 && !tel.startsWith('34') ? '34'+tel : tel;
           const nombre = pres.cliente_nombre.split(' ')[0];
+          const numPedStr = pedidosCreados.join(', ');
           
           const plazoDias = pres.plazo_dias || 5;
           
           await enviarWA(telNorm,
             `✅ ¡Pago confirmado, ${nombre}!\n\n`
-            + `📌 Arrancamos con tu pedido *${pres.numero}*. En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n`
+            + `📌 Arrancamos con tu pedido *${numPedStr}*. En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n`
             + `⏱️ *Plazo de producción:* ${plazoDias} días laborables desde tu aprobación.`
             + (resto > 0.01 ? `\n\nResto (${resto.toFixed(2)}€) al recoger tu pedido terminado.` : '')
           );
