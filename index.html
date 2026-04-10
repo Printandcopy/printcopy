@@ -4536,7 +4536,7 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
             fecha_entrega:fecha,fecha_tipo:'aprox',descripcion:lin.descripcion,
             notas:'Auto desde '+pres.numero+(metodo?' | '+metodo:''),
             total:parseFloat(lin.subtotal)||0,senal:cV2R2(senalTotal*proporcion),
-            pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:1};
+            pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:0};
           sb.from('pedidos').insert([ped]).then(function(ri){
             if(ri.error){
               console.error('Error insert pedido auto:',ri.error.message);
