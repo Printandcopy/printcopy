@@ -353,8 +353,7 @@ textarea{resize:vertical;min-height:64px}
     <div class="user-badge">👤 <select id="current-user" onchange="setCurrentUser(this.value)"><option value="Marilia">Marilia</option><option value="Álvaro">Álvaro</option><option value="Charo">Charo</option><option value="Raúl">Raúl</option><option value="Bea">Bea</option></select></div>
     <span id="conn-status" style="font-size:11px;color:#aaa"><span class="conn-dot" id="conn-dot"></span>Conectando...</span>
     <div class="nav-tabs">
-      <button class="nav-tab active" onclick="showScreen('calculadora',this)">Calculadora</button>
-      <button class="nav-tab" onclick="showScreen('solicitudes',this)">Presupuestos</button>
+      <button class="nav-tab active" onclick="showScreen('solicitudes',this)">Presupuestos</button>
       <button class="nav-tab" onclick="showScreen('ventas',this)">Pedidos</button>
       <button class="nav-tab" onclick="showScreen('taller',this)">Taller</button>
       <button class="nav-tab" onclick="showScreen('clientes',this)">Clientes</button>
@@ -378,7 +377,7 @@ textarea{resize:vertical;min-height:64px}
 </div>
 
 <!-- PRESUPUESTOS (Solicitudes + Cotizaciones) -->
-<div id="screen-solicitudes" class="screen">
+<div id="screen-solicitudes" class="screen active">
   <div class="taller-top">
     <div style="display:flex;gap:10px;align-items:center">
       <h2 style="font-size:16px;font-weight:600;margin:0">Presupuestos</h2>
@@ -630,7 +629,7 @@ textarea{resize:vertical;min-height:64px}
 </div>
 
 <!-- CALCULADORA V2 -->
-<div id="screen-calculadora" class="screen active" style="max-width:100%;padding:0">
+<div id="screen-calculadora" class="screen" style="display:none!important" style="max-width:100%;padding:0">
   <div class="calc-grid">
     <div class="calc-left">
       <div class="card"><div class="card-title">Categoría de producto</div>
