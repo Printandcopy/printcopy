@@ -970,7 +970,7 @@ textarea{resize:vertical;min-height:64px}
         <div class="card">
           <div class="form-grid">
             <div class="field" id="nv-validez-wrap"><label>Validez días</label><input type="number" id="nv-validez" value="15" min="1" autocomplete="off"></div>
-            <div class="field"><label>Condición pago</label><select id="nv-condicion" onchange="nvCalcPendiente()"><option value="50_50">50% · 50%</option><option value="0_100">100% recoger</option><option value="transferencia">Transferencia</option><option value="credito_senal">💳 Crédito señal</option><option value="credito_total">💳 Crédito total</option></select></div>
+            <div class="field" id="nv-condicion-wrap"><label>Condición pago</label><select id="nv-condicion" onchange="nvCalcPendiente()"><option value="50_50">50% · 50%</option><option value="0_100">100% recoger</option><option value="transferencia">Transferencia</option><option value="credito_senal">💳 Crédito señal</option><option value="credito_total">💳 Crédito total</option></select></div>
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
@@ -3426,6 +3426,8 @@ function nuevaVenta(modo){
   if(bpres)bpres.style.display=esPedido?'none':'block';
   var vwrap=document.getElementById('nv-validez-wrap');
   if(vwrap)vwrap.style.display=esPedido?'none':'';
+  var cwrap=document.getElementById('nv-condicion-wrap');
+  if(cwrap)cwrap.style.display=esPedido?'none':'';
   nvLineas=[];_nvCat=null;_nvRes=null;
   window._solIdParaPresupuesto=null;
   window._editandoPresupuestoId=null;
