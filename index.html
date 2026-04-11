@@ -383,8 +383,8 @@ textarea{resize:vertical;min-height:64px}
     <div class="user-badge">👤 <select id="current-user" onchange="setCurrentUser(this.value)"><option value="Marilia">Marilia</option><option value="Álvaro">Álvaro</option><option value="Charo">Charo</option><option value="Raúl">Raúl</option><option value="Bea">Bea</option></select></div>
     <span id="conn-status" style="font-size:11px;color:#aaa"><span class="conn-dot" id="conn-dot"></span>Conectando...</span>
     <div class="nav-tabs">
-      <button class="nav-tab" onclick="showScreen('mostrador',this)">🏪 Mostrador</button>
-      <button class="nav-tab active" onclick="showScreen('solicitudes',this)">Presupuestos</button>
+      <button class="nav-tab active" onclick="showScreen('mostrador',this)">🏪 Mostrador</button>
+      <button class="nav-tab" onclick="showScreen('solicitudes',this)">Presupuestos</button>
       <button class="nav-tab" onclick="showScreen('ventas',this)">Pedidos</button>
       <button class="nav-tab" onclick="showScreen('taller',this)">Taller</button>
       <button class="nav-tab" onclick="showScreen('clientes',this)">Clientes</button>
@@ -408,7 +408,7 @@ textarea{resize:vertical;min-height:64px}
 </div>
 
 <!-- PRESUPUESTOS (Solicitudes + Cotizaciones) -->
-<div id="screen-mostrador" class="screen">
+<div id="screen-mostrador" class="screen active">
   <div style="max-width:720px;margin:0 auto;padding:8px 0">
     <!-- Acciones -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
@@ -426,7 +426,7 @@ textarea{resize:vertical;min-height:64px}
   </div>
 </div>
 
-<div id="screen-solicitudes" class="screen active">
+<div id="screen-solicitudes" class="screen">
   <div class="taller-top">
     <div style="display:flex;gap:10px;align-items:center">
       <h2 style="font-size:16px;font-weight:600;margin:0">Presupuestos</h2>
@@ -1101,7 +1101,7 @@ textarea{resize:vertical;min-height:64px}
     <div id="cot-comms" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"></div>
     <div class="btn-row" style="margin-top:14px;flex-wrap:wrap">
       <button class="btn btn-primary" id="cot-btn-enviar" onclick="cotEnviar()">📤 Marcar enviado</button>
-      <!-- Botón convertir eliminado: usar barra de avisos → Cobrada -->
+      <button class="btn btn-success" id="cot-btn-aceptar" onclick="cotConvertir()" style="background:#3B6D11">✓ Aceptar y cobrar</button>
       <button class="btn btn-danger" id="cot-btn-rechazar" onclick="cotRechazar()">✗ Rechazar</button>
     </div>
   </div>
@@ -5461,6 +5461,8 @@ startClock();
 testConnection();
 cargarDatos();
 cargarPresupuestos();
+// Arrancar siempre en Mostrador
+showScreen('mostrador',document.querySelector('.nav-tab'));
 // Polling cada 60s para detectar presupuestos aceptados por el cliente
 setInterval(function(){
   var hace24h=new Date(Date.now()-86400000).toISOString();
