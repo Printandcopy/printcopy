@@ -4064,7 +4064,7 @@ function nvGuardar(estado,canal){
               var msgWA='Hola '+nombre.split(' ')[0]+' 👋\n\n'
                 +'Ya tienes listo tu presupuesto:\n'
                 +'https://printcopy.vercel.app/presupuesto.html?t='+tokenPublico+'\n\n'
-                +'Presupuesto válido 7 días.\n\n'
+                +'Presupuesto válido 15 días.\n\n'
                 +'Ábrelo y si tienes alguna duda me dices 👇';
               fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({telefono:telNorm,mensaje:msgWA,nombre:nombre})})
@@ -4473,7 +4473,7 @@ function cotReenviarEnlace(){
       +'Ya tienes listo tu presupuesto:\n'
       +url+'\n\n'
       +(fechaEntrega?'📅 Entrega aproximada: *'+fechaEntrega+'*\n':'')
-      +'Presupuesto válido 7 días.\n\n'
+      +'Presupuesto válido 15 días.\n\n'
       +'Ábrelo y si tienes alguna duda me dices 👇';
     fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
