@@ -937,7 +937,8 @@ textarea{resize:vertical;min-height:64px}
           <div style="border-top:1px solid #eee;padding-top:10px;margin-top:10px">
             <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="color:#888;font-size:13px">Subtotal</span><span id="nv-subtotal" style="font-weight:500">0,00 €</span></div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="color:#888;font-size:13px">Dto %</span><input type="number" id="nv-dto" value="0" min="0" max="100" style="width:55px;text-align:right" oninput="nvCalcTotales()"></div>
-            <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;border-top:1px solid #eee;padding-top:8px"><span>Total</span><span id="nv-total" style="color:#185FA5">0,00 €</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#888;font-size:12px">Sin IVA</span><span id="nv-total-si" style="color:#9CA3AF;font-size:12px;font-weight:500">0,00 €</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;border-top:1px solid #eee;padding-top:8px"><span>Total con IVA</span><span id="nv-total" style="color:#185FA5">0,00 €</span></div>
           </div>
         </div>
         <!-- Pago (para crear pedido directo) -->
@@ -3830,7 +3831,8 @@ function nvAddLinea(){
   // Unidades (multiplicador)
   if(unidades>1)desc=' ['+unidades+' uds] '+desc;
   
-  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,cat:_nvRes.cat,unidades:unidades,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0});
+  var _prod=P[_nvRes.cat];var _totalSi=_prod?(_prod.sinIva?cV2R2(_nvRes.totalFinal/1.21):cV2R2(_nvRes.totalFinal/1.21)):cV2R2(_nvRes.totalFinal/1.21);
+  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,totalSi:_totalSi,cat:_nvRes.cat,unidades:unidades,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0});
   nvRenderLineas();
   nvActualizarFecha();
   nvShowCross(_nvRes.cat);
@@ -3865,7 +3867,10 @@ function nvRenderLineas(){
   if(!nvLineas.length){cont.innerHTML='';empty.style.display='block';nvCalcTotales();return;}
   empty.style.display='none';
   cont.innerHTML=nvLineas.map(function(l,i){
-    return '<div class="linea-item"><div class="linea-info"><span class="badge sec-'+l.sec+'">'+l.sec+'</span> <span class="linea-desc">'+l.desc+'</span></div><span class="linea-price">'+cV2Fmt(l.total)+'</span><button class="linea-del" onclick="nvQuitarLinea('+i+')">✕</button></div>';
+    var si=l.totalSi?cV2Fmt(l.totalSi):'';
+    var ci=cV2Fmt(l.total);
+    var priceCol=si?'<span style="color:#9CA3AF;font-size:11px;margin-right:8px">'+si+'</span><span style="color:#185FA5;font-weight:700">'+ci+'</span>':'<span style="color:#185FA5;font-weight:700">'+ci+'</span>';
+    return '<div class="linea-item"><div class="linea-info"><span class="badge sec-'+l.sec+'">'+l.sec+'</span> <span class="linea-desc">'+l.desc+'</span></div><div style="display:flex;align-items:center;gap:4px">'+priceCol+'</div><button class="linea-del" onclick="nvQuitarLinea('+i+')">✕</button></div>';
   }).join('');
   nvCalcTotales();
 }
@@ -3873,10 +3878,13 @@ function nvQuitarLinea(i){nvLineas.splice(i,1);nvRenderLineas();}
 
 function nvCalcTotales(){
   var sub=nvLineas.reduce(function(s,l){return s+l.total;},0);
+  var subSi=nvLineas.reduce(function(s,l){return s+(l.totalSi||cV2R2(l.total/1.21));},0);
   var dto=parseFloat(document.getElementById('nv-dto').value)||0;
   var total=cV2R2(sub*(1-dto/100));
+  var totalSi=cV2R2(subSi*(1-dto/100));
   document.getElementById('nv-subtotal').textContent=cV2Fmt(sub);
   document.getElementById('nv-total').textContent=cV2Fmt(total);
+  var elSi=document.getElementById('nv-total-si');if(elSi)elSi.textContent=cV2Fmt(totalSi);
   nvCalcPendiente();
   // Recalcular envío si está activo
   if(document.getElementById('nv-envio')&&document.getElementById('nv-envio').checked)nvCalcEnvio();
