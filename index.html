@@ -383,6 +383,7 @@ textarea{resize:vertical;min-height:64px}
     <div class="user-badge">👤 <select id="current-user" onchange="setCurrentUser(this.value)"><option value="Marilia">Marilia</option><option value="Álvaro">Álvaro</option><option value="Charo">Charo</option><option value="Raúl">Raúl</option><option value="Bea">Bea</option></select></div>
     <span id="conn-status" style="font-size:11px;color:#aaa"><span class="conn-dot" id="conn-dot"></span>Conectando...</span>
     <div class="nav-tabs">
+      <button class="nav-tab" onclick="showScreen('mostrador',this)">🏪 Mostrador</button>
       <button class="nav-tab active" onclick="showScreen('solicitudes',this)">Presupuestos</button>
       <button class="nav-tab" onclick="showScreen('ventas',this)">Pedidos</button>
       <button class="nav-tab" onclick="showScreen('taller',this)">Taller</button>
@@ -407,6 +408,24 @@ textarea{resize:vertical;min-height:64px}
 </div>
 
 <!-- PRESUPUESTOS (Solicitudes + Cotizaciones) -->
+<div id="screen-mostrador" class="screen">
+  <div style="max-width:720px;margin:0 auto;padding:8px 0">
+    <!-- Acciones -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+      <button onclick="nuevaVenta('pedido')" style="padding:16px 12px;border:none;border-radius:10px;background:#185FA5;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px"><span style="font-size:26px">📦</span>Nuevo pedido</button>
+      <button onclick="nuevaVenta('presupuesto')" style="padding:16px 12px;border:none;border-radius:10px;background:#0F6E56;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px"><span style="font-size:26px">📋</span>Nuevo presupuesto</button>
+      <button onclick="nuevaSolicitud()" style="padding:16px 12px;border:none;border-radius:10px;background:#534AB7;color:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:7px"><span style="font-size:26px">📝</span>Solicitud presupuesto</button>
+    </div>
+    <!-- Buscador -->
+    <div style="position:relative;margin-bottom:12px">
+      <span style="position:absolute;left:15px;top:50%;transform:translateY(-50%);font-size:17px">🔍</span>
+      <input id="most-buscar" type="text" placeholder="Teléfono, nº pedido o nº presupuesto..." oninput="mostBuscar(this.value)" autocomplete="off" style="width:100%;padding:14px 18px 14px 46px;border:2px solid #ddd;border-radius:10px;font-size:15px;background:#fff;transition:border .15s" onfocus="this.style.borderColor='#185FA5'" onblur="this.style.borderColor='#ddd'">
+    </div>
+    <!-- Resultados -->
+    <div id="most-resultados" style="display:none;background:#fff;border-radius:10px;border:2px solid #185FA5;overflow:hidden;box-shadow:0 4px 20px rgba(24,95,165,.12)"></div>
+  </div>
+</div>
+
 <div id="screen-solicitudes" class="screen active">
   <div class="taller-top">
     <div style="display:flex;gap:10px;align-items:center">
@@ -1266,6 +1285,133 @@ var PAGOS=[
   {value:'credito_senal',label:'Crédito señal — 100% al recoger'},
   {value:'credito_total', label:'Crédito total — Factura posterior'}
 ];
+
+function mostBuscar(q){
+  var box=document.getElementById('most-resultados');
+  q=(q||'').trim();
+  if(q.length<2){box.style.display='none';box.innerHTML='';return;}
+
+  // Buscar cliente por teléfono o nombre
+  var cliente=clientes.find(function(c){return c.telefono===q||c.nombre.toLowerCase().includes(q.toLowerCase());});
+  // Buscar pedido por id
+  var pedidoDir=pedidos.find(function(p){return p.id.toLowerCase()===q.toLowerCase();});
+  // Buscar presupuesto por número
+  var presDir=(presupuestos||[]).find(function(p){return (p.numero||'').toLowerCase()===q.toLowerCase();});
+
+  // Si coincide un pedido directo, usar su cliente
+  if(pedidoDir&&!cliente)cliente=clientes.find(function(c){return c.id===pedidoDir.clienteId||c.telefono===pedidoDir.clienteTel;});
+  if(presDir&&!cliente)cliente=clientes.find(function(c){return c.telefono===presDir.cliente_telefono;});
+
+  var html='';
+
+  // Toast cliente
+  if(cliente){
+    var nivelR=calcNivel(cliente);
+    var nDef=NIVELES[nivelR]||NIVELES.nuevo;
+    var pedsCli=pedidos.filter(function(p){return p.clienteId===cliente.id||p.clienteTel===cliente.telefono;});
+    var totalCli=pedsCli.reduce(function(s,p){return s+(parseFloat(p.total)||0);},0);
+    var pagoLabs={'50_50':'50·50','0_100':'100% recoger','transferencia':'Transf.','credito_senal':'Crédito','credito_total':'Crédito'};
+    html+='<div style="background:#1e3a5f;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
+      +'<span style="font-size:14px;font-weight:800;color:#fff">'+cliente.nombre+'</span>'
+      +'<span style="padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:'+nDef.bg+';color:'+nDef.color+'">'+nDef.emoji+' '+nDef.label+'</span>'
+      +'<span style="flex:1"></span>'
+      +'<div style="display:flex;flex-direction:column;align-items:center"><span style="font-size:13px;font-weight:700;color:#fff">'+pedsCli.length+'</span><span style="font-size:9px;color:#93adc8;text-transform:uppercase">Pedidos</span></div>'
+      +'<div style="width:1px;height:28px;background:rgba(255,255,255,.15)"></div>'
+      +'<div style="display:flex;flex-direction:column;align-items:center"><span style="font-size:13px;font-weight:700;color:#fff">'+totalCli.toFixed(0)+'€</span><span style="font-size:9px;color:#93adc8;text-transform:uppercase">Total</span></div>'
+      +'<div style="width:1px;height:28px;background:rgba(255,255,255,.15)"></div>'
+      +'<div style="display:flex;flex-direction:column;align-items:center"><span style="font-size:13px;font-weight:700;color:#fff">'+(pagoLabs[cliente.pago]||'—')+'</span><span style="font-size:9px;color:#93adc8;text-transform:uppercase">Pago</span></div>'
+      +'<button onclick="verPedidosCliente('+cliente.id+')" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer">Ver historial →</button>'
+      +'</div>';
+    // Alerta pendiente
+    var pendTotal=pedsCli.filter(function(p){return p.fase<6;}).reduce(function(s,p){return s+(p.total-(p.senal||0));},0);
+    if(pendTotal>0.01)html+='<div style="background:#FCEBEB;padding:9px 16px;font-size:12px;color:#A32D2D;font-weight:600;border-bottom:1px solid #f5c6c6">⚠️ Tiene <strong style="margin:0 3px">'+pendTotal.toFixed(2)+'€</strong> pendientes de cobro</div>';
+  }
+
+  // Terminados listos para recoger
+  var terminados=pedidos.filter(function(p){
+    return p.fase===5&&(
+      (cliente&&(p.clienteId===cliente.id||p.clienteTel===cliente.telefono))||
+      p.id.toLowerCase()===q.toLowerCase()
+    );
+  });
+  if(terminados.length){
+    html+='<div style="padding:8px 16px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#aaa;border-top:1px solid #f0f0f0;margin-top:2px">✅ Listo para recoger</div>';
+    terminados.forEach(function(p){
+      var pend=cV2R2(p.total-(p.senal||0));
+      html+='<div style="padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f6f6f6;flex-wrap:wrap">'
+        +'<span style="font-family:monospace;font-size:12px;font-weight:700;min-width:70px">'+p.id+'</span>'
+        +'<span style="flex:1;font-size:13px;color:#444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.descripcion+'</span>'
+        +(pend>0.01
+          ?'<span style="background:#FCEBEB;color:#A32D2D;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap">'+pend.toFixed(2)+'€ pend.</span>'
+           +'<button onclick="mostCobrarEntregar(\''+p.id+'\')" style="background:#3B6D11;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">💳 Cobrar y entregar</button>'
+          :'<span style="background:#E8F5E9;color:#0F6E56;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap">✓ Pagado</span>'
+           +'<button onclick="mostEntregar(\''+p.id+'\')" style="background:#1a1a1a;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">📦 Entregar</button>')
+        +'</div>';
+    });
+  }
+
+  // En producción
+  var enProd=pedidos.filter(function(p){
+    return p.fase>0&&p.fase<5&&(
+      (cliente&&(p.clienteId===cliente.id||p.clienteTel===cliente.telefono))||
+      p.id.toLowerCase()===q.toLowerCase()
+    );
+  });
+  if(enProd.length){
+    html+='<div style="padding:8px 16px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#aaa;border-top:1px solid #f0f0f0;margin-top:2px">⚙️ En producción</div>';
+    enProd.forEach(function(p){
+      html+='<div style="padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f6f6f6;flex-wrap:wrap">'
+        +'<span style="font-family:monospace;font-size:12px;font-weight:700;min-width:70px">'+p.id+'</span>'
+        +'<span style="flex:1;font-size:13px;color:#444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.descripcion+'</span>'
+        +'<span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap">'+FASES[p.fase]+'</span>'
+        +'<button onclick="verPedido(\''+p.id+'\')" style="background:#E6F1FB;color:#185FA5;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Ver detalles</button>'
+        +'</div>';
+    });
+  }
+
+  // Presupuestos por aceptar
+  var porAceptar=(presupuestos||[]).filter(function(p){
+    return (p.estado==='guardado'||p.estado==='enviado')&&!p.convertido&&(
+      (cliente&&(p.cliente_telefono===cliente.telefono||p.cliente_nombre===cliente.nombre))||
+      (p.numero||'').toLowerCase()===q.toLowerCase()
+    );
+  });
+  if(porAceptar.length){
+    html+='<div style="padding:8px 16px 2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#aaa;border-top:1px solid #f0f0f0;margin-top:2px">💬 Presupuesto pendiente de aceptar</div>';
+    porAceptar.forEach(function(p){
+      html+='<div style="padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #f6f6f6;flex-wrap:wrap">'
+        +'<span style="font-family:monospace;font-size:12px;font-weight:700;min-width:70px">'+(p.numero||p.id)+'</span>'
+        +'<span style="flex:1;font-size:13px;color:#444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.lineas_resumen||p.notas||'—')+'</span>'
+        +'<span style="font-size:13px;font-weight:700;color:#BA7517;white-space:nowrap">'+parseFloat(p.total).toFixed(2)+'€</span>'
+        +'<button onclick="verCotizacion(\''+p.id+'\')" style="background:#f0f0f0;color:#444;border:none;border-radius:6px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Editar</button>'
+        +'<button onclick="verCotizacion(\''+p.id+'\')" style="background:#0F6E56;color:#fff;border:none;border-radius:6px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✓ Aceptar</button>'
+        +'</div>';
+    });
+  }
+
+  if(!html){
+    html='<div style="padding:24px;text-align:center;color:#aaa;font-size:13px">Sin resultados para "'+q+'"</div>';
+  }
+
+  box.innerHTML=html;
+  box.style.display='block';
+}
+
+function mostCobrarEntregar(id){
+  var p=pedidos.find(function(x){return x.id===id;});
+  if(!p)return;
+  _pedidoModal=p;
+  // Abrir modal pedido directamente en cobro resto
+  verPedido(id);
+  setTimeout(function(){
+    var btn=document.querySelector('#mp-body .btn-cobrar-resto');
+    if(btn)btn.click();
+  },300);
+}
+
+function mostEntregar(id){
+  verPedido(id);
+}
 
 function toggleProvPanel(){
   var panel=document.getElementById('prov-panel');
