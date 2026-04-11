@@ -3645,14 +3645,17 @@ function nvCalc(){
   _nvRes.totalFinal=totalFinal;
   
   // Mostrar resultado
-  var totalUnitSinIva=cV2R2(totalUnit);
-  var totalFinalSinIva=cV2R2(totalUnitSinIva*unidades);
+  // Sin IVA: si prod.sinIva los precios son base imponible, si no (textil) dividir entre 1.21
+  var totalFinalSinIva=prod.sinIva?cV2R2(totalUnit*unidades):cV2R2(totalFinal/1.21);
+  // Precio unitario real (res.pu si existe, si no calcular del total)
+  var puConIva=res.pu?cV2R2(res.pu*(prod.sinIva?1.21:1)):totalUnitIva;
+  var puSinIva=prod.sinIva?cV2R2(res.pu||totalUnit):cV2R2(puConIva/1.21);
   document.getElementById('nv-result').style.display='block';
   document.getElementById('nv-rc-nombre').textContent=prod.name;
-  document.getElementById('nv-precio-unit-si').textContent=cV2Fmt(totalUnitSinIva);
-  document.getElementById('nv-precio-unit').textContent=cV2Fmt(totalUnitIva);
-  var cantLabel=unidades>1?unidades+' uds × '+cV2Fmt(totalUnitIva):cV2Fmt(totalUnitIva)+' × 1 ud';
-  document.getElementById('nv-cant-display').textContent=cantLabel;
+  document.getElementById('nv-precio-unit-si').textContent=cV2Fmt(puSinIva);
+  document.getElementById('nv-precio-unit').textContent=cV2Fmt(puConIva);
+  var qty=res.qty||unidades;var qtyLabel=qty>1?qty+' uds':unidades+' ud';
+  document.getElementById('nv-cant-display').textContent=qtyLabel+' × '+cV2Fmt(puConIva);
   document.getElementById('nv-precio-si').textContent=cV2Fmt(totalFinalSinIva);
   document.getElementById('nv-precio').textContent=cV2Fmt(totalFinal);
   document.getElementById('nv-btn-add').style.display='inline-block';
