@@ -1101,7 +1101,7 @@ textarea{resize:vertical;min-height:64px}
     <div id="cot-comms" style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"></div>
     <div class="btn-row" style="margin-top:14px;flex-wrap:wrap">
       <button class="btn btn-primary" id="cot-btn-enviar" onclick="cotEnviar()">📤 Marcar enviado</button>
-      <button class="btn btn-success" id="cot-btn-aceptar" onclick="cotConvertir()" style="background:#3B6D11">✓ Aceptar y cobrar</button>
+      <button class="btn btn-success" id="cot-btn-aceptar" onclick="cotAceptarYCobrar()" style="background:#3B6D11">✓ Aceptar y cobrar</button>
       <button class="btn btn-danger" id="cot-btn-rechazar" onclick="cotRechazar()">✗ Rechazar</button>
     </div>
   </div>
@@ -5413,6 +5413,33 @@ function toggleBarraLista(){
   btn.textContent=abierto?'Ver todos':'Cerrar';
 }
 
+
+function cotAceptarYCobrar(){
+  if(!_cotActual)return;
+  var pres=_cotActual;
+  var total=parseFloat(pres.total)||0;
+  var condPago=pres.condicion_pago||'50_50';
+  // Calcular señal según condición de pago
+  var senal=0;
+  if(condPago==='50_50')senal=Math.round(total/2*100)/100;
+  else if(condPago==='0_100')senal=0;
+  else senal=total;
+
+  // Poblar modal-cobro-senal
+  _cobroPresId=pres.id;
+  var queda=senal>0.01?(total-senal).toFixed(2)+' € al recoger':'Todo cobrado ahora';
+  document.getElementById('modal-cobro-info').innerHTML=
+    '<strong>'+pres.numero+'</strong> — '+(pres.cliente_nombre||'')
+    +'<br><span style="color:#888">Total: '+total.toFixed(2)+'€'
+    +(condPago==='50_50'?' · Señal: '+senal.toFixed(2)+'€ · Resto: '+queda:'')
+    +'</span>';
+  document.getElementById('cobro-importe').value=senal>0.01?senal.toFixed(2):total.toFixed(2);
+  // Seleccionar bizum por defecto
+  var biz=document.querySelector('input[name="cobro-metodo"][value="bizum"]');
+  if(biz)biz.checked=true;
+  closeModal('modal-cot');
+  document.getElementById('modal-cobro-senal').classList.add('open');
+}
 
 function cotConvertir(){
   if(!_cotActual)return;
