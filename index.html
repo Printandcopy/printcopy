@@ -1297,15 +1297,24 @@ function mostBuscar(q){
   function matchId(id){return id.replace(/[-\s]/g,'').toLowerCase().includes(qNorm);}
   function matchNum(num){return (num||'').replace(/[-\s]/g,'').toLowerCase().includes(qNorm);}
 
-  var cliente=clientes.find(function(c){return c.telefono.includes(q)||c.nombre.toLowerCase().includes(q.toLowerCase());});
-  // Buscar pedido por id (parcial, sin guión)
-  var pedidoDir=pedidos.find(function(p){return matchId(p.id);});
-  // Buscar presupuesto por número (parcial, sin guión)
-  var presDir=(presupuestos||[]).find(function(p){return matchNum(p.numero);});
+  // Detectar si la búsqueda es por ID/número (empieza por letras seguidas de números o letras)
+  var esBusquedaId=/^[a-zA-Z]{2,4}[-]?[0-9]/i.test(q)||/^cot/i.test(q);
 
-  // Si coincide un pedido directo, usar su cliente
-  if(pedidoDir&&!cliente)cliente=clientes.find(function(c){return c.id===pedidoDir.clienteId||c.telefono===pedidoDir.clienteTel;});
-  if(presDir&&!cliente)cliente=clientes.find(function(c){return c.telefono===presDir.cliente_telefono;});
+  var cliente=null;
+  var pedidoDir=null;
+  var presDir=null;
+
+  if(esBusquedaId){
+    // Modo ID: solo buscar ese pedido o presupuesto concreto
+    pedidoDir=pedidos.find(function(p){return matchId(p.id);});
+    presDir=(presupuestos||[]).find(function(p){return matchNum(p.numero);});
+    // No cargar cliente ni resto del historial
+  } else {
+    // Modo cliente: buscar por teléfono o nombre y mostrar todo
+    cliente=clientes.find(function(c){return c.telefono.includes(q)||c.nombre.toLowerCase().includes(q.toLowerCase());});
+    if(pedidoDir&&!cliente)cliente=clientes.find(function(c){return c.id===pedidoDir.clienteId||c.telefono===pedidoDir.clienteTel;});
+    if(presDir&&!cliente)cliente=clientes.find(function(c){return c.telefono===presDir.cliente_telefono;});
+  }
 
   var html='';
 
@@ -1335,8 +1344,8 @@ function mostBuscar(q){
   // Terminados listos para recoger
   var terminados=pedidos.filter(function(p){
     return p.fase===5&&(
-      (cliente&&(p.clienteId===cliente.id||p.clienteTel===cliente.telefono))||
-      matchId(p.id)
+      esBusquedaId?matchId(p.id):
+      (cliente&&(p.clienteId===cliente.id||p.clienteTel===cliente.telefono))
     );
   });
   if(terminados.length){
@@ -1358,8 +1367,8 @@ function mostBuscar(q){
   // En producción
   var enProd=pedidos.filter(function(p){
     return p.fase>0&&p.fase<5&&(
-      (cliente&&(p.clienteId===cliente.id||p.clienteTel===cliente.telefono))||
-      matchId(p.id)
+      esBusquedaId?matchId(p.id):
+      (cliente&&(p.clienteId===cliente.id||p.clienteTel===cliente.telefono))
     );
   });
   if(enProd.length){
@@ -1377,8 +1386,8 @@ function mostBuscar(q){
   // Presupuestos por aceptar
   var porAceptar=(presupuestos||[]).filter(function(p){
     return (p.estado==='guardado'||p.estado==='enviado')&&!p.convertido&&(
-      (cliente&&(p.cliente_telefono===cliente.telefono||p.cliente_nombre===cliente.nombre))||
-      matchNum(p.numero)
+      esBusquedaId?matchNum(p.numero):
+      (cliente&&(p.cliente_telefono===cliente.telefono||p.cliente_nombre===cliente.nombre))
     );
   });
   if(porAceptar.length){
