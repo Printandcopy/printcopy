@@ -4294,6 +4294,51 @@ function nvCrearPedido(){
           });
           window._presupuestoParaConvertir=null;
         }
+        // Enviar WA confirmación pedido directo
+        if(tel){
+          var telD=tel.replace(/\s/g,'').replace(/^\+/,'');
+          if(telD.length===9&&!telD.startsWith('34'))telD='34'+telD;
+          var nomD=nombre.split(' ')[0];
+          var numPedD=validos.join(', ');
+          var fechaD='';
+          if(fecha){
+            var fd=new Date(fecha+'T12:00:00');
+            var diasSem=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+            fechaD=diasSem[fd.getDay()]+' '+fd.getDate()+'/'+(fd.getMonth()+1);
+          }
+          var descD=nvLineas.map(function(l){return l.desc;}).join(', ');
+          var maxPlazoD=3;
+          nvLineas.forEach(function(l){if(l.plazo&&l.plazo>maxPlazoD)maxPlazoD=l.plazo;});
+          var restoD=cV2R2(totalGlobal-senal);
+          var msgD;
+          if(condicion==='credito_senal'||condicion==='credito_total'){
+            msgD='✅ ¡Anotado, '+nomD+'! Pedido en marcha 🙌\n\n'
+              +'📌 *'+numPedD+'*\n'
+              +'📦 '+descD+'\n'
+              +(fechaD?'📅 Entrega est.: *'+fechaD+'*\n':'')
+              +'💰 Total: '+totalGlobal.toFixed(2)+'€ (IVA incl.) — *100% al recoger*\n\n'
+              +'En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n'
+              +'⏱️ *Plazo de producción:* '+maxPlazoD+' días laborables desde tu aprobación.';
+          } else if(senal>0&&restoD>0.01){
+            msgD='✅ ¡Pago inicial abonado, '+nomD+'! Gracias por pasarte 🙌\n\n'
+              +'📌 *'+numPedD+'*\n'
+              +'📦 '+descD+'\n'
+              +(fechaD?'📅 Entrega est.: *'+fechaD+'*\n':'')
+              +'💰 Total: '+totalGlobal.toFixed(2)+'€ (IVA incl.)\n\n'
+              +'📌 Arrancamos con tu pedido. En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n'
+              +'⏱️ *Plazo de producción:* '+maxPlazoD+' días laborables desde tu aprobación.\n\n'
+              +'Resto ('+restoD.toFixed(2)+'€) al recoger tu pedido terminado.';
+          } else {
+            msgD='✅ ¡Listo, '+nomD+'! Pedido confirmado 🙌\n\n'
+              +'📌 *'+numPedD+'*\n'
+              +'📦 '+descD+'\n'
+              +(fechaD?'📅 Entrega est.: *'+fechaD+'*\n':'')
+              +'💰 Total: '+totalGlobal.toFixed(2)+'€ (IVA incl.)\n\n'
+              +'En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n'
+              +'⏱️ *Plazo de producción:* '+maxPlazoD+' días laborables desde tu aprobación.';
+          }
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telD,mensaje:msgD,nombre:nombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA pedido directo:',d.error);});
+        }
         closeModal('modal-venta');cargarDatos();
         // Ir a pantalla Pedidos para ver el nuevo pedido
         setTimeout(function(){
