@@ -214,6 +214,22 @@ textarea{resize:vertical;min-height:64px}
 .result-val{font-size:14px;font-weight:600;color:#fff}
 .result-main{font-size:24px;font-weight:800;color:#DCC25C}
 .result-divider{height:1px;background:#333;margin:8px 0}
+.nv-rc{background:#fff;border:2px solid #185FA5;border-radius:10px;box-shadow:0 2px 12px rgba(24,95,165,.13);overflow:hidden;margin-top:12px}
+.nv-rc table{width:100%;border-collapse:collapse}
+.nv-rc td{padding:7px 16px;font-size:12px}
+.nv-rc .nv-rc-prod{background:#EFF6FF;color:#185FA5;font-weight:700;font-size:12px;border-bottom:1px solid #DBEAFE}
+.nv-rc .nv-rc-head th{background:#fff;color:#c0cfe8;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;text-align:right;border-bottom:1px solid #f0f4fb;padding:5px 16px}
+.nv-rc .nv-rc-head th:first-child{text-align:left}
+.nv-rc .nv-rc-data td{color:#374151;border-bottom:1px solid #f4f6fa}
+.nv-rc .nv-rc-data td:first-child{color:#6B7280;font-size:12px}
+.nv-rc .nv-rc-r{text-align:right;white-space:nowrap}
+.nv-rc .nv-rc-si{color:#9CA3AF!important;font-weight:500!important;font-size:12px!important}
+.nv-rc .nv-rc-ci{color:#185FA5!important;font-weight:700!important;font-size:13px!important}
+.nv-rc .nv-rc-sep td{padding:0;border-bottom:2px solid #DBEAFE}
+.nv-rc .nv-rc-tot{background:#EFF6FF;border-top:2px solid #185FA5}
+.nv-rc .nv-rc-tot td{padding:9px 16px;color:#111827;font-weight:700;font-size:13px}
+.nv-rc .nv-rc-tot .nv-rc-si{color:#6B7280!important;font-size:13px!important;font-weight:600!important}
+.nv-rc .nv-rc-tot .nv-rc-ci{color:#185FA5!important;font-size:17px!important;font-weight:800!important}
 .result-unit{font-size:11px;color:#888;margin-top:2px}
 .result-tramo{font-size:11px;color:#BA7517;margin-top:4px;background:#332800;padding:4px 8px;border-radius:4px}
 .sug-header{background:#1a1a1a;color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
@@ -832,11 +848,20 @@ textarea{resize:vertical;min-height:64px}
           <!-- Textil custom -->
           <div id="nv-textil-wrap" style="display:none;margin-top:10px"></div>
           <!-- Resultado -->
-          <div id="nv-result" class="result-box" style="display:none;margin-top:12px">
-            <div class="result-row"><span class="result-label">Precio unitario</span><span class="result-val" id="nv-precio-unit">0,00 €</span></div>
-            <div class="result-row"><span class="result-label">Unidades</span><span class="result-val" id="nv-cant-display">1</span></div>
-            <div class="result-divider"></div>
-            <div class="result-row"><span class="result-label">TOTAL</span><span class="result-main" id="nv-precio">0,00 €</span></div>
+          <div id="nv-result" class="nv-rc" style="display:none">
+            <table>
+              <tr class="nv-rc-prod"><td colspan="3" id="nv-rc-nombre">—</td></tr>
+              <tr class="nv-rc-data">
+                <td>Precio unitario</td>
+                <td class="nv-rc-r nv-rc-si" id="nv-precio-unit-si">—</td>
+                <td class="nv-rc-r nv-rc-ci" id="nv-precio-unit">—</td>
+              </tr>
+              <tr class="nv-rc-data" id="nv-rc-row-total">
+                <td id="nv-cant-display">—</td>
+                <td class="nv-rc-r nv-rc-si" id="nv-precio-si">—</td>
+                <td class="nv-rc-r nv-rc-ci" id="nv-precio">—</td>
+              </tr>
+            </table>
           </div>
           <!-- Plazo + specs -->
           <div id="nv-plazo" style="display:none;margin-top:8px;padding:10px 14px;background:linear-gradient(135deg,#f0f7f0,#e8f5e9);border-radius:8px;border-left:4px solid #4caf50">
@@ -3620,9 +3645,15 @@ function nvCalc(){
   _nvRes.totalFinal=totalFinal;
   
   // Mostrar resultado
+  var totalUnitSinIva=cV2R2(totalUnit);
+  var totalFinalSinIva=cV2R2(totalUnitSinIva*unidades);
   document.getElementById('nv-result').style.display='block';
+  document.getElementById('nv-rc-nombre').textContent=prod.name;
+  document.getElementById('nv-precio-unit-si').textContent=cV2Fmt(totalUnitSinIva);
   document.getElementById('nv-precio-unit').textContent=cV2Fmt(totalUnitIva);
-  document.getElementById('nv-cant-display').textContent=unidades;
+  var cantLabel=unidades>1?unidades+' uds × '+cV2Fmt(totalUnitIva):cV2Fmt(totalUnitIva)+' × 1 ud';
+  document.getElementById('nv-cant-display').textContent=cantLabel;
+  document.getElementById('nv-precio-si').textContent=cV2Fmt(totalFinalSinIva);
   document.getElementById('nv-precio').textContent=cV2Fmt(totalFinal);
   document.getElementById('nv-btn-add').style.display='inline-block';
   
