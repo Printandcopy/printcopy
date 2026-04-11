@@ -1292,11 +1292,16 @@ function mostBuscar(q){
   if(q.length<2){box.style.display='none';box.innerHTML='';return;}
 
   // Buscar cliente por teléfono o nombre
-  var cliente=clientes.find(function(c){return c.telefono===q||c.nombre.toLowerCase().includes(q.toLowerCase());});
-  // Buscar pedido por id
-  var pedidoDir=pedidos.find(function(p){return p.id.toLowerCase()===q.toLowerCase();});
-  // Buscar presupuesto por número
-  var presDir=(presupuestos||[]).find(function(p){return (p.numero||'').toLowerCase()===q.toLowerCase();});
+  // Normalizar query: quitar guión para comparar ids (tx0013 == TX-0013)
+  var qNorm=q.replace(/[-\s]/g,'').toLowerCase();
+  function matchId(id){return id.replace(/[-\s]/g,'').toLowerCase().includes(qNorm);}
+  function matchNum(num){return (num||'').replace(/[-\s]/g,'').toLowerCase().includes(qNorm);}
+
+  var cliente=clientes.find(function(c){return c.telefono.includes(q)||c.nombre.toLowerCase().includes(q.toLowerCase());});
+  // Buscar pedido por id (parcial, sin guión)
+  var pedidoDir=pedidos.find(function(p){return matchId(p.id);});
+  // Buscar presupuesto por número (parcial, sin guión)
+  var presDir=(presupuestos||[]).find(function(p){return matchNum(p.numero);});
 
   // Si coincide un pedido directo, usar su cliente
   if(pedidoDir&&!cliente)cliente=clientes.find(function(c){return c.id===pedidoDir.clienteId||c.telefono===pedidoDir.clienteTel;});
@@ -1331,7 +1336,7 @@ function mostBuscar(q){
   var terminados=pedidos.filter(function(p){
     return p.fase===5&&(
       (cliente&&(p.clienteId===cliente.id||p.clienteTel===cliente.telefono))||
-      p.id.toLowerCase()===q.toLowerCase()
+      matchId(p.id)
     );
   });
   if(terminados.length){
@@ -1354,7 +1359,7 @@ function mostBuscar(q){
   var enProd=pedidos.filter(function(p){
     return p.fase>0&&p.fase<5&&(
       (cliente&&(p.clienteId===cliente.id||p.clienteTel===cliente.telefono))||
-      p.id.toLowerCase()===q.toLowerCase()
+      matchId(p.id)
     );
   });
   if(enProd.length){
@@ -1373,7 +1378,7 @@ function mostBuscar(q){
   var porAceptar=(presupuestos||[]).filter(function(p){
     return (p.estado==='guardado'||p.estado==='enviado')&&!p.convertido&&(
       (cliente&&(p.cliente_telefono===cliente.telefono||p.cliente_nombre===cliente.nombre))||
-      (p.numero||'').toLowerCase()===q.toLowerCase()
+      matchNum(p.numero)
     );
   });
   if(porAceptar.length){
