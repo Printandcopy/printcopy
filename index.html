@@ -11,8 +11,8 @@ body{background:#f5f5f0;min-height:100vh;color:#1a1a1a}
 header{background:#1a1a1a;color:#fff;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:12px}
 .header-left{display:flex;align-items:center;gap:16px}
 header h1{font-size:16px;font-weight:500;white-space:nowrap}
-.clock-time{font-size:13px;color:#aaa;font-family:monospace}
-.clock-date{font-size:11px;color:#777;margin-top:1px}
+.clock-time{font-size:22px;color:#fff;font-family:monospace;font-weight:700;letter-spacing:1px;line-height:1}
+.clock-date{font-size:12px;color:#aaa;margin-top:2px;text-transform:capitalize}
 .conn-dot{width:8px;height:8px;border-radius:50%;background:#666;display:inline-block;margin-right:4px}
 .conn-dot.ok{background:#4ade80}.conn-dot.err{background:#f87171}
 .nav-tabs{display:flex;gap:3px}
@@ -373,8 +373,9 @@ textarea{resize:vertical;min-height:64px}
 <body>
 <header>
   <div class="header-left">
-    <h1>🖨️ Print &amp; Copy <span style="font-size:10px;color:#666;font-weight:400">v51</span></h1>
-    <div id="clock-wrap" style="display:none">
+    <img src="https://printcopy.vercel.app/logo.png" alt="Print &amp; Copy" style="height:38px;width:auto" onerror="this.style.display='none';document.getElementById('logo-txt').style.display='block'">
+    <span id="logo-txt" style="display:none;font-size:17px;font-weight:800;color:#fff">Print &amp; Copy</span>
+    <div id="clock-wrap" style="display:block">
       <div class="clock-time" id="clock-time"></div>
       <div class="clock-date" id="clock-date"></div>
     </div>
