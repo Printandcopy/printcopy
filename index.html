@@ -838,7 +838,14 @@ textarea{resize:vertical;min-height:64px}
             <div class="result-divider"></div>
             <div class="result-row"><span class="result-label">TOTAL</span><span class="result-main" id="nv-precio">0,00 €</span></div>
           </div>
-          <!-- Upselling -->
+          <!-- Plazo + specs -->
+          <div id="nv-plazo" style="display:none;margin-top:8px;padding:10px 14px;background:linear-gradient(135deg,#f0f7f0,#e8f5e9);border-radius:8px;border-left:4px solid #4caf50">
+            <div id="nv-plazo-entrega" style="font-weight:600;color:#2e7d32;font-size:13px"></div>
+            <div id="nv-plazo-specs" style="font-size:12px;color:#555;margin-top:2px"></div>
+          </div>
+          <!-- Tramos upselling -->
+          <div id="nv-tramos" style="display:none;margin-top:8px"></div>
+          <!-- Upselling legacy (oculto cuando hay panel grande) -->
           <div id="nv-upsell" class="sug-box" style="display:none;margin-top:10px"><div class="sug-title">💡 Sugerencia</div><div id="nv-upsell-content"></div></div>
           <div class="btn-row" style="margin-top:12px"><button class="btn btn-primary" id="nv-btn-add" onclick="nvAddLinea()" style="display:none">+ Añadir al presupuesto</button></div>
         </div>
@@ -3387,6 +3394,8 @@ function nuevaVenta(){
   document.getElementById('nv-btn-add').style.display='none';
   document.getElementById('nv-cross').style.display='none';
   if(document.getElementById('nv-sug-panel'))document.getElementById('nv-sug-panel').style.display='none';
+  if(document.getElementById('nv-plazo'))document.getElementById('nv-plazo').style.display='none';
+  if(document.getElementById('nv-tramos'))document.getElementById('nv-tramos').style.display='none';
   document.getElementById('nv-fecha').value='';
   document.getElementById('nv-ftipo').value='aprox';
   document.getElementById('nv-operario').value='Marilia';
@@ -3617,6 +3626,52 @@ function nvCalc(){
   document.getElementById('nv-precio').textContent=cV2Fmt(totalFinal);
   document.getElementById('nv-btn-add').style.display='inline-block';
   
+  // Plazo de entrega + specs técnicas
+  var plazoEl=document.getElementById('nv-plazo');
+  var plazoReal=res.plazoReal||prod.plazo;
+  var specsShow=res.specsOverride!==undefined?res.specsOverride:prod.specs;
+  if(plazoEl){
+    if(plazoReal||specsShow){
+      plazoEl.style.display='block';
+      document.getElementById('nv-plazo-entrega').innerHTML=plazoReal?'📦 Entrega: '+plazoReal+' días hábiles':'';
+      document.getElementById('nv-plazo-specs').innerHTML=specsShow?'📋 '+specsShow:'';
+    }else{plazoEl.style.display='none';}
+  }
+  // Tramos upselling visuales en columna izquierda
+  var tramosEl=document.getElementById('nv-tramos');
+  if(tramosEl&&res.tiers&&res.qty&&res.pu){
+    var nexts=nextTiers(res.tiers,res.qty,2);
+    if(nexts.length){
+      var tHtml='<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#854F0B;letter-spacing:.6px;margin-bottom:8px">📈 Compara tramos</div>';
+      tHtml+='<div style="display:flex;gap:8px">';
+      // Tramo actual
+      tHtml+='<div class="tramo-card current" style="flex:1;margin:0"><div class="tramo-header"><span class="tramo-badge">Actual</span></div>';
+      tHtml+='<div style="font-size:14px;font-weight:700;margin:4px 0 2px">'+res.qty.toLocaleString('es-ES')+' uds</div>';
+      tHtml+='<div style="font-size:12px;font-weight:600">'+cV2Fmt(res.base)+'</div>';
+      tHtml+='<div style="font-size:11px;color:#666">'+cV2Fmt(res.pu)+'/ud</div></div>';
+      // Tramos siguientes
+      nexts.forEach(function(nIdx,i){
+        var nextQty=res.tiers[nIdx],testVals={},nextPu,nextTotal;
+        prod.fields.forEach(function(f){testVals[f.id]=document.getElementById('nvf-'+f.id)?document.getElementById('nvf-'+f.id).value:'';if(f.id==='qty')testVals[f.id]=String(nextQty);});
+        var testRes=prod.calc(testVals,{});
+        if(!testRes||testRes.error)return;
+        nextPu=testRes.pu||0;nextTotal=testRes.base||0;
+        var difTotal=cV2R2(nextTotal-res.base);
+        var udsExtra=nextQty-res.qty;
+        var isRec=i===0;
+        var badgeStyle=isRec?'background:#BA7517;color:#fff':'background:#EAF3DE;color:#3B6D11';
+        tHtml+='<div class="tramo-card'+(isRec?' recommended':'')+'" style="flex:1;margin:0"><div class="tramo-header"><span class="tramo-badge" style="'+badgeStyle+'">'+(isRec?'⭐ Recomendado':'💚 Máx ahorro')+'</span></div>';
+        tHtml+='<div style="font-size:14px;font-weight:700;margin:4px 0 2px">'+nextQty.toLocaleString('es-ES')+' uds</div>';
+        tHtml+='<div style="font-size:12px;font-weight:600">'+cV2Fmt(nextTotal)+'</div>';
+        tHtml+='<div style="font-size:11px;color:#666">'+cV2Fmt(nextPu)+'/ud</div>';
+        tHtml+='<div style="margin-top:5px;font-size:11px;color:#3B6D11;font-weight:600;background:#EAF3DE;padding:3px 6px;border-radius:4px">+'+cV2Fmt(difTotal)+' → +'+udsExtra.toLocaleString('es-ES')+' uds</div>';
+        tHtml+='</div>';
+      });
+      tHtml+='</div>';
+      tramosEl.innerHTML=tHtml;
+      tramosEl.style.display='block';
+    }else{tramosEl.style.display='none';}
+  }else if(tramosEl){tramosEl.style.display='none';}
   // Upselling (solo para productos con tramos)
   if(res.tiers&&res.qty){
     var idx=floorIdx(res.tiers,res.qty);
