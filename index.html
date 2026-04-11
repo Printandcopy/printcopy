@@ -3845,8 +3845,12 @@ function nvAddLinea(){
   // Unidades (multiplicador)
   if(unidades>1)desc=' ['+unidades+' uds] '+desc;
   
-  var _prod=P[_nvRes.cat];var _totalSi=_prod?(_prod.sinIva?cV2R2(_nvRes.totalFinal/1.21):cV2R2(_nvRes.totalFinal/1.21)):cV2R2(_nvRes.totalFinal/1.21);
-  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,totalSi:_totalSi,cat:_nvRes.cat,unidades:unidades,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0});
+  var _prod=P[_nvRes.cat];
+  var _totalSi=cV2R2(_nvRes.totalFinal/1.21);
+  var _puCi=document.getElementById('nv-precio-unit')?parseFloat((document.getElementById('nv-precio-unit').textContent||'0').replace(',','.')):0;
+  var _puSi=document.getElementById('nv-precio-unit-si')?parseFloat((document.getElementById('nv-precio-unit-si').textContent||'0').replace(',','.')):0;
+  var _qty=_nvRes.qty||1;
+  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,totalSi:_totalSi,puCi:_puCi,puSi:_puSi,qty:_qty,unidades:unidades,cat:_nvRes.cat,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0});
   nvRenderLineas();
   nvActualizarFecha();
   nvShowCross(_nvRes.cat);
@@ -3887,9 +3891,15 @@ function nvRenderLineas(){
     var si=l.totalSi?cV2Fmt(l.totalSi):cV2Fmt(cV2R2(l.total/1.21));
     var ci=cV2Fmt(l.total);
     var sep=i>0?'<tr class="nv-rs-sep"><td colspan="4"></td></tr>':'';
+    var puCi=l.puCi?cV2Fmt(l.puCi):'';
+    var puSi=l.puSi?cV2Fmt(l.puSi):'';
+    var qtyVal=l.qty&&l.qty>1?l.qty:(l.unidades&&l.unidades>1?l.unidades:1);
+    var qtyLabel=qtyVal+' '+(qtyVal>1?'uds':'ud')+(puCi?' × '+puCi:'');
+    var rowPu=puCi?'<tr class="nv-rs-data"><td>Precio unitario</td><td class="nv-rs-r nv-rs-si">'+puSi+'</td><td class="nv-rs-r nv-rs-ci">'+puCi+'</td><td></td></tr>':'';
     return sep+
       '<tr class="nv-rs-prod"><td colspan="3"><span class="badge sec-'+l.sec+'">'+l.sec+'</span> '+l.desc+'</td><td class="nv-rs-del"><button class="linea-del" onclick="nvQuitarLinea('+i+')">✕</button></td></tr>'+
-      '<tr class="nv-rs-data"><td>Subtotal</td><td class="nv-rs-r nv-rs-si">'+si+'</td><td class="nv-rs-r nv-rs-ci">'+ci+'</td><td></td></tr>';
+      rowPu+
+      '<tr class="nv-rs-data"><td>'+qtyLabel+'</td><td class="nv-rs-r nv-rs-si">'+si+'</td><td class="nv-rs-r nv-rs-ci">'+ci+'</td><td></td></tr>';
   }).join('');
   var subSiTot=nvLineas.reduce(function(s,l){return s+(l.totalSi||cV2R2(l.total/1.21));},0);
   var subTot=nvLineas.reduce(function(s,l){return s+l.total;},0);
