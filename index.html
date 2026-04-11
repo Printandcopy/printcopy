@@ -1399,8 +1399,8 @@ function mostBuscar(q){
         +'<span style="font-family:monospace;font-size:12px;font-weight:700;min-width:70px">'+(p.numero||p.id)+'</span>'
         +'<span style="flex:1;font-size:13px;color:#444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.lineas_resumen||p.notas||'—')+'</span>'
         +'<span style="font-size:13px;font-weight:700;color:#BA7517;white-space:nowrap">'+parseFloat(p.total).toFixed(2)+'€</span>'
-        +'<button onclick="verCotizacion(\''+p.id+'\')" style="background:#f0f0f0;color:#444;border:none;border-radius:6px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Editar</button>'
-        +'<button onclick="verCotizacion(\''+p.id+'\')" style="background:#0F6E56;color:#fff;border:none;border-radius:6px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✓ Aceptar</button>'
+        +'<button onclick="verCotizacion(\''+p.id+'\',true)" style="background:#f0f0f0;color:#444;border:none;border-radius:6px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✏️ Editar</button>'
+        +'<button onclick="verCotizacion(\''+p.id+'\',true)" style="background:#0F6E56;color:#fff;border:none;border-radius:6px;padding:6px 11px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">✓ Aceptar</button>'
         +'</div>';
     });
   }
@@ -4836,7 +4836,7 @@ cargarProveedores();
   }
 }
 
-function verCotizacion(id){
+function verCotizacion(id,desdeMostrador){
   var p=presupuestos.find(function(x){return x.id===id;});if(!p)return;
   _cotActual=p;
   sb.from('presupuesto_lineas').select('*').eq('presupuesto_id',id).order('orden').then(function(r){
@@ -4962,6 +4962,7 @@ function verCotizacion(id){
       }
     }
 
+    document.getElementById('cot-comms').style.display=desdeMostrador?'none':'';
     document.getElementById('modal-cot').classList.add('open');
   });
 }
