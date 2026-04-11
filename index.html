@@ -3810,7 +3810,10 @@ function nvAddLinea(){
   document.getElementById('nv-result').style.display='none';
   document.getElementById('nv-upsell').style.display='none';
   document.getElementById('nv-btn-add').style.display='none';
-  _nvCat=null;_nvRes=null;
+  if(document.getElementById('nv-plazo'))document.getElementById('nv-plazo').style.display='none';
+  if(document.getElementById('nv-tramos'))document.getElementById('nv-tramos').style.display='none';
+  if(document.getElementById('nv-sug-panel'))document.getElementById('nv-sug-panel').style.display='none';
+  _nvCat=null;_nvRes=null;window._nvCurCat=null;
 }
 
 function nvAddManual(){
