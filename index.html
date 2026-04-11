@@ -2627,6 +2627,9 @@ function cV2calc(){
 function cV2renderSug(res){
   var upHtml='';
   var sugHtml='';
+  // Sincronizar cat: puede venir de calculadora (cV2curCat) o del modal (window._nvCurCat)
+  if(window._nvCurCat&&!cV2curCat)cV2curCat=window._nvCurCat;
+  else if(window._nvCurCat)cV2curCat=window._nvCurCat;
   var upEl=document.getElementById('c-upselling');
   if(res.tiers&&res.qty&&res.pu){
     var nexts=nextTiers(res.tiers,res.qty,2);
@@ -3125,6 +3128,7 @@ var presupuestos=[];
 var nvLineas=[];
 var _nvCat=null;
 var _nvRes=null;
+window._nvCurCat=null;
 var _cotActual=null;
 var PRES_ESTADOS={guardado:'Guardada',enviado:'Enviada',aceptado:'Aceptada',rechazado:'Rechazada'};
 
@@ -3625,6 +3629,12 @@ function nvCalc(){
       }
     }else{document.getElementById('nv-upsell').style.display='none';}
   }else{document.getElementById('nv-upsell').style.display='none';}
+  // Reflejar sugerencias completas en panel derecho del modal (sustituye al upsell pequeño)
+  window._nvCurCat=cat;
+  if(typeof cV2renderSug==='function'){
+    document.getElementById('nv-upsell').style.display='none';
+    cV2renderSug(res);
+  }
 }
 
 function nvAddEst(){
