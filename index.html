@@ -1414,8 +1414,7 @@ function mostBuscar(q){
 }
 
 function mostCobrarEntregar(id){
-  // Llama directamente al flujo de cobro (fase 6 = Cobrado)
-  // Si hay pendiente abre modal-cobro-resto, si está pagado pasa directo
+  window._cobroDesdesMostrador=true;
   setFaseModal(id,6);
 }
 
@@ -2071,13 +2070,21 @@ function ejecutarCobroResto(){
   p.pago='pagado';
   p.metodo_pago_resto=metodo;
   var faseAnterior=p.fase;
-  sb.from('pedidos').update({senal:nuevaSenal,pago:'pagado',metodo_pago_resto:metodo,fase:fase}).eq('id',id).then(function(r){
+  // Si viene desde Mostrador (fase=6), encadenar directamente a Recogido (7)
+  var faseFinal=window._cobroDesdesMostrador?7:fase;
+  var updateData={senal:nuevaSenal,pago:'pagado',metodo_pago_resto:metodo,fase:faseFinal};
+  if(faseFinal===7){updateData.recogido=true;updateData.fecha_recogido=new Date().toISOString();}
+  sb.from('pedidos').update(updateData).eq('id',id).then(function(r){
     if(r&&r.error){alert('Error al guardar cobro: '+r.error.message);return;}
-    p.senal=nuevaSenal;p.pago='pagado';p.fase=fase;
+    p.senal=nuevaSenal;p.pago='pagado';p.fase=faseFinal;
+    if(faseFinal===7){p.recogido=true;p.fecha_recogido=updateData.fecha_recogido;}
     _pedidoModal=p;
-    logCambioFase(id,faseAnterior,fase);
-    verPedido(id);
-    renderTaller();
+    logCambioFase(id,faseAnterior,faseFinal);
+    window._cobroDesdesMostrador=false;
+    // Refrescar mostrador si está activo
+    var mbuscar=document.getElementById('most-buscar');
+    if(mbuscar&&mbuscar.value)mostBuscar(mbuscar.value);
+    else{verPedido(id);renderTaller();}
   });
   closeModal('modal-cobro-resto');
 }
