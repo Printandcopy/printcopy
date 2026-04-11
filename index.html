@@ -782,6 +782,13 @@ textarea{resize:vertical;min-height:64px}
             <input type="text" id="nv-buscar" placeholder="Buscar cliente existente..." oninput="nvBuscarCliente(this.value)" autocomplete="off">
             <div class="search-results" id="nv-resultados"></div>
           </div>
+          <div id="nv-cliente-toast" style="display:none;background:#1e3a5f;color:#fff;border-radius:6px;padding:6px 12px;margin-bottom:8px;display:none;align-items:center;gap:10px;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,.18)">
+            <strong id="nv-ct-nombre" style="font-size:12px;flex:1"></strong>
+            <span style="color:#93adc8">Pedidos</span><span id="nv-ct-peds" style="font-weight:700"></span>
+            <span style="color:#93adc8;margin-left:4px">Total</span><span id="nv-ct-total" style="font-weight:700"></span>
+            <span style="color:#93adc8;margin-left:4px">Pago</span><span id="nv-ct-pago" style="font-weight:700"></span>
+            <span id="nv-ct-nivel" style="margin-left:6px;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700"></span>
+          </div>
           <div class="form-grid">
             <div class="field"><label>Nombre</label><input type="text" id="nv-nombre"></div>
             <div class="field"><label>Teléfono</label><input type="tel" id="nv-tel" placeholder="600 000 000" maxlength="9" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,9)"></div>
@@ -3435,6 +3442,7 @@ function nuevaVenta(modo){
   document.getElementById('nv-tel').value='';
   document.getElementById('nv-email').value='';
   document.getElementById('nv-sector').value='';
+  var _t=document.getElementById('nv-cliente-toast');if(_t)_t.style.display='none';
   document.getElementById('nv-cat').value='';
   document.getElementById('nv-campos-dinamicos').innerHTML='';
   document.getElementById('nv-unidades-wrap').style.display='none';
@@ -3530,6 +3538,22 @@ function nvSelCliente(id){
   }
   document.getElementById('nv-buscar').value='';
   document.getElementById('nv-resultados').style.display='none';
+  // Toast resumen cliente
+  var toast=document.getElementById('nv-cliente-toast');
+  if(toast){
+    var pedsCli=(pedidos||[]).filter(function(p){return p.cliente_id===c.id||p.cliente_tel===c.telefono;});
+    var totalCli=pedsCli.reduce(function(s,p){return s+(parseFloat(p.total)||0);},0);
+    var pagoLabels={'50_50':'50·50','0_100':'100% recoger','transferencia':'Transf.','credito_senal':'Créd. señal','credito_total':'Créd. total'};
+    var nivelColors={nuevo:'#888',recurrente:'#185FA5',premium:'#0F6E56',vip:'#BA7517',restringido:'#A32D2D',credito:'#534AB7'};
+    document.getElementById('nv-ct-nombre').textContent=c.nombre;
+    document.getElementById('nv-ct-peds').textContent=pedsCli.length;
+    document.getElementById('nv-ct-total').textContent=totalCli.toFixed(0)+'€';
+    document.getElementById('nv-ct-pago').textContent=pagoLabels[c.pago]||c.pago||'—';
+    var nEl=document.getElementById('nv-ct-nivel');
+    nEl.textContent=(c.nivel||'nuevo').charAt(0).toUpperCase()+(c.nivel||'nuevo').slice(1);
+    nEl.style.background=nivelColors[c.nivel]||'#888';
+    toast.style.display='flex';
+  }
 }
 
 function nvCatChange(){
