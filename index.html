@@ -1414,19 +1414,14 @@ function mostBuscar(q){
 }
 
 function mostCobrarEntregar(id){
-  var p=pedidos.find(function(x){return x.id===id;});
-  if(!p)return;
-  _pedidoModal=p;
-  // Abrir modal pedido directamente en cobro resto
-  verPedido(id);
-  setTimeout(function(){
-    var btn=document.querySelector('#mp-body .btn-cobrar-resto');
-    if(btn)btn.click();
-  },300);
+  // Llama directamente al flujo de cobro (fase 6 = Cobrado)
+  // Si hay pendiente abre modal-cobro-resto, si está pagado pasa directo
+  setFaseModal(id,6);
 }
 
 function mostEntregar(id){
-  verPedido(id);
+  // Pasar a Recogido (fase 7) directamente
+  setFaseModal(id,7);
 }
 
 function toggleProvPanel(){
