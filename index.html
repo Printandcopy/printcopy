@@ -920,6 +920,7 @@ textarea{resize:vertical;min-height:64px}
           <button class="btn btn-success" onclick="nvCrearPedido()" style="width:100%;margin-top:12px">✓ Confirmar cobro y crear pedido</button>
         </div>
         <div id="nv-cross" class="card" style="display:none"><div class="card-title">💡 Cross-selling</div><div id="nv-cross-content"></div></div>
+        <div id="nv-sug-panel" style="display:none"><div class="card" style="padding:0;overflow:hidden"><div style="background:#1a1a1a;color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:600">💡 Sugerencias de venta</span><span style="width:8px;height:8px;border-radius:50%;background:#4ade80;display:inline-block"></span></div><div id="nv-sug-content" style="max-height:420px;overflow-y:auto"></div></div></div>
         <div class="card"><div class="card-title">Notas</div><textarea id="nv-notas" rows="2" placeholder="Observaciones..."></textarea></div>
         <div class="card">
           <div class="form-grid">
@@ -2678,6 +2679,14 @@ function cV2renderSug(res){
     sugHtml+='</div>';
   }
   document.getElementById('c-sug-content').innerHTML=sugHtml||'<div class="sug-empty">Sin sugerencias adicionales</div>';
+  // Reflejar en el modal si está abierto
+  var nvPanel=document.getElementById('nv-sug-panel');
+  var nvContent=document.getElementById('nv-sug-content');
+  if(nvPanel&&nvContent&&document.getElementById('modal-venta').classList.contains('open')){
+    var panelHtml=(upHtml?'<div style="padding:10px 14px;border-bottom:1px solid #f0f0f0"><div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#854F0B;letter-spacing:.6px;margin-bottom:8px">📈 Tramos de precio</div>'+upHtml+'</div>':'')+(sugHtml?'<div style="padding:10px 14px">'+sugHtml+'</div>':'');
+    if(panelHtml){nvContent.innerHTML=panelHtml;nvPanel.style.display='block';}
+    else nvPanel.style.display='none';
+  }
 }
 
 function cV2aplicarDto(wrapId){
@@ -3373,6 +3382,7 @@ function nuevaVenta(){
   document.getElementById('nv-upsell').style.display='none';
   document.getElementById('nv-btn-add').style.display='none';
   document.getElementById('nv-cross').style.display='none';
+  if(document.getElementById('nv-sug-panel'))document.getElementById('nv-sug-panel').style.display='none';
   document.getElementById('nv-fecha').value='';
   document.getElementById('nv-ftipo').value='aprox';
   document.getElementById('nv-operario').value='Marilia';
