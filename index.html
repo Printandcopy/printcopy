@@ -646,7 +646,7 @@ textarea{resize:vertical;min-height:64px}
           </div>
           <div style="font-size:12px;color:#555;margin-bottom:8px">A partir de:</div>
           <div style="display:flex;align-items:center;gap:6px">
-            <input type="number" id="cfg-repite-peds" min="2" max="5" value="2" style="width:55px;text-align:center;font-weight:700" oninput="previewNivelConfig()">
+            <input type="number" id="cfg-repite-peds" min="1" max="5" value="1" style="width:55px;text-align:center;font-weight:700" oninput="previewNivelConfig()">
             <span style="font-size:12px;color:#555">pedidos</span>
           </div>
         </div>
@@ -1227,6 +1227,9 @@ var OPERARIOS=['Marilia','Álvaro','Charo','Raúl','Bea'];
 var SECTORES={particular:'Particular',hosteleria:'Hostelería',comercio:'Comercio',eventos:'Eventos y fiestas',empresa:'Empresas / Industria',inmobiliaria:'Inmobiliaria',educacion:'Educación',salud:'Salud y bienestar',servicios:'Servicios profesionales',asociaciones:'Asociaciones y clubs',admin_publica:'Administración pública'};
 var SECTOR_COLORS={particular:'#f1efe8|#5f5e5a',hosteleria:'#fef3e8|#7a4a1a',comercio:'#e8f0fe|#1a3a7a',eventos:'#f3e8fe|#4a1a7a',empresa:'#e8fef8|#1a5a4a',inmobiliaria:'#fce8e8|#7a1a1a',educacion:'#E6F1FB|#185FA5',salud:'#e8fce8|#1a5a1a',servicios:'#EEEDFE|#534AB7',asociaciones:'#FAEEDA|#BA7517',admin_publica:'#f5f5f5|#444'};
 
+// ── PROVEEDORES EXTERNOS ──
+var PROVEEDORES=['DTF Salamanca','Bordados Norte','Imprenta García','Laser Salmantino','Sublimación Express'];
+
 // ── NIVELES DE FIDELIZACIÓN ──
 var NIVELES={
   nuevo:    {label:'Nuevo',    emoji:'⚪', bg:'#f5f5f5', color:'#666',    border:'#ddd'},
@@ -1237,7 +1240,7 @@ var NIVELES={
 };
 // Umbrales editables desde el panel de configuración
 var NIVEL_CONFIG={
-  repite_peds:   2,   // nº pedidos para pasar a Repite
+  repite_peds:   1,   // nº pedidos previos para pasar a Repite (ha vuelto = 1 pedido anterior)
   habitual_peds: 3,   // nº pedidos para pasar a Habitual
   vip_peds:      6    // nº pedidos para pasar a VIP
 };
@@ -1256,13 +1259,13 @@ function toggleNivelConfig(){
   panel.style.display=open?'none':'block';
   arrow.textContent=open?'▼ Desplegar':'▲ Cerrar';
   if(!open){
-    document.getElementById('cfg-repite-peds').value=NIVEL_CONFIG.repite_peds||2;
+    document.getElementById('cfg-repite-peds').value=NIVEL_CONFIG.repite_peds||1;
     document.getElementById('cfg-habitual-peds').value=NIVEL_CONFIG.habitual_peds||3;
     document.getElementById('cfg-vip-peds').value=NIVEL_CONFIG.vip_peds||6;
   }
 }
 function previewNivelConfig(){
-  var r=parseInt(document.getElementById('cfg-repite-peds').value)||2;
+  var r=parseInt(document.getElementById('cfg-repite-peds').value)||1;
   var h=parseInt(document.getElementById('cfg-habitual-peds').value)||3;
   var v=parseInt(document.getElementById('cfg-vip-peds').value)||6;
   var prev=document.getElementById('nivel-config-preview');
@@ -1272,7 +1275,7 @@ function previewNivelConfig(){
   prev.style.color='#3B6D11';
 }
 function guardarNivelConfig(){
-  var r=parseInt(document.getElementById('cfg-repite-peds').value)||2;
+  var r=parseInt(document.getElementById('cfg-repite-peds').value)||1;
   var h=parseInt(document.getElementById('cfg-habitual-peds').value)||3;
   var v=parseInt(document.getElementById('cfg-vip-peds').value)||6;
   if(h<=r){alert('El umbral Habitual debe ser mayor que Repite');return;}
@@ -1287,7 +1290,7 @@ function guardarNivelConfig(){
   renderClientes();
 }
 // Cargar config guardada al iniciar
-try{var _nc=localStorage.getItem('pc_nivel_config');if(_nc){var _ncp=JSON.parse(_nc);NIVEL_CONFIG.repite_peds=_ncp.repite_peds||2;NIVEL_CONFIG.habitual_peds=_ncp.habitual_peds||3;NIVEL_CONFIG.vip_peds=_ncp.vip_peds||6;}}catch(e){}
+try{var _nc=localStorage.getItem('pc_nivel_config');if(_nc){var _ncp=JSON.parse(_nc);NIVEL_CONFIG.repite_peds=_ncp.repite_peds||1;NIVEL_CONFIG.habitual_peds=_ncp.habitual_peds||3;NIVEL_CONFIG.vip_peds=_ncp.vip_peds||6;}}catch(e){}
 
 function calcNivel(c){
   // Premium es manual, no se toca automáticamente
@@ -1296,7 +1299,7 @@ function calcNivel(c){
   var nped=pedidos.filter(function(p){return p.clienteId===c.id||p.clienteTel===c.telefono;}).length;
   if(nped>=(NIVEL_CONFIG.vip_peds||6))return'vip';
   if(nped>=(NIVEL_CONFIG.habitual_peds||3))return'habitual';
-  if(nped>=(NIVEL_CONFIG.repite_peds||2))return'repite';
+  if(nped>=(NIVEL_CONFIG.repite_peds||1))return'repite';
   return'nuevo';
 }
 function nivelBadgeHTML(nivel){
@@ -1355,7 +1358,7 @@ function cargarDatos(){
 }
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',creado:c.creado};}
-function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,presupuestoId:p.presupuesto_id||null};}
+function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null};}
 function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null};}
 
 function startClock(){
@@ -1714,8 +1717,57 @@ function verPedido(id){
     return '<button class="fase-step '+(i<p.fase?'done':i===p.fase?'current':'')+'" onclick="setFaseModal(\''+p.id+'\','+i+')">'+f+'</button>';
   }).join('')+'</div>';
 
+  // Bloque externalización
+  var extInfo=p.externalizado?'<div style="background:#FFF8EC;border:1px solid #FAC775;border-radius:6px;padding:7px 12px;margin-top:8px;font-size:12px;color:#BA7517;display:flex;align-items:center;gap:8px">🔄 <span>Externalizado a <strong>'+p.externalizado+'</strong> · '+p.externalizadoFecha+'</span><button onclick="cancelarExternalizacion(\''+p.id+'\')" style="margin-left:auto;background:none;border:none;color:#aaa;cursor:pointer;font-size:13px">✕</button></div>':'';
+  var extSelector='<div id="ext-panel-'+p.id+'" style="border:1.5px solid #e8a020;border-radius:8px;overflow:hidden;margin-top:10px">'
+    +'<div style="background:#FFF8EC;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleExtPanel(\'ext-panel-'+p.id+'\')">'
+    +'<span style="font-size:12px;font-weight:700;color:#BA7517">🔄 Externalizar pedido</span>'
+    +'<span id="ext-arrow-'+p.id+'" style="font-size:11px;color:#BA7517">▼</span></div>'
+    +'<div id="ext-body-'+p.id+'" style="display:none;padding:12px;display:flex;flex-direction:column;gap:8px">'
+    +'<select id="ext-prov-'+p.id+'" style="width:100%;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:12px"><option value="">— Seleccionar proveedor —</option>'
+    +PROVEEDORES.map(function(pr){return'<option>'+pr+'</option>';}).join('')
+    +'</select>'
+    +'<button onclick="guardarExternalizacion(\''+p.id+'\')" style="background:#BA7517;color:#fff;border:none;border-radius:6px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;width:100%">✓ Marcar como externalizado</button>'
+    +'</div></div>';
+  html+=(p.externalizado?extInfo:extSelector);
+
   document.getElementById('mp-body').innerHTML=html;
   document.getElementById('modal-pedido').classList.add('open');
+  // Iniciar panel cerrado
+  if(!p.externalizado){var eb=document.getElementById('ext-body-'+p.id);if(eb)eb.style.display='none';}
+}
+function toggleExtPanel(panelId){
+  var pid=panelId.replace('ext-panel-','');
+  var body=document.getElementById('ext-body-'+pid);
+  var arrow=document.getElementById('ext-arrow-'+pid);
+  if(!body)return;
+  var open=body.style.display==='flex';
+  body.style.display=open?'none':'flex';
+  body.style.flexDirection='column';
+  body.style.gap='8px';
+  if(arrow)arrow.textContent=open?'▼':'▲';
+}
+function guardarExternalizacion(id){
+  var prov=document.getElementById('ext-prov-'+id);
+  if(!prov||!prov.value){alert('Selecciona un proveedor');return;}
+  var p=pedidos.find(function(x){return x.id===id;});if(!p)return;
+  var ahora=new Date();
+  var fechaStr=ahora.getDate()+'/'+(ahora.getMonth()+1)+'/'+ahora.getFullYear()+' '+ahora.getHours().toString().padStart(2,'0')+':'+ahora.getMinutes().toString().padStart(2,'0');
+  p.externalizado=prov.value;
+  p.externalizadoFecha=fechaStr;
+  sb.from('pedidos').update({externalizado:prov.value,externalizado_fecha:fechaStr}).eq('id',id).then(function(r){
+    if(r.error){alert('Error al guardar: '+r.error.message);return;}
+    verPedido(id);
+  });
+}
+function cancelarExternalizacion(id){
+  if(!confirm('¿Quitar la externalización?'))return;
+  var p=pedidos.find(function(x){return x.id===id;});if(!p)return;
+  delete p.externalizado; delete p.externalizadoFecha;
+  sb.from('pedidos').update({externalizado:null,externalizado_fecha:null}).eq('id',id).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    verPedido(id);
+  });
 }
 function setFaseModal(id,fase){
   var p=pedidos.find(function(x){return x.id===id;});
