@@ -522,7 +522,7 @@ textarea{resize:vertical;min-height:64px}
     <div style="display:flex;gap:10px;align-items:center">
       <h2 style="font-size:16px;font-weight:600;margin:0">Pedidos</h2>
       <span id="pedidos-count" style="background:#FCEBEB;color:#A32D2D;padding:2px 10px;border-radius:12px;font-size:13px;font-weight:500"></span>
-      <button class="btn btn-primary" onclick="nuevaVenta()">+ Nuevo pedido</button>
+      <button class="btn btn-primary" onclick="nuevaVenta('pedido')">+ Nuevo pedido</button>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
       <select class="sort-select" id="pedidos-vista" onchange="renderPedidosActivos()">
@@ -770,7 +770,7 @@ textarea{resize:vertical;min-height:64px}
 <div class="modal-overlay" id="modal-venta">
   <div class="modal" style="max-width:1100px;max-height:95vh;overflow-y:auto">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <h3>Nuevo presupuesto</h3>
+      <h3 id="nv-modal-titulo">Nuevo presupuesto</h3>
       <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-venta')">✕</button>
     </div>
     <div class="venta-grid">
@@ -884,8 +884,6 @@ textarea{resize:vertical;min-height:64px}
           </div>
           <!-- Tramos upselling -->
           <div id="nv-tramos" style="display:none;margin-top:8px"></div>
-          <!-- Upselling legacy (oculto cuando hay panel grande) -->
-          <div id="nv-upsell" class="sug-box" style="display:none;margin-top:10px"><div class="sug-title">💡 Sugerencia</div><div id="nv-upsell-content"></div></div>
           <div class="btn-row" style="margin-top:12px"><button class="btn btn-primary" id="nv-btn-add" onclick="nvAddLinea()" style="display:none">+ Añadir al presupuesto</button></div>
         </div>
         <!-- Línea manual -->
@@ -976,12 +974,14 @@ textarea{resize:vertical;min-height:64px}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
-          <button class="btn btn-secondary" onclick="nvGuardar('guardado')" style="width:100%">💾 Guardar cotización</button>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-primary" onclick="nvGuardar('enviado','email')" style="flex:1">📧 Guardar + Email</button>
-            <button class="btn" onclick="nvGuardar('enviado','whatsapp')" style="flex:1;background:#25D366;color:white">📱 Guardar + WA</button>
+          <div id="nv-btns-presupuesto">
+            <button class="btn btn-secondary" onclick="nvGuardar('guardado')" style="width:100%;margin-bottom:6px">💾 Guardar cotización</button>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-primary" onclick="nvGuardar('enviado','email')" style="flex:1">📧 Guardar + Email</button>
+              <button class="btn" onclick="nvGuardar('enviado','whatsapp')" style="flex:1;background:#25D366;color:white">📱 Guardar + WA</button>
+            </div>
           </div>
-          <button class="btn btn-success" id="nv-btn-crear-directo" onclick="nvMostrarPanelPago()" style="width:100%">✓ Crear pedido directo</button>
+          <button class="btn btn-success" id="nv-btn-crear-directo" onclick="nvMostrarPanelPago()" style="width:100%;margin-top:2px">✓ Crear pedido</button>
         </div>
       </div>
     </div>
@@ -3416,7 +3416,14 @@ function renderPedidosKanban(list){
   document.getElementById('pedidos-list').innerHTML=html;
 }
 
-function nuevaVenta(){
+function nuevaVenta(modo){
+  window._modalModo=modo||'presupuesto';
+  // Adaptar UI según modo
+  var esPedido=window._modalModo==='pedido';
+  var tit=document.getElementById('nv-modal-titulo');
+  if(tit)tit.textContent=esPedido?'Nuevo pedido':'Nuevo presupuesto';
+  var bpres=document.getElementById('nv-btns-presupuesto');
+  if(bpres)bpres.style.display=esPedido?'none':'block';
   nvLineas=[];_nvCat=null;_nvRes=null;
   window._solIdParaPresupuesto=null;
   window._editandoPresupuestoId=null;
@@ -3430,7 +3437,7 @@ function nuevaVenta(){
   document.getElementById('nv-extras-wrap').style.display='none';
   document.getElementById('nv-textil-wrap').style.display='none';
   document.getElementById('nv-result').style.display='none';
-  document.getElementById('nv-upsell').style.display='none';
+  // nv-upsell removed
   document.getElementById('nv-btn-add').style.display='none';
   document.getElementById('nv-cross').style.display='none';
   if(document.getElementById('nv-sug-panel'))document.getElementById('nv-sug-panel').style.display='none';
@@ -3492,7 +3499,7 @@ function abrirVentaDesdeCarrito(){
   nvLineas=carrito.map(function(c){return{sec:CAT_TO_SEC[c.cat]||'XR',desc:c.desc,total:c.total,cat:c.cat,plazo:P[c.cat]&&P[c.cat].plazo||0};});
   limpiarCarrito();
   document.getElementById('nv-nombre').value='';document.getElementById('nv-tel').value='';document.getElementById('nv-email').value='';document.getElementById('nv-sector').value='';
-  document.getElementById('nv-cat').value='';document.getElementById('nv-campos-dinamicos').innerHTML='';document.getElementById('nv-unidades-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-result').style.display='none';document.getElementById('nv-upsell').style.display='none';document.getElementById('nv-btn-add').style.display='none';
+  document.getElementById('nv-cat').value='';document.getElementById('nv-campos-dinamicos').innerHTML='';document.getElementById('nv-unidades-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-result').style.display='none';// nv-upsell removeddocument.getElementById('nv-btn-add').style.display='none';
   document.getElementById('nv-fecha').value='';
   nvRenderLineas();
   nvActualizarFecha();
@@ -3529,7 +3536,7 @@ function nvCatChange(){
   document.getElementById('nv-extras-wrap').style.display='none';
   document.getElementById('nv-textil-wrap').style.display='none';
   document.getElementById('nv-result').style.display='none';
-  document.getElementById('nv-upsell').style.display='none';
+  // nv-upsell removed
   document.getElementById('nv-btn-add').style.display='none';
   var prod=P[cat];if(!prod)return;
   
@@ -3728,15 +3735,16 @@ function nvCalc(){
       var nextQ=res.tiers[idx+1];
       var fieldQty=prod.fields.find(function(f){return f.type==='number';});
       if(fieldQty){
+        // nv-upsell removed
         document.getElementById('nv-upsell').style.display='block';
-        document.getElementById('nv-upsell-content').innerHTML='<div style="cursor:pointer;color:#854F0B" onclick="document.getElementById(\'nvf-'+fieldQty.id+'\').value='+nextQ+';nvCalc()">📈 Subir a '+nextQ+' uds para mejor precio</div>';
+        document.getElementById('nv-upsell-content').innerHTML='<div style="color:#854F0B" onclick="document.getElementById(\'nvf-'+fieldQty.id+'\').value='+nextQ+';nvCalc()">📈 Subir a '+nextQ+' uds para mejor precio</div>';
       }
-    }else{document.getElementById('nv-upsell').style.display='none';}
-  }else{document.getElementById('nv-upsell').style.display='none';}
+    }else{}
+  }else{}
   // Reflejar sugerencias completas en panel derecho del modal (sustituye al upsell pequeño)
   window._nvCurCat=cat;
   if(typeof cV2renderSug==='function'){
-    document.getElementById('nv-upsell').style.display='none';
+    // nv-upsell removed
     cV2renderSug(res);
   }
 }
@@ -3862,7 +3870,7 @@ function nvAddLinea(){
   document.getElementById('nv-extras-wrap').style.display='none';
   document.getElementById('nv-textil-wrap').style.display='none';
   document.getElementById('nv-result').style.display='none';
-  document.getElementById('nv-upsell').style.display='none';
+  // nv-upsell removed
   document.getElementById('nv-btn-add').style.display='none';
   if(document.getElementById('nv-plazo'))document.getElementById('nv-plazo').style.display='none';
   if(document.getElementById('nv-tramos'))document.getElementById('nv-tramos').style.display='none';
