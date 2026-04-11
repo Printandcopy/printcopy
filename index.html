@@ -412,7 +412,7 @@ textarea{resize:vertical;min-height:64px}
     <div style="display:flex;gap:10px;align-items:center">
       <h2 style="font-size:16px;font-weight:600;margin:0">Presupuestos</h2>
       <button class="btn btn-primary" onclick="nuevaVenta()">+ Nuevo presupuesto</button>
-      <button class="btn" onclick="nuevaSolicitud()" style="background:#0F6E56;color:#fff;font-weight:600">+ Solicitud</button>
+      <button class="btn" onclick="nuevaSolicitud()" style="background:#0F6E56;color:#fff;font-weight:600">+ Solicitud presupuesto</button>
     </div>
     <button class="btn btn-secondary btn-sm" onclick="cargarSolicitudes();cargarPresupuestos()">↻</button>
   </div>
@@ -969,7 +969,7 @@ textarea{resize:vertical;min-height:64px}
         <div class="card"><div class="card-title">Notas</div><textarea id="nv-notas" rows="2" placeholder="Observaciones..."></textarea></div>
         <div class="card">
           <div class="form-grid">
-            <div class="field"><label>Validez días</label><input type="number" id="nv-validez" value="15" min="1" autocomplete="off"></div>
+            <div class="field" id="nv-validez-wrap"><label>Validez días</label><input type="number" id="nv-validez" value="15" min="1" autocomplete="off"></div>
             <div class="field"><label>Condición pago</label><select id="nv-condicion" onchange="nvCalcPendiente()"><option value="50_50">50% · 50%</option><option value="0_100">100% recoger</option><option value="transferencia">Transferencia</option><option value="credito_senal">💳 Crédito señal</option><option value="credito_total">💳 Crédito total</option></select></div>
           </div>
         </div>
@@ -3424,6 +3424,8 @@ function nuevaVenta(modo){
   if(tit)tit.textContent=esPedido?'Nuevo pedido':'Nuevo presupuesto';
   var bpres=document.getElementById('nv-btns-presupuesto');
   if(bpres)bpres.style.display=esPedido?'none':'block';
+  var vwrap=document.getElementById('nv-validez-wrap');
+  if(vwrap)vwrap.style.display=esPedido?'none':'';
   nvLineas=[];_nvCat=null;_nvRes=null;
   window._solIdParaPresupuesto=null;
   window._editandoPresupuestoId=null;
