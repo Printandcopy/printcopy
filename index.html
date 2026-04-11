@@ -623,6 +623,20 @@ textarea{resize:vertical;min-height:64px}
     <button class="btn btn-primary" onclick="abrirNuevoCliente()">+ Nuevo cliente</button>
   </div>
   <div id="clientes-list"></div>
+  <!-- Panel gestión proveedores externos -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleProvPanel()">
+      <span>🔄 Proveedores externos</span>
+      <span id="prov-panel-arrow" style="font-size:12px;color:#aaa">▼ Desplegar</span>
+    </div>
+    <div id="prov-panel" style="display:none;margin-top:12px">
+      <div id="prov-lista" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="prov-nuevo-nombre" placeholder="Nombre del proveedor..." style="flex:1">
+        <button class="btn btn-primary" onclick="agregarProveedor()">+ Añadir</button>
+      </div>
+    </div>
+  </div>
   <!-- Panel configuración niveles -->
   <div class="card" style="margin-top:16px">
     <div class="card-title" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleNivelConfig()">
@@ -844,11 +858,12 @@ textarea{resize:vertical;min-height:64px}
             <div class="search-results" id="nv-resultados"></div>
           </div>
           <div id="nv-cliente-toast" style="display:none;background:#1e3a5f;color:#fff;border-radius:6px;padding:6px 12px;margin-bottom:8px;display:none;align-items:center;gap:10px;font-size:11px;box-shadow:0 2px 8px rgba(0,0,0,.18)">
-            <strong id="nv-ct-nombre" style="font-size:12px;flex:1"></strong>
+            <strong id="nv-ct-nombre" style="font-size:12px"></strong>
+            <span id="nv-ct-nivel" style="padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700"></span>
+            <span style="flex:1"></span>
             <span style="color:#93adc8">Pedidos</span><span id="nv-ct-peds" style="font-weight:700"></span>
             <span style="color:#93adc8;margin-left:4px">Total</span><span id="nv-ct-total" style="font-weight:700"></span>
             <span style="color:#93adc8;margin-left:4px">Pago</span><span id="nv-ct-pago" style="font-weight:700"></span>
-            <span id="nv-ct-nivel" style="margin-left:6px;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700"></span>
           </div>
           <div class="form-grid">
             <div class="field"><label>Nombre</label><input type="text" id="nv-nombre"></div>
@@ -1228,7 +1243,7 @@ var SECTORES={particular:'Particular',hosteleria:'Hostelería',comercio:'Comerci
 var SECTOR_COLORS={particular:'#f1efe8|#5f5e5a',hosteleria:'#fef3e8|#7a4a1a',comercio:'#e8f0fe|#1a3a7a',eventos:'#f3e8fe|#4a1a7a',empresa:'#e8fef8|#1a5a4a',inmobiliaria:'#fce8e8|#7a1a1a',educacion:'#E6F1FB|#185FA5',salud:'#e8fce8|#1a5a1a',servicios:'#EEEDFE|#534AB7',asociaciones:'#FAEEDA|#BA7517',admin_publica:'#f5f5f5|#444'};
 
 // ── PROVEEDORES EXTERNOS ──
-var PROVEEDORES=['DTF Salamanca','Bordados Norte','Imprenta García','Laser Salmantino','Sublimación Express'];
+var PROVEEDORES=[]; // se carga desde Supabase al iniciar
 
 // ── NIVELES DE FIDELIZACIÓN ──
 var NIVELES={
@@ -1251,6 +1266,48 @@ var PAGOS=[
   {value:'credito_senal',label:'Crédito señal — 100% al recoger'},
   {value:'credito_total', label:'Crédito total — Factura posterior'}
 ];
+
+function toggleProvPanel(){
+  var panel=document.getElementById('prov-panel');
+  var arrow=document.getElementById('prov-panel-arrow');
+  var open=panel.style.display==='block';
+  panel.style.display=open?'none':'block';
+  arrow.textContent=open?'▼ Desplegar':'▲ Cerrar';
+  if(!open)renderProvLista();
+}
+function renderProvLista(){
+  var lista=document.getElementById('prov-lista');
+  if(!lista)return;
+  if(!PROVEEDORES.length){lista.innerHTML='<div style="color:#aaa;font-size:12px">No hay proveedores. Añade el primero.</div>';return;}
+  lista.innerHTML=PROVEEDORES.map(function(p){
+    var enc=encodeURIComponent(p);
+    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#f9f9f7;border-radius:6px;margin-bottom:5px;font-size:13px">'
+      +'<span>'+p+'</span>'
+      +'<button data-prov="'+enc+'" onclick="eliminarProveedor(decodeURIComponent(this.dataset.prov))" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:14px">✕</button>'
+      +'</div>';
+  }).join('');
+}
+function agregarProveedor(){
+  var inp=document.getElementById('prov-nuevo-nombre');
+  var nombre=(inp.value||'').trim();
+  if(!nombre)return;
+  if(PROVEEDORES.includes(nombre)){alert('Ya existe ese proveedor');return;}
+  sb.from('proveedores').insert([{nombre:nombre}]).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    PROVEEDORES.push(nombre);
+    PROVEEDORES.sort();
+    inp.value='';
+    renderProvLista();
+  });
+}
+function eliminarProveedor(nombre){
+  if(!confirm('¿Eliminar proveedor "'+nombre+'"?'))return;
+  sb.from('proveedores').delete().eq('nombre',nombre).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    PROVEEDORES=PROVEEDORES.filter(function(p){return p!==nombre;});
+    renderProvLista();
+  });
+}
 
 function toggleNivelConfig(){
   var panel=document.getElementById('nivel-config-panel');
@@ -1323,6 +1380,12 @@ function testConnection(){
   }).catch(function(){
     document.getElementById('conn-dot').className='conn-dot err';
     document.getElementById('conn-status').innerHTML='<span class="conn-dot err"></span>Sin conexión';
+  });
+}
+
+function cargarProveedores(){
+  sb.from('proveedores').select('*').order('nombre').then(function(r){
+    PROVEEDORES=(r.data||[]).map(function(p){return p.nombre;});
   });
 }
 
@@ -4536,6 +4599,7 @@ function nvCrearPedido(){
           fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telD,mensaje:msgD,nombre:nombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA pedido directo:',d.error);});
         }
         closeModal('modal-venta');cargarDatos();
+cargarProveedores();
         // Ir a pantalla Pedidos para ver el nuevo pedido
         setTimeout(function(){
           showScreen('ventas');
