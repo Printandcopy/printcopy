@@ -1830,7 +1830,14 @@ function guardarAnotacion(id, valor){
   if(!p||p.anotacion===valor)return; // sin cambios
   p.anotacion=valor;
   sb.from('pedidos').update({anotacion_operario:valor}).eq('id',id).then(function(r){
-    if(r.error)console.error('Error anotación:',r.error.message);
+    if(r.error){console.error('Error anotación:',r.error.message);return;}
+    // Sincronizar el otro campo (tarjeta ↔ modal)
+    var modalArea=document.getElementById('modal-anotacion');
+    if(modalArea&&modalArea.value!==valor)modalArea.value=valor;
+    // Actualizar textarea en la tarjeta del taller si existe
+    var tallerId='nota-taller-'+id;
+    var tallerArea=document.getElementById(tallerId);
+    if(tallerArea&&tallerArea.value!==valor)tallerArea.value=valor;
   });
 }
 function cancelarExternalizacion(id){
@@ -2250,7 +2257,7 @@ function tarjetaTaller(p){
   var miniCal=buildMiniCalendario(p.fechaEntrega, p.fechaTipo);
   var pendPill=pend>0?"<span class=\"pendiente-pill\">"+pend.toFixed(2)+"€ pdte</span>":"<span class=\"pagado-pill\">Pagado</span>";
   var presBadge=p.presupuestoId?"<span class=\"pres-badge\" onclick=\"event.stopPropagation();filtrarPorPresupuesto('"+p.presupuestoId+"')\" >📦 "+p.presupuestoId+"</span>":"";
-  return"<div class=\"taller-card "+urgente+"\" onclick=\"verPedido('"+p.id+"')\" ><div class=\"taller-header\"><div style=\"display:flex;align-items:center;gap:7px;flex-wrap:wrap\"><span style=\"font-size:13px;font-weight:700;font-family:monospace\">"+p.id+"</span><span class=\"badge sec-"+p.seccion+"\">"+SECS[p.seccion]+"</span><span class=\"fase-badge fase-"+p.fase+"\">"+FASES[p.fase]+"</span>"+pendPill+"<span class=\"operario-pill\">"+p.operario+"</span>"+presBadge+"</div>"+miniCal+"</div><div class=\"taller-body\"><p><strong>Cliente:</strong> "+p.clienteNombre+(p.clienteTel?" · "+p.clienteTel:"")+"</p><p><strong>Pedido:</strong> "+formatDateTime(p.fechaCreacion)+"</p><p><strong>Trabajo:</strong> "+p.descripcion+"</p>"+(p.notas?"<p><strong>Notas:</strong> "+p.notas+"</p>":"")+"<p><strong>Total:</strong> "+p.total.toFixed(2)+"€ | <strong>Pagado:</strong> "+(p.senal||0).toFixed(2)+"€ | <strong style=\"color:"+(pend>0?"#A32D2D":"#3B6D11")+"\">Pendiente: "+pend.toFixed(2)+"€</strong></p>"+(p.externalizado?"<div style=\\\"background:#534AB7;border-radius:6px;padding:7px 12px;margin:6px 0;display:flex;align-items:center;gap:8px\\\"><span>🔄</span><span style=\\\"font-size:12px;font-weight:700;color:#fff\\\">"+p.externalizado+"</span><span style=\\\"font-size:11px;color:rgba(255,255,255,.7);margin-left:6px\\\">"+p.externalizadoFecha+"</span></div>":"")+"</div><textarea class=\"nota-operario\" rows=\"2\" placeholder=\"Anotaciones del operario...\" onclick=\"event.stopPropagation()\" onblur=\"guardarAnotacion(\\\'"+p.id+"\\\',this.value)\">"+(p.anotacion||"")+"</textarea></div></div>";
+  return"<div class=\"taller-card "+urgente+"\" onclick=\"verPedido('"+p.id+"')\" ><div class=\"taller-header\"><div style=\"display:flex;align-items:center;gap:7px;flex-wrap:wrap\"><span style=\"font-size:13px;font-weight:700;font-family:monospace\">"+p.id+"</span><span class=\"badge sec-"+p.seccion+"\">"+SECS[p.seccion]+"</span><span class=\"fase-badge fase-"+p.fase+"\">"+FASES[p.fase]+"</span>"+pendPill+"<span class=\"operario-pill\">"+p.operario+"</span>"+presBadge+"</div>"+miniCal+"</div><div class=\"taller-body\"><p><strong>Cliente:</strong> "+p.clienteNombre+(p.clienteTel?" · "+p.clienteTel:"")+"</p><p><strong>Pedido:</strong> "+formatDateTime(p.fechaCreacion)+"</p><p><strong>Trabajo:</strong> "+p.descripcion+"</p>"+(p.notas?"<p><strong>Notas:</strong> "+p.notas+"</p>":"")+"<p><strong>Total:</strong> "+p.total.toFixed(2)+"€ | <strong>Pagado:</strong> "+(p.senal||0).toFixed(2)+"€ | <strong style=\"color:"+(pend>0?"#A32D2D":"#3B6D11")+"\">Pendiente: "+pend.toFixed(2)+"€</strong></p>"+(p.externalizado?"<div style=\\\"background:#534AB7;border-radius:6px;padding:7px 12px;margin:6px 0;display:flex;align-items:center;gap:8px\\\"><span>🔄</span><span style=\\\"font-size:12px;font-weight:700;color:#fff\\\">"+p.externalizado+"</span><span style=\\\"font-size:11px;color:rgba(255,255,255,.7);margin-left:6px\\\">"+p.externalizadoFecha+"</span></div>":"")+"</div><textarea id=\"nota-taller-"+p.id+"\" class=\"nota-operario\" rows=\"2\" placeholder=\"Anotaciones del operario...\" onclick=\"event.stopPropagation()\" onblur=\"guardarAnotacion(\\\'"+p.id+"\\\',this.value)\">"+(p.anotacion||"")+"</textarea></div></div>";
 }
 
 function filtrarPorPresupuesto(presId){
