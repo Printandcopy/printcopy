@@ -1577,7 +1577,7 @@ function cargarDatos(){
 }
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',creado:c.creado};}
-function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||''};}
+function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||''};}
 function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null};}
 
 function startClock(){
@@ -1918,8 +1918,8 @@ function verPedido(id){
 
   if(p.seccion==='TX'){
     html+='<div class="checks-textil" style="margin-bottom:10px">';
-    html+='<label class="check-item"><input type="checkbox" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"> Ropa pedida</label>';
-    html+='<label class="check-item"><input type="checkbox" '+(p.dtfOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'dtfOk\',this.checked)"> DTF pedido</label>';
+    html+='<div class="check-item" style="display:flex;align-items:flex-start;gap:8px"><input type="checkbox" style="margin-top:2px;flex-shrink:0" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"><div><div>Ropa pedida</div><div style="font-size:10px;color:'+(p.ropaOkFecha?'#aaa':'#ddd')+'">'+(p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):'—')+'</div></div></div>';
+    html+='<div class="check-item" style="display:flex;align-items:flex-start;gap:8px"><input type="checkbox" style="margin-top:2px;flex-shrink:0" '+(p.dtfOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'dtfOk\',this.checked)"><div><div>DTF pedido</div><div style="font-size:10px;color:'+(p.dtfOkFecha?'#aaa':'#ddd')+'">'+(p.dtfOkFecha?fmtCheckTs(p.dtfOkFecha):'—')+'</div></div></div>';
     html+='</div>';
   }
 
@@ -2122,7 +2122,29 @@ function enviarWAResena(p){
     })
     .catch(function(e){console.error('Error WA:',e);});
 }
-function toggleCheckModal(id,field,val){var p=pedidos.find(function(x){return x.id===id;});if(!p)return;p[field]=val;var col=field==='ropaOk'?'ropa_ok':'dtf_ok';var upd={};upd[col]=val;sb.from('pedidos').update(upd).eq('id',id).then(function(){});}
+function fmtCheckTs(iso){
+  if(!iso)return'—';
+  var d=new Date(iso);
+  return(d.getDate()+'/'+(d.getMonth()+1)).padStart(5,'0')+' · '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+function toggleCheckModal(id,field,val){
+  var p=pedidos.find(function(x){return x.id===id;});
+  if(!p)return;
+  p[field]=val;
+  var col=field==='ropaOk'?'ropa_ok':'dtf_ok';
+  var colFecha=field==='ropaOk'?'ropa_ok_fecha':'dtf_ok_fecha';
+  var fechaField=field==='ropaOk'?'ropaOkFecha':'dtfOkFecha';
+  var ts=val?new Date().toISOString():null;
+  p[fechaField]=ts;
+  var upd={};upd[col]=val;upd[colFecha]=ts;
+  sb.from('pedidos').update(upd).eq('id',id).then(function(r){
+    if(r&&r.error){console.error('Error check:',r.error.message);return;}
+    // Refrescar modal si está abierto
+    if(_pedidoModal&&_pedidoModal.id===id)verPedido(id);
+    // Refrescar tarjeta en taller
+    renderTaller();
+  });
+}
 function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');generarResguardo(_pedidoModal);}}
 
 function editarPedido(){
