@@ -1379,6 +1379,7 @@ function mostBuscar(q){
         +'<span style="font-family:monospace;font-size:12px;font-weight:700;min-width:70px">'+p.id+'</span>'
         +'<span style="flex:1;font-size:13px;color:#444;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.descripcion+'</span>'
         +'<span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap">'+FASES[p.fase]+'</span>'
+        +'<span style="font-size:11px;color:#888;white-space:nowrap">👤 '+p.operario+'</span>'
         +'<button onclick="verPedido(\''+p.id+'\')" style="background:#E6F1FB;color:#185FA5;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">Ver detalles</button>'
         +'</div>';
     });
