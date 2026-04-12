@@ -2066,11 +2066,27 @@ function setFaseModal(id,fase){
     sb.from('pedidos').update({recogido:true,fecha_recogido:p.fecha_recogido}).eq('id',id).then(function(){
       // Enviar WA pidiendo reseña Google (solo si tiene teléfono)
       if(p.clienteTel){
-        setTimeout(function(){enviarWAResena(p);},500);
+        setTimeout(function(){enviarWAResenaAuto(p);},500);
       }
     });
   }
   
+  // WA automático fase 3 (Previas OK)
+  if(fase===3&&p.clienteTel){
+    var tel3=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+    if(tel3.length===9&&!tel3.startsWith('34'))tel3='34'+tel3;
+    var msg3='Perfecto '+p.clienteNombre.split(' ')[0]+' ✅\n\nTu diseño del pedido *'+p.id+'* ha sido aprobado. Arrancamos producción ahora mismo 🚀\n\nTe avisamos en cuanto esté listo para recoger.\n\n⏱️ Plazo estimado: según lo acordado al encargar.\n\nPrint & Copy · 923 018 034';
+    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel3,mensaje:msg3,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA fase3:',d.error);});
+  }
+  // WA automático fase 5 (Terminado — listo para recoger)
+  if(fase===5&&p.clienteTel){
+    var tel5=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+    if(tel5.length===9&&!tel5.startsWith('34'))tel5='34'+tel5;
+    var pend5=p.total-(p.senal||0);
+    var pendTxt5=pend5>0.01?'\n💰 Pendiente al recoger: *'+pend5.toFixed(2)+'€*':'\n✅ Pagado completo';
+    var msg5='Hola '+p.clienteNombre.split(' ')[0]+' 👋\n\nTu pedido *'+p.id+'* ya está *listo para recoger* en Print & Copy 🎉\n\n📦 '+p.descripcion.substring(0,80)+'\n'+pendTxt5+'\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 10:00-14:00\n\n¡Te esperamos! 😊';
+    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel5,mensaje:msg5,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA fase5:',d.error);});
+  }
   // Registrar cambio en log
   logCambioFase(id,faseAnterior,fase);
   
@@ -2128,6 +2144,13 @@ function logCambioFase(pedidoId,faseAnterior,faseNueva){
   });
 }
 
+function enviarWAResenaAuto(p){
+  var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+  if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+  var nombre=(p.clienteNombre||'').split(' ')[0];
+  var msg='¡Hola '+nombre+'! 👋\n\nGracias por recoger tu pedido en Print & Copy. Esperamos que todo esté perfecto. 🙌\n\nSi tienes un momento, nos ayudaría mucho una reseña en Google:\nhttps://g.page/r/CWmxJawMlrReEBM/review\n\n¡Gracias y hasta pronto! 😊';
+  fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA reseña auto:',d.error);}).catch(function(e){console.error('Error WA:',e);});
+}
 function enviarWAResena(p){
   if(!confirm('¿Enviar WhatsApp pidiendo reseña en Google?'))return;
   var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
