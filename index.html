@@ -171,6 +171,24 @@ textarea{resize:vertical;min-height:64px}
 .dias-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
 .delivery-urgent{border-left:3px solid #A32D2D}
 .delivery-soon{border-left:3px solid #BA7517}
+.tc-header{display:flex;align-items:stretch;border-bottom:0.5px solid #f0f0f0}
+.tc-left{flex:1;padding:10px 12px}
+.tc-right{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;padding:10px 12px;border-left:0.5px solid #f0f0f0;min-width:88px;gap:4px}
+.tc-id{font-family:monospace;font-size:13px;font-weight:800;color:#1a1a1a}
+.tc-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:4px}
+.tc-op{font-size:11px;color:#aaa;margin-top:3px}
+.tc-entrega-hoy{font-size:13px;font-weight:800;color:#A32D2D;white-space:nowrap}
+.tc-entrega-man{font-size:12px;font-weight:700;color:#BA7517;white-space:nowrap}
+.tc-entrega-ok{font-size:11px;color:#888;white-space:nowrap}
+.tc-body{padding:10px 12px}
+.tc-cliente{font-size:14px;font-weight:700;color:#1a1a1a}
+.tc-desc{font-size:13px;color:#333;margin-top:3px}
+.tc-notas{font-size:12px;color:#777;margin-top:3px}
+.tc-cambios{background:#FCEBEB;border-radius:5px;padding:6px 8px;margin-top:6px;font-size:11px;color:#A32D2D;font-style:italic}
+.tc-checks{display:flex;gap:16px;margin-top:8px;padding:7px 10px;background:#fce8e8;border-radius:6px}
+.tc-check-item{display:flex;flex-direction:column;gap:2px}
+.tc-check-item label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#7a1a1a;cursor:pointer}
+.tc-check-item .tc-ts{font-size:10px;color:#aaa;padding-left:20px}
 .semana-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#ddd;border-radius:8px;overflow:hidden;margin-bottom:12px}
 .dia-col{background:#fff;min-height:80px}
 .dia-header{padding:6px 4px;text-align:center;border-bottom:0.5px solid #f0f0f0;background:#f9f9f7}
@@ -2505,13 +2523,21 @@ function tarjetaTaller(p){
   var pend=p.total-(p.senal||0),hoy=new Date();hoy.setHours(0,0,0,0);
   var fe=p.fechaEntrega?new Date(p.fechaEntrega+"T00:00:00"):null;
   var urgente=fe&&fe<hoy&&p.fase<4?"delivery-urgent":fe&&(fe.getTime()-hoy.getTime())<=86400000&&p.fase<4?"delivery-soon":"";
-  var miniCal=buildMiniCalendario(p.fechaEntrega, p.fechaTipo);
-  var pendPill=pend>0?"<span class=\"pendiente-pill\">"+pend.toFixed(2)+"€ pdte</span>":"<span class=\"pagado-pill\">Pagado</span>";
-  var presBadge=p.presupuestoId?"<span class=\"pres-badge\" onclick=\"event.stopPropagation();filtrarPorPresupuesto('"+p.presupuestoId+"')\" >📦 "+p.presupuestoId+"</span>":"";
-  var previaBadge=p.previaEstado==="rechazada"?"<span class=\"badge\" style=\"background:#FCEBEB;color:#A32D2D;border:0.5px solid #f7c1c1\">✏️ Cambios</span>":p.previaEstado==="enviada"?"<span class=\"badge\" style=\"background:#E6F1FB;color:#185FA5;border:0.5px solid #B5D4F4\">👁️ Previa env.</span>":p.previaEstado==="aceptada"?"<span class=\"badge\" style=\"background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97\">✅ Previa OK</span>":"";
-  return"<div class=\"taller-card "+urgente+"\" onclick=\"verPedido('"+p.id+"')\" ><div class=\"taller-header\"><div style=\"display:flex;align-items:center;gap:7px;flex-wrap:wrap\"><span style=\"font-size:13px;font-weight:700;font-family:monospace\">"+p.id+"</span><span class=\"badge sec-"+p.seccion+"\">"+SECS[p.seccion]+"</span><span class=\"fase-badge fase-"+p.fase+"\">"+FASES[p.fase]+"</span>"+pendPill+"<span class=\"operario-pill\">"+p.operario+"</span>"+presBadge+previaBadge+"</div>"+miniCal+"</div><div class=\"taller-body\"><p><strong>Cliente:</strong> "+p.clienteNombre+(p.clienteTel?" · "+p.clienteTel:"")+"</p><p><strong>Pedido:</strong> "+formatDateTime(p.fechaCreacion)+"</p><p><strong>Trabajo:</strong> "+p.descripcion+"</p>"+(p.notas?"<p><strong>Notas:</strong> "+p.notas+"</p>":"")+"<p><strong>Total:</strong> "+p.total.toFixed(2)+"€ | <strong>Pagado:</strong> "+(p.senal||0).toFixed(2)+"€ | <strong style=\"color:"+(pend>0?"#A32D2D":"#3B6D11")+"\">Pendiente: "+pend.toFixed(2)+"€</strong></p>"+(p.externalizado?"<div style=\\\"background:#534AB7;border-radius:6px;padding:7px 12px;margin:6px 0;display:flex;align-items:center;gap:8px\\\"><span>🔄</span><span style=\\\"font-size:12px;font-weight:700;color:#fff\\\">"+p.externalizado+"</span><span style=\\\"font-size:11px;color:rgba(255,255,255,.7);margin-left:6px\\\">"+p.externalizadoFecha+"</span></div>":"")+"</div><textarea id=\"nota-taller-"+p.id+"\" class=\"nota-operario\" rows=\"2\" placeholder=\"Anotaciones del operario...\" onclick=\"event.stopPropagation()\" onblur=\"guardarAnotacion(\\\'"+p.id+"\\\',this.value)\">"+(p.anotacion||"")+"</textarea></div></div>";
+  // Texto días entrega
+  var entregaTxt="";
+  if(fe&&p.fase<5){var diff=Math.round((fe-hoy)/(1000*3600*24));if(diff<0)entregaTxt='<span class="tc-entrega-hoy">🔴 Vencido</span>';else if(diff===0)entregaTxt='<span class="tc-entrega-hoy">🔴 HOY</span>';else if(diff===1)entregaTxt='<span class="tc-entrega-man">⚠️ Mañana</span>';else entregaTxt='<span class="tc-entrega-ok">📅 En '+diff+' días</span>';}
+  var pendPill=pend>0.01?'<span class="pendiente-pill">'+pend.toFixed(0)+'€ pdte</span>':''; 
+  var previaBadge=p.previaEstado==="rechazada"?'<span class="badge" style="background:#FCEBEB;color:#A32D2D;border:0.5px solid #f7c1c1">✏️ Cambios</span>':p.previaEstado==="enviada"?'<span class="badge" style="background:#E6F1FB;color:#185FA5;border:0.5px solid #B5D4F4">👁️ Previa env.</span>':p.previaEstado==="aceptada"?'<span class="badge" style="background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97">✅ OK</span>':''; 
+  var extBadge=p.externalizado?'<span class="badge" style="background:#534AB7;color:#fff;font-size:10px">🔄 '+p.externalizado+'</span>':''; 
+  var checksHTML="";
+  if(p.seccion==="TX"){checksHTML='<div class="tc-checks" onclick="event.stopPropagation()">'+'<div class="tc-check-item"><label><input type="checkbox" '+(p.ropaOk?"checked":"")+' onchange="toggleCheckModal(\''+ p.id +'\',\'ropaOk\',this.checked)"> Ropa pedida</label><span class="tc-ts">'+(p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):"—")+'</span></div>'+'<div class="tc-check-item"><label><input type="checkbox" '+(p.dtfOk?"checked":"")+' onchange="toggleCheckModal(\''+ p.id +'\',\'dtfOk\',this.checked)"> DTF pedido</label><span class="tc-ts">'+(p.dtfOkFecha?fmtCheckTs(p.dtfOkFecha):"—")+'</span></div>'+'</div>';}
+  var cambiosHTML=p.previaEstado==="rechazada"&&p.previaCambios?'<div class="tc-cambios">"'+ p.previaCambios +'"</div>':''; 
+  return '<div class="taller-card '+urgente+'" onclick="verPedido(\''+ p.id +'\')">'
+    +'<div class="tc-header"><div class="tc-left"><div class="tc-id">'+p.id+'</div><div class="tc-meta"><span class="badge sec-'+p.seccion+'">'+SECS[p.seccion]+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span>'+previaBadge+extBadge+'</div><div class="tc-op">👤 '+p.operario+'</div></div>'
+    +'<div class="tc-right">'+entregaTxt+pendPill+'</div></div>'
+    +'<div class="tc-body"><div class="tc-cliente">'+p.clienteNombre+'</div><div class="tc-desc">'+p.descripcion+'</div>'+(p.notas?'<div class="tc-notas">'+p.notas+'</div>':'')+cambiosHTML+checksHTML
+    +'<textarea id="nota-taller-'+p.id+'" class="nota-operario" rows="2" placeholder="Anotaciones del operario..." onclick="event.stopPropagation()" onblur="guardarAnotacion(\''+ p.id +'\',this.value)">'+( p.anotacion||"")+'</textarea></div></div>';
 }
-
 function filtrarPorPresupuesto(presId){
   activeFilters={fase:'all',entrega:'all',pago:'all',sfase:'all'};
   document.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('active');if(b.dataset.v==='all')b.classList.add('active');});
