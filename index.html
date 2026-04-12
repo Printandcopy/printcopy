@@ -2068,8 +2068,8 @@ function verPedido(id){
   }
 
   // BLOQUE TALLAS/COLORES (solo TX)
-  if(p.seccion==='TX'){
-    html+=renderTablaTallas(p);
+  if(p.seccion==='TX'||p.seccion==='Textil'||(p.seccion||'').toUpperCase()==='TX'){
+    try{html+=renderTablaTallas(p);}catch(e){console.error('renderTablaTallas error:',e);html+='<div style="color:#A32D2D;font-size:12px;padding:8px">Error al cargar tabla de tallas</div>';}
   }
 
   // BLOQUE PREVIAS
@@ -6221,7 +6221,7 @@ function ttRenderFila(fila,idx,pedidoId,tallas,colorOpts){
     +'<td><div style="display:flex;align-items:center;gap:4px">'
     +'<span class="tt-color-dot" id="tt-dot-'+pedidoId+'-'+idx+'" style="background:'+hex+';'+borde+'"></span>'
     +'<select class="tt-color-select" onchange="ttColorChange(\''+pedidoId+'\','+idx+',this)">'
-    +colorOpts.replace('value="'+fila.color+'"','value="'+fila.color+'" selected')
+    +colorOpts.replace('value="'+(fila.color||'Negro')+'"','value="'+(fila.color||'Negro')+'" selected')
     +'</select>'
     +'<button onclick="ttRemoveFila(\''+pedidoId+'\','+idx+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:14px;padding:0 2px">✕</button>'
     +'</div></td>';
