@@ -5162,17 +5162,17 @@ function nvCalc(){
   if(prod.customBuild){
     // Textil usa su propia calc
     var q=parseInt((document.getElementById('nv-tx-qty')||{}).value)||0;
-    if(q<1){document.getElementById('nv-result').style.display='none';document.getElementById('nv-btn-add').style.display='none';return;}
     var prenda=(document.getElementById('nv-tx-prenda')||{}).value;
-    // Regenerar tabla de tallas si la prenda cambió
-    if(window._nvLastPrenda && window._nvLastPrenda!==prenda){
+    // Regenerar tabla de tallas si la prenda cambió (ANTES de validar cantidad)
+    if(window._nvLastPrenda!==prenda){
+      window._nvLastPrenda=prenda;
       var tw=document.getElementById('nv-tallas-wrap');
       if(tw && tw.style.display!=='none'){
         if(_nvTipoTallas==='iguales') tw.innerHTML=nvRenderTablaTallas();
         else tw.innerHTML=nvRenderTablaIndividual();
       }
     }
-    window._nvLastPrenda=prenda;
+    if(q<1){document.getElementById('nv-result').style.display='none';document.getElementById('nv-btn-add').style.display='none';return;}
     var rangos=prod.prendas[prenda];if(!rangos){document.getElementById('nv-result').style.display='none';return;}
     var pu=rangos[rangos.length-1][2];
     for(var i=0;i<rangos.length;i++){if(q>=rangos[i][0]&&q<=rangos[i][1]){pu=rangos[i][2];break;}}
