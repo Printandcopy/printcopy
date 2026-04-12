@@ -1602,7 +1602,7 @@ function cargarDatos(){
 }
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',creado:c.creado};}
-function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||''};}
+function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null};}
 function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null};}
 
 function startClock(){
@@ -1947,6 +1947,23 @@ function verPedido(id){
     html+='<div class="check-item" style="display:flex;align-items:flex-start;gap:8px"><input type="checkbox" style="margin-top:2px;flex-shrink:0" '+(p.dtfOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'dtfOk\',this.checked)"><div><div>DTF pedido</div><div style="font-size:10px;color:'+(p.dtfOkFecha?'#aaa':'#ddd')+'">'+(p.dtfOkFecha?fmtCheckTs(p.dtfOkFecha):'—')+'</div></div></div>';
     html+='</div>';
   }
+
+  // BLOQUE PREVIAS
+  var previaEstadoLabel={'enviada':'<span style="background:#E6F1FB;color:#185FA5;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">👁️ Enviada · esperando respuesta</span>','aceptada':'<span style="background:#EAF3DE;color:#3B6D11;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✅ Diseño aprobado</span>','rechazada':'<span style="background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✏️ Cambios solicitados</span>','guardada':'<span style="background:#F1EFE8;color:#5F5E5A;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">💾 Guardada sin enviar</span>'};
+  html+='<div style="border:1.5px solid #FAC775;border-radius:8px;overflow:hidden;margin-bottom:10px">';
+  html+='<div style="background:#FFF8EC;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="togglePreviaPanel(\''+p.id+'\')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px">🖼️</span><span style="font-size:12px;font-weight:700;color:#854F0B">Previas de diseño</span>'+(p.previaEstado?(previaEstadoLabel[p.previaEstado]||''):''  )+'</div><span id="previa-arrow-'+p.id+'" style="font-size:11px;color:#BA7517">▼</span></div>';
+  html+='<div id="previa-panel-'+p.id+'" style="display:none;padding:12px">';
+  if(p.previaEstado==='rechazada'&&p.previaCambios){html+='<div style="background:#FCEBEB;border-radius:6px;padding:10px 12px;margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Cambio solicitado por el cliente</div><div style="font-size:12px;color:#501313;line-height:1.5;font-style:italic">"'+p.previaCambios+'"</div></div>';}
+  if(p.previaEstado!=='aceptada'){
+    html+='<div id="drop-zone-'+p.id+'" style="border:1.5px dashed #FAC775;border-radius:7px;padding:14px;text-align:center;cursor:pointer;margin-bottom:8px" ondragover="event.preventDefault();this.style.borderColor=\'#185FA5\'" ondragleave="this.style.borderColor=\'#FAC775\'" ondrop="handlePreviaDropZone(event,\''+p.id+'\')" onclick="document.getElementById(\'file-previa-'+p.id+'\').click()">';
+    html+='<div style="font-size:20px;margin-bottom:4px">📎</div><div style="font-size:12px;color:#888">'+(p.previaEstado==='rechazada'?'<strong style="color:#185FA5">Subir versión nueva</strong> con los cambios solicitados':p.previaEstado==='enviada'?'<strong style="color:#185FA5">Subir nueva versión</strong> o reenviar la actual':'<strong style="color:#185FA5">Subir previa</strong> · Arrastra o pulsa aquí · JPG, PNG, PDF')+'</div></div>';
+    html+='<input type="file" id="file-previa-'+p.id+'" accept="image/*,application/pdf" style="display:none" onchange="previaThumbnail(this,\''+p.id+'\')"><div id="previa-preview-'+p.id+'" style="display:none;margin-bottom:8px"><img id="previa-img-thumb-'+p.id+'" style="width:100%;max-height:120px;object-fit:contain;border-radius:6px;border:0.5px solid #eee"><div style="margin-top:8px"><label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:12px;cursor:pointer"><input type="radio" name="previa-envio-'+p.id+'" value="auto" checked> Enviar WA al cliente ahora</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="previa-envio-'+p.id+'" value="guardar"> Guardar sin enviar</label><button onclick="subirPrevia(\''+p.id+'\' )" style="width:100%;margin-top:8px;padding:9px;background:#185FA5;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer">Confirmar</button></div></div>';
+  }
+  if(p.previaEstado==='enviada'){html+='<div style="display:flex;gap:6px;margin-bottom:8px"><button onclick="reenviarWAPrevia(\''+p.id+'\' )" style="flex:1;padding:7px;background:#25D366;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">📱 Reenviar WA</button></div>';}
+  if(p.previaEstado==='aceptada'){html+='<div style="background:#EAF3DE;border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:#3B6D11">✅ Diseño aprobado. Producción puede arrancar.</div>';}
+  html+='<div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Historial de versiones</div>';
+  html+='<div id="historial-previas-'+p.id+'"><button onclick="cargarHistorialPrevias(\''+p.id+'\' )" style="font-size:12px;color:#185FA5;background:none;border:none;cursor:pointer;padding:0">Ver historial completo →</button></div>';
+  html+='</div></div>';
 
   html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">';
   html+='<div class="stat-card"><div class="sv" style="font-size:16px;font-weight:800">'+p.total.toFixed(2)+'&euro;</div><div class="sl">Total</div></div>';
@@ -2491,7 +2508,8 @@ function tarjetaTaller(p){
   var miniCal=buildMiniCalendario(p.fechaEntrega, p.fechaTipo);
   var pendPill=pend>0?"<span class=\"pendiente-pill\">"+pend.toFixed(2)+"€ pdte</span>":"<span class=\"pagado-pill\">Pagado</span>";
   var presBadge=p.presupuestoId?"<span class=\"pres-badge\" onclick=\"event.stopPropagation();filtrarPorPresupuesto('"+p.presupuestoId+"')\" >📦 "+p.presupuestoId+"</span>":"";
-  return"<div class=\"taller-card "+urgente+"\" onclick=\"verPedido('"+p.id+"')\" ><div class=\"taller-header\"><div style=\"display:flex;align-items:center;gap:7px;flex-wrap:wrap\"><span style=\"font-size:13px;font-weight:700;font-family:monospace\">"+p.id+"</span><span class=\"badge sec-"+p.seccion+"\">"+SECS[p.seccion]+"</span><span class=\"fase-badge fase-"+p.fase+"\">"+FASES[p.fase]+"</span>"+pendPill+"<span class=\"operario-pill\">"+p.operario+"</span>"+presBadge+"</div>"+miniCal+"</div><div class=\"taller-body\"><p><strong>Cliente:</strong> "+p.clienteNombre+(p.clienteTel?" · "+p.clienteTel:"")+"</p><p><strong>Pedido:</strong> "+formatDateTime(p.fechaCreacion)+"</p><p><strong>Trabajo:</strong> "+p.descripcion+"</p>"+(p.notas?"<p><strong>Notas:</strong> "+p.notas+"</p>":"")+"<p><strong>Total:</strong> "+p.total.toFixed(2)+"€ | <strong>Pagado:</strong> "+(p.senal||0).toFixed(2)+"€ | <strong style=\"color:"+(pend>0?"#A32D2D":"#3B6D11")+"\">Pendiente: "+pend.toFixed(2)+"€</strong></p>"+(p.externalizado?"<div style=\\\"background:#534AB7;border-radius:6px;padding:7px 12px;margin:6px 0;display:flex;align-items:center;gap:8px\\\"><span>🔄</span><span style=\\\"font-size:12px;font-weight:700;color:#fff\\\">"+p.externalizado+"</span><span style=\\\"font-size:11px;color:rgba(255,255,255,.7);margin-left:6px\\\">"+p.externalizadoFecha+"</span></div>":"")+"</div><textarea id=\"nota-taller-"+p.id+"\" class=\"nota-operario\" rows=\"2\" placeholder=\"Anotaciones del operario...\" onclick=\"event.stopPropagation()\" onblur=\"guardarAnotacion(\\\'"+p.id+"\\\',this.value)\">"+(p.anotacion||"")+"</textarea></div></div>";
+  var previaBadge=p.previaEstado==="rechazada"?"<span class=\"badge\" style=\"background:#FCEBEB;color:#A32D2D;border:0.5px solid #f7c1c1\">✏️ Cambios</span>":p.previaEstado==="enviada"?"<span class=\"badge\" style=\"background:#E6F1FB;color:#185FA5;border:0.5px solid #B5D4F4\">👁️ Previa env.</span>":p.previaEstado==="aceptada"?"<span class=\"badge\" style=\"background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97\">✅ Previa OK</span>":"";
+  return"<div class=\"taller-card "+urgente+"\" onclick=\"verPedido('"+p.id+"')\" ><div class=\"taller-header\"><div style=\"display:flex;align-items:center;gap:7px;flex-wrap:wrap\"><span style=\"font-size:13px;font-weight:700;font-family:monospace\">"+p.id+"</span><span class=\"badge sec-"+p.seccion+"\">"+SECS[p.seccion]+"</span><span class=\"fase-badge fase-"+p.fase+"\">"+FASES[p.fase]+"</span>"+pendPill+"<span class=\"operario-pill\">"+p.operario+"</span>"+presBadge+previaBadge+"</div>"+miniCal+"</div><div class=\"taller-body\"><p><strong>Cliente:</strong> "+p.clienteNombre+(p.clienteTel?" · "+p.clienteTel:"")+"</p><p><strong>Pedido:</strong> "+formatDateTime(p.fechaCreacion)+"</p><p><strong>Trabajo:</strong> "+p.descripcion+"</p>"+(p.notas?"<p><strong>Notas:</strong> "+p.notas+"</p>":"")+"<p><strong>Total:</strong> "+p.total.toFixed(2)+"€ | <strong>Pagado:</strong> "+(p.senal||0).toFixed(2)+"€ | <strong style=\"color:"+(pend>0?"#A32D2D":"#3B6D11")+"\">Pendiente: "+pend.toFixed(2)+"€</strong></p>"+(p.externalizado?"<div style=\\\"background:#534AB7;border-radius:6px;padding:7px 12px;margin:6px 0;display:flex;align-items:center;gap:8px\\\"><span>🔄</span><span style=\\\"font-size:12px;font-weight:700;color:#fff\\\">"+p.externalizado+"</span><span style=\\\"font-size:11px;color:rgba(255,255,255,.7);margin-left:6px\\\">"+p.externalizadoFecha+"</span></div>":"")+"</div><textarea id=\"nota-taller-"+p.id+"\" class=\"nota-operario\" rows=\"2\" placeholder=\"Anotaciones del operario...\" onclick=\"event.stopPropagation()\" onblur=\"guardarAnotacion(\\\'"+p.id+"\\\',this.value)\">"+(p.anotacion||"")+"</textarea></div></div>";
 }
 
 function filtrarPorPresupuesto(presId){
@@ -5918,6 +5936,19 @@ function actualizarBarraAvisos(){
     }).join('');
   }
   html+='<div style="height:8px"></div>';
+  // PREVIAS CON CAMBIOS SOLICITADOS
+  var conCambios=pedidos.filter(function(p){return p.previaEstado==='rechazada'&&p.fase<5;});
+  if(conCambios.length){
+    barra.style.display='flex';
+    var prevHtml='<div style="padding:10px 20px 4px;font-size:10px;color:#FAC775;text-transform:uppercase;letter-spacing:.8px">✏️ Previas con cambios solicitados</div>';
+    prevHtml+=conCambios.map(function(p){
+      return'<div style="background:#3d2000;border-left:3px solid #FAC775;border-radius:6px;padding:10px 12px;margin:4px 20px;cursor:pointer" onclick="verPedido(\''+p.id+'\')"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;color:#FAC775;font-weight:600">'+p.clienteNombre+' · <span style="font-family:monospace">'+p.id+'</span></div>'+(p.previaCambios?'<div style="font-size:11px;color:#aaa;margin-top:2px;font-style:italic">"'+p.previaCambios.substring(0,60)+(p.previaCambios.length>60?'…':'')+'"</div>':'')+'</div><span style="background:#FAC775;color:#3d2000;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px">Ver →</span></div></div>';
+    }).join('');
+    html+=prevHtml;
+    var textoActual=txt.innerHTML;
+    var nCambios=conCambios.length;
+    txt.innerHTML=textoActual+(pendTotal?'':'')+'<span style="background:#FAC775;color:#3d2000;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;margin-left:8px">'+nCambios+' previa'+(nCambios>1?'s':'')+' con cambios</span>';
+  }
   lista.innerHTML=html;
 }
 // Event delegation para botones de la barra de avisos
@@ -6007,6 +6038,100 @@ function cotConvertir(){
     avisoEl.textContent='⚠️ Cobrar señal antes de pasar a taller: '+condTexto;
   }
   document.getElementById('modal-venta').classList.add('open');
+}
+
+// ── FUNCIONES PREVIAS ──
+function togglePreviaPanel(id){
+  var panel=document.getElementById('previa-panel-'+id);
+  var arrow=document.getElementById('previa-arrow-'+id);
+  if(!panel)return;
+  var open=panel.style.display!=='none';
+  panel.style.display=open?'none':'block';
+  if(arrow)arrow.textContent=open?'▼':'▲';
+}
+function previaThumbnail(input,pedidoId){
+  if(!input.files||!input.files[0])return;
+  var file=input.files[0];
+  var preview=document.getElementById('previa-preview-'+pedidoId);
+  var img=document.getElementById('previa-img-thumb-'+pedidoId);
+  if(preview)preview.style.display='block';
+  if(img&&file.type.startsWith('image/')){var reader=new FileReader();reader.onload=function(e){img.src=e.target.result;};reader.readAsDataURL(file);}
+  else if(img){img.src='';img.alt=file.name+' (PDF)';}
+}
+function handlePreviaDropZone(event,pedidoId){
+  event.preventDefault();
+  var dz=document.getElementById('drop-zone-'+pedidoId);
+  if(dz)dz.style.borderColor='#FAC775';
+  var files=event.dataTransfer.files;
+  if(!files||!files[0])return;
+  var input=document.getElementById('file-previa-'+pedidoId);
+  if(input){var dt=new DataTransfer();dt.items.add(files[0]);input.files=dt.files;previaThumbnail(input,pedidoId);}
+}
+function subirPrevia(pedidoId){
+  var input=document.getElementById('file-previa-'+pedidoId);
+  if(!input||!input.files||!input.files[0]){alert('Selecciona una imagen primero');return;}
+  var file=input.files[0];
+  var enviarEl=document.querySelector('input[name="previa-envio-'+pedidoId+'"]:checked');
+  var autoWA=enviarEl?enviarEl.value==='auto':true;
+  var p=pedidos.find(function(x){return x.id===pedidoId;});if(!p)return;
+  var btn=document.querySelector('#previa-panel-'+pedidoId+' button[onclick^="subirPrevia"]');
+  if(btn){btn.disabled=true;btn.textContent='Subiendo...';}
+  sb.from('pedido_previas').select('version').eq('pedido_id',pedidoId).order('version',{ascending:false}).limit(1).then(function(rv){
+    var version=rv.data&&rv.data[0]?rv.data[0].version+1:1;
+    var ext=file.name.split('.').pop()||'jpg';
+    var path=pedidoId+'/v'+version+'.'+ext;
+    sb.storage.from('previas').upload(path,file,{upsert:true}).then(function(rs){
+      if(rs.error){alert('Error al subir: '+rs.error.message);if(btn){btn.disabled=false;btn.textContent='Confirmar';}return;}
+      var urlData=sb.storage.from('previas').getPublicUrl(path);
+      var imageUrl=urlData.data?urlData.data.publicUrl:null;
+      sb.from('pedido_previas').insert([{pedido_id:pedidoId,version:version,imagen_url:imageUrl,estado:autoWA?'enviada':'guardada',creado_por:window._usuarioActual||'sistema'}]).then(function(){
+        var nuevoEstado=autoWA?'enviada':'guardada';
+        sb.from('pedidos').update({previa_estado:nuevoEstado,previa_cambios:null}).eq('id',pedidoId).then(function(){
+          p.previaEstado=nuevoEstado;p.previaCambios=null;
+          if(autoWA)enviarWAPrevia(pedidoId,imageUrl,version,p);
+          if(autoWA&&(p.fase===0||p.fase===1)){setFaseModal(pedidoId,2);}
+          else{verPedido(pedidoId);renderTaller();}
+        });
+      });
+    });
+  }).catch(function(err){alert('Error: '+err.message);if(btn){btn.disabled=false;btn.textContent='Confirmar';}});
+}
+function enviarWAPrevia(pedidoId,imageUrl,version,p){
+  if(!p||!p.clienteTel)return;
+  var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+  if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+  var nombre=p.clienteNombre.split(' ')[0];
+  var msg='Hola '+nombre+' 👋\n\nYa tienes lista la previa del pedido *'+pedidoId+'* (versión '+version+').\n\nPuedes verla y aprobarla desde aquí:\nhttps://printcopy.vercel.app/previa.html?p='+pedidoId+'\n\nSi todo está correcto pulsa *Aprobar* y arrancamos producción.\nSi necesitas algún cambio, indícanos qué ajustar directamente en la página 🙏\n\nPrint & Copy · 923 018 034';
+  fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){
+    if(d.success){sb.from('pedido_previas').update({wa_enviado:true,wa_enviado_at:new Date().toISOString()}).eq('pedido_id',pedidoId).eq('version',version).then(function(){});}
+    else console.warn('WA previa:',d.error);
+  });
+}
+function reenviarWAPrevia(pedidoId){
+  var p=pedidos.find(function(x){return x.id===pedidoId;});if(!p)return;
+  sb.from('pedido_previas').select('*').eq('pedido_id',pedidoId).order('version',{ascending:false}).limit(1).then(function(r){
+    if(r.data&&r.data[0]){enviarWAPrevia(pedidoId,r.data[0].imagen_url,r.data[0].version,p);alert('WA reenviado a '+p.clienteNombre);}
+  });
+}
+function cargarHistorialPrevias(pedidoId){
+  sb.from('pedido_previas').select('*').eq('pedido_id',pedidoId).order('version').then(function(r){
+    var cont=document.getElementById('historial-previas-'+pedidoId);if(!cont)return;
+    if(!r.data||!r.data.length){cont.innerHTML='<div style="font-size:12px;color:#aaa">Sin versiones registradas</div>';return;}
+    var estColors={enviada:'background:#E6F1FB;color:#185FA5',aceptada:'background:#EAF3DE;color:#3B6D11',rechazada:'background:#FCEBEB;color:#A32D2D',guardada:'background:#F1EFE8;color:#5F5E5A'};
+    cont.innerHTML=r.data.map(function(v){
+      var d=new Date(v.created_at);
+      var fecha=d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear()+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+      return'<div style="display:flex;gap:8px;padding:7px 0;border-bottom:0.5px solid #f5f5f5;align-items:flex-start">'
+        +'<span style="font-size:11px;font-weight:700;color:#888;min-width:20px">v'+v.version+'</span>'
+        +'<div style="flex:1"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">'
+        +'<span style="'+( estColors[v.estado]||'')+';padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600">'+v.estado+'</span>'
+        +'<span style="font-size:11px;color:#aaa">'+fecha+'</span>'
+        +(v.creado_por?'<span style="font-size:11px;color:#aaa">· '+v.creado_por+'</span>':'')
+        +'</div>'+(v.cambios_solicitados?'<div style="font-size:11px;color:#A32D2D;margin-top:3px;font-style:italic">"'+v.cambios_solicitados+'"</div>':'')
+        +(v.imagen_url?'<a href="'+v.imagen_url+'" target="_blank" style="font-size:11px;color:#185FA5">Ver imagen →</a>':'')
+        +'</div></div>';
+    }).join('');
+  });
 }
 
 // ── INIT ──
