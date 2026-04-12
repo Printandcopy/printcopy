@@ -1972,6 +1972,28 @@ var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:te
         return sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){
           if(r.error){alert('Error: '+r.error.message);return;}
           pedidos.unshift(pedido);
+          // WA automático si TX sin tallas rellenadas
+          if(pedido.seccion==='TX'&&pedido.clienteTel){
+            var tDatos=pedido.tallasColores;
+            var vacia=!tDatos||!tDatos.length;
+            if(!vacia&&pedido.tipoPersonalizacion==='individual'){
+              vacia=!tDatos.some(function(d){return d.nombre&&d.nombre.trim();});
+            }
+            if(!vacia&&pedido.tipoPersonalizacion!=='individual'){
+              var sumT=tDatos.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
+              vacia=sumT===0;
+            }
+            if(vacia){
+              var telAuto=pedido.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+              if(telAuto.length===9&&!telAuto.startsWith('34'))telAuto='34'+telAuto;
+              var nomAuto=pedido.clienteNombre.split(' ')[0];
+              var linkAuto=pedido.tipoPersonalizacion==='individual'
+                ?'https://printcopy.vercel.app/penas.html?p='+pedido.id
+                :'https://printcopy.vercel.app/tallas.html?p='+pedido.id;
+              var msgAuto='Hola '+nomAuto+' 👋\n\nPara completar tu pedido *'+pedido.id+'* necesitamos que nos confirmes las tallas'+(pedido.tipoPersonalizacion==='individual'?' y datos de cada persona':'')+'.\n\nAccede aquí para rellenarlo:\n'+linkAuto+'\n\nPrint & Copy · 923 018 034';
+              fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telAuto,mensaje:msgAuto,nombre:pedido.clienteNombre})});
+            }
+          }
           pedidosCreados.push(pedido);
           crearSiguiente(idx+1);
         });
