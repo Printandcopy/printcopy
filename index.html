@@ -4600,9 +4600,39 @@ function nuevaVenta(modo){
   document.getElementById('modal-venta').classList.add('open');
 }
 
+function nvValidarTallas(){
+  // Solo valida si hay tabla de tallas visible (categoría TX)
+  var wrap=document.getElementById('nv-tallas-wrap');
+  if(!wrap||wrap.style.display==='none')return true;
+  // Cantidad de unidades en la calculadora
+  var qEl=document.getElementById('nv-tx-qty');
+  if(!qEl)return true; // si no hay campo qty no validamos
+  var qCal=parseInt(qEl.value)||0;
+  if(qCal<1)return true; // sin cantidad no validamos
+  // Suma total de tallas introducidas
+  var totalTallas=0;
+  var tbody=document.getElementById('nv-tt-tbody');
+  if(tbody){
+    tbody.querySelectorAll('.tt-inp').forEach(function(inp){
+      totalTallas+=parseInt(inp.value)||0;
+    });
+  }
+  if(totalTallas===0)return true; // tabla vacía, no obligatorio
+  if(totalTallas!==qCal){
+    alert('⚠️ Las unidades no cuadran:\n\n'
+      +'· Cantidad en calculadora: '+qCal+' uds\n'
+      +'· Suma de tallas: '+totalTallas+' uds\n\n'
+      +'Revisa la tabla de tallas antes de continuar.');
+    return false;
+  }
+  return true;
+}
+
 function nvMostrarPanelPago(){
   // Validar que hay líneas
   if(!nvLineas.length){alert('Añade al menos un producto');return;}
+  // Validar tallas vs cantidad si es textil
+  if(!nvValidarTallas())return;
   // Validar cliente
   var tel=document.getElementById('nv-tel').value.trim();
   if(!tel){alert('El teléfono del cliente es obligatorio');return;}
@@ -5339,6 +5369,7 @@ function nvCrearPedido(){
   if(!nombre){alert('Nombre obligatorio');return;}
   if(!tel){alert('Teléfono obligatorio');return;}
   if(!nvLineas.length){alert('Añade al menos una línea');return;}
+  if(!nvValidarTallas())return;
   
   // Si no hay fecha, calcularla automáticamente basándose en el mayor plazo
   var fecha=document.getElementById('nv-fecha').value;
