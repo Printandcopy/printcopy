@@ -1957,7 +1957,7 @@ function verPedido(id){
   if(p.previaEstado!=='aceptada'){
     html+='<div id="drop-zone-'+p.id+'" style="border:1.5px dashed #FAC775;border-radius:7px;padding:14px;text-align:center;cursor:pointer;margin-bottom:8px" ondragover="event.preventDefault();this.style.borderColor=\'#185FA5\'" ondragleave="this.style.borderColor=\'#FAC775\'" ondrop="handlePreviaDropZone(event,\''+p.id+'\')" onclick="document.getElementById(\'file-previa-'+p.id+'\').click()">';
     html+='<div style="font-size:20px;margin-bottom:4px">📎</div><div style="font-size:12px;color:#888">'+(p.previaEstado==='rechazada'?'<strong style="color:#185FA5">Subir versión nueva</strong> con los cambios solicitados':p.previaEstado==='enviada'?'<strong style="color:#185FA5">Subir nueva versión</strong> o reenviar la actual':'<strong style="color:#185FA5">Subir previa</strong> · Arrastra o pulsa aquí · JPG, PNG, PDF')+'</div></div>';
-    html+='<input type="file" id="file-previa-'+p.id+'" accept="image/*,application/pdf" style="display:none" onchange="previaThumbnail(this,\''+p.id+'\')"><div id="previa-preview-'+p.id+'" style="display:none;margin-bottom:8px"><img id="previa-img-thumb-'+p.id+'" style="width:100%;max-height:120px;object-fit:contain;border-radius:6px;border:0.5px solid #eee"><div style="margin-top:8px"><label style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:12px;cursor:pointer"><input type="radio" name="previa-envio-'+p.id+'" value="auto" checked> Enviar WA al cliente ahora</label><label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="previa-envio-'+p.id+'" value="guardar"> Guardar sin enviar</label><button onclick="subirPrevia(\''+p.id+'\' )" style="width:100%;margin-top:8px;padding:9px;background:#185FA5;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer">Confirmar</button></div></div>';
+    html+='<input type="file" id="file-previa-'+p.id+'" accept="image/*,application/pdf" style="display:none" onchange="previaThumbnail(this,\''+p.id+'\')"><div id="previa-preview-'+p.id+'" style="display:none;margin-bottom:8px"><img id="previa-img-thumb-'+p.id+'" style="width:100%;max-height:120px;object-fit:contain;border-radius:6px;border:0.5px solid #eee"><div style="display:flex;gap:8px;margin-top:10px"><button onclick="subirPrevia(\''+p.id+'\',false)" style="flex:1;padding:9px;background:#f0f0f0;color:#444;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer">💾 Guardar</button><button onclick="subirPrevia(\''+p.id+'\',true)" style="flex:2;padding:9px;background:#25D366;color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer">📱 Guardar y enviar WA</button></div></div>';
   }
   if(p.previaEstado==='enviada'){html+='<div style="display:flex;gap:6px;margin-bottom:8px"><button onclick="reenviarWAPrevia(\''+p.id+'\' )" style="flex:1;padding:7px;background:#25D366;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">📱 Reenviar WA</button></div>';}
   if(p.previaEstado==='aceptada'){html+='<div style="background:#EAF3DE;border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:12px;color:#3B6D11">✅ Diseño aprobado. Producción puede arrancar.</div>';}
@@ -6067,12 +6067,11 @@ function handlePreviaDropZone(event,pedidoId){
   var input=document.getElementById('file-previa-'+pedidoId);
   if(input){var dt=new DataTransfer();dt.items.add(files[0]);input.files=dt.files;previaThumbnail(input,pedidoId);}
 }
-function subirPrevia(pedidoId){
+function subirPrevia(pedidoId,autoWA){
   var input=document.getElementById('file-previa-'+pedidoId);
   if(!input||!input.files||!input.files[0]){alert('Selecciona una imagen primero');return;}
   var file=input.files[0];
-  var enviarEl=document.querySelector('input[name="previa-envio-'+pedidoId+'"]:checked');
-  var autoWA=enviarEl?enviarEl.value==='auto':true;
+  if(autoWA===undefined)autoWA=true;
   var p=pedidos.find(function(x){return x.id===pedidoId;});if(!p)return;
   var btn=document.querySelector('#previa-panel-'+pedidoId+' button[onclick^="subirPrevia"]');
   if(btn){btn.disabled=true;btn.textContent='Subiendo...';}
