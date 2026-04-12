@@ -5164,6 +5164,15 @@ function nvCalc(){
     var q=parseInt((document.getElementById('nv-tx-qty')||{}).value)||0;
     if(q<1){document.getElementById('nv-result').style.display='none';document.getElementById('nv-btn-add').style.display='none';return;}
     var prenda=(document.getElementById('nv-tx-prenda')||{}).value;
+    // Regenerar tabla de tallas si la prenda cambió
+    if(window._nvLastPrenda && window._nvLastPrenda!==prenda){
+      var tw=document.getElementById('nv-tallas-wrap');
+      if(tw && tw.style.display!=='none'){
+        if(_nvTipoTallas==='iguales') tw.innerHTML=nvRenderTablaTallas();
+        else tw.innerHTML=nvRenderTablaIndividual();
+      }
+    }
+    window._nvLastPrenda=prenda;
     var rangos=prod.prendas[prenda];if(!rangos){document.getElementById('nv-result').style.display='none';return;}
     var pu=rangos[rangos.length-1][2];
     for(var i=0;i<rangos.length;i++){if(q>=rangos[i][0]&&q<=rangos[i][1]){pu=rangos[i][2];break;}}
@@ -6575,9 +6584,22 @@ function cotConvertir(){
 }
 
 // ── FUNCIONES TABLA TALLAS/COLORES ──
+function nvGetPrendaSeleccionada(){
+  var sel=document.getElementById('nv-tx-prenda');
+  if(!sel)return'Camisetas';
+  var v=sel.value||'';
+  // Mapear valores de la calculadora a nombres de PRENDA_MODELO
+  if(v==='CAMISETAS')return'Camisetas';
+  if(v==='SUDADERAS')return'Sudaderas';
+  if(v==='SUDADERAS C/CAPUCHA')return'Sudaderas c/capucha';
+  if(v==='POLOS')return'Polos';
+  if(v==='PETOS'||v==='PETOS FIESTA')return'Petos';
+  return'Camisetas';
+}
 function nvRenderTablaTallas(){
   // Tabla de tallas en el modal de NUEVO PEDIDO (sin pedido id todavía)
-  var colores=COLORES_TEXTIL.beagle;
+  var prendaSel=nvGetPrendaSeleccionada();
+  var colores=getColoresPrenda(prendaSel);
   var colorOpts=colores.map(function(c){
     return'<option value="'+c.nombre+'" data-hex="'+c.hex+'" '+(c.borde?'data-borde="1"':'')+'>'+c.nombre+'</option>';
   }).join('');
@@ -6600,14 +6622,16 @@ function nvRenderTablaTallas(){
 
 function nvTTRenderFila(fila,idx,colorOpts){
   if(!colorOpts){
-    colorOpts=COLORES_TEXTIL.beagle.map(function(c){
+    var _cols=getColoresPrenda(nvGetPrendaSeleccionada());
+    colorOpts=_cols.map(function(c){
       return'<option value="'+c.nombre+'" data-hex="'+c.hex+'" '+(c.borde?'data-borde="1"':'')+'>'+c.nombre+'</option>';
     }).join('');
   }
   var hex=fila.hex||'#1a1a1a';
   var borde=fila.borde?'border:1px solid #ccc;':'';
   var colorNombre=fila.color||'Negro';
-  var colorCod=(COLORES_TEXTIL.beagle.find(function(c){return c.nombre===colorNombre;})||{}).cod||'';
+  var _pCols=getColoresPrenda(nvGetPrendaSeleccionada());
+  var colorCod=(_pCols.find(function(c){return c.nombre===colorNombre;})||{}).cod||'';
   var html='<tr id="nv-tt-fila-'+idx+'">'
     +'<td><div style="display:flex;align-items:center;gap:4px">'
     +'<div class="tt-color-picker" id="nv-tt-picker-'+idx+'">'
@@ -6617,7 +6641,7 @@ function nvTTRenderFila(fila,idx,colorOpts){
     +'<span class="cod" id="nv-tt-cod-'+idx+'">'+colorCod+'</span>'
     +'</div>'
     +'<div class="tt-color-dropdown" id="nv-tt-drop-'+idx+'">'
-    +COLORES_TEXTIL.beagle.map(function(c,ci){
+    +_pCols.map(function(c,ci){
       return'<div class="tt-color-opt" onclick="nvTTSelColor('+idx+','+ci+')">'
         +'<span class="dot" style="background:'+c.hex+';'+(c.borde?'border:1.5px solid #ccc;':'')+'"></span>'
         +'<span>'+c.nombre+'</span>'
@@ -6639,7 +6663,7 @@ function nvTTAddFila(){
   var tbody=document.getElementById('nv-tt-tbody');
   if(!tbody)return;
   var idx=_nvTTCount++;
-  var colores=COLORES_TEXTIL.beagle;
+  var colores=getColoresPrenda(nvGetPrendaSeleccionada());
   var fila={color:colores[idx%colores.length].nombre,hex:colores[idx%colores.length].hex,tallas:{}};
   tbody.insertAdjacentHTML('beforeend',nvTTRenderFila(fila,idx));
 }
@@ -6662,7 +6686,7 @@ function nvTTOpenPicker(idx){
   }
 }
 function nvTTSelColor(idx,colorIdx){
-  var c=COLORES_TEXTIL.beagle[colorIdx];
+  var c=getColoresPrenda(nvGetPrendaSeleccionada())[colorIdx];
   if(!c)return;
   var dot=document.getElementById('nv-tt-dot-'+idx);
   var lbl=document.getElementById('nv-tt-lbl-'+idx);
@@ -6726,7 +6750,8 @@ function nvTTGetDatos(){
     var dot=fila.querySelector('[id^="nv-tt-dot-"]');
     if(!lbl)return;
     var colorNombre=lbl.textContent||'Negro';
-    var cDef=COLORES_TEXTIL.beagle.find(function(c){return c.nombre===colorNombre;})||{hex:'#888',borde:false};
+    var _gCols=getColoresPrenda(nvGetPrendaSeleccionada());
+    var cDef=_gCols.find(function(c){return c.nombre===colorNombre;})||{hex:'#888',borde:false};
     var tallas={};
     fila.querySelectorAll('.tt-inp').forEach(function(inp,i){
       var v=parseInt(inp.value)||0;
@@ -6755,7 +6780,7 @@ function nvSelTipoTallas(tipo){
   }
 }
 function nvRenderTablaIndividual(){
-  var colores=COLORES_TEXTIL.beagle;
+  var colores=getColoresPrenda(nvGetPrendaSeleccionada());
   var prendas=['Camisetas','Sudaderas','Sudaderas c/capucha','Polos','Petos'];
   var prendaOpts=prendas.map(function(pr){return'<option value="'+pr+'">'+pr+'</option>';}).join('');
   var tallaOpts=TALLAS_STD.map(function(t){return'<option value="'+t+'">'+t+'</option>';}).join('');
@@ -6893,7 +6918,7 @@ function nvIndGetDatos(){
     var numero=fila.querySelector('.nv-ind-numero');
     if(!nombre)return;
     var colorNombre=colorLbl?colorLbl.textContent:'Negro';
-    var cDef=COLORES_TEXTIL.beagle.find(function(c){return c.nombre===colorNombre;})||{hex:'#888'};
+    var _allCols=[].concat(COLORES_TEXTIL.beagle,COLORES_TEXTIL.clasica,COLORES_TEXTIL.urban,COLORES_TEXTIL.star);var cDef=_allCols.find(function(c){return c.nombre===colorNombre;})||{hex:'#888'};
     datos.push({
       prenda:prenda?prenda.value:'Camiseta',
       color:colorNombre,
@@ -6908,7 +6933,8 @@ function nvIndGetDatos(){
 
 function renderTablaIndividualDetalle(p){
   var datos=p.tallasColores||[];
-  var colores=COLORES_TEXTIL.beagle;
+  var _allCols2=[].concat(COLORES_TEXTIL.beagle,COLORES_TEXTIL.clasica,COLORES_TEXTIL.urban,COLORES_TEXTIL.star);
+  var colores=_allCols2;
   var rellenas=datos.filter(function(d){return d.nombre;}).length;
   var total=datos.length;
   var statusBadge=rellenas===0?'<span style="background:#FCEBEB;color:#A32D2D;font-size:10px;padding:1px 7px;border-radius:10px">Pdte</span>'
@@ -6967,11 +6993,12 @@ function ttEnviarWAIndividual(pedidoId){
 }
 
 function renderTablaTallas(p){
-  var colores=COLORES_TEXTIL.beagle;
   var tallas=TALLAS_STD;
-  // Detectar modelo en descripción para usar colores correctos
-  var desc=(p.descripcion||'').toLowerCase();
-  // (en el futuro: if(desc.includes('clasica')) colores=COLORES_TEXTIL.clasica; etc)
+  // Detectar prenda desde tallasColores o descripción
+  var _prendaDetectada='Camisetas';
+  if(p.tallasColores&&p.tallasColores[0]&&p.tallasColores[0].prenda){var _pr=p.tallasColores[0].prenda;if(PRENDA_MODELO[_pr])_prendaDetectada=_pr;}
+  else{var desc=(p.descripcion||'').toUpperCase();if(desc.includes('SUDADERA')&&desc.includes('CAPUCHA'))_prendaDetectada='Sudaderas c/capucha';else if(desc.includes('SUDADERA'))_prendaDetectada='Sudaderas';else if(desc.includes('POLO'))_prendaDetectada='Polos';else if(desc.includes('PETO'))_prendaDetectada='Petos';}
+  var colores=getColoresPrenda(_prendaDetectada);
 
   // Datos guardados o vacío con Negro por defecto
   var datos=p.tallasColores||[{color:'Negro',hex:'#1a1a1a',tallas:{}}];
@@ -7092,7 +7119,11 @@ function ttAddFila(pedidoId){
   var tbody=document.getElementById('tt-tbody-'+pedidoId);
   if(!tbody)return;
   var idx=tbody.querySelectorAll('tr').length;
-  var colores=COLORES_TEXTIL.beagle;
+  var _p=pedidos.find(function(x){return x.id===pedidoId;});
+  var _prDet='Camisetas';
+  if(_p&&_p.tallasColores&&_p.tallasColores[0]&&_p.tallasColores[0].prenda&&PRENDA_MODELO[_p.tallasColores[0].prenda])_prDet=_p.tallasColores[0].prenda;
+  else if(_p){var _d=(_p.descripcion||'').toUpperCase();if(_d.includes('SUDADERA')&&_d.includes('CAPUCHA'))_prDet='Sudaderas c/capucha';else if(_d.includes('SUDADERA'))_prDet='Sudaderas';else if(_d.includes('POLO'))_prDet='Polos';else if(_d.includes('PETO'))_prDet='Petos';}
+  var colores=getColoresPrenda(_prDet);
   var colorOpts=colores.map(function(c){return'<option value="'+c.nombre+'" data-hex="'+c.hex+'" '+(c.borde?'data-borde="1"':'')+'>'+c.nombre+'</option>';}).join('');
   var fila={color:colores[idx%colores.length].nombre,hex:colores[idx%colores.length].hex,tallas:{}};
   var tr=document.createElement('tr');
