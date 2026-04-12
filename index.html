@@ -4104,10 +4104,55 @@ function cargarPresupuestos(){
         });
         renderVentas();
         actualizarBarraAvisos();
+        checkRecordatoriosPresupuestos();
       });
     }else{
       renderVentas();
       actualizarBarraAvisos();
+      checkRecordatoriosPresupuestos();
+    }
+  });
+}
+
+function checkRecordatoriosPresupuestos(){
+  var ahora=new Date();
+  var enviados=(presupuestos||[]).filter(function(p){return p.estado==='enviado';});
+  if(!enviados.length)return;
+  enviados.forEach(function(p){
+    var diasDesde=Math.floor((ahora-new Date(p.updated_at||p.created_at))/(1000*3600*24));
+    var tel=(p.cliente_telefono||'').replace(/\s/g,'').replace(/^\+/,'');
+    if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+    if(!tel)return;
+    var nombre=(p.cliente_nombre||'').split(' ')[0];
+    var total=parseFloat(p.total||0).toFixed(0);
+    // Recordatorio 1: día 3
+    if(diasDesde>=3&&!p.recordatorio_1_enviado){
+      var msg1='Hola '+nombre+' 👋 ¿Pudiste revisar el presupuesto *'+p.numero+'* por *'+total+'€*? Si tienes alguna duda o quieres que ajustemos algo, aquí estamos 😊\n\nPrint & Copy · 923 018 034';
+      fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg1,nombre:p.cliente_nombre})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.success){
+            sb.from('presupuestos').update({recordatorio_1_enviado:true}).eq('id',p.id).then(function(){});
+            p.recordatorio_1_enviado=true;
+            console.log('Recordatorio 1 enviado a',p.cliente_nombre,'para',p.numero);
+          }
+        });
+    }
+    // Recordatorio 2: día 7
+    if(diasDesde>=7&&!p.recordatorio_2_enviado){
+      var validez=parseInt(p.validez)||15;
+      var diasRestantes=validez-diasDesde;
+      if(diasRestantes<0)diasRestantes=0;
+      var msg2='Hola '+nombre+' ⚡ Te recordamos que el presupuesto *'+p.numero+'* vence en *'+diasRestantes+' días*. Si quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034';
+      fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg2,nombre:p.cliente_nombre})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.success){
+            sb.from('presupuestos').update({recordatorio_2_enviado:true}).eq('id',p.id).then(function(){});
+            p.recordatorio_2_enviado=true;
+            console.log('Recordatorio 2 enviado a',p.cliente_nombre,'para',p.numero);
+          }
+        });
     }
   });
 }
@@ -5971,6 +6016,8 @@ cargarDatos();
 cargarPresupuestos();
 // Arrancar siempre en Mostrador
 showScreen('mostrador',document.querySelector('.nav-tab'));
+// Recordatorios automáticos presupuestos cada 4h
+setInterval(checkRecordatoriosPresupuestos,4*60*60*1000);
 // Polling cada 60s para detectar presupuestos aceptados por el cliente
 setInterval(function(){
   var hace24h=new Date(Date.now()-86400000).toISOString();
