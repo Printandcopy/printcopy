@@ -189,6 +189,16 @@ textarea{resize:vertical;min-height:64px}
 .tc-check-item{display:flex;flex-direction:column;gap:2px}
 .tc-check-item label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#7a1a1a;cursor:pointer}
 .tc-check-item .tc-ts{font-size:10px;color:#aaa;padding-left:20px}
+.sem-wrap{display:flex;flex-direction:column;gap:3px;margin-top:8px}
+.sem-item{display:flex;align-items:center;gap:7px;padding:4px 9px;background:#f9f9f7;border-radius:5px;font-size:12px}
+.sem-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sem-red{background:#E24B4A}
+.sem-green{background:#639922}
+.sem-gray{background:#B4B2A9}
+.sem-label{flex:1;color:#444}
+.sem-label.sem-blocked{color:#bbb}
+.sem-ts{font-size:10px;color:#aaa;margin-left:auto}
+.taller-card.listo-producir{border-left:3px solid #639922}
 .tt-wrap{border:1.5px solid #E6F1FB;border-radius:8px;overflow:hidden;margin-bottom:10px}
 .tt-header{background:#E6F1FB;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
 .tt-header-title{font-size:12px;font-weight:700;color:#185FA5;display:flex;align-items:center;gap:6px}
@@ -2076,9 +2086,25 @@ function verPedido(id){
   html+='</div>';
 
   if(p.seccion==='TX'){
-    html+='<div class="checks-textil" style="margin-bottom:10px">';
-    html+='<div class="check-item" style="display:flex;align-items:flex-start;gap:8px"><input type="checkbox" style="margin-top:2px;flex-shrink:0" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"><div><div>Ropa pedida</div><div style="font-size:10px;color:'+(p.ropaOkFecha?'#aaa':'#ddd')+'">'+(p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):'—')+'</div></div></div>';
-    html+='<div class="check-item" style="display:flex;align-items:flex-start;gap:8px"><input type="checkbox" style="margin-top:2px;flex-shrink:0" '+(p.dtfOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'dtfOk\',this.checked)"><div><div>DTF pedido</div><div style="font-size:10px;color:'+(p.dtfOkFecha?'#aaa':'#ddd')+'">'+(p.dtfOkFecha?fmtCheckTs(p.dtfOkFecha):'—')+'</div></div></div>';
+    var tieneTallas=!!(p.tallasColores&&p.tallasColores.length);
+    html+='<div style="margin-bottom:10px;border-radius:7px;overflow:hidden;border:0.5px solid #e5e7eb">';
+    html+='<div style="background:#f9f9f7;padding:8px 12px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px">Checklist producción</div>';
+    // Tallas
+    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+(tieneTallas?'sem-green':'sem-red')+'"></span><span class="sem-label">'+(tieneTallas?'Tallas recibidas':'Pdte tallas')+'</span></div>';
+    // Ropa
+    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0">';
+    if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">Ropa pedida</span>';
+    else html+='<label style="display:flex;align-items:center;gap:7px;cursor:pointer;flex:1;margin:0"><input type="checkbox" style="margin:0;flex-shrink:0" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"><span class="sem-label">Ropa pedida</span></label>'+(p.ropaOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.ropaOkFecha)+'</span>':'');
+    html+='</div>';
+    // Previas
+    var prevLbl=p.previaEstado==='aceptada'?'Previas OK':p.previaEstado==='rechazada'?'Previas: cambios':p.previaEstado==='enviada'?'Previas: esperando':'Pdte previas';
+    var prevDot=p.previaEstado==='aceptada'?'sem-green':'sem-red';
+    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+prevDot+'"></span><span class="sem-label">'+prevLbl+'</span></div>';
+    // DTF
+    html+='<div class="sem-item" style="padding:7px 12px">';
+    if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">DTF pedido</span>';
+    else html+='<label style="display:flex;align-items:center;gap:7px;cursor:pointer;flex:1;margin:0"><input type="checkbox" style="margin:0;flex-shrink:0" '+(p.dtfOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'dtfOk\',this.checked)"><span class="sem-label">DTF pedido</span></label>'+(p.dtfOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.dtfOkFecha)+'</span>':'');
+    html+='</div>';
     html+='</div>';
   }
 
@@ -2637,6 +2663,59 @@ function buildMiniCalendario(fechaEntrega, fechaTipo){
   '</div>';
 }
 
+function siguienteDiaLaborable(fecha){
+  var d=new Date(fecha);d.setDate(d.getDate()+1);
+  while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
+  return d;
+}
+function esListoProducir(p){
+  if(p.seccion!=='TX')return false;
+  var tieneTallas=!!(p.tallasColores&&p.tallasColores.length);
+  if(!tieneTallas||!p.ropaOk||!p.dtfOk)return false;
+  var previaOk=p.previaEstado==='aceptada';
+  if(!previaOk)return false;
+  var ropaF=p.ropaOkFecha?new Date(p.ropaOkFecha):null;
+  var dtfF=p.dtfOkFecha?new Date(p.dtfOkFecha):null;
+  if(!ropaF||!dtfF)return false;
+  var ultimaFecha=ropaF>dtfF?ropaF:dtfF;
+  var listoDesde=siguienteDiaLaborable(ultimaFecha);
+  var hoy=new Date();hoy.setHours(0,0,0,0);listoDesde.setHours(0,0,0,0);
+  return hoy>=listoDesde;
+}
+function renderSemaforoTaller(p){
+  if(p.seccion!=='TX')return'';
+  var tieneTallas=!!(p.tallasColores&&p.tallasColores.length);
+  var items=[];
+  // 1. Tallas
+  if(tieneTallas)items.push({dot:'sem-green',label:'Tallas recibidas',ts:''});
+  else items.push({dot:'sem-red',label:'Pdte tallas',ts:''});
+  // 2. Ropa pedida (solo activo si tallas OK)
+  if(!tieneTallas)items.push({dot:'sem-gray',label:'Ropa pedida',ts:'',blocked:true});
+  else if(p.ropaOk)items.push({dot:'sem-green',label:'Ropa pedida',ts:p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):''});
+  else items.push({dot:'sem-red',label:'Ropa pedida',ts:'',check:true,field:'ropaOk'});
+  // 3. Previas
+  var previaOk=p.previaEstado==='aceptada';
+  var previaEnv=p.previaEstado==='enviada';
+  var previaCambios=p.previaEstado==='rechazada';
+  if(previaOk)items.push({dot:'sem-green',label:'Previas OK',ts:''});
+  else if(previaCambios)items.push({dot:'sem-red',label:'Previas: cambios',ts:''});
+  else if(previaEnv)items.push({dot:'sem-red',label:'Previas: esperando',ts:''});
+  else items.push({dot:'sem-red',label:'Pdte previas',ts:''});
+  // 4. DTF (solo activo si tallas OK)
+  if(!tieneTallas)items.push({dot:'sem-gray',label:'DTF pedido',ts:'',blocked:true});
+  else if(p.dtfOk)items.push({dot:'sem-green',label:'DTF pedido',ts:p.dtfOkFecha?fmtCheckTs(p.dtfOkFecha):''});
+  else items.push({dot:'sem-red',label:'DTF pedido',ts:'',check:true,field:'dtfOk'});
+  var html='<div class="sem-wrap" onclick="event.stopPropagation()">';
+  items.forEach(function(it){
+    if(it.check){
+      html+='<div class="sem-item"><label style="display:flex;align-items:center;gap:7px;cursor:pointer;flex:1;margin:0"><input type="checkbox" onchange="toggleCheckModal(\''+p.id+'\',\''+it.field+'\',this.checked)" style="margin:0;flex-shrink:0"><span class="sem-label">'+it.label+'</span></label>'+(it.ts?'<span class="sem-ts">'+it.ts+'</span>':'')+'</div>';
+    } else {
+      html+='<div class="sem-item"><span class="sem-dot '+it.dot+'"></span><span class="sem-label'+(it.blocked?' sem-blocked':'')+'">'+it.label+'</span>'+(it.ts?'<span class="sem-ts">'+it.ts+'</span>':'')+'</div>';
+    }
+  });
+  html+='</div>';
+  return html;
+}
 function tarjetaTaller(p){
   var pend=p.total-(p.senal||0),hoy=new Date();hoy.setHours(0,0,0,0);
   var fe=p.fechaEntrega?new Date(p.fechaEntrega+"T00:00:00"):null;
@@ -2648,9 +2727,10 @@ function tarjetaTaller(p){
   var previaBadge=p.previaEstado==="rechazada"?'<span class="badge" style="background:#FCEBEB;color:#A32D2D;border:0.5px solid #f7c1c1">✏️ Cambios</span>':p.previaEstado==="enviada"?'<span class="badge" style="background:#E6F1FB;color:#185FA5;border:0.5px solid #B5D4F4">👁️ Previa env.</span>':p.previaEstado==="aceptada"?'<span class="badge" style="background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97">✅ OK</span>':''; 
   var extBadge=p.externalizado?'<span class="badge" style="background:#534AB7;color:#fff;font-size:10px">🔄 '+p.externalizado+'</span>':''; 
   var checksHTML="";
-  if(p.seccion==="TX"){checksHTML='<div class="tc-checks" onclick="event.stopPropagation()">'+'<div class="tc-check-item"><label><input type="checkbox" '+(p.ropaOk?"checked":"")+' onchange="toggleCheckModal(\''+ p.id +'\',\'ropaOk\',this.checked)"> Ropa pedida</label><span class="tc-ts">'+(p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):"—")+'</span></div>'+'<div class="tc-check-item"><label><input type="checkbox" '+(p.dtfOk?"checked":"")+' onchange="toggleCheckModal(\''+ p.id +'\',\'dtfOk\',this.checked)"> DTF pedido</label><span class="tc-ts">'+(p.dtfOkFecha?fmtCheckTs(p.dtfOkFecha):"—")+'</span></div>'+'</div>';}
+  if(p.seccion==="TX"){checksHTML=renderSemaforoTaller(p);}
+  var listoClass=esListoProducir(p)?' listo-producir':'';
   var cambiosHTML=p.previaEstado==="rechazada"&&p.previaCambios?'<div class="tc-cambios">"'+ p.previaCambios +'"</div>':''; 
-  return '<div class="taller-card '+urgente+'" onclick="verPedido(\''+ p.id +'\')">'
+  return '<div class="taller-card '+urgente+listoClass+'" onclick="verPedido(\''+ p.id +'\')">'
     +'<div class="tc-header"><div class="tc-left"><div class="tc-id">'+p.id+'</div><div class="tc-meta"><span class="badge sec-'+p.seccion+'">'+SECS[p.seccion]+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span>'+previaBadge+extBadge+'</div><div class="tc-op">👤 '+p.operario+'</div></div>'
     +'<div class="tc-right">'+entregaTxt+pendPill+'</div></div>'
     +'<div class="tc-body"><div class="tc-cliente">'+p.clienteNombre+'</div><div class="tc-desc">'+p.descripcion+'</div>'+(p.notas?'<div class="tc-notas">'+p.notas+'</div>':'')+cambiosHTML+checksHTML
