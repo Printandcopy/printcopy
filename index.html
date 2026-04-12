@@ -1061,6 +1061,22 @@ textarea{resize:vertical;min-height:64px}
           <div id="nv-extras-wrap" style="display:none;margin-top:10px"><label style="font-weight:600;margin-bottom:6px;display:block">Extras opcionales</label><div class="extras-grid" id="nv-extras"></div></div>
           <!-- Textil custom -->
           <div id="nv-textil-wrap" style="display:none;margin-top:10px"></div>
+          <!-- Selector tipo tallas -->
+          <div id="nv-tipo-tallas-wrap" style="display:none;margin-top:10px">
+            <label style="font-weight:600;margin-bottom:8px;display:block;font-size:13px">Tipo de personalización</label>
+            <div style="display:flex;gap:8px">
+              <div id="nv-tipo-iguales" class="nv-tipo-card nv-tipo-active" onclick="nvSelTipoTallas('iguales')" style="flex:1;padding:10px;border:2px solid #185FA5;border-radius:8px;text-align:center;cursor:pointer;background:#E6F1FB">
+                <div style="font-size:18px;margin-bottom:2px">👕</div>
+                <div style="font-size:12px;font-weight:600;color:#0C447C">Todas iguales</div>
+                <div style="font-size:10px;color:#185FA5">Mismo diseño, varias tallas</div>
+              </div>
+              <div id="nv-tipo-individual" class="nv-tipo-card" onclick="nvSelTipoTallas('individual')" style="flex:1;padding:10px;border:2px solid #e5e7eb;border-radius:8px;text-align:center;cursor:pointer;background:#fff">
+                <div style="font-size:18px;margin-bottom:2px">🏷</div>
+                <div style="font-size:12px;font-weight:600;color:#444">Personalización individual</div>
+                <div style="font-size:10px;color:#888">Nombre y número por persona</div>
+              </div>
+            </div>
+          </div>
           <!-- Tabla tallas nuevo pedido -->
           <div id="nv-tallas-wrap" style="display:none;margin-top:10px"></div>
           <!-- Resultado -->
@@ -1744,8 +1760,8 @@ function cargarDatos(){
 }
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',creado:c.creado};}
-function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,tallasColores:p.tallas_colores||null};}
-function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null};}
+function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null};}
+function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null,tipo_personalizacion:p.tipoPersonalizacion||null};}
 
 function startClock(){
   document.getElementById('clock-wrap').style.display='block';
@@ -1941,8 +1957,18 @@ function finalizarGuardar(cliente){
         return sb.from('contadores').update({valor:numVal}).eq('seccion',sec).then(function(){return numVal;});
       }).then(function(numVal){
         var numPedido=sec+'-'+String(numVal).padStart(4,'0');
-        var _nvTallas=sec==='TX'?nvTTGetDatos():null;
-var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:item.desc,notas:notas,total:item.total,senal:senalItem,pago:pagoTipo,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:presId,tallasColores:_nvTallas};
+        var _nvTallas=null;
+        var _nvTipoPersonalizacion=null;
+        if(sec==='TX'){
+          if(_nvTipoTallas==='individual'){
+            _nvTallas=nvIndGetDatos();
+            _nvTipoPersonalizacion='individual';
+          } else {
+            _nvTallas=nvTTGetDatos();
+            _nvTipoPersonalizacion='iguales';
+          }
+        }
+var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:item.desc,notas:notas,total:item.total,senal:senalItem,pago:pagoTipo,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:presId,tallasColores:_nvTallas,tipoPersonalizacion:_nvTipoPersonalizacion};
         return sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){
           if(r.error){alert('Error: '+r.error.message);return;}
           pedidos.unshift(pedido);
@@ -4641,6 +4667,7 @@ function nuevaVenta(modo){
   document.getElementById('nv-extras-wrap').style.display='none';
   document.getElementById('nv-textil-wrap').style.display='none';
   document.getElementById('nv-tallas-wrap').style.display='none';
+  document.getElementById('nv-tipo-tallas-wrap').style.display='none';
   document.getElementById('nv-result').style.display='none';
   // nv-upsell removed
   document.getElementById('nv-btn-add').style.display='none';
@@ -4685,7 +4712,34 @@ function nvValidarTallas(){
   var wrap=document.getElementById('nv-tallas-wrap');
   if(!wrap||wrap.style.display==='none')return true;
 
-  // Suma total de tallas — SIEMPRE obligatoria si la tabla está visible
+  // Cantidad de unidades del calculador
+  var qCal=0;
+  var lineaTX=nvLineas.find(function(l){return l.sec==='TX'||l.cat==='camiseta'||l.cat==='sudadera'||l.cat==='polo'||l.cat==='textil';});
+  if(lineaTX)qCal=lineaTX.qty||lineaTX.unidades||0;
+  if(!qCal){
+    var qEl=document.getElementById('nv-tx-qty');
+    if(qEl)qCal=parseInt(qEl.value)||0;
+  }
+  if(qCal<1)return true;
+
+  if(_nvTipoTallas==='individual'){
+    // Tabla individual: contar filas rellenas (con nombre)
+    var datos=nvIndGetDatos();
+    var rellenas=datos?datos.filter(function(d){return d.nombre;}).length:0;
+    // Permitir 0 rellenas (se enviará al cliente)
+    if(rellenas===0)return true;
+    // Si hay rellenas, deben cuadrar con cantidad
+    if(rellenas!==qCal){
+      alert('⚠️ Las personas no cuadran\n\n'
+        +'· Cantidad en calculadora: '+qCal+' uds\n'
+        +'· Personas rellenas: '+rellenas+'\n\n'
+        +'Ajusta la tabla antes de continuar.');
+      return false;
+    }
+    return true;
+  }
+
+  // Tabla iguales: suma de tallas
   var totalTallas=0;
   var tbody=document.getElementById('nv-tt-tbody');
   if(tbody){
@@ -4694,25 +4748,8 @@ function nvValidarTallas(){
     });
   }
 
-  // Cantidad de unidades: primero de nvLineas (ya añadidas), luego del campo input
-  var qCal=0;
-  // Buscar en nvLineas la línea TX
-  var lineaTX=nvLineas.find(function(l){return l.sec==='TX'||l.cat==='camiseta'||l.cat==='sudadera'||l.cat==='polo'||l.cat==='textil';});
-  if(lineaTX)qCal=lineaTX.qty||lineaTX.unidades||0;
-  // Si no está en nvLineas aún, leer del campo
-  if(!qCal){
-    var qEl=document.getElementById('nv-tx-qty');
-    if(qEl)qCal=parseInt(qEl.value)||0;
-  }
-
-  // Si no hay cantidad definida tampoco validamos
-  if(qCal<1)return true;
-
-  // Con tabla visible, las tallas SON obligatorias
-  if(totalTallas===0){
-    alert('⚠️ Introduce las tallas\n\nHay '+qCal+' unidades en la calculadora pero la tabla de tallas está vacía.\n\nRellena al menos una talla antes de continuar.');
-    return false;
-  }
+  // Permitir 0 (se rellenará después)
+  if(totalTallas===0)return true;
 
   if(totalTallas!==qCal){
     alert('⚠️ Las unidades no cuadran\n\n'
@@ -4750,7 +4787,7 @@ function abrirVentaDesdeCarrito(){
   nvLineas=carrito.map(function(c){return{sec:CAT_TO_SEC[c.cat]||'XR',desc:c.desc,total:c.total,cat:c.cat,plazo:P[c.cat]&&P[c.cat].plazo||0};});
   limpiarCarrito();
   document.getElementById('nv-nombre').value='';document.getElementById('nv-tel').value='';document.getElementById('nv-email').value='';document.getElementById('nv-sector').value='';
-  document.getElementById('nv-cat').value='';document.getElementById('nv-campos-dinamicos').innerHTML='';document.getElementById('nv-unidades-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-tallas-wrap').style.display='none';document.getElementById('nv-result').style.display='none';// nv-upsell removeddocument.getElementById('nv-btn-add').style.display='none';
+  document.getElementById('nv-cat').value='';document.getElementById('nv-campos-dinamicos').innerHTML='';document.getElementById('nv-unidades-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-tallas-wrap').style.display='none';document.getElementById('nv-tipo-tallas-wrap').style.display='none';document.getElementById('nv-result').style.display='none';// nv-upsell removeddocument.getElementById('nv-btn-add').style.display='none';
   document.getElementById('nv-fecha').value='';
   nvRenderLineas();
   nvActualizarFecha();
@@ -4814,7 +4851,10 @@ function nvCatChange(){
     // Textil tiene su propio builder
     document.getElementById('nv-textil-wrap').style.display='block';
     document.getElementById('nv-textil-wrap').innerHTML=prod.buildCustom().replace(/cf-/g,'nv-tx-').replace(/cV2calc/g,'nvCalc').replace(/cV2addEst/g,'nvAddEst');
-    // Mostrar tabla de tallas para textil
+    // Mostrar selector tipo personalización y tabla tallas
+    document.getElementById('nv-tipo-tallas-wrap').style.display='block';
+    _nvTipoTallas='iguales';
+    nvSelTipoTallas('iguales');
     var tallasWrap=document.getElementById('nv-tallas-wrap');
     if(tallasWrap){
       tallasWrap.style.display='block';
@@ -6472,6 +6512,147 @@ function nvTTGetDatos(){
       if(v>0)tallas[TALLAS_STD[i]]=v;
     });
     if(Object.keys(tallas).length)datos.push({color:colorNombre,hex:cDef.hex,borde:cDef.borde||false,tallas:tallas});
+  });
+  return datos.length?datos:null;
+}
+
+var _nvTipoTallas='iguales';
+var _nvIndCount=1;
+function nvSelTipoTallas(tipo){
+  _nvTipoTallas=tipo;
+  var btnIg=document.getElementById('nv-tipo-iguales');
+  var btnIn=document.getElementById('nv-tipo-individual');
+  if(btnIg){btnIg.style.border=tipo==='iguales'?'2px solid #185FA5':'2px solid #e5e7eb';btnIg.style.background=tipo==='iguales'?'#E6F1FB':'#fff';}
+  if(btnIn){btnIn.style.border=tipo==='individual'?'2px solid #185FA5':'2px solid #e5e7eb';btnIn.style.background=tipo==='individual'?'#E6F1FB':'#fff';}
+  var wrap=document.getElementById('nv-tallas-wrap');
+  if(!wrap)return;
+  if(tipo==='iguales'){
+    wrap.innerHTML=nvRenderTablaTallas();
+    _nvIndCount=1;
+  } else {
+    wrap.innerHTML=nvRenderTablaIndividual();
+  }
+}
+function nvRenderTablaIndividual(){
+  var colores=COLORES_TEXTIL.beagle;
+  var prendas=['Camiseta','Sudadera','Polo'];
+  var prendaOpts=prendas.map(function(pr){return'<option value="'+pr+'">'+pr+'</option>';}).join('');
+  var tallaOpts=TALLAS_STD.map(function(t){return'<option value="'+t+'">'+t+'</option>';}).join('');
+  _nvIndCount=1;
+  var html='<div style="border:1.5px solid #E6F1FB;border-radius:8px;overflow:hidden">'
+    +'<div style="background:#E6F1FB;padding:9px 12px;display:flex;align-items:center;justify-content:space-between">'
+    +'<span style="font-size:12px;font-weight:700;color:#185FA5">🏷 Personalización individual</span>'
+    +'<span id="nv-ind-counter" style="background:#B5D4F4;color:#042C53;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600">0 personas</span>'
+    +'</div>'
+    +'<div style="overflow-x:auto"><table class="tt-table" id="nv-ind-table" style="font-size:12px">'
+    +'<thead><tr>'
+    +'<th style="width:30px;text-align:center">#</th>'
+    +'<th style="min-width:90px;text-align:left">Prenda</th>'
+    +'<th style="min-width:100px;text-align:left">Color</th>'
+    +'<th style="width:60px;text-align:center">Talla</th>'
+    +'<th style="min-width:120px;text-align:left">Nombre</th>'
+    +'<th style="width:55px;text-align:center">Nº</th>'
+    +'<th style="width:30px"></th>'
+    +'</tr></thead>'
+    +'<tbody id="nv-ind-tbody">'
+    +nvIndRenderFila(0,prendaOpts,tallaOpts)
+    +'</tbody></table></div>'
+    +'<button class="tt-add-btn" onclick="nvIndAddFila()">+ Añadir persona</button>'
+    +'<div id="nv-ind-resumen" class="tt-resumen">0 personas</div>'
+    +'</div>';
+  return html;
+}
+function nvIndRenderFila(idx,prendaOpts,tallaOpts){
+  if(!prendaOpts)prendaOpts=['Camiseta','Sudadera','Polo'].map(function(pr){return'<option value="'+pr+'">'+pr+'</option>';}).join('');
+  if(!tallaOpts)tallaOpts=TALLAS_STD.map(function(t){return'<option value="'+t+'">'+t+'</option>';}).join('');
+  var colores=COLORES_TEXTIL.beagle;
+  var defColor=colores[0]||{nombre:'Negro',hex:'#1a1a1a'};
+  return'<tr id="nv-ind-fila-'+idx+'">'
+    +'<td style="text-align:center;color:#aaa;font-size:11px">'+(idx+1)+'</td>'
+    +'<td><select class="nv-ind-prenda" style="width:100%;font-size:12px;padding:4px;border:1px solid #ddd;border-radius:4px">'+prendaOpts+'</select></td>'
+    +'<td><div class="tt-color-picker" id="nv-ind-picker-'+idx+'">'
+    +'<div class="tt-color-btn" onclick="nvIndOpenPicker('+idx+')">'
+    +'<span class="dot" id="nv-ind-dot-'+idx+'" style="background:'+defColor.hex+'"></span>'
+    +'<span id="nv-ind-clbl-'+idx+'" style="font-size:11px">'+defColor.nombre+'</span>'
+    +'</div>'
+    +'<div class="tt-color-dropdown" id="nv-ind-drop-'+idx+'">'
+    +colores.map(function(c,ci){
+      return'<div class="tt-color-opt" onclick="nvIndSelColor('+idx+','+ci+')">'
+        +'<span class="dot" style="background:'+c.hex+';'+(c.borde?'border:1.5px solid #ccc;':'')+'"></span>'
+        +'<span>'+c.nombre+'</span></div>';
+    }).join('')
+    +'</div></div></td>'
+    +'<td><select class="nv-ind-talla" style="width:100%;font-size:12px;padding:4px;border:1px solid #ddd;border-radius:4px;text-align:center">'+tallaOpts+'</select></td>'
+    +'<td><input class="nv-ind-nombre" type="text" placeholder="Nombre estampado" style="width:100%;font-size:12px;padding:4px;border:1px solid #ddd;border-radius:4px" oninput="nvIndActualizar()"></td>'
+    +'<td><input class="nv-ind-numero" type="text" placeholder="Nº" style="width:50px;font-size:12px;padding:4px;border:1px solid #ddd;border-radius:4px;text-align:center"></td>'
+    +'<td>'+(idx>0?'<button onclick="nvIndRemFila('+idx+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:14px">✕</button>':'')+'</td>'
+    +'</tr>';
+}
+function nvIndAddFila(){
+  var tbody=document.getElementById('nv-ind-tbody');
+  if(!tbody)return;
+  var idx=_nvIndCount++;
+  tbody.insertAdjacentHTML('beforeend',nvIndRenderFila(idx));
+  nvIndActualizar();
+}
+function nvIndRemFila(idx){
+  var fila=document.getElementById('nv-ind-fila-'+idx);
+  if(fila)fila.remove();
+  nvIndActualizar();
+}
+function nvIndOpenPicker(idx){
+  document.querySelectorAll('.tt-color-dropdown.open').forEach(function(d){
+    if(d.id!=='nv-ind-drop-'+idx)d.classList.remove('open');
+  });
+  var drop=document.getElementById('nv-ind-drop-'+idx);
+  if(drop)drop.classList.toggle('open');
+}
+function nvIndSelColor(idx,colorIdx){
+  var c=COLORES_TEXTIL.beagle[colorIdx];
+  if(!c)return;
+  var dot=document.getElementById('nv-ind-dot-'+idx);
+  var lbl=document.getElementById('nv-ind-clbl-'+idx);
+  if(dot)dot.style.cssText='background:'+c.hex+';'+(c.borde?'border:1.5px solid #ccc;':'')+'width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0';
+  if(lbl)lbl.textContent=c.nombre;
+  var drop=document.getElementById('nv-ind-drop-'+idx);
+  if(drop)drop.classList.remove('open');
+}
+function nvIndActualizar(){
+  var tbody=document.getElementById('nv-ind-tbody');
+  if(!tbody)return;
+  var count=0;
+  tbody.querySelectorAll('tr').forEach(function(fila){
+    var nombre=fila.querySelector('.nv-ind-nombre');
+    if(nombre&&nombre.value.trim())count++;
+  });
+  var total=tbody.querySelectorAll('tr').length;
+  var counter=document.getElementById('nv-ind-counter');
+  if(counter)counter.textContent=count+'/'+total+' rellenas';
+  var resumen=document.getElementById('nv-ind-resumen');
+  if(resumen)resumen.innerHTML=count?'<strong>'+count+' personas</strong> rellenas de '+total+' filas':'0 personas';
+}
+function nvIndGetDatos(){
+  var tbody=document.getElementById('nv-ind-tbody');
+  if(!tbody)return null;
+  var datos=[];
+  tbody.querySelectorAll('tr').forEach(function(fila){
+    var prenda=fila.querySelector('.nv-ind-prenda');
+    var colorLbl=fila.querySelector('[id^="nv-ind-clbl-"]');
+    var colorDot=fila.querySelector('[id^="nv-ind-dot-"]');
+    var talla=fila.querySelector('.nv-ind-talla');
+    var nombre=fila.querySelector('.nv-ind-nombre');
+    var numero=fila.querySelector('.nv-ind-numero');
+    if(!nombre)return;
+    var colorNombre=colorLbl?colorLbl.textContent:'Negro';
+    var cDef=COLORES_TEXTIL.beagle.find(function(c){return c.nombre===colorNombre;})||{hex:'#888'};
+    datos.push({
+      prenda:prenda?prenda.value:'Camiseta',
+      color:colorNombre,
+      hex:cDef.hex,
+      talla:talla?talla.value:'M',
+      nombre:nombre.value.trim(),
+      numero:numero?numero.value.trim():''
+    });
   });
   return datos.length?datos:null;
 }
