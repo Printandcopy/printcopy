@@ -4604,12 +4604,8 @@ function nvValidarTallas(){
   // Solo valida si hay tabla de tallas visible (categoría TX)
   var wrap=document.getElementById('nv-tallas-wrap');
   if(!wrap||wrap.style.display==='none')return true;
-  // Cantidad de unidades en la calculadora
-  var qEl=document.getElementById('nv-tx-qty');
-  if(!qEl)return true; // si no hay campo qty no validamos
-  var qCal=parseInt(qEl.value)||0;
-  if(qCal<1)return true; // sin cantidad no validamos
-  // Suma total de tallas introducidas
+
+  // Suma total de tallas — SIEMPRE obligatoria si la tabla está visible
   var totalTallas=0;
   var tbody=document.getElementById('nv-tt-tbody');
   if(tbody){
@@ -4617,12 +4613,32 @@ function nvValidarTallas(){
       totalTallas+=parseInt(inp.value)||0;
     });
   }
-  if(totalTallas===0)return true; // tabla vacía, no obligatorio
+
+  // Cantidad de unidades: primero de nvLineas (ya añadidas), luego del campo input
+  var qCal=0;
+  // Buscar en nvLineas la línea TX
+  var lineaTX=nvLineas.find(function(l){return l.sec==='TX'||l.cat==='camiseta'||l.cat==='sudadera'||l.cat==='polo'||l.cat==='textil';});
+  if(lineaTX)qCal=lineaTX.qty||lineaTX.unidades||0;
+  // Si no está en nvLineas aún, leer del campo
+  if(!qCal){
+    var qEl=document.getElementById('nv-tx-qty');
+    if(qEl)qCal=parseInt(qEl.value)||0;
+  }
+
+  // Si no hay cantidad definida tampoco validamos
+  if(qCal<1)return true;
+
+  // Con tabla visible, las tallas SON obligatorias
+  if(totalTallas===0){
+    alert('⚠️ Introduce las tallas\n\nHay '+qCal+' unidades en la calculadora pero la tabla de tallas está vacía.\n\nRellena al menos una talla antes de continuar.');
+    return false;
+  }
+
   if(totalTallas!==qCal){
-    alert('⚠️ Las unidades no cuadran:\n\n'
+    alert('⚠️ Las unidades no cuadran\n\n'
       +'· Cantidad en calculadora: '+qCal+' uds\n'
-      +'· Suma de tallas: '+totalTallas+' uds\n\n'
-      +'Revisa la tabla de tallas antes de continuar.');
+      +'· Suma de tallas introducidas: '+totalTallas+' uds\n\n'
+      +'Ajusta la tabla de tallas antes de continuar.');
     return false;
   }
   return true;
