@@ -2768,15 +2768,14 @@ function renderKPIsAvanzados(peds){
       +'<span style="min-width:55px;text-align:right;font-size:12px;font-weight:700;color:#185FA5">'+tk.toFixed(0)+'€</span></div>';
   }).join('');
 
-  // Nuevos vs recurrentes
+  // Nuevos vs recurrentes (calculados ya en renderAnalytics, recalcular aquí para el bloque C)
   var nuevos=0,recurrentes=0;
   var clientesEnPer={};
   peds.forEach(function(p){if(p.clienteId)clientesEnPer[p.clienteId]=p;});
   Object.keys(clientesEnPer).forEach(function(cid){
     var c=clientes.find(function(x){return x.id==cid;});
     if(!c)return;
-    var nivel=calcNivel(c);
-    if(nivel==='nuevo')nuevos++;else recurrentes++;
+    calcNivel(c)==='nuevo'?nuevos++:recurrentes++;
   });
 
   // Por nivel
@@ -2948,12 +2947,19 @@ function renderAnalytics(){
   var ticketMedio=numPedidos>0?totalVentas/numPedidos:0;
   
   // Stats principales
+  // Calcular nuevos vs recurrentes para el stat-card
+  var _cliEnPer={};pedsFiltrados.forEach(function(p){if(p.clienteId)_cliEnPer[p.clienteId]=p;});
+  var _nuevos=0,_recurr=0;
+  Object.keys(_cliEnPer).forEach(function(cid){var c=clientes.find(function(x){return x.id==cid;});if(!c)return;calcNivel(c)==='nuevo'?_nuevos++:_recurr++;});
+
   document.getElementById('analytics-stats').innerHTML=
     '<div class="stat-card"><div class="sv">'+numPedidos+'</div><div class="sl">Pedidos</div></div>'+
     '<div class="stat-card"><div class="sv" style="color:#185FA5">'+totalVentas.toFixed(0)+'€</div><div class="sl">Facturado</div></div>'+
     '<div class="stat-card"><div class="sv" style="color:#3B6D11">'+totalCobrado.toFixed(0)+'€</div><div class="sl">Cobrado</div></div>'+
     '<div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPendiente.toFixed(0)+'€</div><div class="sl">Pendiente</div></div>'+
-    '<div class="stat-card"><div class="sv">'+ticketMedio.toFixed(0)+'€</div><div class="sl">Ticket medio</div></div>';
+    '<div class="stat-card"><div class="sv">'+ticketMedio.toFixed(0)+'€</div><div class="sl">Ticket medio</div></div>'+
+    '<div class="stat-card"><div class="sv" style="color:#185FA5">'+_nuevos+'</div><div class="sl">Clientes nuevos</div></div>'+
+    '<div class="stat-card"><div class="sv" style="color:#2E7D32">'+_recurr+'</div><div class="sl">Recurrentes</div></div>';
   
   // Por sección
   var porSeccion={};
