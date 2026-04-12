@@ -372,13 +372,13 @@ textarea{resize:vertical;min-height:64px}
 </head>
 <body>
 <header>
-  <div class="header-left">
+  <div id="clock-wrap" style="display:flex;flex-direction:column;align-items:flex-start;min-width:120px">
+    <div class="clock-time" id="clock-time"></div>
+    <div class="clock-date" id="clock-date"></div>
+  </div>
+  <div style="position:absolute;left:50%;transform:translateX(-50%)">
     <img src="/logo.png" alt="Print &amp; Copy" style="height:64px;width:auto" onerror="this.style.display='none';document.getElementById('logo-txt').style.display='block'">
     <span id="logo-txt" style="display:none;font-size:17px;font-weight:800;color:#fff">Print &amp; Copy</span>
-    <div id="clock-wrap" style="display:flex;flex-direction:column;align-items:flex-start">
-      <div class="clock-time" id="clock-time"></div>
-      <div class="clock-date" id="clock-date"></div>
-    </div>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
     <div class="user-badge">👤 <select id="current-user" onchange="setCurrentUser(this.value)"><option value="Marilia">Marilia</option><option value="Álvaro">Álvaro</option><option value="Charo">Charo</option><option value="Raúl">Raúl</option><option value="Bea">Bea</option></select></div>
