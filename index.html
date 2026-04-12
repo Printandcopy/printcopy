@@ -4380,11 +4380,13 @@ function cargarPresupuestos(){
         renderVentas();
         actualizarBarraAvisos();
         checkRecordatoriosPresupuestos();
+        checkRecordatoriosTallas();
       });
     }else{
       renderVentas();
       actualizarBarraAvisos();
       checkRecordatoriosPresupuestos();
+      checkRecordatoriosTallas();
     }
   });
 }
@@ -4429,6 +4431,43 @@ function checkRecordatoriosPresupuestos(){
           }
         });
     }
+  });
+}
+
+// Recordatorios tallas: cada 2 días (2,4,6,8...) para pedidos TX sin tallas
+function checkRecordatoriosTallas(){
+  var ahora=new Date();
+  var sinTallas=pedidos.filter(function(p){
+    return p.seccion==='TX'&&!p.tallasColores&&p.fase<4&&p.clienteTel;
+  });
+  if(!sinTallas.length)return;
+  sinTallas.forEach(function(p){
+    var creado=new Date(p.fechaCreacion);
+    var diasDesde=Math.floor((ahora-creado)/(1000*3600*24));
+    if(diasDesde<2)return;
+    // Calcular número de recordatorio (día 2=1, día 4=2, día 6=3...)
+    var numRecordatorio=Math.floor(diasDesde/2);
+    // Último recordatorio enviado (guardado en localStorage)
+    var key='rec_tallas_'+p.id;
+    var ultimoEnviado=parseInt(localStorage.getItem(key)||'0');
+    if(numRecordatorio<=ultimoEnviado)return;
+    // Enviar
+    var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+    if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+    var nombre=p.clienteNombre.split(' ')[0];
+    var esIndividual=p.tipoPersonalizacion==='individual';
+    var link=esIndividual?'https://printcopy.vercel.app/penas.html?p='+p.id:'https://printcopy.vercel.app/tallas.html?p='+p.id;
+    var msg=diasDesde<=4
+      ?'Hola '+nombre+' 👋\n\nTe recordamos que necesitamos los datos de tallas para tu pedido *'+p.id+'*.\n\nAccede aquí para rellenarlo:\n'+link+'\n\nPrint & Copy · 923 018 034'
+      :'Hola '+nombre+' ⏰\n\nLlevamos '+diasDesde+' días esperando los datos de tallas de tu pedido *'+p.id+'*. Sin ellos no podemos arrancar la producción.\n\nRellénalo aquí:\n'+link+'\n\nPrint & Copy · 923 018 034';
+    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.clienteNombre})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.success){
+          localStorage.setItem(key,String(numRecordatorio));
+          console.log('Recordatorio tallas #'+numRecordatorio+' enviado a',p.clienteNombre,'para',p.id);
+        }
+      });
   });
 }
 
@@ -7008,6 +7047,8 @@ cargarPresupuestos();
 showScreen('mostrador',document.querySelector('.nav-tab'));
 // Recordatorios automáticos presupuestos cada 4h
 setInterval(checkRecordatoriosPresupuestos,4*60*60*1000);
+// Recordatorios automáticos tallas cada 4h
+setInterval(checkRecordatoriosTallas,4*60*60*1000);
 // Polling cada 60s para detectar presupuestos aceptados por el cliente
 setInterval(function(){
   var hace24h=new Date(Date.now()-86400000).toISOString();
@@ -7033,22 +7074,29 @@ setInterval(function(){
 // Pedir permiso notificaciones
 if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
 
-// Polling cada 45s para detectar cuando cliente rellena tallas
+// Polling cada 45s para detectar cuando cliente rellena tallas (simples o individual)
 setInterval(function(){
   var sinTallas=pedidos.filter(function(p){return p.seccion==='TX'&&!p.tallasColores&&p.fase<4;});
   if(!sinTallas.length)return;
   var ids=sinTallas.map(function(p){return p.id;});
-  sb.from('pedidos').select('id,tallas_colores').in('id',ids).then(function(r){
+  sb.from('pedidos').select('id,tallas_colores,tipo_personalizacion').in('id',ids).then(function(r){
     if(!r.data)return;
     r.data.forEach(function(row){
       if(!row.tallas_colores)return;
       var p=pedidos.find(function(x){return x.id===row.id;});
       if(!p||p.tallasColores)return;
       p.tallasColores=row.tallas_colores;
-      var total=row.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
+      if(row.tipo_personalizacion)p.tipoPersonalizacion=row.tipo_personalizacion;
+      var esIndividual=row.tipo_personalizacion==='individual';
+      var total=0;
+      if(esIndividual){
+        total=row.tallas_colores.filter(function(f){return f.nombre;}).length;
+      } else {
+        total=row.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
+      }
       var t=document.createElement('div');
       t.style.cssText='position:fixed;bottom:20px;right:20px;background:#185FA5;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px';
-      t.textContent='👕 '+p.clienteNombre+' envió tallas ('+total+' uds) · '+p.id;
+      t.textContent=esIndividual?'🏷 '+p.clienteNombre+' envió lista ('+total+' personas) · '+p.id:'👕 '+p.clienteNombre+' envió tallas ('+total+' uds) · '+p.id;
       t.onclick=function(){verPedido(p.id);t.remove();};
       document.body.appendChild(t);
       setTimeout(function(){if(t.parentNode)t.remove();},8000);
