@@ -189,6 +189,24 @@ textarea{resize:vertical;min-height:64px}
 .tc-check-item{display:flex;flex-direction:column;gap:2px}
 .tc-check-item label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#7a1a1a;cursor:pointer}
 .tc-check-item .tc-ts{font-size:10px;color:#aaa;padding-left:20px}
+.tt-wrap{border:1.5px solid #E6F1FB;border-radius:8px;overflow:hidden;margin-bottom:10px}
+.tt-header{background:#E6F1FB;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.tt-header-title{font-size:12px;font-weight:700;color:#185FA5;display:flex;align-items:center;gap:6px}
+.tt-body{padding:12px}
+.tt-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px}
+.tt-table th{background:#f9fafb;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#888;padding:6px 8px;border:1px solid #e5e7eb;text-align:center}
+.tt-table td{padding:4px 6px;border:1px solid #e5e7eb;text-align:center;vertical-align:middle}
+.tt-table td:first-child{text-align:left;font-size:11px;font-weight:600;padding-left:8px}
+.tt-inp{width:44px;text-align:center;border:1px solid #ddd;border-radius:4px;padding:3px 2px;font-size:12px;font-weight:700}
+.tt-inp:focus{outline:none;border-color:#185FA5}
+.tt-color-dot{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15);margin-right:4px;vertical-align:middle;flex-shrink:0}
+.tt-total-row td{background:#f9fafb;font-weight:700;font-size:12px}
+.tt-add-btn{background:none;border:1.5px dashed #b5d4f4;border-radius:6px;padding:5px 12px;font-size:11px;color:#185FA5;cursor:pointer;width:100%;margin-bottom:8px}
+.tt-add-btn:hover{background:#EFF6FF}
+.tt-save-btn{background:#185FA5;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;flex:1}
+.tt-wa-btn{background:#25D366;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;flex:1}
+.tt-resumen{font-size:11px;color:#888;background:#f9fafb;border-radius:6px;padding:8px 10px;margin-top:8px;line-height:1.7}
+.tt-color-select{border:none;font-size:11px;font-family:inherit;background:transparent;padding:0;cursor:pointer;max-width:110px}
 .semana-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#ddd;border-radius:8px;overflow:hidden;margin-bottom:12px}
 .dia-col{background:#fff;min-height:80px}
 .dia-header{padding:6px 4px;text-align:center;border-bottom:0.5px solid #f0f0f0;background:#f9f9f7}
@@ -677,6 +695,22 @@ textarea{resize:vertical;min-height:64px}
     <button class="btn btn-primary" onclick="abrirNuevoCliente()">+ Nuevo cliente</button>
   </div>
   <div id="clientes-list"></div>
+  <!-- Panel gestión colores textil -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleColoresPanel()">
+      <span>🎨 Colores textil disponibles</span>
+      <span id="colores-panel-arrow" style="font-size:12px;color:#aaa">▼ Desplegar</span>
+    </div>
+    <div id="colores-panel" style="display:none;margin-top:12px">
+      <p style="font-size:12px;color:#888;margin-bottom:12px">Colores que se muestran al cliente al pedir tallas. Edita cuando Roly añada o quite colores.</p>
+      <div id="colores-lista-beagle" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="color-nuevo-nombre" placeholder="Nombre del color..." style="flex:1;min-width:120px">
+        <input type="color" id="color-nuevo-hex" value="#185FA5" style="width:40px;height:36px;border:1px solid #ddd;border-radius:6px;cursor:pointer;padding:2px">
+        <button class="btn btn-primary btn-sm" onclick="agregarColorTextil()">+ Añadir</button>
+      </div>
+    </div>
+  </div>
   <!-- Panel gestión proveedores externos -->
   <div class="card" style="margin-top:16px">
     <div class="card-title" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleProvPanel()">
@@ -1304,6 +1338,34 @@ var OPERARIOS=['Marilia','Álvaro','Charo','Raúl','Bea'];
 var SECTORES={particular:'Particular',hosteleria:'Hostelería',comercio:'Comercio',eventos:'Eventos y fiestas',empresa:'Empresas / Industria',inmobiliaria:'Inmobiliaria',educacion:'Educación',salud:'Salud y bienestar',servicios:'Servicios profesionales',asociaciones:'Asociaciones y clubs',admin_publica:'Administración pública'};
 var SECTOR_COLORS={particular:'#f1efe8|#5f5e5a',hosteleria:'#fef3e8|#7a4a1a',comercio:'#e8f0fe|#1a3a7a',eventos:'#f3e8fe|#4a1a7a',empresa:'#e8fef8|#1a5a4a',inmobiliaria:'#fce8e8|#7a1a1a',educacion:'#E6F1FB|#185FA5',salud:'#e8fce8|#1a5a1a',servicios:'#EEEDFE|#534AB7',asociaciones:'#FAEEDA|#BA7517',admin_publica:'#f5f5f5|#444'};
 
+// ── COLORES TEXTIL (Roly Beagle y otros modelos) ──
+var COLORES_TEXTIL = {
+  beagle: [
+    {nombre:'Blanco', hex:'#FFFFFF', borde:true},
+    {nombre:'Negro', hex:'#1a1a1a'},
+    {nombre:'Azul marino', hex:'#1B2A6B'},
+    {nombre:'Azul royal', hex:'#2651A0'},
+    {nombre:'Azul celeste', hex:'#6AAED6'},
+    {nombre:'Azul denim', hex:'#4A6FA5'},
+    {nombre:'Azul profundo', hex:'#1E3A5F'},
+    {nombre:'Azul turquesa', hex:'#00A6A6'},
+    {nombre:'Rojo', hex:'#CC2222'},
+    {nombre:'Granate', hex:'#7B1F2E'},
+    {nombre:'Naranja', hex:'#E87020'},
+    {nombre:'Amarillo', hex:'#F5C518'},
+    {nombre:'Verde grass', hex:'#3A7A3A'},
+    {nombre:'Verde oasis', hex:'#5BAD6F'},
+    {nombre:'Verde pradera', hex:'#7FBF50'},
+    {nombre:'Rosa pálido', hex:'#F5B8C4'},
+    {nombre:'Rosetón', hex:'#E8608A'},
+    {nombre:'Púrpura', hex:'#7B2D8B'},
+    {nombre:'Gris vigoré', hex:'#9C9C9C'},
+    {nombre:'Marrón', hex:'#7B4F2E'},
+    {nombre:'Lila', hex:'#B09CC8'}
+  ]
+};
+var TALLAS_STD = ['XS','S','M','L','XL','XXL','3XL'];
+
 // ── PROVEEDORES EXTERNOS ──
 var PROVEEDORES=[]; // se carga desde Supabase al iniciar
 
@@ -1466,6 +1528,45 @@ function mostEntregar(id){
   setFaseModal(id,7);
 }
 
+function toggleColoresPanel(){
+  var panel=document.getElementById('colores-panel');
+  var arrow=document.getElementById('colores-panel-arrow');
+  var open=panel.style.display==='block';
+  panel.style.display=open?'none':'block';
+  arrow.textContent=open?'▼ Desplegar':'▲ Cerrar';
+  if(!open)renderColoresLista();
+}
+function renderColoresLista(){
+  var lista=document.getElementById('colores-lista-beagle');
+  if(!lista)return;
+  var colores=COLORES_TEXTIL.beagle;
+  lista.innerHTML=colores.map(function(c,i){
+    return'<div style="display:flex;align-items:center;gap:4px;background:#f9fafb;border:1px solid #eee;border-radius:20px;padding:4px 10px;font-size:12px">'
+      +'<span style="width:12px;height:12px;border-radius:50%;background:'+c.hex+';border:1px solid rgba(0,0,0,.2);display:inline-block;flex-shrink:0"></span>'
+      +c.nombre
+      +'<button onclick="eliminarColorTextil('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:13px;padding:0 0 0 4px">✕</button>'
+      +'</div>';
+  }).join('');
+}
+function agregarColorTextil(){
+  var nombre=(document.getElementById('color-nuevo-nombre').value||'').trim();
+  var hex=document.getElementById('color-nuevo-hex').value||'#888';
+  if(!nombre){alert('Indica el nombre del color');return;}
+  if(COLORES_TEXTIL.beagle.find(function(c){return c.nombre.toLowerCase()===nombre.toLowerCase();})){alert('Ese color ya existe');return;}
+  COLORES_TEXTIL.beagle.push({nombre:nombre,hex:hex});
+  try{localStorage.setItem('pc_colores_beagle',JSON.stringify(COLORES_TEXTIL.beagle));}catch(e){}
+  document.getElementById('color-nuevo-nombre').value='';
+  renderColoresLista();
+}
+function eliminarColorTextil(idx){
+  if(!confirm('¿Eliminar color "'+COLORES_TEXTIL.beagle[idx].nombre+'"?'))return;
+  COLORES_TEXTIL.beagle.splice(idx,1);
+  try{localStorage.setItem('pc_colores_beagle',JSON.stringify(COLORES_TEXTIL.beagle));}catch(e){}
+  renderColoresLista();
+}
+// Cargar colores personalizados de localStorage al iniciar
+try{var _cb=localStorage.getItem('pc_colores_beagle');if(_cb)COLORES_TEXTIL.beagle=JSON.parse(_cb);}catch(e){}
+
 function toggleProvPanel(){
   var panel=document.getElementById('prov-panel');
   var arrow=document.getElementById('prov-panel-arrow');
@@ -1620,7 +1721,7 @@ function cargarDatos(){
 }
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',creado:c.creado};}
-function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null};}
+function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,tallasColores:p.tallas_colores||null};}
 function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null};}
 
 function startClock(){
@@ -1964,6 +2065,11 @@ function verPedido(id){
     html+='<div class="check-item" style="display:flex;align-items:flex-start;gap:8px"><input type="checkbox" style="margin-top:2px;flex-shrink:0" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"><div><div>Ropa pedida</div><div style="font-size:10px;color:'+(p.ropaOkFecha?'#aaa':'#ddd')+'">'+(p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):'—')+'</div></div></div>';
     html+='<div class="check-item" style="display:flex;align-items:flex-start;gap:8px"><input type="checkbox" style="margin-top:2px;flex-shrink:0" '+(p.dtfOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'dtfOk\',this.checked)"><div><div>DTF pedido</div><div style="font-size:10px;color:'+(p.dtfOkFecha?'#aaa':'#ddd')+'">'+(p.dtfOkFecha?fmtCheckTs(p.dtfOkFecha):'—')+'</div></div></div>';
     html+='</div>';
+  }
+
+  // BLOQUE TALLAS/COLORES (solo TX)
+  if(p.seccion==='TX'){
+    html+=renderTablaTallas(p);
   }
 
   // BLOQUE PREVIAS
@@ -6064,6 +6170,189 @@ function cotConvertir(){
     avisoEl.textContent='⚠️ Cobrar señal antes de pasar a taller: '+condTexto;
   }
   document.getElementById('modal-venta').classList.add('open');
+}
+
+// ── FUNCIONES TABLA TALLAS/COLORES ──
+function renderTablaTallas(p){
+  var colores=COLORES_TEXTIL.beagle;
+  var tallas=TALLAS_STD;
+  // Detectar modelo en descripción para usar colores correctos
+  var desc=(p.descripcion||'').toLowerCase();
+  // (en el futuro: if(desc.includes('clasica')) colores=COLORES_TEXTIL.clasica; etc)
+
+  // Datos guardados o vacío con Negro por defecto
+  var datos=p.tallasColores||[{color:'Negro',hex:'#1a1a1a',tallas:{}}];
+
+  var colorOpts=colores.map(function(c){
+    return'<option value="'+c.nombre+'" data-hex="'+c.hex+'" '+(c.borde?'data-borde="1"':'')+'>'+c.nombre+'</option>';
+  }).join('');
+
+  var html='<div class="tt-wrap">'
+    +'<div class="tt-header" onclick="toggleTTPanel(\'tt-panel-'+p.id+'\')">'
+    +'<span class="tt-header-title">👕 Tallas y colores'
+    +(p.tallasColores&&p.tallasColores.length?'<span style="background:#185FA5;color:#fff;font-size:10px;padding:1px 7px;border-radius:10px">'+ttResumenCorto(p.tallasColores)+'</span>':'')
+    +'</span>'
+    +'<span id="tt-arrow-'+p.id+'" style="font-size:11px;color:#185FA5">▼</span>'
+    +'</div>'
+    +'<div id="tt-panel-'+p.id+'" style="display:none">'
+    +'<div class="tt-body">'
+    +'<table class="tt-table" id="tt-table-'+p.id+'">'
+    +'<thead><tr><th style="text-align:left;min-width:120px">Color</th>'
+    +tallas.map(function(t){return'<th>'+t+'</th>';}).join('')
+    +'<th>Total</th></tr></thead>'
+    +'<tbody id="tt-tbody-'+p.id+'">'
+    +datos.map(function(fila,i){return ttRenderFila(fila,i,p.id,tallas,colorOpts);}).join('')
+    +'</tbody>'
+    +'</table>'
+    +'<button class="tt-add-btn" onclick="ttAddFila(\''+p.id+'\')">+ Añadir color</button>'
+    +'<div id="tt-resumen-'+p.id+'" class="tt-resumen">'+ttResumenHTML(datos)+'</div>'
+    +'<div style="display:flex;gap:8px;margin-top:8px">'
+    +'<button class="tt-save-btn" onclick="ttGuardar(\''+p.id+'\')">💾 Guardar</button>'
+    +'<button class="tt-wa-btn" onclick="ttEnviarWA(\''+p.id+'\')">📱 Enviar al cliente</button>'
+    +'</div></div></div></div>';
+  return html;
+}
+
+function ttRenderFila(fila,idx,pedidoId,tallas,colorOpts){
+  var hex=fila.hex||'#888';
+  var borde=fila.borde?'border:1px solid #ccc;':'';
+  var totalFila=Object.values(fila.tallas||{}).reduce(function(s,v){return s+(parseInt(v)||0);},0);
+  var html='<tr id="tt-fila-'+pedidoId+'-'+idx+'">'
+    +'<td><div style="display:flex;align-items:center;gap:4px">'
+    +'<span class="tt-color-dot" id="tt-dot-'+pedidoId+'-'+idx+'" style="background:'+hex+';'+borde+'"></span>'
+    +'<select class="tt-color-select" onchange="ttColorChange(\''+pedidoId+'\','+idx+',this)">'
+    +colorOpts.replace('value="'+fila.color+'"','value="'+fila.color+'" selected')
+    +'</select>'
+    +'<button onclick="ttRemoveFila(\''+pedidoId+'\','+idx+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:14px;padding:0 2px">✕</button>'
+    +'</div></td>';
+  tallas.forEach(function(t){
+    html+='<td><input class="tt-inp" type="number" min="0" value="'+(fila.tallas&&fila.tallas[t]?fila.tallas[t]:0)+'" oninput="ttCalc(\''+pedidoId+'\','+idx+',\''+t+'\',this.value)"></td>';
+  });
+  html+='<td style="font-weight:700;color:#185FA5" id="tt-rowtot-'+pedidoId+'-'+idx+'">'+totalFila+'</td></tr>';
+  return html;
+}
+
+function ttColorChange(pedidoId,idx,sel){
+  var opt=sel.options[sel.selectedIndex];
+  var hex=opt.getAttribute('data-hex')||'#888';
+  var borde=opt.getAttribute('data-borde')?'border:1px solid #ccc;':'';
+  var dot=document.getElementById('tt-dot-'+pedidoId+'-'+idx);
+  if(dot)dot.style.cssText='background:'+hex+';'+borde+'width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15);margin-right:4px;vertical-align:middle;flex-shrink:0';
+  ttActualizarResumen(pedidoId);
+}
+
+function ttCalc(pedidoId,idx,talla,val){
+  var total=0;
+  var fila=document.getElementById('tt-fila-'+pedidoId+'-'+idx);
+  if(fila){fila.querySelectorAll('.tt-inp').forEach(function(i){total+=parseInt(i.value)||0;});}
+  var totEl=document.getElementById('tt-rowtot-'+pedidoId+'-'+idx);
+  if(totEl)totEl.textContent=total;
+  ttActualizarResumen(pedidoId);
+}
+
+function ttActualizarResumen(pedidoId){
+  var datos=ttLeerDatos(pedidoId);
+  var el=document.getElementById('tt-resumen-'+pedidoId);
+  if(el)el.innerHTML=ttResumenHTML(datos);
+}
+
+function ttLeerDatos(pedidoId){
+  var tbody=document.getElementById('tt-tbody-'+pedidoId);
+  if(!tbody)return[];
+  var datos=[];
+  tbody.querySelectorAll('tr').forEach(function(fila){
+    var sel=fila.querySelector('.tt-color-select');
+    if(!sel)return;
+    var opt=sel.options[sel.selectedIndex];
+    var color=opt.value;
+    var hex=opt.getAttribute('data-hex')||'#888';
+    var borde=!!opt.getAttribute('data-borde');
+    var tallas={};
+    fila.querySelectorAll('.tt-inp').forEach(function(inp,i){
+      var v=parseInt(inp.value)||0;
+      if(v>0)tallas[TALLAS_STD[i]]=v;
+    });
+    datos.push({color:color,hex:hex,borde:borde,tallas:tallas});
+  });
+  return datos;
+}
+
+function ttResumenHTML(datos){
+  if(!datos||!datos.length)return'Sin datos de tallas introducidos';
+  var totalUds=0;
+  var lineas=datos.map(function(d){
+    var parts=Object.keys(d.tallas).map(function(t){return t+'×'+d.tallas[t];});
+    var sub=parts.reduce(function(s,_,i){return s+(parseInt(Object.values(d.tallas)[i])||0);},0);
+    totalUds+=sub;
+    return parts.length?'<strong>'+d.color+'</strong>: '+parts.join(' '):'';
+  }).filter(Boolean);
+  return'<strong>Total: '+totalUds+' uds</strong><br>'+lineas.join('<br>');
+}
+
+function ttResumenCorto(datos){
+  if(!datos)return'';
+  var total=datos.reduce(function(s,d){return s+Object.values(d.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
+  return total+' uds';
+}
+
+function ttAddFila(pedidoId){
+  var tbody=document.getElementById('tt-tbody-'+pedidoId);
+  if(!tbody)return;
+  var idx=tbody.querySelectorAll('tr').length;
+  var colores=COLORES_TEXTIL.beagle;
+  var colorOpts=colores.map(function(c){return'<option value="'+c.nombre+'" data-hex="'+c.hex+'" '+(c.borde?'data-borde="1"':'')+'>'+c.nombre+'</option>';}).join('');
+  var fila={color:colores[idx%colores.length].nombre,hex:colores[idx%colores.length].hex,tallas:{}};
+  var tr=document.createElement('tr');
+  tr.id='tt-fila-'+pedidoId+'-'+idx;
+  tr.innerHTML=ttRenderFila(fila,idx,pedidoId,TALLAS_STD,colorOpts).replace('<tr id="'+tr.id+'">','');
+  tbody.appendChild(tr);
+}
+
+function ttRemoveFila(pedidoId,idx){
+  var fila=document.getElementById('tt-fila-'+pedidoId+'-'+idx);
+  if(fila)fila.remove();
+  ttActualizarResumen(pedidoId);
+}
+
+function ttGuardar(pedidoId){
+  var datos=ttLeerDatos(pedidoId);
+  var p=pedidos.find(function(x){return x.id===pedidoId;});
+  if(!p)return;
+  p.tallasColores=datos;
+  sb.from('pedidos').update({tallas_colores:datos}).eq('id',pedidoId).then(function(r){
+    if(r&&r.error){alert('Error al guardar: '+r.error.message);return;}
+    // Actualizar badge resumen en el header del panel
+    var arrow=document.getElementById('tt-arrow-'+pedidoId);
+    if(arrow){var titulo=arrow.parentElement.querySelector('.tt-header-title');if(titulo){var span=titulo.querySelector('span');if(span)span.textContent=ttResumenCorto(datos)+' uds';}}
+    var btn=document.querySelector('#tt-panel-'+pedidoId+' .tt-save-btn');
+    if(btn){btn.textContent='✅ Guardado';setTimeout(function(){btn.textContent='💾 Guardar';},2000);}
+  });
+}
+
+function ttEnviarWA(pedidoId){
+  var p=pedidos.find(function(x){return x.id===pedidoId;});
+  if(!p||!p.clienteTel){alert('Este pedido no tiene teléfono de cliente');return;}
+  var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+  if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+  var nombre=p.clienteNombre.split(' ')[0];
+  var msg='Hola '+nombre+' 👋\n\n'
+    +'Para completar tu pedido *'+pedidoId+'* necesitamos que nos confirmes las tallas y colores.\n\n'
+    +'Accede aquí para rellenarlo:\nhttps://printcopy.vercel.app/tallas.html?p='+pedidoId+'\n\n'
+    +'Podrás ver los colores disponibles y seleccionar las tallas que necesitas.\n\n'
+    +'Print & Copy · 923 018 034';
+  fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.clienteNombre})})
+    .then(function(r){return r.json();})
+    .then(function(d){if(d.success)alert('WA enviado a '+p.clienteNombre);else alert('Error: '+d.error);});
+}
+
+function toggleTTPanel(panelId){
+  var pedidoId=panelId.replace('tt-panel-','');
+  var panel=document.getElementById(panelId);
+  var arrow=document.getElementById('tt-arrow-'+pedidoId);
+  if(!panel)return;
+  var open=panel.style.display!=='none';
+  panel.style.display=open?'none':'block';
+  if(arrow)arrow.textContent=open?'▼':'▲';
 }
 
 // ── FUNCIONES PREVIAS ──
