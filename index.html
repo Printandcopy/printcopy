@@ -6482,6 +6482,30 @@ setInterval(function(){
 // Pedir permiso notificaciones
 if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
 
+// Polling cada 45s para detectar cuando cliente rellena tallas
+setInterval(function(){
+  var sinTallas=pedidos.filter(function(p){return p.seccion==='TX'&&!p.tallasColores&&p.fase<4;});
+  if(!sinTallas.length)return;
+  var ids=sinTallas.map(function(p){return p.id;});
+  sb.from('pedidos').select('id,tallas_colores').in('id',ids).then(function(r){
+    if(!r.data)return;
+    r.data.forEach(function(row){
+      if(!row.tallas_colores)return;
+      var p=pedidos.find(function(x){return x.id===row.id;});
+      if(!p||p.tallasColores)return;
+      p.tallasColores=row.tallas_colores;
+      var total=row.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
+      var t=document.createElement('div');
+      t.style.cssText='position:fixed;bottom:20px;right:20px;background:#185FA5;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px';
+      t.textContent='👕 '+p.clienteNombre+' envió tallas ('+total+' uds) · '+p.id;
+      t.onclick=function(){verPedido(p.id);t.remove();};
+      document.body.appendChild(t);
+      setTimeout(function(){if(t.parentNode)t.remove();},8000);
+      renderTaller();
+    });
+  });
+},45000);
+
 // Polling cada 30s para detectar respuestas de clientes en previas
 setInterval(function(){
   var conPrevia=pedidos.filter(function(p){return p.previaEstado==='enviada'&&p.fase<5;});

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Tallas y colores — Print & Copy</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; min-height: 100vh; }
+  .header { background: #1a1a1a; padding: 12px 20px; display: flex; align-items: center; gap: 10px; }
+  .header img { height: 36px; width: auto; }
+  .header h1 { color: #fff; font-size: 15px; font-weight: 700; }
+  .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+  .card { background: #fff; border-radius: 10px; border: 1px solid #e5e7eb; padding: 16px; margin-bottom: 14px; }
+  .card h2 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .card .sub { font-size: 12px; color: #888; margin-bottom: 12px; }
+  .loading { text-align: center; padding: 50px 20px; color: #aaa; }
+  .error { text-align: center; padding: 30px 20px; color: #A32D2D; font-size: 14px; }
+
+  /* Paleta colores */
+  .paleta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .color-chip { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 20px; border: 2px solid #e5e7eb; font-size: 12px; font-weight: 600; cursor: pointer; background: #fff; transition: all .15s; }
+  .color-chip.selected { border-color: #185FA5; background: #EFF6FF; }
+  .color-dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); flex-shrink: 0; }
+
+  /* Tabla tallas */
+  .tabla-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f9fafb; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #888; padding: 8px 6px; border: 1px solid #e5e7eb; text-align: center; }
+  th:first-child { text-align: left; padding-left: 8px; }
+  td { padding: 5px 4px; border: 1px solid #e5e7eb; text-align: center; vertical-align: middle; }
+  td:first-child { text-align: left; padding-left: 8px; }
+  .td-color { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .mini-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); flex-shrink: 0; }
+  .inp-talla { width: 46px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px 2px; font-size: 14px; font-weight: 700; }
+  .inp-talla:focus { outline: none; border-color: #185FA5; }
+  .row-total { font-weight: 700; color: #185FA5; }
+  .add-color-btn { width: 100%; margin-top: 10px; padding: 8px; border: 1.5px dashed #b5d4f4; border-radius: 8px; background: none; font-size: 12px; color: #185FA5; cursor: pointer; }
+  .del-btn { background: none; border: none; color: #ddd; cursor: pointer; font-size: 16px; padding: 0 4px; }
+  .del-btn:hover { color: #A32D2D; }
+
+  /* Resumen */
+  .resumen { background: #EFF6FF; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; color: #185FA5; line-height: 1.7; }
+  .total-uds { font-size: 20px; font-weight: 800; }
+
+  /* Botón enviar */
+  .btn-enviar { width: 100%; padding: 16px; background: #3B6D11; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+  .btn-enviar:disabled { background: #aaa; cursor: not-allowed; }
+  .ok-screen { text-align: center; padding: 40px 20px; }
+  .ok-ico { font-size: 60px; margin-bottom: 14px; }
+  .ok-title { font-size: 22px; font-weight: 800; color: #3B6D11; margin-bottom: 8px; }
+  .ok-sub { font-size: 14px; color: #555; line-height: 1.6; }
+
+  /* Selección de color en modal */
+  .color-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 100; align-items: flex-end; }
+  .color-modal.open { display: flex; }
+  .color-modal-body { background: #fff; border-radius: 16px 16px 0 0; padding: 20px; width: 100%; max-height: 70vh; overflow-y: auto; }
+  .color-modal-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+  .color-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .color-opt { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border: 2px solid #e5e7eb; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; background: #fff; }
+  .color-opt:hover { border-color: #185FA5; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="/logo.png" alt="Print & Copy" onerror="this.style.display='none'">
+  <h1>Tallas y colores</h1>
+</div>
+
+<div class="container">
+  <div id="main-content">
+    <div class="loading">⏳ Cargando...</div>
+  </div>
+</div>
+
+<!-- Modal selección de color -->
+<div class="color-modal" id="color-modal">
+  <div class="color-modal-body">
+    <div class="color-modal-title">Selecciona un color</div>
+    <div class="color-grid" id="color-grid"></div>
+  </div>
+</div>
+
+<script>
+var SUPA_URL = 'https://ffiyprmbrznofoprvvik.supabase.co';
+var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg';
+var TALLAS = ['XS','S','M','L','XL','XXL','3XL'];
+var COLORES = [
+  {nombre:'Blanco',hex:'#FFFFFF',borde:true},{nombre:'Negro',hex:'#1a1a1a'},
+  {nombre:'Azul marino',hex:'#1B2A6B'},{nombre:'Azul royal',hex:'#2651A0'},
+  {nombre:'Azul celeste',hex:'#6AAED6'},{nombre:'Azul denim',hex:'#4A6FA5'},
+  {nombre:'Azul profundo',hex:'#1E3A5F'},{nombre:'Azul turquesa',hex:'#00A6A6'},
+  {nombre:'Rojo',hex:'#CC2222'},{nombre:'Granate',hex:'#7B1F2E'},
+  {nombre:'Naranja',hex:'#E87020'},{nombre:'Amarillo',hex:'#F5C518'},
+  {nombre:'Verde grass',hex:'#3A7A3A'},{nombre:'Verde oasis',hex:'#5BAD6F'},
+  {nombre:'Verde pradera',hex:'#7FBF50'},{nombre:'Rosa pálido',hex:'#F5B8C4'},
+  {nombre:'Rosetón',hex:'#E8608A'},{nombre:'Púrpura',hex:'#7B2D8B'},
+  {nombre:'Gris vigoré',hex:'#9C9C9C'},{nombre:'Marrón',hex:'#7B4F2E'},
+  {nombre:'Lila',hex:'#B09CC8'}
+];
+
+var pedidoId = new URLSearchParams(window.location.search).get('p');
+var _pedido = null;
+var _filas = []; // [{color, hex, borde, tallas:{XS:0,...}}]
+var _colorModalCallback = null;
+
+function api(path) {
+  return fetch(SUPA_URL+'/rest/v1/'+path, {
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json'}
+  }).then(function(r){return r.json();});
+}
+function apiPatch(path, data) {
+  return fetch(SUPA_URL+'/rest/v1/'+path, {
+    method:'PATCH',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body:JSON.stringify(data)
+  });
+}
+
+function init() {
+  if(!pedidoId){show('<div class="error">❌ Enlace inválido.</div>');return;}
+  api('pedidos?id=eq.'+pedidoId+'&select=id,cliente_nombre,descripcion,tallas_colores').then(function(r){
+    if(!r||!r.length){show('<div class="error">❌ Pedido no encontrado.</div>');return;}
+    _pedido = r[0];
+    // Si ya tiene datos guardados, usarlos como base
+    if(_pedido.tallas_colores && _pedido.tallas_colores.length) {
+      _filas = JSON.parse(JSON.stringify(_pedido.tallas_colores));
+    } else {
+      _filas = [{color:'Negro',hex:'#1a1a1a',borde:false,tallas:{}}];
+    }
+    render();
+  }).catch(function(){show('<div class="error">❌ Error de conexión.</div>');});
+}
+
+function render() {
+  var ped = _pedido;
+  var html = '';
+
+  // Info pedido
+  html += '<div class="card">'
+    +'<h2>👋 Hola, '+ped.cliente_nombre.split(' ')[0]+'</h2>'
+    +'<div class="sub">Pedido <strong>'+pedidoId+'</strong> · '+ped.descripcion+'</div>'
+    +'<p style="font-size:13px;color:#555">Indica las tallas y colores que necesitas. Puedes añadir varios colores.</p>'
+    +'</div>';
+
+  // Tabla tallas
+  html += '<div class="card">'
+    +'<h2>📏 Tallas por color</h2>'
+    +'<div class="sub">Pulsa el color para cambiarlo. Introduce la cantidad de cada talla.</div>'
+    +'<div class="tabla-wrap"><table>'
+    +'<thead><tr><th>Color</th>'+TALLAS.map(function(t){return'<th>'+t+'</th>';}).join('')+'<th>Total</th><th></th></tr></thead>'
+    +'<tbody id="tbl-body">'
+    +_filas.map(function(f,i){return renderFila(f,i);}).join('')
+    +'</tbody></table></div>'
+    +'<button class="add-color-btn" onclick="addFila()">+ Añadir otro color</button>'
+    +'</div>';
+
+  // Resumen
+  html += '<div class="resumen" id="resumen">'+calcResumen()+'</div>';
+
+  // Botón enviar
+  html += '<button class="btn-enviar" id="btn-enviar" onclick="enviar()">✅ Confirmar y enviar</button>';
+  html += '<p style="text-align:center;font-size:11px;color:#aaa;margin-top:12px;padding-bottom:20px">Print & Copy · Av. Portugal 62, Salamanca · 923 018 034</p>';
+
+  show(html);
+  // Render el modal de colores
+  renderColorGrid();
+}
+
+function renderFila(f, i) {
+  var borde = f.borde ? 'border:1px solid #ccc;' : '';
+  var totalFila = Object.values(f.tallas||{}).reduce(function(s,v){return s+(parseInt(v)||0);},0);
+  var html = '<tr id="fila-'+i+'">'
+    +'<td><div class="td-color" onclick="abrirColorModal('+i+')" style="cursor:pointer">'
+    +'<span class="mini-dot" id="dot-'+i+'" style="background:'+f.hex+';'+borde+'"></span>'
+    +'<span id="color-lbl-'+i+'">'+f.color+'</span>'
+    +'<span style="font-size:10px;color:#aaa;margin-left:2px">▼</span>'
+    +'</div></td>';
+  TALLAS.forEach(function(t) {
+    html += '<td><input class="inp-talla" type="number" min="0" value="'+(f.tallas&&f.tallas[t]?f.tallas[t]:'')+'" placeholder="0" oninput="onInput('+i+',\''+t+'\',this.value)"></td>';
+  });
+  html += '<td class="row-total" id="tot-'+i+'">'+totalFila+'</td>';
+  html += '<td><button class="del-btn" onclick="delFila('+i+')" title="Quitar">✕</button></td>';
+  html += '</tr>';
+  return html;
+}
+
+function onInput(idx, talla, val) {
+  if(!_filas[idx]) return;
+  if(!_filas[idx].tallas) _filas[idx].tallas = {};
+  _filas[idx].tallas[talla] = parseInt(val)||0;
+  // Actualizar total fila
+  var total = Object.values(_filas[idx].tallas).reduce(function(s,v){return s+(parseInt(v)||0);},0);
+  var totEl = document.getElementById('tot-'+idx);
+  if(totEl) totEl.textContent = total;
+  // Actualizar resumen
+  var res = document.getElementById('resumen');
+  if(res) res.innerHTML = calcResumen();
+}
+
+function calcResumen() {
+  var totalUds = 0;
+  var lineas = _filas.map(function(f) {
+    var parts = TALLAS.filter(function(t){return f.tallas&&f.tallas[t]>0;}).map(function(t){return t+'×'+f.tallas[t];});
+    var sub = parts.reduce(function(s,_,i){return s+(parseInt(Object.values(f.tallas||{})[i])||0);},0);
+    // calcular bien
+    sub = Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);
+    totalUds += sub;
+    return parts.length ? '<strong>'+f.color+'</strong>: '+parts.join(' ') : null;
+  }).filter(Boolean);
+  if(!totalUds) return 'Sin tallas introducidas aún';
+  return '<span class="total-uds">'+totalUds+' uds</span><br>'+lineas.join('<br>');
+}
+
+function addFila() {
+  var idx = _filas.length;
+  var col = COLORES[idx % COLORES.length];
+  _filas.push({color:col.nombre, hex:col.hex, borde:col.borde||false, tallas:{}});
+  var tbody = document.getElementById('tbl-body');
+  if(tbody) {
+    var tr = document.createElement('tr');
+    tr.outerHTML; // dummy
+    tbody.insertAdjacentHTML('beforeend', renderFila(_filas[idx], idx));
+  }
+}
+
+function delFila(idx) {
+  if(_filas.length <= 1) {alert('Necesitas al menos un color');return;}
+  _filas.splice(idx, 1);
+  // Re-render la tabla completa
+  var tbody = document.getElementById('tbl-body');
+  if(tbody) tbody.innerHTML = _filas.map(function(f,i){return renderFila(f,i);}).join('');
+  var res = document.getElementById('resumen');
+  if(res) res.innerHTML = calcResumen();
+}
+
+// Modal colores
+function renderColorGrid() {
+  var grid = document.getElementById('color-grid');
+  if(!grid) return;
+  grid.innerHTML = COLORES.map(function(c,i) {
+    var borde = c.borde ? 'border:1px solid #ccc;' : '';
+    return '<div class="color-opt" onclick="selColor('+i+')">'
+      +'<span style="width:16px;height:16px;border-radius:50%;background:'+c.hex+';'+borde+'display:inline-block;flex-shrink:0"></span>'
+      +c.nombre+'</div>';
+  }).join('');
+}
+
+function abrirColorModal(idx) {
+  _colorModalCallback = idx;
+  document.getElementById('color-modal').classList.add('open');
+}
+
+function selColor(colorIdx) {
+  var c = COLORES[colorIdx];
+  var idx = _colorModalCallback;
+  if(idx !== null && _filas[idx]) {
+    _filas[idx].color = c.nombre;
+    _filas[idx].hex = c.hex;
+    _filas[idx].borde = c.borde||false;
+    // Actualizar fila visual
+    var dot = document.getElementById('dot-'+idx);
+    var lbl = document.getElementById('color-lbl-'+idx);
+    if(dot) dot.style.cssText = 'background:'+c.hex+';'+(c.borde?'border:1px solid #ccc;':'')+'width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0';
+    if(lbl) lbl.textContent = c.nombre;
+  }
+  document.getElementById('color-modal').classList.remove('open');
+}
+
+// Cerrar modal al pulsar fuera
+document.getElementById('color-modal').addEventListener('click', function(e){
+  if(e.target === this) this.classList.remove('open');
+});
+
+function enviar() {
+  var totalUds = _filas.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
+  if(totalUds === 0) {alert('Introduce al menos una talla');return;}
+  var btn = document.getElementById('btn-enviar');
+  if(btn){btn.disabled=true;btn.textContent='Enviando...';}
+  apiPatch('pedidos?id=eq.'+pedidoId, {tallas_colores: _filas}).then(function(){
+    show('<div class="card ok-screen">'
+      +'<div class="ok-ico">✅</div>'
+      +'<div class="ok-title">¡Recibido!</div>'
+      +'<div class="ok-sub">Hemos recibido tu selección de tallas y colores para el pedido <strong>'+pedidoId+'</strong>.<br><br>Nos ponemos en marcha. Te avisaremos cuando esté listo.<br><br><span style="color:#aaa">Print & Copy · 923 018 034</span></div>'
+      +'</div>');
+    setTimeout(function(){try{window.close();}catch(e){}},3000);
+  }).catch(function(){
+    if(btn){btn.disabled=false;btn.textContent='✅ Confirmar y enviar';}
+    alert('Error al enviar. Llámanos al 923 018 034');
+  });
+}
+
+function show(html){ document.getElementById('main-content').innerHTML = html; }
+
+init();
+</script>
+</body>
+</html>
