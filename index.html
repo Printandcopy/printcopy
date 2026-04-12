@@ -222,7 +222,7 @@ textarea{resize:vertical;min-height:64px}
 .tt-color-btn:hover{border-color:#185FA5}
 .tt-color-btn .dot{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
 .tt-color-btn .cod{font-size:10px;color:#aaa;margin-left:auto}
-.tt-color-dropdown{display:none;position:absolute;top:100%;left:0;z-index:200;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);padding:8px;width:260px;max-height:300px;overflow-y:auto}
+.tt-color-dropdown{display:none;position:fixed;z-index:9000;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);padding:8px;width:260px;max-height:280px;overflow-y:auto}
 .tt-color-dropdown.open{display:block}
 .tt-color-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
 .tt-color-opt:hover{background:#f0f7ff}
@@ -1401,9 +1401,118 @@ var COLORES_TEXTIL = {
     {cod:'58', nombre:'Gris vigoré', hex:'#9C9C9C'},
     {cod:'29', nombre:'Marrón', hex:'#7B4F2E'},
     {cod:'49', nombre:'Lila', hex:'#B09CC8'}
+  ],
+  clasica: [
+    {cod:'01', nombre:'Blanco', hex:'#FFFFFF', borde:true},
+    {cod:'02', nombre:'Negro', hex:'#1a1a1a'},
+    {cod:'03', nombre:'Amarillo', hex:'#F5C518'},
+    {cod:'05', nombre:'Azul royal', hex:'#2651A0'},
+    {cod:'07', nombre:'Arena', hex:'#D2C6A5'},
+    {cod:'08', nombre:'Moca', hex:'#8B6F4E'},
+    {cod:'10', nombre:'Azul celeste', hex:'#6AAED6'},
+    {cod:'12', nombre:'Turquesa', hex:'#00A6A6'},
+    {cod:'20', nombre:'Verde Kelly', hex:'#4CBB17'},
+    {cod:'31', nombre:'Naranja', hex:'#E87020'},
+    {cod:'46', nombre:'Plomo oscuro', hex:'#4A4A4A'},
+    {cod:'48', nombre:'Rosa pálido', hex:'#F5B8C4'},
+    {cod:'55', nombre:'Azul marino', hex:'#1B2A6B'},
+    {cod:'56', nombre:'Verde botella', hex:'#1B5E20'},
+    {cod:'57', nombre:'Granate', hex:'#7B1F2E'},
+    {cod:'58', nombre:'Gris vigoré', hex:'#9C9C9C'},
+    {cod:'60', nombre:'Rojo', hex:'#CC2222'},
+    {cod:'71', nombre:'Púrpura', hex:'#7B2D8B'},
+    {cod:'78', nombre:'Rosetón', hex:'#E8608A'},
+    {cod:'100', nombre:'Azul océano', hex:'#1565C0'},
+    {cod:'108', nombre:'Gris perla', hex:'#C0C0C0'},
+    {cod:'114', nombre:'Verde oasis', hex:'#5BAD6F'},
+    {cod:'120', nombre:'Coral', hex:'#FF7F50'},
+    {cod:'121', nombre:'Lila', hex:'#B09CC8'},
+    {cod:'132', nombre:'Vintage White', hex:'#F5F0E8'},
+    {cod:'152', nombre:'Adventure Green', hex:'#5F8A4E'},
+    {cod:'168', nombre:'Pale Red', hex:'#E88B8B'},
+    {cod:'169', nombre:'Berry Red', hex:'#9E2B2B'},
+    {cod:'170', nombre:'Storm Blue', hex:'#4A6A8A'},
+    {cod:'172', nombre:'Yellow Curry', hex:'#C49B22'},
+    {cod:'177', nombre:'Ash White Hthr', hex:'#E8E4DC'},
+    {cod:'229', nombre:'Angora', hex:'#D4C5B0'},
+    {cod:'231', nombre:'Ebony', hex:'#3C3C3C'},
+    {cod:'263', nombre:'Zen Blue', hex:'#6B8DAD'},
+    {cod:'264', nombre:'Mist Green', hex:'#A8C5A8'},
+    {cod:'275', nombre:'Laurel Green', hex:'#5E7D5E'},
+    {cod:'430', nombre:'Lake Blue', hex:'#3A7CA5'},
+    {cod:'711', nombre:'Purple Iris', hex:'#6A4C93'}
+  ],
+  urban: [
+    {cod:'01', nombre:'Blanco', hex:'#FFFFFF', borde:true},
+    {cod:'02', nombre:'Negro', hex:'#1a1a1a'},
+    {cod:'03', nombre:'Amarillo', hex:'#F5C518'},
+    {cod:'05', nombre:'Azul royal', hex:'#2651A0'},
+    {cod:'10', nombre:'Azul celeste', hex:'#6AAED6'},
+    {cod:'12', nombre:'Turquesa', hex:'#00A6A6'},
+    {cod:'20', nombre:'Verde Kelly', hex:'#4CBB17'},
+    {cod:'31', nombre:'Naranja', hex:'#E87020'},
+    {cod:'46', nombre:'Plomo oscuro', hex:'#4A4A4A'},
+    {cod:'48', nombre:'Rosa pálido', hex:'#F5B8C4'},
+    {cod:'55', nombre:'Azul marino', hex:'#1B2A6B'},
+    {cod:'56', nombre:'Verde botella', hex:'#1B5E20'},
+    {cod:'57', nombre:'Granate', hex:'#7B1F2E'},
+    {cod:'58', nombre:'Gris vigoré', hex:'#9C9C9C'},
+    {cod:'60', nombre:'Rojo', hex:'#CC2222'},
+    {cod:'71', nombre:'Púrpura', hex:'#7B2D8B'},
+    {cod:'78', nombre:'Rosetón', hex:'#E8608A'},
+    {cod:'100', nombre:'Azul océano', hex:'#1565C0'},
+    {cod:'108', nombre:'Gris perla', hex:'#C0C0C0'},
+    {cod:'114', nombre:'Verde oasis', hex:'#5BAD6F'},
+    {cod:'120', nombre:'Coral', hex:'#FF7F50'},
+    {cod:'121', nombre:'Lila', hex:'#B09CC8'},
+    {cod:'132', nombre:'Vintage White', hex:'#F5F0E8'},
+    {cod:'152', nombre:'Adventure Green', hex:'#5F8A4E'},
+    {cod:'168', nombre:'Pale Red', hex:'#E88B8B'},
+    {cod:'169', nombre:'Berry Red', hex:'#9E2B2B'},
+    {cod:'170', nombre:'Storm Blue', hex:'#4A6A8A'},
+    {cod:'172', nombre:'Yellow Curry', hex:'#C49B22'},
+    {cod:'0255', nombre:'Marino/Gris', hex:'#1B2A6B'},
+    {cod:'0258', nombre:'Negro/Gris', hex:'#1a1a1a'},
+    {cod:'5802', nombre:'Gris/Negro', hex:'#9C9C9C'}
+  ],
+  star: [
+    {cod:'01', nombre:'Blanco', hex:'#FFFFFF', borde:true},
+    {cod:'02', nombre:'Negro', hex:'#1a1a1a'},
+    {cod:'03', nombre:'Amarillo', hex:'#F5C518'},
+    {cod:'05', nombre:'Azul royal', hex:'#2651A0'},
+    {cod:'10', nombre:'Azul celeste', hex:'#6AAED6'},
+    {cod:'12', nombre:'Azul turquesa', hex:'#00A6A6'},
+    {cod:'29', nombre:'Marrón chocolate', hex:'#5C3A1E'},
+    {cod:'31', nombre:'Naranja', hex:'#E87020'},
+    {cod:'48', nombre:'Rosa pálido', hex:'#F5B8C4'},
+    {cod:'55', nombre:'Azul marino', hex:'#1B2A6B'},
+    {cod:'56', nombre:'Verde botella', hex:'#1B5E20'},
+    {cod:'57', nombre:'Granate', hex:'#7B1F2E'},
+    {cod:'58', nombre:'Gris vigoré', hex:'#9C9C9C'},
+    {cod:'60', nombre:'Rojo', hex:'#CC2222'},
+    {cod:'64', nombre:'Púrpura', hex:'#7B2D8B'},
+    {cod:'68', nombre:'Verde grass', hex:'#3A7A3A'},
+    {cod:'78', nombre:'Rosetón', hex:'#E8608A'},
+    {cod:'86', nombre:'Azul denim', hex:'#4A6FA5'},
+    {cod:'114', nombre:'Verde oasis', hex:'#5BAD6F'},
+    {cod:'121', nombre:'Lila', hex:'#B09CC8'},
+    {cod:'168', nombre:'Pale Red', hex:'#E88B8B'},
+    {cod:'169', nombre:'Berry Red', hex:'#9E2B2B'},
+    {cod:'170', nombre:'Storm Blue', hex:'#4A6A8A'},
+    {cod:'263', nombre:'Zen Blue', hex:'#6B8DAD'},
+    {cod:'264', nombre:'Dark Mint', hex:'#5AAD7D'},
+    {cod:'430', nombre:'Calm Blue', hex:'#7BA5C4'}
   ]
 };
 var TALLAS_STD = ['XS','S','M','L','XL','XXL','3XL'];
+var PRENDA_MODELO = {
+  'Camisetas':'beagle','Sudaderas':'clasica','Sudaderas c/capucha':'urban',
+  'Polos':'star','Petos':'beagle'
+};
+function getColoresPrenda(prenda){
+  var modelo=PRENDA_MODELO[prenda]||'beagle';
+  return COLORES_TEXTIL[modelo]||COLORES_TEXTIL.beagle;
+}
 
 // ── PROVEEDORES EXTERNOS ──
 var PROVEEDORES=[]; // se carga desde Supabase al iniciar
@@ -6505,12 +6614,17 @@ function nvTTRemoveFila(idx){
   nvTTActualizarResumen();
 }
 function nvTTOpenPicker(idx){
-  // Cerrar otros dropdowns abiertos
   document.querySelectorAll('.tt-color-dropdown.open').forEach(function(d){
     if(d.id!=='nv-tt-drop-'+idx)d.classList.remove('open');
   });
   var drop=document.getElementById('nv-tt-drop-'+idx);
-  if(drop)drop.classList.toggle('open');
+  var btn=document.getElementById('nv-tt-picker-'+idx);
+  if(drop&&btn){
+    var r=btn.getBoundingClientRect();
+    drop.style.left=r.left+'px';
+    drop.style.top=(r.bottom+2)+'px';
+    drop.classList.toggle('open');
+  }
 }
 function nvTTSelColor(idx,colorIdx){
   var c=COLORES_TEXTIL.beagle[colorIdx];
@@ -6634,14 +6748,14 @@ function nvRenderTablaIndividual(){
     +'</div>';
   return html;
 }
-function nvIndRenderFila(idx,prendaOpts,tallaOpts){
+function nvIndRenderFila(idx,prendaOpts,tallaOpts,prendaDef){
   if(!prendaOpts)prendaOpts=['Camisetas','Sudaderas','Sudaderas c/capucha','Polos','Petos'].map(function(pr){return'<option value="'+pr+'">'+pr+'</option>';}).join('');
   if(!tallaOpts)tallaOpts=TALLAS_STD.map(function(t){return'<option value="'+t+'">'+t+'</option>';}).join('');
-  var colores=COLORES_TEXTIL.beagle;
+  var colores=getColoresPrenda(prendaDef||'Camisetas');
   var defColor=colores[0]||{nombre:'Negro',hex:'#1a1a1a'};
   return'<tr id="nv-ind-fila-'+idx+'">'
     +'<td style="text-align:center;color:#aaa;font-size:11px">'+(idx+1)+'</td>'
-    +'<td><select class="nv-ind-prenda" style="width:100%;font-size:12px;padding:4px;border:1px solid #ddd;border-radius:4px">'+prendaOpts+'</select></td>'
+    +'<td><select class="nv-ind-prenda" style="width:100%;font-size:12px;padding:4px;border:1px solid #ddd;border-radius:4px" onchange="nvIndCambioPrenda('+idx+',this.value)">'+prendaOpts+'</select></td>'
     +'<td><div class="tt-color-picker" id="nv-ind-picker-'+idx+'">'
     +'<div class="tt-color-btn" onclick="nvIndOpenPicker('+idx+')">'
     +'<span class="dot" id="nv-ind-dot-'+idx+'" style="background:'+defColor.hex+'"></span>'
@@ -6649,7 +6763,7 @@ function nvIndRenderFila(idx,prendaOpts,tallaOpts){
     +'</div>'
     +'<div class="tt-color-dropdown" id="nv-ind-drop-'+idx+'">'
     +colores.map(function(c,ci){
-      return'<div class="tt-color-opt" onclick="nvIndSelColor('+idx+','+ci+')">'
+      return'<div class="tt-color-opt" onclick="nvIndSelColor('+idx+',\''+c.nombre+'\')">'
         +'<span class="dot" style="background:'+c.hex+';'+(c.borde?'border:1.5px solid #ccc;':'')+'"></span>'
         +'<span>'+c.nombre+'</span></div>';
     }).join('')
@@ -6677,10 +6791,20 @@ function nvIndOpenPicker(idx){
     if(d.id!=='nv-ind-drop-'+idx)d.classList.remove('open');
   });
   var drop=document.getElementById('nv-ind-drop-'+idx);
-  if(drop)drop.classList.toggle('open');
+  var picker=document.getElementById('nv-ind-picker-'+idx);
+  if(drop&&picker){
+    var r=picker.getBoundingClientRect();
+    drop.style.left=r.left+'px';
+    drop.style.top=(r.bottom+2)+'px';
+    drop.classList.toggle('open');
+  }
 }
-function nvIndSelColor(idx,colorIdx){
-  var c=COLORES_TEXTIL.beagle[colorIdx];
+function nvIndSelColor(idx,colorNombre){
+  var fila=document.getElementById('nv-ind-fila-'+idx);
+  var prenda=fila?fila.querySelector('.nv-ind-prenda'):null;
+  var prendaVal=prenda?prenda.value:'Camisetas';
+  var colores=getColoresPrenda(prendaVal);
+  var c=colores.find(function(x){return x.nombre===colorNombre;});
   if(!c)return;
   var dot=document.getElementById('nv-ind-dot-'+idx);
   var lbl=document.getElementById('nv-ind-clbl-'+idx);
@@ -6688,6 +6812,24 @@ function nvIndSelColor(idx,colorIdx){
   if(lbl)lbl.textContent=c.nombre;
   var drop=document.getElementById('nv-ind-drop-'+idx);
   if(drop)drop.classList.remove('open');
+}
+function nvIndCambioPrenda(idx,prenda){
+  var colores=getColoresPrenda(prenda);
+  var defColor=colores[0]||{nombre:'Negro',hex:'#1a1a1a'};
+  // Actualizar dropdown con colores de la nueva prenda
+  var drop=document.getElementById('nv-ind-drop-'+idx);
+  if(drop){
+    drop.innerHTML=colores.map(function(c){
+      return'<div class="tt-color-opt" onclick="nvIndSelColor('+idx+',\''+c.nombre+'\')">'
+        +'<span class="dot" style="background:'+c.hex+';'+(c.borde?'border:1.5px solid #ccc;':'')+'"></span>'
+        +'<span>'+c.nombre+'</span></div>';
+    }).join('');
+  }
+  // Reset color al primero de la nueva prenda
+  var dot=document.getElementById('nv-ind-dot-'+idx);
+  var lbl=document.getElementById('nv-ind-clbl-'+idx);
+  if(dot)dot.style.cssText='background:'+defColor.hex+';'+(defColor.borde?'border:1.5px solid #ccc;':'')+'width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0';
+  if(lbl)lbl.textContent=defColor.nombre;
 }
 function nvIndActualizar(){
   var tbody=document.getElementById('nv-ind-tbody');
