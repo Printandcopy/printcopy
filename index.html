@@ -6581,7 +6581,7 @@ function nvSelTipoTallas(tipo){
 }
 function nvRenderTablaIndividual(){
   var colores=COLORES_TEXTIL.beagle;
-  var prendas=['Camisetas','Sudaderas','Sudaderas c/capucha','Polos','Petos','Totebag','Gorras'];
+  var prendas=['Camisetas','Sudaderas','Sudaderas c/capucha','Polos','Petos'];
   var prendaOpts=prendas.map(function(pr){return'<option value="'+pr+'">'+pr+'</option>';}).join('');
   var tallaOpts=TALLAS_STD.map(function(t){return'<option value="'+t+'">'+t+'</option>';}).join('');
   _nvIndCount=1;
@@ -6609,7 +6609,7 @@ function nvRenderTablaIndividual(){
   return html;
 }
 function nvIndRenderFila(idx,prendaOpts,tallaOpts){
-  if(!prendaOpts)prendaOpts=['Camisetas','Sudaderas','Sudaderas c/capucha','Polos','Petos','Totebag','Gorras'].map(function(pr){return'<option value="'+pr+'">'+pr+'</option>';}).join('');
+  if(!prendaOpts)prendaOpts=['Camisetas','Sudaderas','Sudaderas c/capucha','Polos','Petos'].map(function(pr){return'<option value="'+pr+'">'+pr+'</option>';}).join('');
   if(!tallaOpts)tallaOpts=TALLAS_STD.map(function(t){return'<option value="'+t+'">'+t+'</option>';}).join('');
   var colores=COLORES_TEXTIL.beagle;
   var defColor=colores[0]||{nombre:'Negro',hex:'#1a1a1a'};
