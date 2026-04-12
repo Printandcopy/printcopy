@@ -7075,6 +7075,10 @@ showScreen('mostrador',document.querySelector('.nav-tab'));
 setInterval(checkRecordatoriosPresupuestos,4*60*60*1000);
 // Recordatorios automáticos tallas cada 4h
 setInterval(checkRecordatoriosTallas,4*60*60*1000);
+// Health check WhatsApp cada 4h — si falla envía email de alerta
+function checkWAHealth(){fetch('/api/health-check').then(function(r){return r.json();}).then(function(d){if(d.estado==='ERROR'){console.warn('⚠️ WA CAÍDO:',d.detalle);var t=document.createElement('div');t.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#A32D2D;color:#fff;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:400px;text-align:center';t.innerHTML='⚠️ WhatsApp desconectado<br><span style="font-size:12px;font-weight:400">Los envíos automáticos están parados. Reconecta en Whaticket.</span>';t.onclick=function(){t.remove();};document.body.appendChild(t);}}).catch(function(){});}
+checkWAHealth();
+setInterval(checkWAHealth,4*60*60*1000);
 // Polling cada 60s para detectar presupuestos aceptados por el cliente
 setInterval(function(){
   var hace24h=new Date(Date.now()-86400000).toISOString();
