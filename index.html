@@ -6167,6 +6167,40 @@ setInterval(function(){
 // Pedir permiso notificaciones
 if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
 
+// Polling cada 30s para detectar respuestas de clientes en previas
+setInterval(function(){
+  var conPrevia=pedidos.filter(function(p){return p.previaEstado==='enviada'&&p.fase<5;});
+  if(!conPrevia.length)return;
+  var ids=conPrevia.map(function(p){return p.id;});
+  sb.from('pedidos').select('id,previa_estado,previa_cambios').in('id',ids).then(function(r){
+    if(!r.data||!r.data.length)return;
+    var hubocambio=false;
+    r.data.forEach(function(row){
+      var p=pedidos.find(function(x){return x.id===row.id;});
+      if(!p)return;
+      if(row.previa_estado!==p.previaEstado){
+        p.previaEstado=row.previa_estado;
+        p.previaCambios=row.previa_cambios;
+        hubocambio=true;
+        // Notificación visual si el cliente respondió
+        if(row.previa_estado==='aceptada'||row.previa_estado==='rechazada'){
+          var msg=row.previa_estado==='aceptada'
+            ?'✅ '+p.clienteNombre+' aprobó la previa de '+p.id
+            :'✏️ '+p.clienteNombre+' solicitó cambios en '+p.id;
+          if(Notification.permission==='granted')new Notification('Print & Copy',{body:msg,icon:'/logo.png'});
+          var t=document.createElement('div');
+          t.style.cssText='position:fixed;bottom:20px;right:20px;background:'+(row.previa_estado==='aceptada'?'#3B6D11':'#A32D2D')+';color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px';
+          t.textContent=msg;
+          t.onclick=function(){verPedido(p.id);t.remove();};
+          document.body.appendChild(t);
+          setTimeout(function(){if(t.parentNode)t.remove();},8000);
+        }
+      }
+    });
+    if(huboambio){renderTaller();actualizarBarraAvisos();}
+  });
+},30000);
+
 // ══════════════════════════════════════════════════════════════
 // PDF PRESUPUESTO
 // ══════════════════════════════════════════════════════════════

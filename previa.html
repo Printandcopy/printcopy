@@ -155,6 +155,7 @@
       apiPatch('pedidos?id=eq.' + pedidoId, { previa_estado: 'aceptada', previa_cambios: null })
     ]).then(function() {
       show('<div class="estado-ok"><div class="ico">✅</div><h2>¡Diseño aprobado!</h2><p>Hemos recibido tu aprobación. Ya estamos produciendo tu pedido <strong>' + pedidoId + '</strong>.<br><br>Te avisaremos cuando esté listo para recoger.</p><p style="margin-top:16px;font-size:12px;color:#888">Print & Copy · 923 018 034</p></div>');
+      setTimeout(function(){ try{window.close();}catch(e){} }, 2500);
     }).catch(function() {
       alert('Error al enviar. Llámanos al 923 018 034');
       if (btn) { btn.disabled = false; btn.textContent = '✅ Aprobar diseño'; }
@@ -178,6 +179,7 @@
       apiPatch('pedidos?id=eq.' + pedidoId, { previa_estado: 'rechazada', previa_cambios: cambios })
     ]).then(function() {
       show('<div class="card"><div class="card-body" style="text-align:center;padding:30px 16px"><div style="font-size:48px;margin-bottom:12px">📝</div><h2 style="color:#185FA5;margin-bottom:8px">Cambios enviados</h2><p style="color:#555;font-size:14px">Hemos recibido tus indicaciones. Te enviaremos una nueva versión pronto.</p><p style="margin-top:16px;font-size:12px;color:#aaa">Print & Copy · 923 018 034</p></div></div>');
+      setTimeout(function(){ try{window.close();}catch(e){} }, 2500);
     }).catch(function() {
       alert('Error al enviar. Llámanos al 923 018 034');
       if (btn) { btn.disabled = false; btn.textContent = 'Enviar solicitud de cambios'; }
