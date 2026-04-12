@@ -1040,6 +1040,8 @@ textarea{resize:vertical;min-height:64px}
           <div id="nv-extras-wrap" style="display:none;margin-top:10px"><label style="font-weight:600;margin-bottom:6px;display:block">Extras opcionales</label><div class="extras-grid" id="nv-extras"></div></div>
           <!-- Textil custom -->
           <div id="nv-textil-wrap" style="display:none;margin-top:10px"></div>
+          <!-- Tabla tallas nuevo pedido -->
+          <div id="nv-tallas-wrap" style="display:none;margin-top:10px"></div>
           <!-- Resultado -->
           <div id="nv-result" class="nv-rc" style="display:none">
             <table>
@@ -1722,7 +1724,7 @@ function cargarDatos(){
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',creado:c.creado};}
 function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,tallasColores:p.tallas_colores||null};}
-function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null};}
+function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null};}
 
 function startClock(){
   document.getElementById('clock-wrap').style.display='block';
@@ -1918,7 +1920,8 @@ function finalizarGuardar(cliente){
         return sb.from('contadores').update({valor:numVal}).eq('seccion',sec).then(function(){return numVal;});
       }).then(function(numVal){
         var numPedido=sec+'-'+String(numVal).padStart(4,'0');
-        var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:item.desc,notas:notas,total:item.total,senal:senalItem,pago:pagoTipo,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:presId};
+        var _nvTallas=sec==='TX'?nvTTGetDatos():null;
+var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:item.desc,notas:notas,total:item.total,senal:senalItem,pago:pagoTipo,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:presId,tallasColores:_nvTallas};
         return sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){
           if(r.error){alert('Error: '+r.error.message);return;}
           pedidos.unshift(pedido);
@@ -1939,7 +1942,8 @@ function finalizarGuardar(cliente){
       return sb.from('contadores').update({valor:numVal}).eq('seccion',sec).then(function(){return numVal;});
     }).then(function(numVal){
       var numPedido=sec+'-'+String(numVal).padStart(4,'0');
-      var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:desc,notas:notas,total:total,senal:senal,pago:pagoTipo,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:null};
+      var _nvTallas2=sec==='TX'?nvTTGetDatos():null;
+var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:desc,notas:notas,total:total,senal:senal,pago:pagoTipo,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:null,tallasColores:_nvTallas2};
       sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){
         if(r.error){alert('Error: '+r.error.message);return;}
         pedidos.unshift(pedido);mostrarResguardo(pedido);
@@ -4548,6 +4552,7 @@ function nuevaVenta(modo){
   document.getElementById('nv-unidades-wrap').style.display='none';
   document.getElementById('nv-extras-wrap').style.display='none';
   document.getElementById('nv-textil-wrap').style.display='none';
+  document.getElementById('nv-tallas-wrap').style.display='none';
   document.getElementById('nv-result').style.display='none';
   // nv-upsell removed
   document.getElementById('nv-btn-add').style.display='none';
@@ -4611,7 +4616,7 @@ function abrirVentaDesdeCarrito(){
   nvLineas=carrito.map(function(c){return{sec:CAT_TO_SEC[c.cat]||'XR',desc:c.desc,total:c.total,cat:c.cat,plazo:P[c.cat]&&P[c.cat].plazo||0};});
   limpiarCarrito();
   document.getElementById('nv-nombre').value='';document.getElementById('nv-tel').value='';document.getElementById('nv-email').value='';document.getElementById('nv-sector').value='';
-  document.getElementById('nv-cat').value='';document.getElementById('nv-campos-dinamicos').innerHTML='';document.getElementById('nv-unidades-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-result').style.display='none';// nv-upsell removeddocument.getElementById('nv-btn-add').style.display='none';
+  document.getElementById('nv-cat').value='';document.getElementById('nv-campos-dinamicos').innerHTML='';document.getElementById('nv-unidades-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-tallas-wrap').style.display='none';document.getElementById('nv-result').style.display='none';// nv-upsell removeddocument.getElementById('nv-btn-add').style.display='none';
   document.getElementById('nv-fecha').value='';
   nvRenderLineas();
   nvActualizarFecha();
@@ -4675,6 +4680,12 @@ function nvCatChange(){
     // Textil tiene su propio builder
     document.getElementById('nv-textil-wrap').style.display='block';
     document.getElementById('nv-textil-wrap').innerHTML=prod.buildCustom().replace(/cf-/g,'nv-tx-').replace(/cV2calc/g,'nvCalc').replace(/cV2addEst/g,'nvAddEst');
+    // Mostrar tabla de tallas para textil
+    var tallasWrap=document.getElementById('nv-tallas-wrap');
+    if(tallasWrap){
+      tallasWrap.style.display='block';
+      tallasWrap.innerHTML=nvRenderTablaTallas();
+    }
   }else if(prod.fields&&prod.fields.length){
     prod.fields.forEach(function(f,i){
       if(f.type==='select'){
@@ -6173,6 +6184,121 @@ function cotConvertir(){
 }
 
 // ── FUNCIONES TABLA TALLAS/COLORES ──
+function nvRenderTablaTallas(){
+  // Tabla de tallas en el modal de NUEVO PEDIDO (sin pedido id todavía)
+  var colores=COLORES_TEXTIL.beagle;
+  var colorOpts=colores.map(function(c){
+    return'<option value="'+c.nombre+'" data-hex="'+c.hex+'" '+(c.borde?'data-borde="1"':'')+'>'+c.nombre+'</option>';
+  }).join('');
+  var filaInicial={color:'Negro',hex:'#1a1a1a',tallas:{}};
+
+  var html='<div style="border:1.5px solid #E6F1FB;border-radius:8px;overflow:hidden">'
+    +'<div style="background:#E6F1FB;padding:9px 12px"><span style="font-size:12px;font-weight:700;color:#185FA5">👕 Tallas y colores</span></div>'
+    +'<div class="tt-body">'
+    +'<table class="tt-table" id="nv-tt-table">'
+    +'<thead><tr><th style="text-align:left;min-width:120px">Color</th>'
+    +TALLAS_STD.map(function(t){return'<th>'+t+'</th>';}).join('')
+    +'<th>Total</th></tr></thead>'
+    +'<tbody id="nv-tt-tbody">'+nvTTRenderFila(filaInicial,0,colorOpts)+'</tbody>'
+    +'</table>'
+    +'<button class="tt-add-btn" onclick="nvTTAddFila()">+ Añadir color</button>'
+    +'<div id="nv-tt-resumen" class="tt-resumen">Sin tallas introducidas</div>'
+    +'</div></div>';
+  return html;
+}
+
+function nvTTRenderFila(fila,idx,colorOpts){
+  if(!colorOpts){
+    colorOpts=COLORES_TEXTIL.beagle.map(function(c){
+      return'<option value="'+c.nombre+'" data-hex="'+c.hex+'" '+(c.borde?'data-borde="1"':'')+'>'+c.nombre+'</option>';
+    }).join('');
+  }
+  var hex=fila.hex||'#1a1a1a';
+  var borde=fila.borde?'border:1px solid #ccc;':'';
+  var html='<tr id="nv-tt-fila-'+idx+'">'
+    +'<td><div style="display:flex;align-items:center;gap:4px">'
+    +'<span class="tt-color-dot" id="nv-tt-dot-'+idx+'" style="background:'+hex+';'+borde+'"></span>'
+    +'<select class="tt-color-select" onchange="nvTTColorChange('+idx+',this)">'
+    +colorOpts.replace('value="'+(fila.color||'Negro')+'"','value="'+(fila.color||'Negro')+'" selected')
+    +'</select>'
+    +(idx>0?'<button onclick="nvTTRemoveFila('+idx+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:14px;padding:0 2px">✕</button>':'')
+    +'</div></td>';
+  TALLAS_STD.forEach(function(t){
+    html+='<td><input class="tt-inp" type="number" min="0" value="0" placeholder="0" oninput="nvTTCalc('+idx+',\''+t+'\',this.value)"></td>';
+  });
+  html+='<td style="font-weight:700;color:#185FA5" id="nv-tt-tot-'+idx+'">0</td></tr>';
+  return html;
+}
+
+var _nvTTCount=1;
+function nvTTAddFila(){
+  var tbody=document.getElementById('nv-tt-tbody');
+  if(!tbody)return;
+  var idx=_nvTTCount++;
+  var colores=COLORES_TEXTIL.beagle;
+  var fila={color:colores[idx%colores.length].nombre,hex:colores[idx%colores.length].hex,tallas:{}};
+  tbody.insertAdjacentHTML('beforeend',nvTTRenderFila(fila,idx));
+}
+function nvTTRemoveFila(idx){
+  var fila=document.getElementById('nv-tt-fila-'+idx);
+  if(fila)fila.remove();
+  nvTTActualizarResumen();
+}
+function nvTTColorChange(idx,sel){
+  var opt=sel.options[sel.selectedIndex];
+  var hex=opt.getAttribute('data-hex')||'#888';
+  var borde=opt.getAttribute('data-borde')?'border:1px solid #ccc;':'';
+  var dot=document.getElementById('nv-tt-dot-'+idx);
+  if(dot)dot.style.cssText='background:'+hex+';'+borde+'width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15);margin-right:4px;vertical-align:middle;flex-shrink:0';
+}
+function nvTTCalc(idx,talla,val){
+  var total=0;
+  var fila=document.getElementById('nv-tt-fila-'+idx);
+  if(fila)fila.querySelectorAll('.tt-inp').forEach(function(i){total+=parseInt(i.value)||0;});
+  var totEl=document.getElementById('nv-tt-tot-'+idx);
+  if(totEl)totEl.textContent=total;
+  nvTTActualizarResumen();
+}
+function nvTTActualizarResumen(){
+  var tbody=document.getElementById('nv-tt-tbody');
+  if(!tbody)return;
+  var totalUds=0;var lineas=[];
+  tbody.querySelectorAll('tr').forEach(function(fila){
+    var sel=fila.querySelector('.tt-color-select');
+    if(!sel)return;
+    var color=sel.options[sel.selectedIndex].value;
+    var parts=[];
+    fila.querySelectorAll('.tt-inp').forEach(function(inp,i){
+      var v=parseInt(inp.value)||0;
+      if(v>0){parts.push(TALLAS_STD[i]+'×'+v);totalUds+=v;}
+    });
+    if(parts.length)lineas.push('<strong>'+color+'</strong>: '+parts.join(' '));
+  });
+  var res=document.getElementById('nv-tt-resumen');
+  if(res)res.innerHTML=totalUds?'<strong>Total: '+totalUds+' uds</strong><br>'+lineas.join('<br>'):'Sin tallas introducidas';
+}
+function nvTTGetDatos(){
+  // Devuelve los datos de la tabla para guardar con el pedido
+  var tbody=document.getElementById('nv-tt-tbody');
+  if(!tbody)return null;
+  var datos=[];
+  tbody.querySelectorAll('tr').forEach(function(fila){
+    var sel=fila.querySelector('.tt-color-select');
+    if(!sel)return;
+    var opt=sel.options[sel.selectedIndex];
+    var color=opt.value;
+    var hex=opt.getAttribute('data-hex')||'#888';
+    var borde=!!opt.getAttribute('data-borde');
+    var tallas={};
+    fila.querySelectorAll('.tt-inp').forEach(function(inp,i){
+      var v=parseInt(inp.value)||0;
+      if(v>0)tallas[TALLAS_STD[i]]=v;
+    });
+    if(Object.keys(tallas).length)datos.push({color:color,hex:hex,borde:borde,tallas:tallas});
+  });
+  return datos.length?datos:null;
+}
+
 function renderTablaTallas(p){
   var colores=COLORES_TEXTIL.beagle;
   var tallas=TALLAS_STD;
