@@ -2134,7 +2134,14 @@ function verPedido(id){
     html+='</div>';
   }
 
-
+  // TABLA TALLAS/PERSONALIZACIÓN en modal detalle
+  if(p.seccion==='TX'){
+    if(p.tipoPersonalizacion==='individual'){
+      html+=renderTablaIndividualDetalle(p);
+    } else {
+      html+=renderTablaTallas(p);
+    }
+  }
 
   // BLOQUE PREVIAS
   var previaEstadoLabel={'enviada':'<span style="background:#E6F1FB;color:#185FA5;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">👁️ Enviada · esperando respuesta</span>','aceptada':'<span style="background:#EAF3DE;color:#3B6D11;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✅ Diseño aprobado</span>','rechazada':'<span style="background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✏️ Cambios solicitados</span>','guardada':'<span style="background:#F1EFE8;color:#5F5E5A;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">💾 Guardada sin enviar</span>'};
@@ -6655,6 +6662,66 @@ function nvIndGetDatos(){
     });
   });
   return datos.length?datos:null;
+}
+
+function renderTablaIndividualDetalle(p){
+  var datos=p.tallasColores||[];
+  var colores=COLORES_TEXTIL.beagle;
+  var rellenas=datos.filter(function(d){return d.nombre;}).length;
+  var total=datos.length;
+  var statusBadge=rellenas===0?'<span style="background:#FCEBEB;color:#A32D2D;font-size:10px;padding:1px 7px;border-radius:10px">Pdte</span>'
+    :rellenas<total?'<span style="background:#E6F1FB;color:#185FA5;font-size:10px;padding:1px 7px;border-radius:10px">'+rellenas+'/'+total+'</span>'
+    :'<span style="background:#EAF3DE;color:#3B6D11;font-size:10px;padding:1px 7px;border-radius:10px">Completa</span>';
+  var html='<div class="tt-wrap">'
+    +'<div class="tt-header" onclick="toggleTTPanel(\'tt-panel-'+p.id+'\')">'
+    +'<span class="tt-header-title">🏷 Personalización individual '+statusBadge+'</span>'
+    +'<span id="tt-arrow-'+p.id+'" style="font-size:11px;color:#185FA5">▼</span>'
+    +'</div>'
+    +'<div id="tt-panel-'+p.id+'" style="display:none"><div class="tt-body">';
+  if(datos.length){
+    html+='<table class="tt-table" style="font-size:12px"><thead><tr>'
+      +'<th style="width:28px;text-align:center">#</th>'
+      +'<th style="text-align:left;min-width:80px">Prenda</th>'
+      +'<th style="text-align:left;min-width:90px">Color</th>'
+      +'<th style="text-align:center;width:50px">Talla</th>'
+      +'<th style="text-align:left;min-width:110px">Nombre</th>'
+      +'<th style="text-align:center;width:45px">Nº</th>'
+      +'</tr></thead><tbody>';
+    datos.forEach(function(d,i){
+      var cDef=colores.find(function(c){return c.nombre===d.color;})||{hex:'#888',borde:false};
+      html+='<tr style="border-bottom:0.5px solid #f0f0f0">'
+        +'<td style="text-align:center;color:#aaa;font-size:11px">'+(i+1)+'</td>'
+        +'<td style="font-size:12px">'+(d.prenda||'Camiseta')+'</td>'
+        +'<td><div style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:50%;background:'+cDef.hex+';'+(cDef.borde?'border:1px solid #ccc;':'')+'display:inline-block;flex-shrink:0"></span><span style="font-size:11px">'+(d.color||'—')+'</span></div></td>'
+        +'<td style="text-align:center;font-weight:500">'+(d.talla||'—')+'</td>'
+        +'<td style="font-weight:500">'+(d.nombre||'<span style="color:#ccc;font-style:italic">—</span>')+'</td>'
+        +'<td style="text-align:center;font-weight:500">'+(d.numero||'—')+'</td>'
+        +'</tr>';
+    });
+    html+='</tbody></table>';
+  } else {
+    html+='<div style="text-align:center;padding:16px;color:#aaa;font-size:13px">Sin datos. Envía el link al cliente para que rellene.</div>';
+  }
+  html+='<div style="display:flex;gap:8px;margin-top:8px">'
+    +'<button class="tt-save-btn" onclick="ttGuardar(\''+p.id+'\')">💾 Guardar</button>'
+    +'<button class="tt-wa-btn" onclick="ttEnviarWAIndividual(\''+p.id+'\')">📱 Enviar al cliente</button>'
+    +'</div></div></div></div>';
+  return html;
+}
+
+function ttEnviarWAIndividual(pedidoId){
+  var p=pedidos.find(function(x){return x.id===pedidoId;});
+  if(!p||!p.clienteTel){alert('Este pedido no tiene teléfono de cliente');return;}
+  var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+  if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+  var nombre=p.clienteNombre.split(' ')[0];
+  var msg='Hola '+nombre+' 👋\n\n'
+    +'Para completar tu pedido *'+pedidoId+'* necesitamos que cada persona rellene sus datos (talla, color y nombre para estampar).\n\n'
+    +'Accede aquí:\nhttps://printcopy.vercel.app/penas.html?p='+pedidoId+'\n\n'
+    +'Print & Copy · 923 018 034';
+  fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.clienteNombre})})
+    .then(function(r){return r.json();})
+    .then(function(d){if(d.success)alert('WA enviado a '+p.clienteNombre);else alert('Error: '+d.error);});
 }
 
 function renderTablaTallas(p){
