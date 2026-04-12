@@ -78,6 +78,59 @@ var SUPA_URL = 'https://ffiyprmbrznofoprvvik.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg';
 var TALLAS = ['XS','S','M','L','XL','XXL','3XL'];
 var PRENDAS = ['Camisetas','Sudaderas','Sudaderas c/capucha','Polos','Petos'];
+var PRENDA_REF = {'Camisetas':'CA6554','Sudaderas':'SU1070','Sudaderas c/capucha':'SU1067','Polos':'PO6638','Petos':'CA6554'};
+var PRENDA_MEDIDAS = {
+  'Camisetas':{XS:'46×66',S:'49×69',M:'52×71',L:'55×73',XL:'58×75',XXL:'62×77'},
+  'Sudaderas':{S:'52×68',M:'55×70',L:'58×72',XL:'61×74',XXL:'65×76','3XL':'69×78'},
+  'Sudaderas c/capucha':{S:'52×68',M:'55×70',L:'58×72',XL:'61×74',XXL:'65×76','3XL':'69×78'},
+  'Polos':{S:'50×72',M:'53×74',L:'56×76',XL:'59×78',XXL:'63×80','3XL':'67×82'},
+  'Petos':{S:'49×69',M:'52×71',L:'55×73',XL:'58×75',XXL:'62×77'}
+};
+function rolyImgUrl(prenda,codColor){
+  var ref=PRENDA_REF[prenda]||'CA6554';
+  return'https://www.camisetas.com/img/img-products/medium/Roly/'+ref+'-'+codColor+'.jpg';
+}
+var PRENDA_COLORES = {
+  'Camisetas':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},
+    {cod:'12',nombre:'Turquesa',hex:'#00A6A6'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},
+    {cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'83',nombre:'Verde Grass',hex:'#3A7A3A'},
+    {cod:'78',nombre:'Rosetón',hex:'#E8608A'},{cod:'46',nombre:'Plomo Oscuro',hex:'#4A4A4A'},
+    {cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},
+    {cod:'43',nombre:'Azul Profundo',hex:'#4A6FA5'},{cod:'114',nombre:'Verde Oasis',hex:'#5BAD6F'},
+    {cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},{cod:'31',nombre:'Naranja',hex:'#E87020'},
+    {cod:'10',nombre:'Celeste',hex:'#6AAED6'},{cod:'20',nombre:'Verde Kelly',hex:'#4CBB17'},
+    {cod:'86',nombre:'Azul Denim',hex:'#1E3A5F'},{cod:'87',nombre:'Chocolate',hex:'#6B4226'},
+    {cod:'229',nombre:'Ángora',hex:'#D4C5B0'},{cod:'267',nombre:'Azul Dusty',hex:'#6B8DAD'},
+    {cod:'45',nombre:'Azul Luz de Luna',hex:'#3F51B5'},{cod:'132',nombre:'Blanco Vintage',hex:'#F0EBE0',borde:true},
+    {cod:'276',nombre:'Ocre',hex:'#C49B22'},{cod:'120',nombre:'Coral',hex:'#F07060'},
+    {cod:'108',nombre:'Gris Piedra',hex:'#C0C0C0'},{cod:'277',nombre:'Teja',hex:'#C85A4A'},
+    {cod:'152',nombre:'Verde Aventura',hex:'#5F8A4E'},{cod:'98',nombre:'Verde Menta',hex:'#5AAD7D'},
+    {cod:'73',nombre:'Arena',hex:'#C8B88A'},{cod:'481',nombre:'Rosa Seda',hex:'#F48FB1'},
+    {cod:'711',nombre:'Purple Iris',hex:'#6A4C93'},{cod:'101',nombre:'Azul Océano',hex:'#1565C0'}
+  ],
+  'Polos':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},
+    {cod:'12',nombre:'Turquesa',hex:'#00A6A6'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},
+    {cod:'78',nombre:'Rosetón',hex:'#E8608A'},{cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},
+    {cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'121',nombre:'Lila',hex:'#B09CC8'},
+    {cod:'03',nombre:'Amarillo',hex:'#F5D300'},{cod:'31',nombre:'Naranja',hex:'#E87020'},
+    {cod:'10',nombre:'Celeste',hex:'#6AAED6'},{cod:'86',nombre:'Azul Denim',hex:'#4A6FA5'},
+    {cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},{cod:'83',nombre:'Verde Grass',hex:'#3A7A3A'},
+    {cod:'46',nombre:'Plomo Oscuro',hex:'#4A4A4A'},{cod:'07',nombre:'Arena',hex:'#C8B88A'},
+    {cod:'87',nombre:'Chocolate',hex:'#6B4226'},{cod:'152',nombre:'Verde Aventura',hex:'#5F8A4E'},
+    {cod:'263',nombre:'Azul Zen',hex:'#6B8DAD'},{cod:'170',nombre:'Azul Tormenta',hex:'#4A6A8A'},
+    {cod:'171',nombre:'Azul Lago',hex:'#3A7CA5'},{cod:'164',nombre:'Azul Calma',hex:'#7BA5C4'},
+    {cod:'264',nombre:'Verde Niebla',hex:'#A8C5A8'},{cod:'98',nombre:'Verde Menta Osc.',hex:'#5AAD7D'},
+    {cod:'216',nombre:'Verde Tropical',hex:'#2E8B57'},{cod:'266',nombre:'Ocre',hex:'#C49B22'},
+    {cod:'262',nombre:'Rojo Pálido',hex:'#E88B8B'},{cod:'168',nombre:'Rojo Baya',hex:'#9E2B2B'},
+    {cod:'169',nombre:'Coral',hex:'#F07060'},{cod:'261',nombre:'Purple Iris',hex:'#6A4C93'}
+  ]
+};
 var COLORES = [
   {nombre:'Blanco',hex:'#FFFFFF',borde:true},{nombre:'Negro',hex:'#1a1a1a'},
   {nombre:'Azul marino',hex:'#1B2A6B'},{nombre:'Azul royal',hex:'#2651A0'},
@@ -134,6 +187,17 @@ function render() {
     +'<p style="font-size:13px;color:#555;line-height:1.5">Rellena los datos de cada persona: prenda, color, talla, nombre para estampar y número.</p>'
     +'</div>';
 
+  // Guía de tallas
+  html += '<div class="card" style="padding:12px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="var g=document.getElementById(\'guia-tallas\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'">'
+    +'<span style="font-size:13px;font-weight:700;color:#185FA5">📏 Guía de tallas</span>'
+    +'<span style="font-size:11px;color:#aaa">▼</span>'
+    +'</div>'
+    +'<div id="guia-tallas" style="display:none;margin-top:10px">'
+    +'<div style="font-size:11px;color:#888;margin-bottom:8px">Medidas en cm (ancho × alto). Variación ±2,5 cm</div>'
+    +'<div id="guia-tallas-tabla"></div>'
+    +'</div></div>';
+
   html += '<div id="filas-container">';
   _filas.forEach(function(f,i){
     html += renderFila(f,i);
@@ -147,6 +211,7 @@ function render() {
 
   show(html);
   renderColorGrid();
+  actualizarGuiaTallas();
 }
 
 function renderFila(f, i) {
@@ -157,6 +222,9 @@ function renderFila(f, i) {
   var tallaOpts = TALLAS.map(function(t){
     return '<option value="'+t+'"'+(f.talla===t?' selected':'')+'>'+t+'</option>';
   }).join('');
+  var colores=PRENDA_COLORES[f.prenda]||COLORES;
+  var cDef=colores.find(function(c){return c.nombre===(f.color||'Negro');})||{cod:'02'};
+  var imgUrl=rolyImgUrl(f.prenda||'Camisetas',cDef.cod);
 
   return '<div class="fila-card" id="fila-'+i+'">'
     +'<div class="fila-header"><div class="fila-num">'+(i+1)+'</div><span>Persona '+(i+1)+'</span>'
@@ -167,8 +235,11 @@ function renderFila(f, i) {
     +'<div class="field"><label>Talla</label><select onchange="onFieldChange('+i+',\'talla\',this.value)">'+tallaOpts+'</select></div>'
     +'</div>'
     +'<div class="field-row">'
-    +'<div class="field"><label>Color</label>'
+    +'<div class="field" style="flex:1"><label>Color</label>'
     +'<div class="color-btn" onclick="abrirColorModal('+i+')"><span class="color-dot" id="dot-'+i+'" style="background:'+(f.hex||'#1a1a1a')+';'+borde+'"></span><span class="color-name" id="clbl-'+i+'">'+(f.color||'Negro')+'</span><span style="font-size:11px;color:#aaa">▼</span></div>'
+    +'</div>'
+    +'<div style="flex:0 0 60px;display:flex;align-items:flex-end">'
+    +'<img id="prenda-img-'+i+'" src="'+imgUrl+'" style="width:56px;height:56px;object-fit:contain;border-radius:6px;border:1px solid #eee" onerror="this.style.display=\'none\'">'
     +'</div>'
     +'</div>'
     +'<div class="field-row">'
@@ -181,6 +252,8 @@ function renderFila(f, i) {
 function onFieldChange(idx, field, val) {
   if(!_filas[idx]) return;
   _filas[idx][field] = val;
+  if(field==='prenda'){actualizarGuiaTallas();actualizarFotoPrencia(idx);}
+  if(field==='color')actualizarFotoPrencia(idx);
   var res = document.getElementById('resumen');
   if(res) res.innerHTML = calcResumen();
 }
@@ -234,6 +307,7 @@ function selColor(colorIdx) {
     var lbl = document.getElementById('clbl-'+idx);
     if(dot) dot.style.cssText = 'background:'+c.hex+';'+(c.borde?'border:1px solid #ccc;':'')+'width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0';
     if(lbl) lbl.textContent = c.nombre;
+    actualizarFotoPrencia(idx);
   }
   document.getElementById('color-modal').classList.remove('open');
 }
@@ -266,6 +340,32 @@ function enviar() {
 }
 
 function show(html){ document.getElementById('main-content').innerHTML = html; }
+
+function actualizarGuiaTallas(){
+  var prenda=(_filas[0]&&_filas[0].prenda)||'Camisetas';
+  var medidas=PRENDA_MEDIDAS[prenda];
+  if(!medidas){document.getElementById('guia-tallas-tabla').innerHTML='';return;}
+  var ref=PRENDA_REF[prenda]||'CA6554';
+  var html='<div style="font-size:12px;font-weight:600;color:#444;margin-bottom:6px">'+prenda+' ('+ref+')</div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html+='<tr style="background:#f0f7ff"><th style="padding:5px 8px;border:1px solid #e5e7eb;text-align:left">Talla</th><th style="padding:5px 8px;border:1px solid #e5e7eb">Ancho × Alto (cm)</th></tr>';
+  Object.keys(medidas).forEach(function(t){
+    html+='<tr><td style="padding:4px 8px;border:1px solid #e5e7eb;font-weight:600">'+t+'</td><td style="padding:4px 8px;border:1px solid #e5e7eb;text-align:center">'+medidas[t]+'</td></tr>';
+  });
+  html+='</table>';
+  document.getElementById('guia-tallas-tabla').innerHTML=html;
+}
+
+function actualizarFotoPrencia(idx){
+  var f=_filas[idx];if(!f)return;
+  var prenda=f.prenda||'Camisetas';
+  var color=f.color||'Negro';
+  var colores=PRENDA_COLORES[prenda]||COLORES;
+  var cDef=colores.find(function(c){return c.nombre===color;})||{cod:'02'};
+  var url=rolyImgUrl(prenda,cDef.cod);
+  var img=document.getElementById('prenda-img-'+idx);
+  if(img){img.src=url;img.style.display='block';}
+}
 
 init();
 </script>

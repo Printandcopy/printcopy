@@ -1544,6 +1544,21 @@ var PRENDA_MODELO = {
   'Camisetas':'beagle','Sudaderas':'clasica','Sudaderas c/capucha':'urban',
   'Polos':'star','Petos':'beagle'
 };
+var PRENDA_REF = {
+  'Camisetas':'CA6554','Sudaderas':'SU1070','Sudaderas c/capucha':'SU1067',
+  'Polos':'PO6638','Petos':'CA6554'
+};
+var PRENDA_MEDIDAS = {
+  'Camisetas':{XS:'46×66',S:'49×69',M:'52×71',L:'55×73',XL:'58×75',XXL:'62×77'},
+  'Sudaderas':{S:'52×68',M:'55×70',L:'58×72',XL:'61×74',XXL:'65×76','3XL':'69×78'},
+  'Sudaderas c/capucha':{S:'52×68',M:'55×70',L:'58×72',XL:'61×74',XXL:'65×76','3XL':'69×78'},
+  'Polos':{S:'50×72',M:'53×74',L:'56×76',XL:'59×78',XXL:'63×80','3XL':'67×82'},
+  'Petos':{S:'49×69',M:'52×71',L:'55×73',XL:'58×75',XXL:'62×77'}
+};
+function rolyImgUrl(prenda,codColor){
+  var ref=PRENDA_REF[prenda]||'CA6554';
+  return'https://www.camisetas.com/img/img-products/medium/Roly/'+ref+'-'+codColor+'.jpg';
+}
 function getColoresPrenda(prenda){
   var modelo=PRENDA_MODELO[prenda]||'beagle';
   return COLORES_TEXTIL[modelo]||COLORES_TEXTIL.beagle;
