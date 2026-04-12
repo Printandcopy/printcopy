@@ -207,6 +207,17 @@ textarea{resize:vertical;min-height:64px}
 .tt-wa-btn{background:#25D366;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;flex:1}
 .tt-resumen{font-size:11px;color:#888;background:#f9fafb;border-radius:6px;padding:8px 10px;margin-top:8px;line-height:1.7}
 .tt-color-select{border:none;font-size:11px;font-family:inherit;background:transparent;padding:0;cursor:pointer;max-width:110px}
+.tt-color-picker{position:relative;display:inline-block}
+.tt-color-btn{display:flex;align-items:center;gap:6px;padding:4px 8px;border:1.5px solid #e5e7eb;border-radius:6px;cursor:pointer;background:#fff;font-size:12px;font-weight:600;min-width:130px}
+.tt-color-btn:hover{border-color:#185FA5}
+.tt-color-btn .dot{width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
+.tt-color-btn .cod{font-size:10px;color:#aaa;margin-left:auto}
+.tt-color-dropdown{display:none;position:absolute;top:100%;left:0;z-index:200;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);padding:8px;width:260px;max-height:300px;overflow-y:auto}
+.tt-color-dropdown.open{display:block}
+.tt-color-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
+.tt-color-opt:hover{background:#f0f7ff}
+.tt-color-opt .dot{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
+.tt-color-opt .cod{font-size:11px;color:#aaa;margin-left:auto;font-weight:400}
 .semana-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:#ddd;border-radius:8px;overflow:hidden;margin-bottom:12px}
 .dia-col{background:#fff;min-height:80px}
 .dia-header{padding:6px 4px;text-align:center;border-bottom:0.5px solid #f0f0f0;background:#f9f9f7}
@@ -1343,27 +1354,27 @@ var SECTOR_COLORS={particular:'#f1efe8|#5f5e5a',hosteleria:'#fef3e8|#7a4a1a',com
 // ── COLORES TEXTIL (Roly Beagle y otros modelos) ──
 var COLORES_TEXTIL = {
   beagle: [
-    {nombre:'Blanco', hex:'#FFFFFF', borde:true},
-    {nombre:'Negro', hex:'#1a1a1a'},
-    {nombre:'Azul marino', hex:'#1B2A6B'},
-    {nombre:'Azul royal', hex:'#2651A0'},
-    {nombre:'Azul celeste', hex:'#6AAED6'},
-    {nombre:'Azul denim', hex:'#4A6FA5'},
-    {nombre:'Azul profundo', hex:'#1E3A5F'},
-    {nombre:'Azul turquesa', hex:'#00A6A6'},
-    {nombre:'Rojo', hex:'#CC2222'},
-    {nombre:'Granate', hex:'#7B1F2E'},
-    {nombre:'Naranja', hex:'#E87020'},
-    {nombre:'Amarillo', hex:'#F5C518'},
-    {nombre:'Verde grass', hex:'#3A7A3A'},
-    {nombre:'Verde oasis', hex:'#5BAD6F'},
-    {nombre:'Verde pradera', hex:'#7FBF50'},
-    {nombre:'Rosa pálido', hex:'#F5B8C4'},
-    {nombre:'Rosetón', hex:'#E8608A'},
-    {nombre:'Púrpura', hex:'#7B2D8B'},
-    {nombre:'Gris vigoré', hex:'#9C9C9C'},
-    {nombre:'Marrón', hex:'#7B4F2E'},
-    {nombre:'Lila', hex:'#B09CC8'}
+    {cod:'01', nombre:'Blanco', hex:'#FFFFFF', borde:true},
+    {cod:'02', nombre:'Negro', hex:'#1a1a1a'},
+    {cod:'03', nombre:'Azul marino', hex:'#1B2A6B'},
+    {cod:'05', nombre:'Azul royal', hex:'#2651A0'},
+    {cod:'10', nombre:'Azul celeste', hex:'#6AAED6'},
+    {cod:'86', nombre:'Azul denim', hex:'#4A6FA5'},
+    {cod:'55', nombre:'Azul profundo', hex:'#1E3A5F'},
+    {cod:'85', nombre:'Azul turquesa', hex:'#00A6A6'},
+    {cod:'60', nombre:'Rojo', hex:'#CC2222'},
+    {cod:'57', nombre:'Granate', hex:'#7B1F2E'},
+    {cod:'31', nombre:'Naranja', hex:'#E87020'},
+    {cod:'03', nombre:'Amarillo', hex:'#F5C518'},
+    {cod:'68', nombre:'Verde grass', hex:'#3A7A3A'},
+    {cod:'69', nombre:'Verde oasis', hex:'#5BAD6F'},
+    {cod:'79', nombre:'Verde pradera', hex:'#7FBF50'},
+    {cod:'48', nombre:'Rosa pálido', hex:'#F5B8C4'},
+    {cod:'78', nombre:'Rosetón', hex:'#E8608A'},
+    {cod:'64', nombre:'Púrpura', hex:'#7B2D8B'},
+    {cod:'58', nombre:'Gris vigoré', hex:'#9C9C9C'},
+    {cod:'29', nombre:'Marrón', hex:'#7B4F2E'},
+    {cod:'49', nombre:'Lila', hex:'#B09CC8'}
   ]
 };
 var TALLAS_STD = ['XS','S','M','L','XL','XXL','3XL'];
@@ -2071,10 +2082,7 @@ function verPedido(id){
     html+='</div>';
   }
 
-  // BLOQUE TALLAS/COLORES (solo TX)
-  if(p.seccion==='TX'||p.seccion==='Textil'||(p.seccion||'').toUpperCase()==='TX'){
-    try{html+=renderTablaTallas(p);}catch(e){console.error('renderTablaTallas error:',e);html+='<div style="color:#A32D2D;font-size:12px;padding:8px">Error al cargar tabla de tallas</div>';}
-  }
+
 
   // BLOQUE PREVIAS
   var previaEstadoLabel={'enviada':'<span style="background:#E6F1FB;color:#185FA5;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">👁️ Enviada · esperando respuesta</span>','aceptada':'<span style="background:#EAF3DE;color:#3B6D11;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✅ Diseño aprobado</span>','rechazada':'<span style="background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✏️ Cambios solicitados</span>','guardada':'<span style="background:#F1EFE8;color:#5F5E5A;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">💾 Guardada sin enviar</span>'};
@@ -6215,13 +6223,26 @@ function nvTTRenderFila(fila,idx,colorOpts){
   }
   var hex=fila.hex||'#1a1a1a';
   var borde=fila.borde?'border:1px solid #ccc;':'';
+  var colorNombre=fila.color||'Negro';
+  var colorCod=(COLORES_TEXTIL.beagle.find(function(c){return c.nombre===colorNombre;})||{}).cod||'';
   var html='<tr id="nv-tt-fila-'+idx+'">'
     +'<td><div style="display:flex;align-items:center;gap:4px">'
-    +'<span class="tt-color-dot" id="nv-tt-dot-'+idx+'" style="background:'+hex+';'+borde+'"></span>'
-    +'<select class="tt-color-select" onchange="nvTTColorChange('+idx+',this)">'
-    +colorOpts.replace('value="'+(fila.color||'Negro')+'"','value="'+(fila.color||'Negro')+'" selected')
-    +'</select>'
-    +(idx>0?'<button onclick="nvTTRemoveFila('+idx+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:14px;padding:0 2px">✕</button>':'')
+    +'<div class="tt-color-picker" id="nv-tt-picker-'+idx+'">'
+    +'<div class="tt-color-btn" onclick="nvTTOpenPicker('+idx+')">'
+    +'<span class="dot" id="nv-tt-dot-'+idx+'" style="background:'+hex+';'+(borde?'border:1px solid #ccc;':'')+'"></span>'
+    +'<span id="nv-tt-lbl-'+idx+'">'+colorNombre+'</span>'
+    +'<span class="cod" id="nv-tt-cod-'+idx+'">'+colorCod+'</span>'
+    +'</div>'
+    +'<div class="tt-color-dropdown" id="nv-tt-drop-'+idx+'">'
+    +COLORES_TEXTIL.beagle.map(function(c,ci){
+      return'<div class="tt-color-opt" onclick="nvTTSelColor('+idx+','+ci+')">'
+        +'<span class="dot" style="background:'+c.hex+';'+(c.borde?'border:1.5px solid #ccc;':'')+'"></span>'
+        +'<span>'+c.nombre+'</span>'
+        +'<span class="cod">'+c.cod+'</span>'
+        +'</div>';
+    }).join('')
+    +'</div></div>'
+    +(idx>0?'<button onclick="nvTTRemoveFila('+idx+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:14px;padding:0 4px">✕</button>':'')
     +'</div></td>';
   TALLAS_STD.forEach(function(t){
     html+='<td><input class="tt-inp" type="number" min="0" value="0" placeholder="0" oninput="nvTTCalc('+idx+',\''+t+'\',this.value)"></td>';
@@ -6244,6 +6265,36 @@ function nvTTRemoveFila(idx){
   if(fila)fila.remove();
   nvTTActualizarResumen();
 }
+function nvTTOpenPicker(idx){
+  // Cerrar otros dropdowns abiertos
+  document.querySelectorAll('.tt-color-dropdown.open').forEach(function(d){
+    if(d.id!=='nv-tt-drop-'+idx)d.classList.remove('open');
+  });
+  var drop=document.getElementById('nv-tt-drop-'+idx);
+  if(drop)drop.classList.toggle('open');
+}
+function nvTTSelColor(idx,colorIdx){
+  var c=COLORES_TEXTIL.beagle[colorIdx];
+  if(!c)return;
+  var dot=document.getElementById('nv-tt-dot-'+idx);
+  var lbl=document.getElementById('nv-tt-lbl-'+idx);
+  var cod=document.getElementById('nv-tt-cod-'+idx);
+  if(dot)dot.style.cssText='background:'+c.hex+';'+(c.borde?'border:1.5px solid #ccc;':'')+'width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0';
+  if(lbl)lbl.textContent=c.nombre;
+  if(cod)cod.textContent=c.cod||'';
+  var drop=document.getElementById('nv-tt-drop-'+idx);
+  if(drop)drop.classList.remove('open');
+  // Guardar en dato local
+  _nvTTFilas=_nvTTFilas||{};
+  _nvTTFilas[idx]={color:c.nombre,hex:c.hex,borde:c.borde||false,cod:c.cod||''};
+}
+// Cerrar dropdowns al pulsar fuera
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.tt-color-picker')){
+    document.querySelectorAll('.tt-color-dropdown.open').forEach(function(d){d.classList.remove('open');});
+  }
+});
+var _nvTTFilas={};
 function nvTTColorChange(idx,sel){
   var opt=sel.options[sel.selectedIndex];
   var hex=opt.getAttribute('data-hex')||'#888';
@@ -6278,23 +6329,22 @@ function nvTTActualizarResumen(){
   if(res)res.innerHTML=totalUds?'<strong>Total: '+totalUds+' uds</strong><br>'+lineas.join('<br>'):'Sin tallas introducidas';
 }
 function nvTTGetDatos(){
-  // Devuelve los datos de la tabla para guardar con el pedido
   var tbody=document.getElementById('nv-tt-tbody');
   if(!tbody)return null;
   var datos=[];
-  tbody.querySelectorAll('tr').forEach(function(fila){
-    var sel=fila.querySelector('.tt-color-select');
-    if(!sel)return;
-    var opt=sel.options[sel.selectedIndex];
-    var color=opt.value;
-    var hex=opt.getAttribute('data-hex')||'#888';
-    var borde=!!opt.getAttribute('data-borde');
+  tbody.querySelectorAll('tr').forEach(function(fila,rowIdx){
+    // Leer color del picker visual
+    var lbl=fila.querySelector('[id^="nv-tt-lbl-"]');
+    var dot=fila.querySelector('[id^="nv-tt-dot-"]');
+    if(!lbl)return;
+    var colorNombre=lbl.textContent||'Negro';
+    var cDef=COLORES_TEXTIL.beagle.find(function(c){return c.nombre===colorNombre;})||{hex:'#888',borde:false};
     var tallas={};
     fila.querySelectorAll('.tt-inp').forEach(function(inp,i){
       var v=parseInt(inp.value)||0;
       if(v>0)tallas[TALLAS_STD[i]]=v;
     });
-    if(Object.keys(tallas).length)datos.push({color:color,hex:hex,borde:borde,tallas:tallas});
+    if(Object.keys(tallas).length)datos.push({color:colorNombre,hex:cDef.hex,borde:cDef.borde||false,tallas:tallas});
   });
   return datos.length?datos:null;
 }
