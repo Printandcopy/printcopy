@@ -77,7 +77,7 @@
 var SUPA_URL = 'https://ffiyprmbrznofoprvvik.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg';
 var TALLAS = ['XS','S','M','L','XL','XXL','3XL'];
-var PRENDAS = ['Camiseta','Sudadera','Polo'];
+var PRENDAS = ['Camisetas','Sudaderas','Sudaderas c/capucha','Polos','Petos','Totebag','Gorras'];
 var COLORES = [
   {nombre:'Blanco',hex:'#FFFFFF',borde:true},{nombre:'Negro',hex:'#1a1a1a'},
   {nombre:'Azul marino',hex:'#1B2A6B'},{nombre:'Azul royal',hex:'#2651A0'},
@@ -118,7 +118,7 @@ function init() {
     if(_pedido.tallas_colores && _pedido.tallas_colores.length) {
       _filas = JSON.parse(JSON.stringify(_pedido.tallas_colores));
     } else {
-      _filas = [{prenda:'Camiseta',color:'Negro',hex:'#1a1a1a',talla:'M',nombre:'',numero:''}];
+      _filas = [{prenda:'Camisetas',color:'Negro',hex:'#1a1a1a',talla:'M',nombre:'',numero:''}];
     }
     render();
   }).catch(function(){show('<div class="error">Error de conexión.</div>');});
@@ -196,7 +196,7 @@ function calcResumen() {
 }
 
 function addFila() {
-  _filas.push({prenda:'Camiseta',color:'Negro',hex:'#1a1a1a',talla:'M',nombre:'',numero:''});
+  _filas.push({prenda:'Camisetas',color:'Negro',hex:'#1a1a1a',talla:'M',nombre:'',numero:''});
   var container = document.getElementById('filas-container');
   if(container) container.insertAdjacentHTML('beforeend', renderFila(_filas[_filas.length-1], _filas.length-1));
   var res = document.getElementById('resumen');
