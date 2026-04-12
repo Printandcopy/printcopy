@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Previa de diseño — Print & Copy</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; min-height: 100vh; }
+  .header { background: #1a1a1a; padding: 14px 20px; display: flex; align-items: center; gap: 12px; }
+  .header img { height: 40px; width: auto; }
+  .header h1 { color: #fff; font-size: 16px; font-weight: 700; }
+  .container { max-width: 560px; margin: 0 auto; padding: 20px 16px; }
+  .card { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; margin-bottom: 14px; }
+  .card-header { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; }
+  .card-body { padding: 16px; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+  .badge.pendiente { background: #E6F1FB; color: #185FA5; }
+  .badge.aceptada { background: #EAF3DE; color: #3B6D11; }
+  .badge.rechazada { background: #FCEBEB; color: #A32D2D; }
+  .pedido-id { font-family: monospace; font-size: 18px; font-weight: 800; color: #1a1a1a; }
+  .cliente { font-size: 14px; color: #666; margin-top: 4px; }
+  .imagen-wrap { width: 100%; background: #f9f9f7; border-radius: 8px; overflow: hidden; margin-bottom: 16px; text-align: center; min-height: 200px; display: flex; align-items: center; justify-content: center; }
+  .imagen-wrap img { max-width: 100%; max-height: 60vh; object-fit: contain; }
+  .pdf-link { color: #185FA5; font-size: 14px; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 8px; justify-content: center; padding: 20px; }
+  .btn { width: 100%; padding: 16px; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; margin-bottom: 10px; transition: opacity .15s; }
+  .btn:active { opacity: .85; }
+  .btn-aprobar { background: #3B6D11; color: #fff; }
+  .btn-cambios { background: #fff; color: #A32D2D; border: 2px solid #A32D2D; }
+  .textarea { width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 12px; font-size: 14px; font-family: inherit; resize: none; margin-bottom: 10px; }
+  .textarea:focus { outline: none; border-color: #185FA5; }
+  .estado-ok { background: #EAF3DE; border-radius: 10px; padding: 20px; text-align: center; }
+  .estado-ok .ico { font-size: 48px; margin-bottom: 10px; }
+  .estado-ok h2 { color: #3B6D11; font-size: 20px; }
+  .estado-ok p { color: #555; font-size: 14px; margin-top: 8px; }
+  .loading { text-align: center; padding: 60px 20px; color: #aaa; font-size: 14px; }
+  .error { text-align: center; padding: 40px 20px; color: #A32D2D; font-size: 14px; }
+  .version-info { font-size: 11px; color: #aaa; margin-top: 4px; }
+  .form-cambios { display: none; }
+  .form-cambios.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="/logo.png" alt="Print & Copy" onerror="this.style.display='none'">
+  <h1>Previa de diseño</h1>
+</div>
+
+<div class="container">
+  <div id="main-content">
+    <div class="loading">⏳ Cargando previa...</div>
+  </div>
+</div>
+
+<script>
+  var SUPA_URL = 'https://ffiyprmbrznofoprvvik.supabase.co';
+  var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg';
+
+  function api(path) {
+    return fetch(SUPA_URL + '/rest/v1/' + path, {
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' }
+    }).then(function(r) { return r.json(); });
+  }
+  function apiPatch(path, data) {
+    return fetch(SUPA_URL + '/rest/v1/' + path, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(data)
+    });
+  }
+
+  var pedidoId = new URLSearchParams(window.location.search).get('p');
+  var _previa = null;
+  var _pedido = null;
+
+  function render() {
+    if (!pedidoId) { show('<div class="error">❌ Enlace inválido. Contacta con Print & Copy.</div>'); return; }
+    // Cargar previa más reciente
+    Promise.all([
+      api('pedido_previas?pedido_id=eq.' + pedidoId + '&order=version.desc&limit=1'),
+      api('pedidos?id=eq.' + pedidoId + '&select=id,cliente_nombre,descripcion,previa_estado,previa_cambios')
+    ]).then(function(results) {
+      var previas = results[0];
+      var pedidos = results[1];
+      if (!previas || !previas.length) { show('<div class="error">❌ No se encontró la previa. Contacta con Print & Copy · 923 018 034</div>'); return; }
+      _previa = previas[0];
+      _pedido = pedidos && pedidos[0] ? pedidos[0] : null;
+      renderPrevia();
+    }).catch(function() {
+      show('<div class="error">❌ Error al cargar. Comprueba tu conexión.</div>');
+    });
+  }
+
+  function renderPrevia() {
+    var p = _previa;
+    var ped = _pedido;
+    var yaRespondida = p.estado === 'aceptada' || p.estado === 'rechazada';
+
+    // Si ya está aceptada mostrar confirmación
+    if (p.estado === 'aceptada') {
+      show('<div class="estado-ok"><div class="ico">✅</div><h2>¡Diseño aprobado!</h2><p>Hemos recibido tu aprobación. Ya estamos produciendo tu pedido <strong>' + pedidoId + '</strong>.<br><br>Te avisaremos cuando esté listo para recoger.</p></div>');
+      return;
+    }
+
+    var clienteNombre = ped ? ped.cliente_nombre : '';
+    var descripcion = ped ? ped.descripcion : '';
+    var esImg = p.imagen_url && !p.imagen_url.toLowerCase().endsWith('.pdf');
+
+    var html = '';
+    // Cabecera pedido
+    html += '<div class="card">';
+    html += '<div class="card-header"><div class="pedido-id">' + pedidoId + '</div>';
+    if (clienteNombre) html += '<div class="cliente">Hola, <strong>' + clienteNombre.split(' ')[0] + '</strong> 👋</div>';
+    html += '<div class="version-info">Versión ' + p.version + ' · ' + new Date(p.created_at).toLocaleDateString('es-ES') + '</div>';
+    html += '</div>';
+    html += '<div class="card-body">';
+    if (descripcion) html += '<p style="font-size:13px;color:#555;margin-bottom:12px">' + descripcion + '</p>';
+
+    // Imagen o PDF
+    if (p.imagen_url) {
+      if (esImg) {
+        html += '<div class="imagen-wrap"><img src="' + p.imagen_url + '" alt="Previa de diseño" onclick="this.requestFullscreen&&this.requestFullscreen()"></div>';
+        html += '<p style="font-size:11px;color:#aaa;text-align:center;margin-bottom:12px">Pulsa la imagen para ampliar</p>';
+      } else {
+        html += '<div class="imagen-wrap"><a class="pdf-link" href="' + p.imagen_url + '" target="_blank">📄 Ver PDF de la previa →</a></div>';
+      }
+    }
+
+    // Acciones
+    if (!yaRespondida) {
+      html += '<button class="btn btn-aprobar" onclick="aprobar()">✅ Aprobar diseño</button>';
+      html += '<button class="btn btn-cambios" onclick="mostrarFormCambios()">✏️ Solicitar cambios</button>';
+      html += '<div class="form-cambios" id="form-cambios">';
+      html += '<p style="font-size:13px;color:#555;margin-bottom:8px">Indica qué cambios necesitas:</p>';
+      html += '<textarea class="textarea" id="txt-cambios" rows="4" placeholder="Describe los cambios que necesitas..."></textarea>';
+      html += '<button class="btn btn-cambios" onclick="enviarCambios()">Enviar solicitud de cambios</button>';
+      html += '</div>';
+    } else if (p.estado === 'rechazada') {
+      html += '<div style="background:#FCEBEB;border-radius:8px;padding:12px;font-size:13px;color:#A32D2D">✏️ Cambios enviados. Estamos trabajando en ello.</div>';
+    }
+
+    html += '</div></div>';
+    html += '<p style="text-align:center;font-size:12px;color:#aaa;padding-bottom:20px">Print & Copy · Av. Portugal 62, Salamanca · 923 018 034</p>';
+    show(html);
+  }
+
+  function aprobar() {
+    if (!confirm('¿Confirmas que el diseño está correcto y podemos empezar la producción?')) return;
+    var btn = document.querySelector('.btn-aprobar');
+    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+    Promise.all([
+      apiPatch('pedido_previas?pedido_id=eq.' + pedidoId + '&version=eq.' + _previa.version, { estado: 'aceptada' }),
+      apiPatch('pedidos?id=eq.' + pedidoId, { previa_estado: 'aceptada', previa_cambios: null })
+    ]).then(function() {
+      show('<div class="estado-ok"><div class="ico">✅</div><h2>¡Diseño aprobado!</h2><p>Hemos recibido tu aprobación. Ya estamos produciendo tu pedido <strong>' + pedidoId + '</strong>.<br><br>Te avisaremos cuando esté listo para recoger.</p><p style="margin-top:16px;font-size:12px;color:#888">Print & Copy · 923 018 034</p></div>');
+    }).catch(function() {
+      alert('Error al enviar. Llámanos al 923 018 034');
+      if (btn) { btn.disabled = false; btn.textContent = '✅ Aprobar diseño'; }
+    });
+  }
+
+  function mostrarFormCambios() {
+    var f = document.getElementById('form-cambios');
+    if (f) { f.classList.toggle('visible'); f.querySelector('textarea').focus(); }
+  }
+
+  function enviarCambios() {
+    var txt = document.getElementById('txt-cambios');
+    var cambios = txt ? txt.value.trim() : '';
+    if (!cambios) { alert('Por favor describe los cambios que necesitas'); return; }
+    var btn = document.querySelector('#form-cambios .btn-cambios');
+    if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+
+    Promise.all([
+      apiPatch('pedido_previas?pedido_id=eq.' + pedidoId + '&version=eq.' + _previa.version, { estado: 'rechazada', cambios_solicitados: cambios }),
+      apiPatch('pedidos?id=eq.' + pedidoId, { previa_estado: 'rechazada', previa_cambios: cambios })
+    ]).then(function() {
+      show('<div class="card"><div class="card-body" style="text-align:center;padding:30px 16px"><div style="font-size:48px;margin-bottom:12px">📝</div><h2 style="color:#185FA5;margin-bottom:8px">Cambios enviados</h2><p style="color:#555;font-size:14px">Hemos recibido tus indicaciones. Te enviaremos una nueva versión pronto.</p><p style="margin-top:16px;font-size:12px;color:#aaa">Print & Copy · 923 018 034</p></div></div>');
+    }).catch(function() {
+      alert('Error al enviar. Llámanos al 923 018 034');
+      if (btn) { btn.disabled = false; btn.textContent = 'Enviar solicitud de cambios'; }
+    });
+  }
+
+  function show(html) {
+    document.getElementById('main-content').innerHTML = html;
+  }
+
+  render();
+</script>
+</body>
+</html>
