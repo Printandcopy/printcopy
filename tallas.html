@@ -86,6 +86,15 @@
 var SUPA_URL = 'https://ffiyprmbrznofoprvvik.supabase.co';
 var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg';
 var TALLAS = ['XS','S','M','L','XL','XXL','3XL'];
+var PRENDA_REF = {'Camisetas':'CA6554','Sudaderas':'SU1070','Sudaderas c/capucha':'SU1067','Polos':'PO6638','Petos':'CA6554'};
+var PRENDA_MEDIDAS = {
+  'Camisetas':{XS:'46×66',S:'49×69',M:'52×71',L:'55×73',XL:'58×75',XXL:'62×77','3XL':'66×79'},
+  'Sudaderas':{S:'52×68',M:'55×70',L:'58×72',XL:'61×74',XXL:'65×76','3XL':'69×78'},
+  'Sudaderas c/capucha':{S:'52×68',M:'55×70',L:'58×72',XL:'61×74',XXL:'65×76','3XL':'69×78'},
+  'Polos':{S:'50×72',M:'53×74',L:'56×76',XL:'59×78',XXL:'63×80','3XL':'67×82'},
+  'Petos':{S:'49×69',M:'52×71',L:'55×73',XL:'58×75',XXL:'62×77'}
+};
+var _prendaDetectada='Camisetas';
 var COLORES = [
   {nombre:'Blanco',hex:'#FFFFFF',borde:true},{nombre:'Negro',hex:'#1a1a1a'},
   {nombre:'Azul marino',hex:'#1B2A6B'},{nombre:'Azul royal',hex:'#2651A0'},
@@ -123,6 +132,13 @@ function init() {
   api('pedidos?id=eq.'+pedidoId+'&select=id,cliente_nombre,descripcion,tallas_colores').then(function(r){
     if(!r||!r.length){show('<div class="error">❌ Pedido no encontrado.</div>');return;}
     _pedido = r[0];
+    // Detectar prenda desde descripción
+    var _d=(_pedido.descripcion||'').toUpperCase();
+    if(_d.includes('SUDADERA')&&_d.includes('CAPUCHA'))_prendaDetectada='Sudaderas c/capucha';
+    else if(_d.includes('SUDADERA'))_prendaDetectada='Sudaderas';
+    else if(_d.includes('POLO'))_prendaDetectada='Polos';
+    else if(_d.includes('PETO'))_prendaDetectada='Petos';
+    else _prendaDetectada='Camisetas';
     // Si ya tiene datos guardados, usarlos como base
     if(_pedido.tallas_colores && _pedido.tallas_colores.length) {
       _filas = JSON.parse(JSON.stringify(_pedido.tallas_colores));
@@ -143,6 +159,35 @@ function render() {
     +'<div class="sub">Pedido <strong>'+pedidoId+'</strong> · '+ped.descripcion+'</div>'
     +'<p style="font-size:13px;color:#555">Indica las tallas y colores que necesitas. Puedes añadir varios colores.</p>'
     +'</div>';
+
+  // Guía de tallas con foto real
+  var _ref=PRENDA_REF[_prendaDetectada]||'CA6554';
+  var _imgGuia='https://www.camisetas.com/img/img-products/medium/Roly/'+_ref+'-58.jpg';
+  var _medidas=PRENDA_MEDIDAS[_prendaDetectada]||{};
+  if(Object.keys(_medidas).length){
+    html+='<div class="card" style="padding:12px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="var g=document.getElementById(\'guia-tallas\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'">'
+      +'<span style="font-size:13px;font-weight:700;color:#185FA5">📏 Guía de tallas — '+_prendaDetectada+'</span>'
+      +'<span style="font-size:11px;color:#aaa">▼</span>'
+      +'</div>'
+      +'<div id="guia-tallas" style="display:none;margin-top:10px">'
+      +'<div style="display:flex;gap:12px;align-items:flex-start">'
+      +'<div style="flex:0 0 140px;position:relative;background:#f5f5f5;border-radius:8px;overflow:hidden;border:1px solid #eee">'
+      +'<img src="'+_imgGuia+'" style="width:140px;height:170px;object-fit:contain;display:block" onerror="this.parentElement.style.display=\'none\'">'
+      +'<div style="position:absolute;top:35%;left:8px;right:30px;display:flex;align-items:center"><div style="height:1px;flex:1;background:#185FA5;position:relative"><div style="position:absolute;left:-3px;top:-2.5px;border-top:3px solid transparent;border-bottom:3px solid transparent;border-right:5px solid #185FA5"></div><div style="position:absolute;right:-3px;top:-2.5px;border-top:3px solid transparent;border-bottom:3px solid transparent;border-left:5px solid #185FA5"></div></div></div>'
+      +'<div style="position:absolute;top:calc(35% - 9px);left:0;right:30px;text-align:center"><span style="background:rgba(255,255,255,.85);padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;color:#185FA5">ANCHO</span></div>'
+      +'<div style="position:absolute;top:12%;right:12px;bottom:8%;display:flex;flex-direction:column;align-items:center"><div style="width:1px;flex:1;background:#185FA5;position:relative"><div style="position:absolute;top:-3px;left:-2.5px;border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:5px solid #185FA5"></div><div style="position:absolute;bottom:-3px;left:-2.5px;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid #185FA5"></div></div></div>'
+      +'<div style="position:absolute;right:0;top:50%;transform:translateY(-50%) rotate(90deg)"><span style="background:rgba(255,255,255,.85);padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;color:#185FA5">ALTO</span></div>'
+      +'</div>'
+      +'<div style="flex:1"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<thead><tr><th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-weight:500;font-size:11px;text-align:center">Talla</th><th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-weight:500;font-size:11px;text-align:center">Ancho</th><th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-weight:500;font-size:11px;text-align:center">Alto</th></tr></thead><tbody>';
+    var _mk=Object.keys(_medidas);
+    _mk.forEach(function(t,i){
+      var _p=_medidas[t].split('×');
+      html+='<tr style="background:'+(i%2===0?'#fff':'#f9f9f7')+'"><td style="padding:5px 8px;border:1px solid #eee;text-align:center;font-weight:600">'+t+'</td><td style="padding:5px 8px;border:1px solid #eee;text-align:center">'+_p[0]+'</td><td style="padding:5px 8px;border:1px solid #eee;text-align:center">'+(_p[1]||'')+'</td></tr>';
+    });
+    html+='</tbody></table><div style="font-size:11px;color:#aaa;margin-top:6px">Medidas en cm. Tolerancia ±2 cm</div></div></div></div></div>';
+  }
 
   // Tabla tallas
   html += '<div class="card">'

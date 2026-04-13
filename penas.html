@@ -187,15 +187,14 @@ function render() {
     +'<p style="font-size:13px;color:#555;line-height:1.5">Rellena los datos de cada persona: prenda, color, talla, nombre para estampar y número.</p>'
     +'</div>';
 
-  // Guía de tallas
+  // Guía de tallas con foto real
   html += '<div class="card" style="padding:12px">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="var g=document.getElementById(\'guia-tallas\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'">'
     +'<span style="font-size:13px;font-weight:700;color:#185FA5">📏 Guía de tallas</span>'
     +'<span style="font-size:11px;color:#aaa">▼</span>'
     +'</div>'
     +'<div id="guia-tallas" style="display:none;margin-top:10px">'
-    +'<div style="font-size:11px;color:#888;margin-bottom:8px">Medidas en cm (ancho × alto). Variación ±2,5 cm</div>'
-    +'<div id="guia-tallas-tabla"></div>'
+    +'<div id="guia-tallas-contenido"></div>'
     +'</div></div>';
 
   html += '<div id="filas-container">';
@@ -344,16 +343,49 @@ function show(html){ document.getElementById('main-content').innerHTML = html; }
 function actualizarGuiaTallas(){
   var prenda=(_filas[0]&&_filas[0].prenda)||'Camisetas';
   var medidas=PRENDA_MEDIDAS[prenda];
-  if(!medidas){document.getElementById('guia-tallas-tabla').innerHTML='';return;}
+  var el=document.getElementById('guia-tallas-contenido');
+  if(!el)return;
+  if(!medidas){el.innerHTML='';return;}
   var ref=PRENDA_REF[prenda]||'CA6554';
-  var html='<div style="font-size:12px;font-weight:600;color:#444;margin-bottom:6px">'+prenda+' ('+ref+')</div>';
-  html+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
-  html+='<tr style="background:#f0f7ff"><th style="padding:5px 8px;border:1px solid #e5e7eb;text-align:left">Talla</th><th style="padding:5px 8px;border:1px solid #e5e7eb">Ancho × Alto (cm)</th></tr>';
-  Object.keys(medidas).forEach(function(t){
-    html+='<tr><td style="padding:4px 8px;border:1px solid #e5e7eb;font-weight:600">'+t+'</td><td style="padding:4px 8px;border:1px solid #e5e7eb;text-align:center">'+medidas[t]+'</td></tr>';
+  var imgUrl='https://www.camisetas.com/img/img-products/medium/Roly/'+ref+'-58.jpg';
+  var medidasArr=Object.keys(medidas);
+  var html='<div style="display:flex;gap:12px;align-items:flex-start">'
+    +'<div style="flex:0 0 150px;position:relative;background:#f5f5f5;border-radius:8px;overflow:hidden;border:1px solid #eee">'
+    +'<img src="'+imgUrl+'" style="width:150px;height:180px;object-fit:contain;display:block" onerror="this.parentElement.style.display=\'none\'">'
+    +'<div style="position:absolute;top:35%;left:8px;right:35px;display:flex;align-items:center">'
+    +'<div style="height:1px;flex:1;background:#185FA5;position:relative">'
+    +'<div style="position:absolute;left:-3px;top:-2.5px;width:0;height:0;border-top:3px solid transparent;border-bottom:3px solid transparent;border-right:5px solid #185FA5"></div>'
+    +'<div style="position:absolute;right:-3px;top:-2.5px;width:0;height:0;border-top:3px solid transparent;border-bottom:3px solid transparent;border-left:5px solid #185FA5"></div>'
+    +'</div></div>'
+    +'<div style="position:absolute;top:calc(35% - 9px);left:0;right:35px;text-align:center">'
+    +'<span style="background:rgba(255,255,255,.85);padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;color:#185FA5">ANCHO</span>'
+    +'</div>'
+    +'<div style="position:absolute;top:12%;right:14px;bottom:8%;display:flex;flex-direction:column;align-items:center">'
+    +'<div style="width:1px;flex:1;background:#185FA5;position:relative">'
+    +'<div style="position:absolute;top:-3px;left:-2.5px;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:5px solid #185FA5"></div>'
+    +'<div style="position:absolute;bottom:-3px;left:-2.5px;width:0;height:0;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid #185FA5"></div>'
+    +'</div></div>'
+    +'<div style="position:absolute;right:2px;top:50%;transform:translateY(-50%) rotate(90deg)">'
+    +'<span style="background:rgba(255,255,255,.85);padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600;color:#185FA5">ALTO</span>'
+    +'</div>'
+    +'</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:13px;font-weight:600;color:#444;margin-bottom:6px">'+prenda+'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<thead><tr><th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-weight:500;font-size:11px;text-align:center">Talla</th>'
+    +'<th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-weight:500;font-size:11px;text-align:center">Ancho</th>'
+    +'<th style="padding:6px 8px;background:#1a1a1a;color:#fff;font-weight:500;font-size:11px;text-align:center">Alto</th></tr></thead><tbody>';
+  medidasArr.forEach(function(t,i){
+    var parts=medidas[t].split('×');
+    var bg=i%2===0?'#fff':'#f9f9f7';
+    html+='<tr style="background:'+bg+'"><td style="padding:5px 8px;border:1px solid #eee;text-align:center;font-weight:600">'+t+'</td>'
+      +'<td style="padding:5px 8px;border:1px solid #eee;text-align:center">'+parts[0]+'</td>'
+      +'<td style="padding:5px 8px;border:1px solid #eee;text-align:center">'+(parts[1]||'')+'</td></tr>';
   });
-  html+='</table>';
-  document.getElementById('guia-tallas-tabla').innerHTML=html;
+  html+='</tbody></table>'
+    +'<div style="font-size:11px;color:#aaa;margin-top:6px">Medidas en cm. Tolerancia ±2 cm</div>'
+    +'</div></div>';
+  el.innerHTML=html;
 }
 
 function actualizarFotoPrencia(idx){
