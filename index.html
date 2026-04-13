@@ -6643,7 +6643,7 @@ function nvRenderTablaTallas(){
     +'<thead><tr><th style="text-align:left;min-width:120px">Color</th>'
     +TALLAS_STD.map(function(t){return'<th>'+t+'</th>';}).join('')
     +'<th>Total</th></tr></thead>'
-    +'<tbody id="nv-tt-tbody">'+nvTTRenderFila(filaInicial,0,colorOpts)+'</tbody>'
+    +'<tbody id="nv-tt-tbody">'+nvTTRenderFila({color:'Negro',hex:'#1a1a1a',tallas:{}},0,colorOpts)+'</tbody>'
     +'</table>'
     +'<button class="tt-add-btn" onclick="nvTTAddFila()">+ Añadir color</button>'
     +'<div id="nv-tt-resumen" class="tt-resumen">Sin tallas introducidas</div>'
