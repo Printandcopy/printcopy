@@ -466,6 +466,7 @@ textarea{resize:vertical;min-height:64px}
     </div>
   </div>
 </header>
+<div id="wa-alert-bar" style="display:none;background:#A32D2D;color:#fff;padding:6px 20px;font-size:13px;font-weight:600;text-align:center;cursor:pointer" onclick="window.open('https://printcopy.vercel.app/api/health-check','_blank')">⚠️ WhatsApp desconectado · Los envíos automáticos están parados. Reconecta en Whaticket.</div>
 <!-- BARRA AVISOS ACEPTADOS -->
 <div id="barra-avisos">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-wrap:wrap">
@@ -7364,7 +7365,7 @@ function ampliImgPrenda(src){
 }
 
 // Health check WhatsApp cada 4h — si falla envía email de alerta
-function checkWAHealth(){fetch('/api/health-check').then(function(r){return r.json();}).then(function(d){if(d.estado==='ERROR'){console.warn('⚠️ WA CAÍDO:',d.detalle);var t=document.createElement('div');t.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#A32D2D;color:#fff;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:400px;text-align:center';t.innerHTML='⚠️ WhatsApp desconectado<br><span style="font-size:12px;font-weight:400">Los envíos automáticos están parados. Reconecta en Whaticket.</span>';t.onclick=function(){t.remove();};document.body.appendChild(t);}}).catch(function(){});}
+function checkWAHealth(){fetch('/api/health-check').then(function(r){return r.json();}).then(function(d){var bar=document.getElementById('wa-alert-bar');if(!bar)return;if(d.estado==='ERROR'){bar.style.display='block';console.warn('⚠️ WA CAÍDO:',d.detalle);}else{bar.style.display='none';}}).catch(function(){});}
 checkWAHealth();
 setInterval(checkWAHealth,15*60*1000);
 // Polling cada 60s para detectar presupuestos aceptados por el cliente
