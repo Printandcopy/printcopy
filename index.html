@@ -2979,7 +2979,7 @@ function renderClientes(q){
     var manualBtns='';
     if(nivel!=='premium')manualBtns+='<button class="btn btn-secondary btn-sm" title="Marcar como Premium" onclick="setNivelManual('+c.id+',\'premium\')">🟣 Premium</button>';
     if(nivel==='premium')manualBtns+='<button class="btn btn-secondary btn-sm" onclick="setNivelManual('+c.id+',\'auto\')">↺ Auto</button>';
-    return'<div class="cliente-card"><div style="flex:1"><div style="font-weight:500;font-size:14px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">'+c.nombre+sectorBadge+nivelBtn+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+(c.telefono||'')+' '+(c.email?'· '+c.email:'')+'</div><div style="font-size:12px;color:#534AB7;margin-top:2px">'+(c.condiciones||COND_STD)+'</div></div><div style="display:flex;align-items:center;gap:5px;flex-shrink:0">'+manualBtns+'<span style="font-size:12px;color:#888">'+nped+' ped.</span><button class="btn btn-secondary btn-sm" onclick="editarCliente('+c.id+')">✏️ Editar</button><button class="btn btn-secondary btn-sm" onclick="verPedidosCliente('+c.id+')">Ver pedidos</button></div></div>';
+    return'<div class="cliente-card"><div style="flex:1"><div style="font-weight:500;font-size:14px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">'+c.nombre+sectorBadge+nivelBtn+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+(c.telefono||'')+' '+(c.email?'· '+c.email:'')+'</div><div style="font-size:12px;color:#534AB7;margin-top:2px">'+(c.condiciones||COND_STD)+'</div></div><div style="display:flex;align-items:center;gap:5px;flex-shrink:0">'+manualBtns+'<span style="font-size:12px;color:#888">'+nped+' ped.</span><button class="btn btn-secondary btn-sm" onclick="editarCliente('+c.id+')">✏️ Editar</button><button class="btn btn-secondary btn-sm" onclick="verPedidosCliente('+c.id+')">Ver pedidos</button><button class="btn btn-secondary btn-sm" style="color:#A32D2D" onclick="event.stopPropagation();eliminarCliente('+c.id+')">🗑</button></div></div>';
   }).join('');
 }
 
@@ -3521,6 +3521,18 @@ function renderAnalytics(){
 }
 
 var _editClienteId=null;
+function eliminarCliente(id){
+  var c=clientes.find(function(x){return x.id===id;});
+  if(!c)return;
+  var nped=pedidos.filter(function(p){return p.clienteId===id;}).length;
+  if(nped>0){alert('No se puede eliminar "'+c.nombre+'" porque tiene '+nped+' pedido(s) asociados.\n\nElimina primero los pedidos.');return;}
+  if(!confirm('¿Eliminar cliente "'+c.nombre+'"?\n\nEsta acción no se puede deshacer.'))return;
+  sb.from('clientes').delete().eq('id',id).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    clientes=clientes.filter(function(x){return x.id!==id;});
+    renderClientes();
+  });
+}
 function editarCliente(id){
   var c=clientes.find(function(x){return x.id==id;});if(!c)return;
   _editClienteId=c.id;
