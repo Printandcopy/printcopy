@@ -6618,10 +6618,26 @@ function nvRenderTablaTallas(){
   var colorOpts=colores.map(function(c){
     return'<option value="'+c.nombre+'" data-hex="'+c.hex+'" '+(c.borde?'data-borde="1"':'')+'>'+c.nombre+'</option>';
   }).join('');
-  var filaInicial={color:'Negro',hex:'#1a1a1a',tallas:{}};
+  var defCod=(colores.find(function(c){return c.nombre==='Negro';})||colores[0]||{}).cod||'02';
+  var imgUrl=rolyImgUrl(prendaSel,defCod);
+  var medidas=PRENDA_MEDIDAS[prendaSel]||{};
+  var medidasHTML='';
+  if(Object.keys(medidas).length){
+    medidasHTML='<div id="nv-tt-guia" style="display:none;padding:10px 12px;border-top:1px solid #E6F1FB">'
+      +'<div style="font-size:11px;color:#888;margin-bottom:6px">Medidas en cm (ancho × alto) · Variación ±2,5 cm</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px">'
+      +Object.keys(medidas).map(function(t){return'<span style="font-size:11px;background:#f0f7ff;padding:2px 8px;border-radius:4px"><b>'+t+'</b> '+medidas[t]+'</span>';}).join('')
+      +'</div></div>';
+  }
 
   var html='<div style="border:1.5px solid #E6F1FB;border-radius:8px;overflow:hidden">'
-    +'<div style="background:#E6F1FB;padding:9px 12px"><span style="font-size:12px;font-weight:700;color:#185FA5">👕 Tallas y colores</span></div>'
+    +'<div style="background:#E6F1FB;padding:9px 12px;display:flex;align-items:center;justify-content:space-between">'
+    +'<span style="font-size:12px;font-weight:700;color:#185FA5">👕 Tallas y colores</span>'
+    +'<div style="display:flex;align-items:center;gap:8px">'
+    +'<img id="nv-tt-prenda-img" src="'+imgUrl+'" style="width:36px;height:36px;object-fit:contain;border-radius:4px;border:1px solid #ddd" onerror="this.style.display=\'none\'">'
+    +'<button type="button" onclick="var g=document.getElementById(\'nv-tt-guia\');if(g)g.style.display=g.style.display===\'none\'?\'block\':\'none\'" style="background:none;border:1px solid #B5D4F4;border-radius:5px;padding:3px 8px;font-size:11px;color:#185FA5;cursor:pointer">📏 Guía tallas</button>'
+    +'</div></div>'
+    +medidasHTML
     +'<div class="tt-body">'
     +'<table class="tt-table" id="nv-tt-table">'
     +'<thead><tr><th style="text-align:left;min-width:120px">Color</th>'
@@ -6714,6 +6730,9 @@ function nvTTSelColor(idx,colorIdx){
   // Guardar en dato local
   _nvTTFilas=_nvTTFilas||{};
   _nvTTFilas[idx]={color:c.nombre,hex:c.hex,borde:c.borde||false,cod:c.cod||''};
+  // Actualizar foto prenda
+  var pImg=document.getElementById('nv-tt-prenda-img');
+  if(pImg){pImg.src=rolyImgUrl(nvGetPrendaSeleccionada(),c.cod);pImg.style.display='block';}
 }
 // Cerrar dropdowns al pulsar fuera
 document.addEventListener('click',function(e){
@@ -6955,11 +6974,16 @@ function renderTablaIndividualDetalle(p){
   var statusBadge=rellenas===0?'<span style="background:#FCEBEB;color:#A32D2D;font-size:10px;padding:1px 7px;border-radius:10px">Pdte</span>'
     :rellenas<total?'<span style="background:#E6F1FB;color:#185FA5;font-size:10px;padding:1px 7px;border-radius:10px">'+rellenas+'/'+total+'</span>'
     :'<span style="background:#EAF3DE;color:#3B6D11;font-size:10px;padding:1px 7px;border-radius:10px">Completa</span>';
+  var _prendaInd='Camisetas';
+  if(datos[0]&&datos[0].prenda&&PRENDA_MODELO[datos[0].prenda])_prendaInd=datos[0].prenda;
+  var imgUrlInd=rolyImgUrl(_prendaInd,(datos[0]&&datos[0].cod)||'02');
   var html='<div class="tt-wrap">'
     +'<div class="tt-header" onclick="toggleTTPanel(\'tt-panel-'+p.id+'\')">'
     +'<span class="tt-header-title">🏷 Personalización individual '+statusBadge+'</span>'
+    +'<div style="display:flex;align-items:center;gap:6px">'
+    +'<img src="'+imgUrlInd+'" style="width:28px;height:28px;object-fit:contain;border-radius:3px;border:1px solid #ddd" onerror="this.style.display=\'none\'">'
     +'<span id="tt-arrow-'+p.id+'" style="font-size:11px;color:#185FA5">▼</span>'
-    +'</div>'
+    +'</div></div>'
     +'<div id="tt-panel-'+p.id+'" style="display:none"><div class="tt-body">';
   if(datos.length){
     html+='<table class="tt-table" style="font-size:12px"><thead><tr>'
@@ -7022,14 +7046,30 @@ function renderTablaTallas(p){
     return'<option value="'+c.nombre+'" data-hex="'+c.hex+'" '+(c.borde?'data-borde="1"':'')+'>'+c.nombre+'</option>';
   }).join('');
 
+  var defCodDet=(datos[0]&&datos[0].color?colores.find(function(c){return c.nombre===datos[0].color;}):colores.find(function(c){return c.nombre==='Negro';}))||colores[0]||{cod:'02'};
+  var imgUrlDet=rolyImgUrl(_prendaDetectada,defCodDet.cod||'02');
+  var medidasDet=PRENDA_MEDIDAS[_prendaDetectada]||{};
+  var medidasHTMLDet='';
+  if(Object.keys(medidasDet).length){
+    medidasHTMLDet='<div id="tt-guia-'+p.id+'" style="display:none;padding:8px 12px;border-bottom:1px solid #E6F1FB">'
+      +'<div style="font-size:11px;color:#888;margin-bottom:4px">Medidas cm (ancho × alto) · ±2,5 cm</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:4px">'
+      +Object.keys(medidasDet).map(function(t){return'<span style="font-size:10px;background:#f0f7ff;padding:2px 6px;border-radius:4px"><b>'+t+'</b> '+medidasDet[t]+'</span>';}).join('')
+      +'</div></div>';
+  }
+
   var html='<div class="tt-wrap">'
     +'<div class="tt-header" onclick="toggleTTPanel(\'tt-panel-'+p.id+'\')">'
     +'<span class="tt-header-title">👕 Tallas y colores'
     +(p.tallasColores&&p.tallasColores.length?'<span style="background:#185FA5;color:#fff;font-size:10px;padding:1px 7px;border-radius:10px">'+ttResumenCorto(p.tallasColores)+'</span>':'')
     +'</span>'
+    +'<div style="display:flex;align-items:center;gap:6px">'
+    +'<img src="'+imgUrlDet+'" style="width:28px;height:28px;object-fit:contain;border-radius:3px;border:1px solid #ddd" onerror="this.style.display=\'none\'">'
     +'<span id="tt-arrow-'+p.id+'" style="font-size:11px;color:#185FA5">▼</span>'
-    +'</div>'
+    +'</div></div>'
+    +medidasHTMLDet
     +'<div id="tt-panel-'+p.id+'" style="display:none">'
+    +'<div style="padding:6px 12px 0;text-align:right"><button type="button" onclick="var g=document.getElementById(\'tt-guia-'+p.id+'\');if(g)g.style.display=g.style.display===\'none\'?\'block\':\'none\'" style="background:none;border:1px solid #B5D4F4;border-radius:5px;padding:2px 8px;font-size:10px;color:#185FA5;cursor:pointer">📏 Guía tallas</button></div>'
     +'<div class="tt-body">'
     +'<table class="tt-table" id="tt-table-'+p.id+'">'
     +'<thead><tr><th style="text-align:left;min-width:120px">Color</th>'
