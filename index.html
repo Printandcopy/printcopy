@@ -2931,7 +2931,7 @@ function renderSemaforoTaller(p){
   var html='<div class="sem-wrap" onclick="event.stopPropagation()">';
   items.forEach(function(it){
     if(it.check){
-      html+='<div class="sem-item"><label style="display:flex;align-items:center;gap:7px;cursor:pointer;flex:1;margin:0"><input type="checkbox" onchange="toggleCheckModal(\''+p.id+'\',\''+it.field+'\',this.checked)" style="margin:0;flex-shrink:0"><span class="sem-label">'+it.label+'</span></label>'+(it.ts?'<span class="sem-ts">'+it.ts+'</span>':'')+'</div>';
+      html+='<div class="sem-item"><input type="checkbox" onchange="toggleCheckModal(\''+p.id+'\',\''+it.field+'\',this.checked)" style="margin:0;flex-shrink:0;width:14px;height:14px;cursor:pointer"><span class="sem-label" style="cursor:pointer">'+it.label+'</span>'+(it.ts?'<span class="sem-ts">'+it.ts+'</span>':'')+'</div>';
     } else {
       html+='<div class="sem-item"><span class="sem-dot '+it.dot+'"></span><span class="sem-label'+(it.blocked?' sem-blocked':'')+'">'+it.label+'</span>'+(it.ts?'<span class="sem-ts">'+it.ts+'</span>':'')+'</div>';
     }
@@ -3694,6 +3694,16 @@ function imprimirPedido(id){
 function generarFichaProduccion(id){
   var p=pedidos.find(function(x){return x.id===id;});
   if(!p){alert('Pedido no encontrado');return;}
+  // Recargar datos frescos desde BD
+  sb.from('pedidos').select('*').eq('id',id).single().then(function(r){
+    if(!r.data){alert('Error al cargar pedido');return;}
+    var fresh=dbToLocal(r.data);
+    // Actualizar en array local
+    Object.keys(fresh).forEach(function(k){p[k]=fresh[k];});
+    _generarFichaHTML(p);
+  });
+}
+function _generarFichaHTML(p){
   var w=window.open('','_blank','width=800,height=1100');
   var fechaEnt=p.fechaEntrega?new Date(p.fechaEntrega+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}):'Sin fecha';
   var operario=p.operario||'Sin asignar';
@@ -7175,12 +7185,11 @@ function renderTablaIndividualDetalle(p){
   } else {
     html+='<div style="text-align:center;padding:16px;color:#aaa;font-size:13px">Sin datos. Envía el link al cliente para que rellene.</div>';
   }
+  var _indCompleta=rellenas>0&&rellenas===total;
   html+='<div style="display:flex;gap:8px;margin-top:8px">'
     +'<button class="tt-save-btn" onclick="ttGuardar(\''+p.id+'\')">💾 Guardar</button>'
-    +'<button class="tt-wa-btn" onclick="ttEnviarWAIndividual(\''+p.id+'\')">📱 Enviar al cliente</button>'
+    +(_indCompleta?'':'<button class="tt-wa-btn" onclick="ttEnviarWAIndividual(\''+p.id+'\')">📱 Enviar al cliente</button>')
     +'</div></div></div></div>';
-  return html;
-}
 
 function ttEnviarWAIndividual(pedidoId){
   var p=pedidos.find(function(x){return x.id===pedidoId;});
@@ -7249,7 +7258,7 @@ function renderTablaTallas(p){
     +'<div id="tt-resumen-'+p.id+'" class="tt-resumen">'+ttResumenHTML(datos)+'</div>'
     +'<div style="display:flex;gap:8px;margin-top:8px">'
     +'<button class="tt-save-btn" onclick="ttGuardar(\''+p.id+'\')">💾 Guardar</button>'
-    +'<button class="tt-wa-btn" onclick="ttEnviarWA(\''+p.id+'\')">📱 Enviar al cliente</button>'
+    +(tallasCompletas(p)?'':'<button class="tt-wa-btn" onclick="ttEnviarWA(\''+p.id+'\')">📱 Enviar al cliente</button>')
     +'</div></div></div></div>';
   return html;
 }
