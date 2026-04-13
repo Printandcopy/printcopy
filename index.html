@@ -3760,10 +3760,10 @@ function _generarFichaHTML(p){
   html+='<script>';
   html+='var SUPA="https://ffiyprmbrznofoprvvik.supabase.co";';
   html+='var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg";';
-  html+='fetch(SUPA+"/rest/v1/pedido_previas?pedido_id=eq.'+p.id+'&order=version.desc&limit=1&select=url",{headers:{"apikey":KEY}})';
+  html+='fetch(SUPA+"/rest/v1/pedido_previas?pedido_id=eq.'+p.id+'&order=version.desc&limit=1&select=imagen_url",{headers:{"apikey":KEY}})';
   html+='.then(function(r){return r.json()})';
   html+='.then(function(d){var s=document.getElementById("previa-section");if(!s)return;';
-  html+='if(d&&d.length&&d[0].url){s.innerHTML="<div style=\\"font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;font-weight:700\\">Previa aprobada</div><img src=\\""+d[0].url+"\\">";}';
+  html+='if(d&&d.length&&d[0].imagen_url){s.innerHTML="<div style=\\"font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;font-weight:700\\">Previa aprobada</div><img src=\\""+d[0].imagen_url+"\\">";}';
   html+='else{s.innerHTML="<div style=\\"color:#aaa;font-size:12px\\">Sin previa</div>";}})';
   html+='.catch(function(){});';
   html+='</'+'script></body></html>';
