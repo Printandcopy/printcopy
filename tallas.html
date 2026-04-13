@@ -321,6 +321,13 @@ document.getElementById('color-modal').addEventListener('click', function(e){
 function enviar() {
   var totalUds = _filas.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
   if(totalUds === 0) {alert('Introduce al menos una talla');return;}
+  // Extraer cantidad del pedido de la descripción (ej: "×15")
+  var match=(_pedido.descripcion||'').match(/[×x](\d+)/i);
+  var cantPedido=match?parseInt(match[1]):0;
+  if(cantPedido>0 && totalUds!==cantPedido){
+    alert('Has indicado '+totalUds+' unidades pero el pedido es de '+cantPedido+'.\n\nRevisa las cantidades antes de enviar.');
+    return;
+  }
   var btn = document.getElementById('btn-enviar');
   if(btn){btn.disabled=true;btn.textContent='Enviando...';}
   apiPatch('pedidos?id=eq.'+pedidoId, {tallas_colores: _filas}).then(function(){

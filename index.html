@@ -1287,6 +1287,7 @@ textarea{resize:vertical;min-height:64px}
     <div class="btn-row" style="margin-top:14px;flex-wrap:wrap">
       <button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button>
       <button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir</button>
+      <button class="btn" style="background:#185FA5;color:white;border:none" onclick="if(_pedidoModal)generarFichaProduccion(_pedidoModal.id)">🏭 Ficha producción</button>
       <button class="btn" style="background:#BA7517;color:white;border:none" onclick="editarPedido()">✏️ Editar</button>
       <button class="btn btn-danger" onclick="anularPedido()">✗ Anular</button>
     </div>
@@ -3716,6 +3717,108 @@ function imprimirPedido(id){
   var p=pedidos.find(function(x){return x.id===id;});
   if(!p){alert('Pedido no encontrado');return;}
   generarResguardo(p);
+}
+
+function generarFichaProduccion(id){
+  var p=pedidos.find(function(x){return x.id===id;});
+  if(!p){alert('Pedido no encontrado');return;}
+  var w=window.open('','_blank','width=800,height=1100');
+  var fechaEnt=p.fechaEntrega?new Date(p.fechaEntrega+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}):'Sin fecha';
+  var operario=p.operario||'Sin asignar';
+  var html='<!DOCTYPE html><html><head><title>Ficha '+p.id+'</title><style>'
+    +'*{margin:0;padding:0;box-sizing:border-box}'
+    +'body{font-family:Arial,sans-serif;padding:20px;font-size:13px;color:#1a1a1a}'
+    +'.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:14px}'
+    +'.header h1{font-size:20px}'
+    +'.header .meta{text-align:right;font-size:12px;color:#555}'
+    +'.header .meta b{color:#1a1a1a}'
+    +'.section{margin-bottom:14px}'
+    +'.section-title{font-size:12px;text-transform:uppercase;font-weight:700;color:#888;border-bottom:1px solid #ddd;padding-bottom:3px;margin-bottom:8px}'
+    +'.info-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:14px}'
+    +'.info-box{background:#f5f5f5;padding:8px;border-radius:4px}'
+    +'.info-box label{font-size:10px;color:#888;text-transform:uppercase;display:block;margin-bottom:2px}'
+    +'.info-box span{font-size:14px;font-weight:700}'
+    +'table{width:100%;border-collapse:collapse;font-size:12px}'
+    +'th{background:#1a1a1a;color:#fff;padding:6px 8px;text-align:center;font-weight:500}'
+    +'th:first-child{text-align:left}'
+    +'td{padding:5px 8px;border:0.5px solid #ddd}'
+    +'tr:nth-child(even){background:#f9f9f9}'
+    +'.previa-box{border:1px solid #ddd;border-radius:6px;padding:10px;margin-top:8px;text-align:center}'
+    +'.previa-box img{max-width:100%;max-height:300px}'
+    +'.footer{margin-top:20px;border-top:1px solid #ddd;padding-top:8px;font-size:10px;color:#aaa;text-align:center}'
+    +'.check-row{display:flex;gap:20px;margin:6px 0}'
+    +'.check-item{display:flex;align-items:center;gap:6px;font-size:12px}'
+    +'.check-box{width:16px;height:16px;border:1.5px solid #999;border-radius:3px;flex-shrink:0}'
+    +'@media print{body{padding:10px}}'
+    +'</style></head><body>';
+  html+='<div class="header"><div><h1>FICHA DE PRODUCCION</h1><span style="font-size:16px;color:#185FA5;font-weight:700">'+p.id+'</span></div>'
+    +'<div class="meta"><b>'+p.clienteNombre+'</b><br>'+p.descripcion+'<br>Operario: <b>'+operario+'</b></div></div>';
+  html+='<div class="info-grid">'
+    +'<div class="info-box"><label>Entrega</label><span>'+fechaEnt+'</span></div>'
+    +'<div class="info-box"><label>Total</label><span>'+p.total.toFixed(2)+'€</span></div>'
+    +'<div class="info-box"><label>Pagado</label><span>'+(p.senal||0).toFixed(2)+'€</span></div>'
+    +'<div class="info-box"><label>Pendiente</label><span>'+(p.total-(p.senal||0)).toFixed(2)+'€</span></div>'
+    +'</div>';
+  // TALLAS
+  if(p.tallasColores&&p.tallasColores.length){
+    html+='<div class="section"><div class="section-title">Tallas y colores</div>';
+    if(p.tipoPersonalizacion==='individual'){
+      html+='<table><tr><th>#</th><th>Prenda</th><th>Color</th><th>Talla</th><th>Nombre</th><th>Numero</th></tr>';
+      p.tallasColores.forEach(function(f,i){
+        if(!f.nombre)return;
+        html+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+(f.prenda||'Camiseta')+'</td><td>'+(f.color||'')+'</td><td style="text-align:center">'+(f.talla||'')+'</td><td><b>'+(f.nombre||'')+'</b></td><td style="text-align:center">'+(f.numero||'')+'</td></tr>';
+      });
+      html+='</table>';
+    }else{
+      var tallas=['XS','S','M','L','XL','XXL','3XL'];
+      html+='<table><tr><th>Color</th>'+tallas.map(function(t){return'<th>'+t+'</th>';}).join('')+'<th>Total</th></tr>';
+      var granTotal=0;
+      p.tallasColores.forEach(function(f){
+        var rowTotal=tallas.reduce(function(s,t){return s+(parseInt((f.tallas||{})[t])||0);},0);
+        if(rowTotal===0)return;
+        granTotal+=rowTotal;
+        html+='<tr><td>'+(f.color||'?')+'</td>'+tallas.map(function(t){var v=parseInt((f.tallas||{})[t])||0;return'<td style="text-align:center">'+(v||'')+'</td>';}).join('')+'<td style="text-align:center;font-weight:700">'+rowTotal+'</td></tr>';
+      });
+      html+='<tr style="background:#eee;font-weight:700"><td>TOTAL</td>'+tallas.map(function(){return'<td></td>';}).join('')+'<td style="text-align:center">'+granTotal+'</td></tr>';
+      html+='</table>';
+    }
+    html+='</div>';
+  }
+  // PREVIAS
+  html+='<div class="section"><div class="section-title">Previa de diseno</div>';
+  if(p.previaEstado==='aceptada'){
+    html+='<div class="previa-box"><div style="color:#3B6D11;font-weight:700;margin-bottom:6px">APROBADA POR EL CLIENTE</div>';
+    // Intentar cargar imagen de previa
+    html+='<div id="previa-img-wrap" style="color:#aaa;font-size:11px">Cargando previa...</div>';
+    html+='</div>';
+  }else{
+    html+='<div class="previa-box" style="color:#aaa">Previa no aprobada aun ('+(p.previaEstado||'pendiente')+')</div>';
+  }
+  html+='</div>';
+  // CHECKLIST MANUAL
+  html+='<div class="section"><div class="section-title">Checklist produccion</div>'
+    +'<div class="check-row"><div class="check-item"><div class="check-box"></div>Ropa recibida del proveedor</div>'
+    +'<div class="check-item"><div class="check-box"></div>DTF impreso y cortado</div></div>'
+    +'<div class="check-row"><div class="check-item"><div class="check-box"></div>Estampado terminado</div>'
+    +'<div class="check-item"><div class="check-box"></div>Control de calidad OK</div></div>'
+    +'<div class="check-row"><div class="check-item"><div class="check-box"></div>Embalado y etiquetado</div>'
+    +'<div class="check-item"><div class="check-box"></div>Avisado al cliente</div></div>'
+    +'</div>';
+  if(p.notas)html+='<div class="section"><div class="section-title">Notas</div><div style="background:#fef9e7;padding:8px;border-radius:4px;font-size:12px">'+p.notas+'</div></div>';
+  html+='<div class="footer">Print & Copy · Av. Portugal 62, 37005 Salamanca · printcopysalamanca.es · Impreso '+new Date().toLocaleDateString('es-ES')+'</div>';
+  html+='<script>';
+  // Cargar imagen previa si existe
+  html+='var SUPA_URL="https://ffiyprmbrznofoprvvik.supabase.co";';
+  html+='var SUPA_KEY="'+SUPA_KEY+'";';
+  html+='fetch(SUPA_URL+"/rest/v1/pedido_previas?pedido_id=eq.'+p.id+'&order=version.desc&limit=1",{headers:{"apikey":SUPA_KEY}}).then(function(r){return r.json()}).then(function(d){';
+  html+='var wrap=document.getElementById("previa-img-wrap");if(!wrap)return;';
+  html+='if(d&&d.length&&d[0].url){wrap.innerHTML=\'<img src="\'+d[0].url+\'" style="max-width:100%;max-height:300px">\'}';
+  html+='else{wrap.innerHTML="Sin imagen de previa subida"}';
+  html+='}).catch(function(){var w=document.getElementById("previa-img-wrap");if(w)w.innerHTML="Sin previa"});';
+  html+='setTimeout(function(){window.print()},1500);';
+  html+='<\/script></body></html>';
+  w.document.write(html);
+  w.document.close();
 }
 
 function resetForm(){

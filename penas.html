@@ -318,6 +318,19 @@ document.getElementById('color-modal').addEventListener('click', function(e){
 function enviar() {
   var rellenas = _filas.filter(function(f){return f.nombre && f.nombre.trim();}).length;
   if(rellenas === 0) {alert('Rellena al menos una persona');return;}
+  // Verificar que todas las filas tengan nombre (no dejar huecos)
+  var vacias = _filas.filter(function(f){return !f.nombre || !f.nombre.trim();}).length;
+  if(vacias > 0){
+    alert('Hay '+vacias+' persona(s) sin nombre.\n\nRellena todas las filas o elimina las que sobren.');
+    return;
+  }
+  // Extraer cantidad del pedido de la descripción
+  var match=(_pedido.descripcion||'').match(/[×x](\d+)/i);
+  var cantPedido=match?parseInt(match[1]):0;
+  if(cantPedido>0 && rellenas!==cantPedido){
+    alert('Has rellenado '+rellenas+' personas pero el pedido es de '+cantPedido+'.\n\n'+(rellenas<cantPedido?'Faltan '+(cantPedido-rellenas)+' personas. Añade más filas.':'Sobran '+(rellenas-cantPedido)+'. Elimina las que no necesites.'));
+    return;
+  }
   var btn = document.getElementById('btn-enviar');
   if(btn){btn.disabled=true;btn.textContent='Enviando...';}
   apiPatch('pedidos?id=eq.'+pedidoId, {tallas_colores: _filas}).then(function(r){
