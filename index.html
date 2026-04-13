@@ -5842,9 +5842,37 @@ function nvCrearPedido(){
                 condiciones:condicion,
                 fase:0
               };
+              // Añadir tallas y tipo personalización para pedidos textil
+              if(sec==='TX'){
+                var _tDatos=_nvTipoTallas==='individual'?nvIndGetDatos():nvTTGetDatos();
+                ped.tallas_colores=_tDatos;
+                ped.tipo_personalizacion=_nvTipoTallas==='individual'?'individual':'iguales';
+              }
               sb.from('pedidos').insert([ped]).then(function(ri){
                 if(ri.error){console.error('Error insert pedido:',ri.error.message);alert('Error al crear pedido: '+ri.error.message);res(null);}
-                else{res(numPed);}
+                else{
+                  // Enviar WA de tallas si es textil y la tabla está vacía
+                  if(sec==='TX'&&tel){
+                    var tDatos=ped.tallas_colores||[];
+                    var vacia=true;
+                    if(ped.tipo_personalizacion==='individual'){
+                      vacia=!tDatos.some(function(d){return d.nombre&&d.nombre.trim();});
+                    }else{
+                      var sumT=tDatos.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
+                      vacia=sumT===0;
+                    }
+                    if(vacia){
+                      var telT=tel.replace(/\s/g,'').replace(/^\+/,'');
+                      if(telT.length===9&&!telT.startsWith('34'))telT='34'+telT;
+                      var linkT=ped.tipo_personalizacion==='individual'
+                        ?'https://printcopy.vercel.app/penas.html?p='+numPed
+                        :'https://printcopy.vercel.app/tallas.html?p='+numPed;
+                      var msgT='Hola '+nombre.split(' ')[0]+' 👋\n\nPara completar tu pedido *'+numPed+'* necesitamos que nos confirmes las tallas'+(ped.tipo_personalizacion==='individual'?' y datos de cada persona':'')+'.\n\nAccede aquí para rellenarlo:\n'+linkT+'\n\nPrint & Copy · 923 018 034';
+                      fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telT,mensaje:msgT,nombre:nombre})});
+                    }
+                  }
+                  res(numPed);
+                }
               });
             });
           });
