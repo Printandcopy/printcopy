@@ -3734,7 +3734,8 @@ function _generarFichaHTML(p){
       html+='<table><tr><th>#</th><th>Prenda</th><th>Color</th><th>Talla</th><th>Nombre</th><th>Nº</th></tr>';
       p.tallasColores.forEach(function(f,i){
         if(!f.nombre)return;
-        html+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+(f.prenda||'Camiseta')+'</td><td>'+(f.color||'')+'</td><td style="text-align:center">'+(f.talla||'')+'</td><td><b>'+(f.nombre||'')+'</b></td><td style="text-align:center">'+(f.numero||'')+'</td></tr>';
+        var _hex=f.hex||'#888';
+        html+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+(f.prenda||'Camiseta')+'</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+_hex+';border:1px solid #ccc;vertical-align:middle;margin-right:4px"></span>'+(f.color||'')+'</td><td style="text-align:center">'+(f.talla||'')+'</td><td><b>'+(f.nombre||'')+'</b></td><td style="text-align:center">'+(f.numero||'')+'</td></tr>';
       });
       html+='</table>';
     }else{
@@ -3745,7 +3746,7 @@ function _generarFichaHTML(p){
         var rowTotal=tallas.reduce(function(s,t){return s+(parseInt((f.tallas||{})[t])||0);},0);
         if(rowTotal===0)return;
         granTotal+=rowTotal;
-        html+='<tr><td>'+(f.color||'?')+'</td>'+tallas.map(function(t){var v=parseInt((f.tallas||{})[t])||0;return'<td style="text-align:center">'+(v||'')+'</td>';}).join('')+'<td style="text-align:center;font-weight:700">'+rowTotal+'</td></tr>';
+        html+='<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+(f.hex||'#888')+';border:1px solid #ccc;vertical-align:middle;margin-right:4px"></span>'+(f.color||'?')+'</td>'+tallas.map(function(t){var v=parseInt((f.tallas||{})[t])||0;return'<td style="text-align:center">'+(v||'')+'</td>';}).join('')+'<td style="text-align:center;font-weight:700">'+rowTotal+'</td></tr>';
       });
       html+='<tr style="background:#eee;font-weight:700"><td>TOTAL</td>'+tallas.map(function(){return'<td></td>';}).join('')+'<td style="text-align:center">'+granTotal+'</td></tr></table>';
     }
