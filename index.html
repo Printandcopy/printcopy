@@ -197,7 +197,7 @@ textarea{resize:vertical;min-height:64px}
 .sem-gray{background:#B4B2A9}
 .sem-label{flex:1;color:#444;white-space:nowrap}
 .sem-label.sem-blocked{color:#bbb}
-.sem-ts{font-size:10px;color:#aaa;margin-left:auto}
+.sem-ts{font-size:10px;color:#aaa;margin-left:6px}
 .taller-card.listo-producir{border-left:3px solid #639922}
 .tt-wrap{border:1.5px solid #E6F1FB;border-radius:8px;overflow:hidden;margin-bottom:10px}
 .tt-header{background:#E6F1FB;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
@@ -2568,7 +2568,7 @@ function enviarWAResena(p){
 function fmtCheckTs(iso){
   if(!iso)return'—';
   var d=new Date(iso);
-  return(d.getDate()+'/'+(d.getMonth()+1)).padStart(5,'0')+' · '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+  return d.getDate()+'/'+(d.getMonth()+1)+' · '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
 }
 function toggleCheckModal(id,field,val){
   var p=pedidos.find(function(x){return x.id===id;});
@@ -3708,7 +3708,7 @@ function generarFichaProduccion(id){
   }).catch(function(){_generarFichaHTML(p);});
 }
 function _generarFichaHTML(p){
-  var w=window.open('','_blank','width=800,height=1100');
+  var w=window.open('about:blank','_blank');
   if(!w){alert('Popup bloqueado. Permite ventanas emergentes para esta página.');return;}
   var fechaEnt=p.fechaEntrega?new Date(p.fechaEntrega+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}):'Sin fecha';
   var operario=p.operario||'Sin asignar';
@@ -3803,7 +3803,7 @@ function _generarFichaHTML(p){
   html+='else{wrap.innerHTML="Sin imagen de previa subida"}';
   html+='}).catch(function(){var w=document.getElementById("previa-img-wrap");if(w)w.innerHTML="Sin previa"});';
   html+='setTimeout(function(){window.print()},1500);';
-  html+='<\/script></body></html>';
+  html+='<'+'/script></body></html>';
   w.document.write(html);
   w.document.close();
 }
