@@ -3718,20 +3718,21 @@ function generarFichaProduccion(id){
 function _generarFichaHTML(p){
   var fechaEnt=p.fechaEntrega?new Date(p.fechaEntrega+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}):'Sin fecha';
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ficha '+p.id+'</title><style>'
-    +'*{margin:0;padding:0;box-sizing:border-box}'
-    +'body{font-family:Arial,sans-serif;padding:20px;font-size:13px;color:#1a1a1a}'
+    +'*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    +'body{font-family:Arial,sans-serif;padding:20px;font-size:14px;color:#1a1a1a}'
     +'.top{text-align:center;border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:16px}'
     +'.top h1{font-size:32px;font-weight:700;margin:0}'
     +'.top .fecha{font-size:18px;margin-top:4px}'
     +'.top .fecha b{color:#1a1a1a}'
-    +'.desc{font-size:13px;color:#555;margin-bottom:14px;text-align:center}'
+    +'.desc{font-size:14px;color:#555;margin-bottom:14px;text-align:center}'
     +'.btn-print{display:block;margin:0 auto 16px;padding:10px 30px;background:#185FA5;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer}'
     +'@media print{.btn-print{display:none}}'
-    +'table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px}'
-    +'th{background:#1a1a1a;color:#fff;padding:6px 8px;text-align:center;font-weight:500}'
+    +'table{width:100%;border-collapse:collapse;font-size:15px;margin-bottom:16px}'
+    +'th{background:#1a1a1a!important;color:#fff!important;padding:8px 10px;text-align:center;font-weight:600;font-size:14px}'
     +'th:first-child{text-align:left}'
-    +'td{padding:5px 8px;border:0.5px solid #ddd}'
-    +'tr:nth-child(even){background:#f9f9f9}'
+    +'td{padding:7px 10px;border:0.5px solid #ddd;font-size:15px}'
+    +'tr:nth-child(even){background:#f9f9f9!important}'
+    +'.cdot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid #ccc;vertical-align:middle;margin-right:5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     +'.previa{text-align:center;margin:16px 0;page-break-inside:avoid}'
     +'.previa img{max-width:100%;max-height:400px}'
     +'.footer{margin-top:20px;border-top:1px solid #ddd;padding-top:6px;font-size:10px;color:#aaa;text-align:center}'
@@ -3747,7 +3748,7 @@ function _generarFichaHTML(p){
       p.tallasColores.forEach(function(f,i){
         if(!f.nombre)return;
         var _hex=f.hex||'#888';
-        html+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+(f.prenda||'Camiseta')+'</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+_hex+';border:1px solid #ccc;vertical-align:middle;margin-right:4px"></span>'+(f.color||'')+'</td><td style="text-align:center">'+(f.talla||'')+'</td><td><b>'+(f.nombre||'')+'</b></td><td style="text-align:center">'+(f.numero||'')+'</td></tr>';
+        html+='<tr><td style="text-align:center">'+(i+1)+'</td><td>'+(f.prenda||'Camiseta')+'</td><td><span class="cdot" style="background:'+_hex+'"></span>'+(f.color||'')+'</td><td style="text-align:center">'+(f.talla||'')+'</td><td><b>'+(f.nombre||'')+'</b></td><td style="text-align:center">'+(f.numero||'')+'</td></tr>';
       });
       html+='</table>';
     }else{
@@ -3758,7 +3759,7 @@ function _generarFichaHTML(p){
         var rowTotal=tallas.reduce(function(s,t){return s+(parseInt((f.tallas||{})[t])||0);},0);
         if(rowTotal===0)return;
         granTotal+=rowTotal;
-        html+='<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+(f.hex||'#888')+';border:1px solid #ccc;vertical-align:middle;margin-right:4px"></span>'+(f.color||'?')+'</td>'+tallas.map(function(t){var v=parseInt((f.tallas||{})[t])||0;return'<td style="text-align:center">'+(v||'')+'</td>';}).join('')+'<td style="text-align:center;font-weight:700">'+rowTotal+'</td></tr>';
+        html+='<tr><td><span class="cdot" style="background:'+(f.hex||'#888')+'"></span>'+(f.color||'?')+'</td>'+tallas.map(function(t){var v=parseInt((f.tallas||{})[t])||0;return'<td style="text-align:center">'+(v||'')+'</td>';}).join('')+'<td style="text-align:center;font-weight:700">'+rowTotal+'</td></tr>';
       });
       html+='<tr style="background:#eee;font-weight:700"><td>TOTAL</td>'+tallas.map(function(){return'<td></td>';}).join('')+'<td style="text-align:center">'+granTotal+'</td></tr></table>';
     }
