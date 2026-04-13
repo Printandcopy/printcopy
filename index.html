@@ -5965,36 +5965,16 @@ function nvCrearPedido(){
               }
               sb.from('pedidos').insert([ped]).then(function(ri){
                 if(ri.error){console.error('Error insert pedido:',ri.error.message);alert('Error al crear pedido: '+ri.error.message);res(null);}
-                else{
-                  // Enviar WA de tallas si es textil y la tabla está vacía
-                  if(sec==='TX'&&tel){
-                    var tDatos=ped.tallas_colores||[];
-                    var vacia=true;
-                    if(ped.tipo_personalizacion==='individual'){
-                      vacia=!tDatos.some(function(d){return d.nombre&&d.nombre.trim();});
-                    }else{
-                      var sumT=tDatos.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
-                      vacia=sumT===0;
-                    }
-                    if(vacia){
-                      var telT=tel.replace(/\s/g,'').replace(/^\+/,'');
-                      if(telT.length===9&&!telT.startsWith('34'))telT='34'+telT;
-                      var linkT=ped.tipo_personalizacion==='individual'
-                        ?'https://printcopy.vercel.app/penas.html?p='+numPed
-                        :'https://printcopy.vercel.app/tallas.html?p='+numPed;
-                      var msgT='Hola '+nombre.split(' ')[0]+' 👋\n\nPara completar tu pedido *'+numPed+'* necesitamos que nos confirmes las tallas'+(ped.tipo_personalizacion==='individual'?' y datos de cada persona':'')+'.\n\nAccede aquí para rellenarlo:\n'+linkT+'\n\nPrint & Copy · 923 018 034';
-                      fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telT,mensaje:msgT,nombre:nombre})});
-                    }
-                  }
-                  res(numPed);
-                }
+                else{res({num:numPed,sec:sec,tipoPers:ped.tipo_personalizacion,tallasVacia:false});}
               });
             });
           });
         });
       });
-      Promise.all(proms).then(function(nums){
-        var validos=nums.filter(function(n){return n!=null;});
+      Promise.all(proms).then(function(results){
+        var validos=results.filter(function(n){return n!=null;});
+        if(!validos.length){return;}
+        var numPedidos=validos.map(function(v){return v.num;});
         if(!validos.length){return;} // todos fallaron, mensajes ya mostrados
         // Marcar presupuesto como convertido si venía de cotConvertir
         if(window._presupuestoParaConvertir){
@@ -6008,7 +5988,7 @@ function nvCrearPedido(){
           var telD=tel.replace(/\s/g,'').replace(/^\+/,'');
           if(telD.length===9&&!telD.startsWith('34'))telD='34'+telD;
           var nomD=nombre.split(' ')[0];
-          var numPedD=validos.join(', ');
+          var numPedD=numPedidos.join(', ');
           var fechaD='';
           if(fecha){
             var fd=new Date(fecha+'T12:00:00');
@@ -6046,15 +6026,31 @@ function nvCrearPedido(){
               +'En cuanto tengamos la previa digital te la enviamos para que la revises.\n\n'
               +'⏱️ *Plazo de producción:* '+maxPlazoD+' días laborables desde tu aprobación.';
           }
-          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telD,mensaje:msgD,nombre:nombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA pedido directo:',d.error);});
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telD,mensaje:msgD,nombre:nombre})}).then(function(r){return r.json();}).then(function(d){
+            if(!d.success)console.warn('WA pedido directo:',d.error);
+            // WA de tallas DESPUÉS de confirmación (con 2s delay)
+            setTimeout(function(){
+              validos.forEach(function(v){
+                if(v.sec!=='TX')return;
+                var tc=_nvTipoTallas==='individual'?nvIndGetDatos():nvTTGetDatos();
+                var vacia=true;
+                if(v.tipoPers==='individual')vacia=!tc.some(function(f){return f.nombre&&f.nombre.trim();});
+                else{var sum=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0);vacia=sum===0;}
+                if(!vacia)return;
+                var linkT=v.tipoPers==='individual'?'https://printcopy.vercel.app/penas.html?p='+v.num:'https://printcopy.vercel.app/tallas.html?p='+v.num;
+                var msgT='📏 '+nombre.split(' ')[0]+', para completar tu pedido *'+v.num+'* necesitamos las tallas'+(v.tipoPers==='individual'?' y datos de cada persona':'')+'.\n\nRellénalas aquí:\n'+linkT+'\n\nPrint & Copy · 923 018 034';
+                fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telD,mensaje:msgT,nombre:nombre})});
+              });
+            },2000);
+          });
         }
         closeModal('modal-venta');cargarDatos();
 cargarProveedores();
         // Ir a pantalla Pedidos para ver el nuevo pedido
         setTimeout(function(){
           showScreen('ventas');
-          var ultimoPed=pedidos.find(function(p){return p.id===validos[0];});
-          if(ultimoPed && confirm('Pedidos creados: '+validos.join(', ')+'\n\n¿Imprimir resguardo?')){
+          var ultimoPed=pedidos.find(function(p){return p.id===numPedidos[0];});
+          if(ultimoPed && confirm('Pedidos creados: '+numPedidos.join(', ')+'\n\n¿Imprimir resguardo?')){
             generarResguardo(ultimoPed);
           }
         },500);
@@ -7572,6 +7568,12 @@ setInterval(function(){
       t.onclick=function(){verPedido(p.id);t.remove();};
       document.body.appendChild(t);
       setTimeout(function(){if(t.parentNode)t.remove();},8000);
+      // WA confirmación tallas recibidas al cliente
+      if(p.clienteTel){
+        var _telC=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+        if(_telC.length===9&&!_telC.startsWith('34'))_telC='34'+_telC;
+        fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:_telC,mensaje:'✅ Recibidas las tallas del pedido *'+p.id+'*. Nos ponemos en marcha.\n\nPrint & Copy · 923 018 034',nombre:p.clienteNombre})});
+      }
       renderTaller();
     });
   });
@@ -7607,9 +7609,9 @@ setInterval(function(){
         }
       }
     });
-    if(huboambio){renderTaller();actualizarBarraAvisos();}
+    if(hubocambio){renderTaller();if(_pedidoModal&&ids.indexOf(_pedidoModal.id)>=0)verPedido(_pedidoModal.id);}
   });
-},30000);
+},15000);
 
 // ══════════════════════════════════════════════════════════════
 // PDF PRESUPUESTO
