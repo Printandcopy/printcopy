@@ -190,12 +190,12 @@ textarea{resize:vertical;min-height:64px}
 .tc-check-item label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#7a1a1a;cursor:pointer}
 .tc-check-item .tc-ts{font-size:10px;color:#aaa;padding-left:20px}
 .sem-wrap{display:flex;flex-direction:column;gap:3px;margin-top:8px}
-.sem-item{display:flex;align-items:center;gap:7px;padding:4px 9px;background:#f9f9f7;border-radius:5px;font-size:12px}
+.sem-item{display:flex;align-items:center;gap:7px;padding:4px 9px;background:#f9f9f7;border-radius:5px;font-size:12px;min-height:28px;overflow:hidden}
 .sem-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .sem-red{background:#E24B4A}
 .sem-green{background:#639922}
 .sem-gray{background:#B4B2A9}
-.sem-label{flex:1;color:#444}
+.sem-label{flex:1;color:#444;white-space:nowrap}
 .sem-label.sem-blocked{color:#bbb}
 .sem-ts{font-size:10px;color:#aaa;margin-left:auto}
 .taller-card.listo-producir{border-left:3px solid #639922}
@@ -2950,43 +2950,15 @@ function tarjetaTaller(p){
   var previaBadge=p.previaEstado==="rechazada"?'<span class="badge" style="background:#FCEBEB;color:#A32D2D;border:0.5px solid #f7c1c1">✏️ Cambios</span>':p.previaEstado==="enviada"?'<span class="badge" style="background:#E6F1FB;color:#185FA5;border:0.5px solid #B5D4F4">👁️ Previa env.</span>':p.previaEstado==="aceptada"?'<span class="badge" style="background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97">✅ OK</span>':''; 
   var extBadge=p.externalizado?'<span class="badge" style="background:#534AB7;color:#fff;font-size:10px">🔄 '+p.externalizado+'</span>':''; 
   var checksHTML="";
-  var tallasResHTML="";
   if(p.seccion==="TX"){
     checksHTML=renderSemaforoTaller(p);
-    // Resumen compacto de tallas para el operario
-    if(p.tallasColores&&p.tallasColores.length){
-      if(p.tipoPersonalizacion==='individual'){
-        var _rellenas=p.tallasColores.filter(function(f){return f.nombre&&f.nombre.trim();});
-        if(_rellenas.length){
-          tallasResHTML='<div style="background:#f5f7fa;border-radius:5px;padding:6px 8px;margin:4px 0;font-size:11px;line-height:1.5" onclick="event.stopPropagation()">';
-          tallasResHTML+='<div style="font-weight:500;color:#185FA5;margin-bottom:3px">'+_rellenas.length+' personas:</div>';
-          _rellenas.slice(0,8).forEach(function(f){
-            tallasResHTML+='<div style="color:#555">'+(f.nombre||'-')+' · '+(f.prenda||'Camiseta')+' '+(f.color||'')+' '+(f.talla||'')+' '+(f.numero?'#'+f.numero:'')+'</div>';
-          });
-          if(_rellenas.length>8)tallasResHTML+='<div style="color:#aaa">...y '+(_rellenas.length-8)+' más</div>';
-          tallasResHTML+='</div>';
-        }
-      }else{
-        var _sum=p.tallasColores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
-        if(_sum>0){
-          tallasResHTML='<div style="background:#f5f7fa;border-radius:5px;padding:6px 8px;margin:4px 0;font-size:11px;line-height:1.5" onclick="event.stopPropagation()">';
-          tallasResHTML+='<div style="font-weight:500;color:#185FA5;margin-bottom:3px">'+_sum+' uds:</div>';
-          p.tallasColores.forEach(function(f){
-            var det=[];
-            Object.keys(f.tallas||{}).forEach(function(t){if(parseInt(f.tallas[t])>0)det.push(t+'x'+f.tallas[t]);});
-            if(det.length)tallasResHTML+='<div style="color:#555">'+(f.color||'?')+': '+det.join(', ')+'</div>';
-          });
-          tallasResHTML+='</div>';
-        }
-      }
-    }
   }
   var listoClass=esListoProducir(p)?' listo-producir':'';
   var cambiosHTML=p.previaEstado==="rechazada"&&p.previaCambios?'<div class="tc-cambios">"'+ p.previaCambios +'"</div>':''; 
   return '<div class="taller-card '+urgente+listoClass+'" onclick="verPedido(\''+ p.id +'\')">'
     +'<div class="tc-header"><div class="tc-left"><div class="tc-id">'+p.id+'</div><div class="tc-meta"><span class="badge sec-'+p.seccion+'">'+SECS[p.seccion]+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span>'+previaBadge+extBadge+'</div><div class="tc-op">👤 '+p.operario+'</div></div>'
     +'<div class="tc-right">'+entregaTxt+pendPill+'</div></div>'
-    +'<div class="tc-body"><div class="tc-cliente">'+p.clienteNombre+'</div><div class="tc-desc">'+p.descripcion+'</div>'+tallasResHTML+(p.notas?'<div class="tc-notas">'+p.notas+'</div>':'')+cambiosHTML+checksHTML
+    +'<div class="tc-body"><div class="tc-cliente">'+p.clienteNombre+'</div><div class="tc-desc">'+p.descripcion+'</div>'+(p.notas?'<div class="tc-notas">'+p.notas+'</div>':'')+cambiosHTML+checksHTML
     +'<textarea id="nota-taller-'+p.id+'" class="nota-operario" rows="2" placeholder="Anotaciones del operario..." onclick="event.stopPropagation()" onblur="guardarAnotacion(\''+ p.id +'\',this.value)">'+( p.anotacion||"")+'</textarea></div></div>';
 }
 function filtrarPorPresupuesto(presId){
