@@ -2303,7 +2303,7 @@ function verPedido(id){
     // Ropa
     html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0">';
     if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">Ropa pedida</span>';
-    else html+='<label style="display:flex;align-items:center;gap:7px;cursor:pointer;flex:1;margin:0"><input type="checkbox" style="margin:0;flex-shrink:0" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"><span class="sem-label">Ropa pedida</span></label>'+(p.ropaOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.ropaOkFecha)+'</span>':'');
+    else html+='<input type="checkbox" style="margin:0;flex-shrink:0;width:16px;height:16px;cursor:pointer" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"><span class="sem-label" style="flex:1">Ropa pedida</span>'+(p.ropaOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.ropaOkFecha)+'</span>':'');
     html+='</div>';
     // Previas
     var prevLbl=p.previaEstado==='aceptada'?'Previas OK':p.previaEstado==='rechazada'?'Previas: cambios':p.previaEstado==='enviada'?'Previas: esperando':'Pdte previas';
@@ -2312,7 +2312,7 @@ function verPedido(id){
     // DTF
     html+='<div class="sem-item" style="padding:7px 12px">';
     if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">DTF pedido</span>';
-    else html+='<label style="display:flex;align-items:center;gap:7px;cursor:pointer;flex:1;margin:0"><input type="checkbox" style="margin:0;flex-shrink:0" '+(p.dtfOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'dtfOk\',this.checked)"><span class="sem-label">DTF pedido</span></label>'+(p.dtfOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.dtfOkFecha)+'</span>':'');
+    else html+='<input type="checkbox" style="margin:0;flex-shrink:0;width:16px;height:16px;cursor:pointer" '+(p.dtfOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'dtfOk\',this.checked)"><span class="sem-label" style="flex:1">DTF pedido</span>'+(p.dtfOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.dtfOkFecha)+'</span>':'');
     html+='</div>';
     html+='</div>';
   }
@@ -2914,7 +2914,7 @@ function renderSemaforoTaller(p){
   else items.push({dot:'sem-red',label:'Pdte tallas',ts:''});
   // 2. Ropa pedida (solo activo si tallas OK)
   if(!tieneTallas)items.push({dot:'sem-gray',label:'Ropa pedida',ts:'',blocked:true});
-  else if(p.ropaOk)items.push({dot:'sem-green',label:'Ropa pedida',ts:p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):''});
+  else if(p.ropaOk)items.push({dot:'sem-green',label:'Ropa pedida',ts:p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):'',check:true,field:'ropaOk',checked:true});
   else items.push({dot:'sem-red',label:'Ropa pedida',ts:'',check:true,field:'ropaOk'});
   // 3. Previas
   var previaOk=p.previaEstado==='aceptada';
@@ -2926,12 +2926,12 @@ function renderSemaforoTaller(p){
   else items.push({dot:'sem-red',label:'Pdte previas',ts:''});
   // 4. DTF (solo activo si tallas OK)
   if(!tieneTallas)items.push({dot:'sem-gray',label:'DTF pedido',ts:'',blocked:true});
-  else if(p.dtfOk)items.push({dot:'sem-green',label:'DTF pedido',ts:p.dtfOkFecha?fmtCheckTs(p.dtfOkFecha):''});
+  else if(p.dtfOk)items.push({dot:'sem-green',label:'DTF pedido',ts:p.dtfOkFecha?fmtCheckTs(p.dtfOkFecha):'',check:true,field:'dtfOk',checked:true});
   else items.push({dot:'sem-red',label:'DTF pedido',ts:'',check:true,field:'dtfOk'});
   var html='<div class="sem-wrap" onclick="event.stopPropagation()">';
   items.forEach(function(it){
     if(it.check){
-      html+='<div class="sem-item"><input type="checkbox" onchange="toggleCheckModal(\''+p.id+'\',\''+it.field+'\',this.checked)" style="margin:0;flex-shrink:0;width:14px;height:14px;cursor:pointer"><span class="sem-label" style="cursor:pointer">'+it.label+'</span>'+(it.ts?'<span class="sem-ts">'+it.ts+'</span>':'')+'</div>';
+      html+='<div class="sem-item"><input type="checkbox" '+(it.checked?'checked ':'')+' onchange="toggleCheckModal(\''+p.id+'\',\''+it.field+'\',this.checked)" style="margin:0;flex-shrink:0;width:14px;height:14px;cursor:pointer"><span class="sem-label" style="cursor:pointer">'+it.label+'</span>'+(it.ts?'<span class="sem-ts">'+it.ts+'</span>':'')+'</div>';
     } else {
       html+='<div class="sem-item"><span class="sem-dot '+it.dot+'"></span><span class="sem-label'+(it.blocked?' sem-blocked':'')+'">'+it.label+'</span>'+(it.ts?'<span class="sem-ts">'+it.ts+'</span>':'')+'</div>';
     }
@@ -3694,17 +3694,22 @@ function imprimirPedido(id){
 function generarFichaProduccion(id){
   var p=pedidos.find(function(x){return x.id===id;});
   if(!p){alert('Pedido no encontrado');return;}
-  // Recargar datos frescos desde BD
-  sb.from('pedidos').select('*').eq('id',id).single().then(function(r){
-    if(!r.data){alert('Error al cargar pedido');return;}
-    var fresh=dbToLocal(r.data);
-    // Actualizar en array local
-    Object.keys(fresh).forEach(function(k){p[k]=fresh[k];});
+  sb.from('pedidos').select('tallas_colores,tipo_personalizacion,previa_estado,ropa_ok,ropa_ok_fecha,dtf_ok,dtf_ok_fecha').eq('id',id).single().then(function(r){
+    if(r.data){
+      p.tallasColores=r.data.tallas_colores;
+      p.tipoPersonalizacion=r.data.tipo_personalizacion;
+      p.previaEstado=r.data.previa_estado;
+      p.ropaOk=r.data.ropa_ok;
+      p.ropaOkFecha=r.data.ropa_ok_fecha;
+      p.dtfOk=r.data.dtf_ok;
+      p.dtfOkFecha=r.data.dtf_ok_fecha;
+    }
     _generarFichaHTML(p);
-  });
+  }).catch(function(){_generarFichaHTML(p);});
 }
 function _generarFichaHTML(p){
   var w=window.open('','_blank','width=800,height=1100');
+  if(!w){alert('Popup bloqueado. Permite ventanas emergentes para esta página.');return;}
   var fechaEnt=p.fechaEntrega?new Date(p.fechaEntrega+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}):'Sin fecha';
   var operario=p.operario||'Sin asignar';
   var html='<!DOCTYPE html><html><head><title>Ficha '+p.id+'</title><style>'
