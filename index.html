@@ -73,9 +73,9 @@ textarea{resize:vertical;min-height:64px}
 .filter-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
 .sort-select{padding:4px 8px;border-radius:6px;border:0.5px solid #ddd;font-size:12px;background:#fff;color:#444;cursor:pointer}
 .stat-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.stat-card{background:#fff;border-radius:8px;border:0.5px solid #ddd;padding:9px 14px;flex:1;min-width:90px}
-.stat-card .sv{font-size:19px;font-weight:700}
-.stat-card .sl{font-size:11px;color:#888;margin-top:1px}
+.stat-card{background:#f5f5f3;border-radius:6px;padding:10px 12px;flex:1;min-width:80px;text-align:center}
+.stat-card .sv{font-size:20px;font-weight:700}
+.stat-card .sl{font-size:10px;color:#888;margin-top:2px}
 .taller-card{background:#fff;border-radius:8px;border:0.5px solid #ddd;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:box-shadow .15s}
 .taller-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
 .taller-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid #f0f0f0;gap:8px;flex-wrap:wrap}
@@ -7529,6 +7529,77 @@ cargarPresupuestos();
 showScreen('mostrador',document.querySelector('.nav-tab'));
 // Recordatorios automáticos presupuestos cada 4h
 setInterval(checkRecordatoriosPresupuestos,4*60*60*1000);
+// Recordatorio pago: presupuestos aceptados sin pago (transferencia o tienda)
+function checkRecordatorioPago(){
+  var ahora=new Date();
+  var aceptados=(presupuestos||[]).filter(function(p){
+    if(p.estado!=='aceptado'||p.convertido)return false;
+    var cond=p.condicion_pago||'';
+    if(cond!=='transferencia'&&cond!=='0_100')return false;
+    // Si ya tiene señal registrada, no recordar
+    var pedAsociado=pedidos.find(function(pd){return pd.presupuestoId===p.id;});
+    if(pedAsociado&&pedAsociado.senal>0)return false;
+    return true;
+  });
+  if(!aceptados.length)return;
+  aceptados.forEach(function(p){
+    var fechaAcept=new Date(p.updated_at||p.created_at);
+    var diasDesde=Math.floor((ahora-fechaAcept)/(1000*3600*24));
+    var tel=(p.cliente_telefono||'').replace(/\s/g,'').replace(/^\+/,'');
+    if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+    if(!tel)return;
+    var nombre=(p.cliente_nombre||'').split(' ')[0];
+    var total=parseFloat(p.total||0).toFixed(2);
+    var numero=p.numero;
+    var desc=(p.lineas&&p.lineas[0])?p.lineas[0].descripcion:'tu pedido';
+    var cond=p.condicion_pago||'';
+    var esTransf=cond==='transferencia';
+    var recNum=p.recordatorio_pago_num||0;
+    var msg='';var nuevoRec=0;
+    // Flujo según días
+    if(diasDesde>=2&&recNum<1){
+      nuevoRec=1;
+      if(esTransf){
+        msg='Hola '+nombre+' 😊 Te escribo desde Print & Copy. Tenemos tu pedido ('+desc+') listo para entrar en producción. Solo nos falta confirmar la transferencia de *'+total+'€* para arrancarlo.\n\nSi necesitas que te reenvíe los datos bancarios, dime y te los paso ahora mismo. ¿Lo cerramos? 💪';
+      }else{
+        msg='Hola '+nombre+' 😊 Te escribo desde Print & Copy. Tenemos tu pedido ('+desc+') reservado y listo para producción.\n\nEstamos en Av. Portugal 62, L-V 10:00-14:00 y 17:00-20:00.\nSi te viene mejor, también puedes hacer transferencia o Bizum al 622 305 934 y arrancamos sin que tengas que desplazarte. ¿Qué te viene mejor?';
+      }
+    }else if(diasDesde>=4&&recNum<2){
+      nuevoRec=2;
+      var fechaEnt=new Date(ahora);fechaEnt.setDate(fechaEnt.getDate()+5);while(fechaEnt.getDay()===0||fechaEnt.getDay()===6)fechaEnt.setDate(fechaEnt.getDate()+1);
+      var diasSem=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+      var fechaTxt=diasSem[fechaEnt.getDay()]+' '+fechaEnt.getDate()+'/'+(fechaEnt.getMonth()+1);
+      if(esTransf){
+        msg='Hola '+nombre+'! Estamos cerrando la planificación de producción. Si confirmamos la transferencia hoy o mañana, te tendríamos tu pedido listo para el *'+fechaTxt+'*.\n\n¿Te viene bien? Te paso los datos de nuevo si lo necesitas 😊';
+      }else{
+        msg='Hola '+nombre+'! Si te pasas esta semana a confirmar tu pedido, te lo tendríamos listo para el *'+fechaTxt+'*.\n\n¿Te viene bien pasarte mañana? Si prefieres, también puedes hacer transferencia o Bizum al 622 305 934 😊';
+      }
+    }else if(diasDesde>=7&&recNum<3){
+      nuevoRec=3;
+      if(esTransf){
+        msg='Hola '+nombre+'! Como aún no hemos podido confirmar tu pedido, quería preguntarte: ¿ha surgido algún cambio o tienes alguna duda sobre el presupuesto?\n\nSin problema si necesitas ajustar algo. Preferimos adaptarnos antes que perder tu proyecto 🙌';
+      }else{
+        msg='Hola '+nombre+'! Veo que aún no hemos podido confirmar tu pedido. ¿Ha surgido algo?\n\nTe doy opciones:\n• Pasarte por tienda (Av. Portugal 62)\n• Transferencia bancaria\n• Bizum al 622 305 934\n\nDime qué te viene mejor y lo cerramos 💪';
+      }
+    }else if(diasDesde>=10&&recNum<4){
+      nuevoRec=4;
+      msg='Hola '+nombre+'! Te aviso de que mañana vamos a liberar tu hueco de producción para otros pedidos en cola. Si confirmas hoy ('+(!esTransf?'en tienda, ':'')+'transferencia o Bizum), mantenemos las condiciones del presupuesto *'+numero+'*.\n\nSi prefieres dejarlo para más adelante, sin problema. Tú decides 😊';
+    }else if(diasDesde>=12&&recNum<5){
+      nuevoRec=5;
+      msg='Hola '+nombre+'! Como no hemos podido confirmar, archivamos tu presupuesto por ahora. Si en cualquier momento quieres retomarlo, escríbenos y te lo reactivamos sin problema.\n\nUn saludo desde Print & Copy! 🙌';
+    }
+    if(!msg||!nuevoRec)return;
+    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.success){
+          sb.from('presupuestos').update({recordatorio_pago_num:nuevoRec}).eq('id',p.id).then(function(){});
+          p.recordatorio_pago_num=nuevoRec;
+        }
+      });
+  });
+}
+setInterval(checkRecordatorioPago,4*60*60*1000);
 // Recordatorios automáticos tallas cada 4h
 setInterval(checkRecordatoriosTallas,4*60*60*1000);
 setInterval(checkRecordatorioRecogida,4*60*60*1000);
