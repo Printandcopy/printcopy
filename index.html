@@ -6814,16 +6814,32 @@ function nvSelTipoTallas(tipo){
   }
 }
 function nvRenderTablaIndividual(){
-  var colores=getColoresPrenda(nvGetPrendaSeleccionada());
+  var prendaSel=nvGetPrendaSeleccionada();
+  var colores=getColoresPrenda(prendaSel);
   var prendas=['Camisetas','Sudaderas','Sudaderas c/capucha','Polos','Petos'];
   var prendaOpts=prendas.map(function(pr){return'<option value="'+pr+'">'+pr+'</option>';}).join('');
   var tallaOpts=TALLAS_STD.map(function(t){return'<option value="'+t+'">'+t+'</option>';}).join('');
   _nvIndCount=1;
+  var defCod=(colores.find(function(c){return c.nombre==='Negro';})||colores[0]||{}).cod||'02';
+  var imgUrl=rolyImgUrl(prendaSel,defCod);
+  var medidas=PRENDA_MEDIDAS[prendaSel]||{};
+  var medidasHTML='';
+  if(Object.keys(medidas).length){
+    medidasHTML='<div id="nv-ind-guia" style="display:none;padding:10px 12px;border-top:1px solid #E6F1FB">'
+      +'<div style="font-size:11px;color:#888;margin-bottom:6px">Medidas en cm (ancho × alto) · ±2,5 cm</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px">'
+      +Object.keys(medidas).map(function(t){return'<span style="font-size:11px;background:#f0f7ff;padding:2px 8px;border-radius:4px"><b>'+t+'</b> '+medidas[t]+'</span>';}).join('')
+      +'</div></div>';
+  }
   var html='<div style="border:1.5px solid #E6F1FB;border-radius:8px;overflow:hidden">'
     +'<div style="background:#E6F1FB;padding:9px 12px;display:flex;align-items:center;justify-content:space-between">'
     +'<span style="font-size:12px;font-weight:700;color:#185FA5">🏷 Personalización individual</span>'
+    +'<div style="display:flex;align-items:center;gap:8px">'
+    +'<img id="nv-ind-prenda-img" src="'+imgUrl+'" style="width:36px;height:36px;object-fit:contain;border-radius:4px;border:1px solid #ddd;cursor:pointer" onerror="this.style.display=\'none\'" onclick="ampliImgPrenda(this.src)">'
+    +'<button type="button" onclick="var g=document.getElementById(\'nv-ind-guia\');if(g)g.style.display=g.style.display===\'none\'?\'block\':\'none\'" style="background:none;border:1px solid #B5D4F4;border-radius:5px;padding:3px 8px;font-size:11px;color:#185FA5;cursor:pointer">📏 Guía</button>'
     +'<span id="nv-ind-counter" style="background:#B5D4F4;color:#042C53;font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600">0 personas</span>'
-    +'</div>'
+    +'</div></div>'
+    +medidasHTML
     +'<div style="overflow-x:auto"><table class="tt-table" id="nv-ind-table" style="font-size:12px">'
     +'<thead><tr>'
     +'<th style="width:30px;text-align:center">#</th>'
@@ -6835,7 +6851,7 @@ function nvRenderTablaIndividual(){
     +'<th style="width:30px"></th>'
     +'</tr></thead>'
     +'<tbody id="nv-ind-tbody">'
-    +nvIndRenderFila(0,prendaOpts,tallaOpts)
+    +nvIndRenderFila(0,prendaOpts,tallaOpts,nvGetPrendaSeleccionada())
     +'</tbody></table></div>'
     +'<button class="tt-add-btn" onclick="nvIndAddFila()">+ Añadir persona</button>'
     +'<div id="nv-ind-resumen" class="tt-resumen">0 personas</div>'
@@ -6872,7 +6888,7 @@ function nvIndAddFila(){
   var tbody=document.getElementById('nv-ind-tbody');
   if(!tbody)return;
   var idx=_nvIndCount++;
-  tbody.insertAdjacentHTML('beforeend',nvIndRenderFila(idx));
+  tbody.insertAdjacentHTML('beforeend',nvIndRenderFila(idx,null,null,nvGetPrendaSeleccionada()));
   nvIndActualizar();
 }
 function nvIndRemFila(idx){
