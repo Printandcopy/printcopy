@@ -129,6 +129,39 @@ var PRENDA_COLORES = {
     {cod:'216',nombre:'Verde Tropical',hex:'#2E8B57'},{cod:'266',nombre:'Ocre',hex:'#C49B22'},
     {cod:'262',nombre:'Rojo Pálido',hex:'#E88B8B'},{cod:'168',nombre:'Rojo Baya',hex:'#9E2B2B'},
     {cod:'169',nombre:'Coral',hex:'#F07060'},{cod:'261',nombre:'Purple Iris',hex:'#6A4C93'}
+  ],
+  'Sudaderas':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},
+    {cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'78',nombre:'Rosetón',hex:'#E8608A'},
+    {cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},{cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},
+    {cod:'121',nombre:'Lila',hex:'#B09CC8'},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},
+    {cod:'31',nombre:'Naranja',hex:'#E87020'},{cod:'12',nombre:'Turquesa',hex:'#00A6A6'},
+    {cod:'10',nombre:'Celeste',hex:'#6AAED6'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},
+    {cod:'20',nombre:'Verde Kelly',hex:'#4CBB17'},{cod:'114',nombre:'Verde Oasis',hex:'#5BAD6F'},
+    {cod:'152',nombre:'Verde Aventura',hex:'#5F8A4E'},{cod:'170',nombre:'Azul Tormenta',hex:'#4A6A8A'},
+    {cod:'263',nombre:'Azul Zen',hex:'#6B8DAD'},{cod:'108',nombre:'Gris Piedra',hex:'#C0C0C0'},
+    {cod:'46',nombre:'Plomo Oscuro',hex:'#4A4A4A'},{cod:'132',nombre:'Blanco Vintage',hex:'#F0EBE0',borde:true}
+  ],
+  'Sudaderas c/capucha':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},
+    {cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'78',nombre:'Rosetón',hex:'#E8608A'},
+    {cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},{cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},
+    {cod:'121',nombre:'Lila',hex:'#B09CC8'},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},
+    {cod:'31',nombre:'Naranja',hex:'#E87020'},{cod:'12',nombre:'Turquesa',hex:'#00A6A6'},
+    {cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},{cod:'152',nombre:'Verde Aventura',hex:'#5F8A4E'},
+    {cod:'170',nombre:'Azul Tormenta',hex:'#4A6A8A'},{cod:'263',nombre:'Azul Zen',hex:'#6B8DAD'},
+    {cod:'108',nombre:'Gris Piedra',hex:'#C0C0C0'},{cod:'132',nombre:'Blanco Vintage',hex:'#F0EBE0',borde:true},
+    {cod:'46',nombre:'Plomo Oscuro',hex:'#4A4A4A'}
+  ],
+  'Petos':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},
+    {cod:'03',nombre:'Amarillo',hex:'#F5D300'},{cod:'31',nombre:'Naranja',hex:'#E87020'}
   ]
 };
 var COLORES = [
@@ -197,7 +230,7 @@ function render() {
     +'<span style="font-size:13px;font-weight:700;color:#185FA5">📏 Guía de tallas</span>'
     +'<span style="font-size:11px;color:#aaa">▼</span>'
     +'</div>'
-    +'<div id="guia-tallas" style="display:none;margin-top:10px">'
+    +'<div id="guia-tallas" style="margin-top:10px">'
     +'<div id="guia-tallas-contenido"></div>'
     +'</div></div>';
 
@@ -297,6 +330,15 @@ function delFila(idx) {
 
 function abrirColorModal(idx) {
   _colorModalIdx = idx;
+  var prenda=(_filas[idx]&&_filas[idx].prenda)||'Camisetas';
+  var colores=PRENDA_COLORES[prenda]||COLORES;
+  var grid=document.getElementById('color-grid');
+  if(grid){
+    grid.innerHTML=colores.map(function(c,i){
+      var borde=c.borde?'border:1px solid #ccc;':'';
+      return'<div class="color-opt" onclick="selColor('+i+')"><span style="width:16px;height:16px;border-radius:50%;background:'+c.hex+';'+borde+'display:inline-block;flex-shrink:0"></span>'+c.nombre+'</div>';
+    }).join('');
+  }
   document.getElementById('color-modal').classList.add('open');
 }
 
@@ -310,7 +352,9 @@ function renderColorGrid() {
 }
 
 function selColor(colorIdx) {
-  var c = COLORES[colorIdx];
+  var prenda=(_filas[_colorModalIdx]&&_filas[_colorModalIdx].prenda)||'Camisetas';
+  var colores=PRENDA_COLORES[prenda]||COLORES;
+  var c = colores[colorIdx];
   var idx = _colorModalIdx;
   if(idx !== null && _filas[idx]) {
     _filas[idx].color = c.nombre;
