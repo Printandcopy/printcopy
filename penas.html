@@ -148,6 +148,7 @@ var COLORES = [
 var pedidoId = new URLSearchParams(window.location.search).get('p');
 var _pedido = null;
 var _filas = [];
+var _cantPedido = 0;
 var _colorModalIdx = null;
 
 function api(path) {
@@ -168,6 +169,9 @@ function init() {
   api('pedidos?id=eq.'+pedidoId+'&select=id,cliente_nombre,descripcion,tallas_colores').then(function(r){
     if(!r||!r.length){show('<div class="error">Pedido no encontrado.</div>');return;}
     _pedido = r[0];
+    // Extraer cantidad del pedido de la descripción (ej: "×15")
+    var _m=(_pedido.descripcion||'').match(/[×x](\d+)/i);
+    _cantPedido=_m?parseInt(_m[1]):0;
     if(_pedido.tallas_colores && _pedido.tallas_colores.length) {
       _filas = JSON.parse(JSON.stringify(_pedido.tallas_colores));
     } else {
@@ -259,15 +263,25 @@ function onFieldChange(idx, field, val) {
 
 function calcResumen() {
   var rellenas = _filas.filter(function(f){return f.nombre && f.nombre.trim();}).length;
-  var total = _filas.length;
-  if(!rellenas) return '<span class="total-uds">0</span> de '+total+' personas rellenas';
+  var totalRef = _cantPedido>0?_cantPedido:_filas.length;
+  var faltan = totalRef - rellenas;
+  var color = rellenas===0?'#A32D2D':rellenas<totalRef?'#BA7517':'#3B6D11';
+  var estado = rellenas===0?'Sin rellenar':rellenas<totalRef?'Faltan '+faltan:'Completo';
+  var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+    +'<span class="total-uds" style="color:'+color+'">'+rellenas+'/'+totalRef+'</span>'
+    +'<span style="font-size:12px;font-weight:600;color:'+color+'">'+estado+'</span></div>';
+  if(!rellenas) return html;
   var lineas = _filas.filter(function(f){return f.nombre && f.nombre.trim();}).map(function(f){
     return '<strong>'+(f.nombre||'')+'</strong> · '+(f.prenda||'Camiseta')+' '+(f.color||'')+' '+(f.talla||'')+' '+(f.numero?'#'+f.numero:'');
   });
-  return '<span class="total-uds">'+rellenas+'/'+total+'</span> personas<br>'+lineas.join('<br>');
+  return html+lineas.join('<br>');
 }
 
 function addFila() {
+  if(_cantPedido>0 && _filas.length>=_cantPedido){
+    alert('El pedido es de '+_cantPedido+' unidades. No puedes añadir más personas.');
+    return;
+  }
   _filas.push({prenda:'Camisetas',color:'Negro',hex:'#1a1a1a',talla:'M',nombre:'',numero:''});
   var container = document.getElementById('filas-container');
   if(container) container.insertAdjacentHTML('beforeend', renderFila(_filas[_filas.length-1], _filas.length-1));

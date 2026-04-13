@@ -95,6 +95,7 @@ var PRENDA_MEDIDAS = {
   'Petos':{S:'49×69',M:'52×71',L:'55×73',XL:'58×75',XXL:'62×77'}
 };
 var _prendaDetectada='Camisetas';
+var _cantPedido=0;
 var COLORES = [
   {nombre:'Blanco',hex:'#FFFFFF',borde:true},{nombre:'Negro',hex:'#1a1a1a'},
   {nombre:'Azul marino',hex:'#1B2A6B'},{nombre:'Azul royal',hex:'#2651A0'},
@@ -139,6 +140,8 @@ function init() {
     else if(_d.includes('POLO'))_prendaDetectada='Polos';
     else if(_d.includes('PETO'))_prendaDetectada='Petos';
     else _prendaDetectada='Camisetas';
+    var _m=(_pedido.descripcion||'').match(/[×x](\d+)/i);
+    _cantPedido=_m?parseInt(_m[1]):0;
     // Si ya tiene datos guardados, usarlos como base
     if(_pedido.tallas_colores && _pedido.tallas_colores.length) {
       _filas = JSON.parse(JSON.stringify(_pedido.tallas_colores));
@@ -248,14 +251,16 @@ function calcResumen() {
   var totalUds = 0;
   var lineas = _filas.map(function(f) {
     var parts = TALLAS.filter(function(t){return f.tallas&&f.tallas[t]>0;}).map(function(t){return t+'×'+f.tallas[t];});
-    var sub = parts.reduce(function(s,_,i){return s+(parseInt(Object.values(f.tallas||{})[i])||0);},0);
-    // calcular bien
-    sub = Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);
+    var sub = Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);
     totalUds += sub;
     return parts.length ? '<strong>'+f.color+'</strong>: '+parts.join(' ') : null;
   }).filter(Boolean);
   if(!totalUds) return 'Sin tallas introducidas aún';
-  return '<span class="total-uds">'+totalUds+' uds</span><br>'+lineas.join('<br>');
+  var totalRef=_cantPedido>0?_cantPedido:totalUds;
+  var faltan=totalRef-totalUds;
+  var color=totalUds===0?'#A32D2D':totalUds<totalRef?'#BA7517':totalUds===totalRef?'#3B6D11':'#A32D2D';
+  var estado=totalUds===0?'Sin rellenar':totalUds<totalRef?'Faltan '+faltan+' uds':totalUds===totalRef?'Completo':'Sobran '+(totalUds-totalRef)+' uds';
+  return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span class="total-uds" style="color:'+color+'">'+totalUds+(_cantPedido?'/'+_cantPedido:'')+'</span><span style="font-size:12px;font-weight:600;color:'+color+'">'+estado+'</span></div>'+lineas.join('<br>');
 }
 
 function addFila() {
