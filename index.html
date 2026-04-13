@@ -4619,8 +4619,15 @@ function checkRecordatoriosPresupuestos(){
 // Recordatorios tallas: cada 2 días (2,4,6,8...) para pedidos TX sin tallas
 function checkRecordatoriosTallas(){
   var ahora=new Date();
+  var fechaMinima=new Date('2026-04-12T00:00:00'); // Solo pedidos desde que tallas está activo
   var sinTallas=pedidos.filter(function(p){
-    return p.seccion==='TX'&&!p.tallasColores&&p.fase<4&&p.clienteTel;
+    if(p.seccion!=='TX'||p.fase>=4||!p.clienteTel)return false;
+    if(new Date(p.fechaCreacion)<fechaMinima)return false;
+    var tc=p.tallasColores;
+    if(!tc||!tc.length)return true;
+    if(p.tipoPersonalizacion==='individual')return !tc.some(function(f){return f.nombre&&f.nombre.trim();});
+    var sum=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
+    return sum===0;
   });
   if(!sinTallas.length)return;
   sinTallas.forEach(function(p){
@@ -7425,7 +7432,14 @@ if('Notification' in window&&Notification.permission==='default')Notification.re
 
 // Polling cada 45s para detectar cuando cliente rellena tallas (simples o individual)
 setInterval(function(){
-  var sinTallas=pedidos.filter(function(p){return p.seccion==='TX'&&!p.tallasColores&&p.fase<4;});
+  var sinTallas=pedidos.filter(function(p){
+    if(p.seccion!=='TX'||p.fase>=4)return false;
+    var tc=p.tallasColores;
+    if(!tc||!tc.length)return true;
+    if(p.tipoPersonalizacion==='individual')return !tc.some(function(f){return f.nombre&&f.nombre.trim();});
+    var sum=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
+    return sum===0;
+  });
   if(!sinTallas.length)return;
   var ids=sinTallas.map(function(p){return p.id;});
   sb.from('pedidos').select('id,tallas_colores,tipo_personalizacion').in('id',ids).then(function(r){
