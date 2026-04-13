@@ -7190,6 +7190,8 @@ function renderTablaIndividualDetalle(p){
     +'<button class="tt-save-btn" onclick="ttGuardar(\''+p.id+'\')">💾 Guardar</button>'
     +(_indCompleta?'':'<button class="tt-wa-btn" onclick="ttEnviarWAIndividual(\''+p.id+'\')">📱 Enviar al cliente</button>')
     +'</div></div></div></div>';
+  return html;
+}
 
 function ttEnviarWAIndividual(pedidoId){
   var p=pedidos.find(function(x){return x.id===pedidoId;});
