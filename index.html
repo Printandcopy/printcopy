@@ -7725,7 +7725,8 @@ setInterval(function(){
 // Pedir permiso notificaciones
 if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
 
-// Polling cada 45s para detectar cuando cliente rellena tallas (simples o individual)
+// Polling tallas — DESACTIVADO temporalmente, se reactivará con lógica corregida
+/*
 setInterval(function(){
   var sinTallas=pedidos.filter(function(p){
     if(p.seccion!=='TX'||p.fase>=4||p._tallasNotificado||_tallasYaNotificadas[p.id])return false;
@@ -7779,6 +7780,7 @@ setInterval(function(){
     });
   });
 },45000);
+*/
 
 // Polling cada 30s para detectar respuestas de clientes en previas
 setInterval(function(){
