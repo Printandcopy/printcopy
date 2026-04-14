@@ -6040,9 +6040,14 @@ function nvCrearPedido(){
                 ped.tallas_colores=_tDatos;
                 ped.tipo_personalizacion=_nvTipoTallas==='individual'?'individual':'iguales';
               }
+              var _esVacia=false;
+              if(sec==='TX'){
+                if(ped.tipo_personalizacion==='individual')_esVacia=!ped.tallas_colores.some(function(d){return d.nombre&&d.nombre.trim();});
+                else{var _s=ped.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0);_esVacia=_s===0;}
+              }
               sb.from('pedidos').insert([ped]).then(function(ri){
                 if(ri.error){console.error('Error insert pedido:',ri.error.message);alert('Error al crear pedido: '+ri.error.message);res(null);}
-                else{res({num:numPed,sec:sec,tipoPers:ped.tipo_personalizacion,tallasVacia:false});}
+                else{res({num:numPed,sec:sec,tipoPers:ped.tipo_personalizacion,tallasVacia:_esVacia});}
               });
             });
           });
@@ -6106,17 +6111,8 @@ function nvCrearPedido(){
           fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telD,mensaje:msgD,nombre:nombre})}).then(function(r){return r.json();}).then(function(d){
             if(!d.success)console.warn('WA pedido directo:',d.error);
           }).catch(function(e){console.error('WA confirmacion error:',e);});
-          // WA de tallas: capturar datos AHORA (antes de cerrar modal)
-          var _tallasData=[];
-          validos.forEach(function(v){
-            if(v.sec!=='TX')return;
-            var tc=_nvTipoTallas==='individual'?nvIndGetDatos():nvTTGetDatos();
-            var vacia=true;
-            if(v.tipoPers==='individual')vacia=!tc.some(function(f){return f.nombre&&f.nombre.trim();});
-            else{var sum=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0);vacia=sum===0;}
-            if(vacia)_tallasData.push(v);
-          });
-          // Enviar WA tallas con 3s delay (datos ya capturados)
+          // WA de tallas: usar datos ya calculados en el resolve
+          var _tallasData=validos.filter(function(v){return v.sec==='TX'&&v.tallasVacia;});
           if(_tallasData.length){
             setTimeout(function(){
               _tallasData.forEach(function(v){
