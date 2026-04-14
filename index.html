@@ -7725,8 +7725,8 @@ setInterval(function(){
 // Pedir permiso notificaciones
 if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
 
-// Polling tallas: DESACTIVADO hasta confirmar columna tallas_notificado en BD
-if(false)setInterval(function(){
+// Polling tallas: consulta BD con filtro tallas_notificado
+setInterval(function(){
   sb.from('pedidos').select('id,cliente_nombre,cliente_tel,tallas_colores,tipo_personalizacion')
     .eq('seccion','TX').lt('fase',4).or('tallas_notificado.is.null,tallas_notificado.eq.false')
     .not('tallas_colores','is',null)
