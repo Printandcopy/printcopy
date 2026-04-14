@@ -6065,7 +6065,11 @@ function nvCrearPedido(){
           });
           window._presupuestoParaConvertir=null;
         }
+        // Cerrar modal PRIMERO (antes de WA para que no se quede abierto)
+        closeModal('modal-venta');cargarDatos();
+cargarProveedores();
         // Enviar WA confirmación pedido directo
+        try{
         if(tel){
           var telD=tel.replace(/\s/g,'').replace(/^\+/,'');
           if(telD.length===9&&!telD.startsWith('34'))telD='34'+telD;
@@ -6123,8 +6127,7 @@ function nvCrearPedido(){
             },3000);
           }
         }
-        closeModal('modal-venta');cargarDatos();
-cargarProveedores();
+        }catch(e){console.error('Error WA:',e);}
         // Ir a pantalla Pedidos para ver el nuevo pedido
         setTimeout(function(){
           showScreen('ventas');
