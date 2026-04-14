@@ -1914,6 +1914,7 @@ var selectedSec=null,currentClientId=null,_pendingClient=null,_pedidoModal=null;
 var activeFilters={fase:'all',entrega:'all',pago:'all',sfase:'all'};
 var currentView='lista',currentOperario='Marilia',mesOffset=0;
 var pedidos=[],clientes=[];
+var _tallasYaNotificadas={};
 
 function testConnection(){
   sb.from('clientes').select('id').limit(1).then(function(r){
@@ -1953,6 +1954,16 @@ function cargarDatos(){
     }
     clientes=(rClientes.data||[]).map(clienteDbToLocal);
     pedidos=(rPedidos.data||[]).map(dbToLocal);
+    // Marcar pedidos TX con tallas completas como ya notificados
+    pedidos.forEach(function(p){
+      if(p.seccion!=='TX')return;
+      var tc=p.tallasColores;
+      if(!tc||!tc.length)return;
+      var completo=false;
+      if(p.tipoPersonalizacion==='individual')completo=tc.some(function(f){return f.nombre&&f.nombre.trim();});
+      else completo=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0)>0;
+      if(completo)_tallasYaNotificadas[p.id]=true;
+    });
     renderTaller();
     renderClientes();
     cargarSolicitudes();
@@ -7717,7 +7728,7 @@ if('Notification' in window&&Notification.permission==='default')Notification.re
 // Polling cada 45s para detectar cuando cliente rellena tallas (simples o individual)
 setInterval(function(){
   var sinTallas=pedidos.filter(function(p){
-    if(p.seccion!=='TX'||p.fase>=4||p._tallasNotificado)return false;
+    if(p.seccion!=='TX'||p.fase>=4||p._tallasNotificado||_tallasYaNotificadas[p.id])return false;
     var tc=p.tallasColores;
     if(!tc||!tc.length)return true;
     if(p.tipoPersonalizacion==='individual')return !tc.some(function(f){return f.nombre&&f.nombre.trim();});
@@ -7739,8 +7750,9 @@ setInterval(function(){
       else bdTieneDatos=row.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0)>0;
       if(!bdTieneDatos)return;
       // Verificar si ya notificamos (flag en memoria)
-      if(p._tallasNotificado)return;
+      if(p._tallasNotificado||_tallasYaNotificadas[p.id])return;
       p._tallasNotificado=true;
+      _tallasYaNotificadas[p.id]=true;
       p.tallasColores=row.tallas_colores;
       if(row.tipo_personalizacion)p.tipoPersonalizacion=row.tipo_personalizacion;
       var total=0;
