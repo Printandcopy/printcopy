@@ -6068,8 +6068,15 @@ function nvCrearPedido(){
           window._presupuestoParaConvertir=null;
         }
         // Cerrar modal PRIMERO (antes de WA para que no se quede abierto)
-        closeModal('modal-venta');cargarDatos();
-cargarProveedores();
+        closeModal('modal-venta');
+        cargarDatos().then(function(){
+          cargarProveedores();
+          showScreen('ventas');
+          var ultimoPed=pedidos.find(function(p){return p.id===numPedidos[0];});
+          if(ultimoPed && confirm('Pedidos creados: '+numPedidos.join(', ')+'\n\n¿Imprimir resguardo?')){
+            generarResguardo(ultimoPed);
+          }
+        });
         // Enviar WA confirmación pedido directo
         try{
         if(tel){
@@ -6130,14 +6137,6 @@ cargarProveedores();
           }
         }
         }catch(e){console.error('Error WA:',e);}
-        // Ir a pantalla Pedidos para ver el nuevo pedido
-        setTimeout(function(){
-          showScreen('ventas');
-          var ultimoPed=pedidos.find(function(p){return p.id===numPedidos[0];});
-          if(ultimoPed && confirm('Pedidos creados: '+numPedidos.join(', ')+'\n\n¿Imprimir resguardo?')){
-            generarResguardo(ultimoPed);
-          }
-        },500);
       }).catch(function(e){console.error('Promise.all error:',e);closeModal('modal-venta');cargarDatos();});
     }
     
