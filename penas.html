@@ -301,6 +301,10 @@ function apiPatch(path, data) {
 
 function init() {
   if(!pedidoId){show('<div class="error">Enlace inválido.</div>');return;}
+  if(new URLSearchParams(window.location.search).get('enviado')==='1'){
+    show('<div class="card ok-screen"><div class="ok-ico">✅</div><div class="ok-title">Ya enviado</div><div class="ok-sub">Los datos de este pedido ya fueron enviados.<br><br>Ya puedes cerrar esta página.<br><br><span style="color:#aaa">Print & Copy · 923 018 034</span></div></div>');
+    return;
+  }
   api('pedidos?id=eq.'+pedidoId+'&select=id,cliente_nombre,descripcion,tallas_colores').then(function(r){
     if(!r||!r.length){show('<div class="error">Pedido no encontrado.</div>');return;}
     _pedido = r[0];
@@ -495,12 +499,13 @@ function enviar() {
   if(btn){btn.disabled=true;btn.textContent='Enviando...';}
   apiPatch('pedidos?id=eq.'+pedidoId, {tallas_colores: _filas}).then(function(r){
     if(r.ok){
+      document.title='✅ Datos enviados';
       show('<div class="card ok-screen">'
         +'<div class="ok-ico">✅</div>'
         +'<div class="ok-title">¡Recibido!</div>'
-        +'<div class="ok-sub">Hemos recibido los datos de <strong>'+rellenas+' personas</strong> para el pedido <strong>'+pedidoId+'</strong>.<br><br>Nos ponemos en marcha. Te avisaremos cuando esté listo.<br><br><span style="color:#aaa">Print & Copy · 923 018 034</span></div>'
+        +'<div class="ok-sub">Hemos recibido los datos de <strong>'+rellenas+' personas</strong> para el pedido <strong>'+pedidoId+'</strong>.<br><br>Nos ponemos en marcha. Te avisaremos cuando esté listo.<br><br>Ya puedes cerrar esta página.<br><br><span style="color:#aaa">Print & Copy · 923 018 034</span></div>'
         +'</div>');
-      setTimeout(function(){try{window.close();}catch(e){}},3000);
+      history.replaceState(null,'','?p='+pedidoId+'&enviado=1');
     } else {
       if(btn){btn.disabled=false;btn.textContent='✅ Confirmar y enviar';}
       alert('Error al enviar. Llámanos al 923 018 034');
