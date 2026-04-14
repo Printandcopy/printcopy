@@ -7731,7 +7731,14 @@ setInterval(function(){
     r.data.forEach(function(row){
       if(!row.tallas_colores)return;
       var p=pedidos.find(function(x){return x.id===row.id;});
-      if(!p||p.tallasColores)return;
+      if(!p)return;
+      // Verificar si ya tenía datos reales (no array vacío)
+      var yaCompleto=false;
+      if(p.tallasColores&&p.tallasColores.length){
+        if(p.tipoPersonalizacion==='individual')yaCompleto=p.tallasColores.some(function(f){return f.nombre&&f.nombre.trim();});
+        else yaCompleto=p.tallasColores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0)>0;
+      }
+      if(yaCompleto)return;
       p.tallasColores=row.tallas_colores;
       if(row.tipo_personalizacion)p.tipoPersonalizacion=row.tipo_personalizacion;
       var esIndividual=row.tipo_personalizacion==='individual';
