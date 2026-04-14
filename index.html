@@ -6818,16 +6818,20 @@ function cotConvertir(){
 
 // ── FUNCIONES TABLA TALLAS/COLORES ──
 function nvGetPrendaSeleccionada(){
-  var sel=document.getElementById('nv-tx-prenda');
+  var sel=document.getElementById('nv-tx-prenda')||document.getElementById('cf-prenda');
   if(!sel)return'Camisetas';
   var v=sel.value||'';
-  // Mapear valores de la calculadora a nombres de PRENDA_MODELO
-  if(v==='CAMISETAS')return'Camisetas';
-  if(v==='SUDADERAS')return'Sudaderas';
-  if(v==='SUDADERAS C/CAPUCHA')return'Sudaderas c/capucha';
-  if(v==='POLOS')return'Polos';
-  if(v==='PETOS'||v==='PETOS FIESTA')return'Petos';
-  return'Camisetas';
+  var mapa={
+    'CAMISETAS':'Camisetas','SUDADERAS':'Sudaderas','SUDADERAS C/CAPUCHA':'Sudaderas c/capucha',
+    'POLOS':'Polos','PETOS':'Petos','PETOS FIESTA':'Petos','TOTEBAG':'Totebag',
+    'CHALECO THUNDER':'Chaleco Thunder','PANTALON THUNDER':'Pantalón Thunder',
+    'PARKA TRAFFIC':'Parka Traffic','BUZO KEVIN':'Buzo Kevin',
+    'MOCHILA':'Mochila','PANUELO':'Pañuelo','GORRAS':'Gorras',
+    'DELANTAL MINI':'Delantal Mini','DELANTAL CLASSIC':'Delantal Classic',
+    'DELANTAL BENOIT':'Delantal Benoit','CAMISA AIFOS':'Camisa Aifos',
+    'PANACEA':'Panacea','ARZAK':'Arzak','VADEMECUM':'Vademécum','VACCINE':'Vaccine'
+  };
+  return mapa[v]||'Camisetas';
 }
 function nvRenderTablaTallas(){
   // Tabla de tallas en el modal de NUEVO PEDIDO (sin pedido id todavía)
