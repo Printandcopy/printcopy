@@ -6041,14 +6041,16 @@ function nvCrearPedido(){
                 ped.tipo_personalizacion=_nvTipoTallas==='individual'?'individual':'iguales';
               }
               var _esVacia=false;
-              if(sec==='TX'){
-                if(ped.tipo_personalizacion==='individual')_esVacia=!ped.tallas_colores.some(function(d){return d.nombre&&d.nombre.trim();});
-                else{var _s=ped.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0);_esVacia=_s===0;}
-              }
+              if(sec==='TX'&&ped.tallas_colores&&ped.tallas_colores.length){
+                try{
+                  if(ped.tipo_personalizacion==='individual')_esVacia=!ped.tallas_colores.some(function(d){return d.nombre&&d.nombre.trim();});
+                  else{var _s=ped.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0);_esVacia=_s===0;}
+                }catch(e){_esVacia=true;}
+              }else if(sec==='TX'){_esVacia=true;}
               sb.from('pedidos').insert([ped]).then(function(ri){
                 if(ri.error){console.error('Error insert pedido:',ri.error.message);alert('Error al crear pedido: '+ri.error.message);res(null);}
                 else{res({num:numPed,sec:sec,tipoPers:ped.tipo_personalizacion,tallasVacia:_esVacia});}
-              });
+              }).catch(function(e){console.error('Insert catch:',e);res(null);});
             });
           });
         });
@@ -6136,7 +6138,7 @@ cargarProveedores();
             generarResguardo(ultimoPed);
           }
         },500);
-      });
+      }).catch(function(e){console.error('Promise.all error:',e);closeModal('modal-venta');cargarDatos();});
     }
     
     if(nvLineas.length>1){
