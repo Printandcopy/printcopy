@@ -7729,21 +7729,22 @@ setInterval(function(){
   sb.from('pedidos').select('id,tallas_colores,tipo_personalizacion').in('id',ids).then(function(r){
     if(!r.data)return;
     r.data.forEach(function(row){
-      if(!row.tallas_colores)return;
+      if(!row.tallas_colores||!row.tallas_colores.length)return;
       var p=pedidos.find(function(x){return x.id===row.id;});
       if(!p)return;
-      // Verificar si ya tenía datos reales (no array vacío)
-      var yaCompleto=false;
-      if(p.tallasColores&&p.tallasColores.length){
-        if(p.tipoPersonalizacion==='individual')yaCompleto=p.tallasColores.some(function(f){return f.nombre&&f.nombre.trim();});
-        else yaCompleto=p.tallasColores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0)>0;
-      }
-      if(yaCompleto)return;
+      // Verificar si los datos de BD tienen contenido real
+      var bdTieneDatos=false;
+      var esInd=row.tipo_personalizacion==='individual';
+      if(esInd)bdTieneDatos=row.tallas_colores.some(function(f){return f.nombre&&f.nombre.trim();});
+      else bdTieneDatos=row.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0)>0;
+      if(!bdTieneDatos)return;
+      // Verificar si ya notificamos (flag en memoria)
+      if(p._tallasNotificado)return;
+      p._tallasNotificado=true;
       p.tallasColores=row.tallas_colores;
       if(row.tipo_personalizacion)p.tipoPersonalizacion=row.tipo_personalizacion;
-      var esIndividual=row.tipo_personalizacion==='individual';
       var total=0;
-      if(esIndividual){
+      if(esInd){
         total=row.tallas_colores.filter(function(f){return f.nombre;}).length;
       } else {
         total=row.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
