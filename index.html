@@ -4748,19 +4748,17 @@ function checkRecordatoriosPresupuestos(){
     var total=parseFloat(p.total||0).toFixed(0);
     // Recordatorio 1: día 3
     if(diasDesde>=3&&!p.recordatorio_1_enviado){
+      p.recordatorio_1_enviado=true;
       var msg1='Hola '+nombre+' 👋 ¿Pudiste revisar el presupuesto *'+p.numero+'* por *'+total+'€*? Si tienes alguna duda o quieres que ajustemos algo, aquí estamos 😊\n\nPrint & Copy · 923 018 034';
       fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg1,nombre:p.cliente_nombre})})
         .then(function(r){return r.json();})
         .then(function(d){
-          if(d.success){
-            sb.from('presupuestos').update({recordatorio_1_enviado:true}).eq('id',p.id).then(function(){});
-            p.recordatorio_1_enviado=true;
-            console.log('Recordatorio 1 enviado a',p.cliente_nombre,'para',p.numero);
-          }
+          if(d.success){sb.from('presupuestos').update({recordatorio_1_enviado:true}).eq('id',p.id).then(function(){});}
         });
     }
     // Recordatorio 2: día 7
     if(diasDesde>=7&&!p.recordatorio_2_enviado){
+      p.recordatorio_2_enviado=true;
       var validez=parseInt(p.validez)||15;
       var diasRestantes=validez-diasDesde;
       if(diasRestantes<0)diasRestantes=0;
@@ -4768,22 +4766,17 @@ function checkRecordatoriosPresupuestos(){
       fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg2,nombre:p.cliente_nombre})})
         .then(function(r){return r.json();})
         .then(function(d){
-          if(d.success){
-            sb.from('presupuestos').update({recordatorio_2_enviado:true}).eq('id',p.id).then(function(){});
-            p.recordatorio_2_enviado=true;
-          }
+          if(d.success){sb.from('presupuestos').update({recordatorio_2_enviado:true}).eq('id',p.id).then(function(){});}
         });
     }
     // Recordatorio 3: día 12 (último aviso)
     if(diasDesde>=12&&!p.recordatorio_3_enviado){
+      p.recordatorio_3_enviado=true;
       var msg3='Hola '+nombre+' 👋 Último aviso: el presupuesto *'+p.numero+'* caduca en breve. Si te interesa, confírmanos antes de que expire.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034';
       fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg3,nombre:p.cliente_nombre})})
         .then(function(r){return r.json();})
         .then(function(d){
-          if(d.success){
-            sb.from('presupuestos').update({recordatorio_3_enviado:true}).eq('id',p.id).then(function(){});
-            p.recordatorio_3_enviado=true;
-          }
+          if(d.success){sb.from('presupuestos').update({recordatorio_3_enviado:true}).eq('id',p.id).then(function(){});}
         });
     }
     // Auto-caducar: pasada la validez
@@ -7653,13 +7646,11 @@ function checkRecordatorioPago(){
       msg='Hola '+nombre+'! Como no hemos podido confirmar, archivamos tu presupuesto por ahora. Si en cualquier momento quieres retomarlo, escríbenos y te lo reactivamos sin problema.\n\nUn saludo desde Print & Copy! 🙌';
     }
     if(!msg||!nuevoRec)return;
+    p.recordatorio_pago_num=nuevoRec;
     fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
       .then(function(r){return r.json();})
       .then(function(d){
-        if(d.success){
-          sb.from('presupuestos').update({recordatorio_pago_num:nuevoRec}).eq('id',p.id).then(function(){});
-          p.recordatorio_pago_num=nuevoRec;
-        }
+        if(d.success){sb.from('presupuestos').update({recordatorio_pago_num:nuevoRec}).eq('id',p.id).then(function(){});}
       });
   });
 }
