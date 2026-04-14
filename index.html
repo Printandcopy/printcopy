@@ -1937,7 +1937,7 @@ function cargarDatos(){
   document.getElementById('taller-list').innerHTML='<div class="loading">Cargando...</div>';
   clientes=[];pedidos=[];
   // Cargar clientes y pedidos desde Supabase en paralelo
-  Promise.all([
+  return Promise.all([
     sb.from('clientes').select('*').order('nombre'),
     sb.from('pedidos').select('*').order('fecha_creacion',{ascending:false})
   ]).then(function(results){
@@ -6057,15 +6057,7 @@ function nvCrearPedido(){
         }
         // Cerrar modal PRIMERO (antes de WA para que no se quede abierto)
         closeModal('modal-venta');
-        cargarDatos().then(function(){
-          cargarProveedores();
-          showScreen('ventas');
-          var ultimoPed=pedidos.find(function(p){return p.id===numPedidos[0];});
-          if(ultimoPed && confirm('Pedidos creados: '+numPedidos.join(', ')+'\n\n¿Imprimir resguardo?')){
-            generarResguardo(ultimoPed);
-          }
-        });
-        // Enviar WA confirmación pedido directo
+        // Enviar WA confirmación pedido directo ANTES de recargar datos
         try{
         if(tel){
           var telD=tel.replace(/\s/g,'').replace(/^\+/,'');
@@ -6125,6 +6117,15 @@ function nvCrearPedido(){
           }
         }
         }catch(e){console.error('Error WA:',e);}
+        // Recargar datos y mostrar pedido
+        cargarDatos().then(function(){
+          cargarProveedores();
+          showScreen('ventas');
+          var ultimoPed=pedidos.find(function(p){return p.id===numPedidos[0];});
+          if(ultimoPed && confirm('Pedidos creados: '+numPedidos.join(', ')+'\n\n¿Imprimir resguardo?')){
+            generarResguardo(ultimoPed);
+          }
+        });
       }).catch(function(e){console.error('Promise.all error:',e);closeModal('modal-venta');cargarDatos();});
     }
     
