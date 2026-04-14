@@ -1964,7 +1964,7 @@ function cargarDatos(){
 }
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',creado:c.creado};}
-function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,_recTallasNum:p.recordatorio_tallas_num||0};}
+function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,_recTallasNum:p.recordatorio_tallas_num||0,_tallasNotificado:p.tallas_notificado||false};}
 function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null,tipo_personalizacion:p.tipoPersonalizacion||null};}
 
 function startClock(){
@@ -7717,7 +7717,7 @@ if('Notification' in window&&Notification.permission==='default')Notification.re
 // Polling cada 45s para detectar cuando cliente rellena tallas (simples o individual)
 setInterval(function(){
   var sinTallas=pedidos.filter(function(p){
-    if(p.seccion!=='TX'||p.fase>=4)return false;
+    if(p.seccion!=='TX'||p.fase>=4||p._tallasNotificado)return false;
     var tc=p.tallasColores;
     if(!tc||!tc.length)return true;
     if(p.tipoPersonalizacion==='individual')return !tc.some(function(f){return f.nombre&&f.nombre.trim();});
@@ -7761,6 +7761,8 @@ setInterval(function(){
         if(_telC.length===9&&!_telC.startsWith('34'))_telC='34'+_telC;
         fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:_telC,mensaje:'✅ Recibidas las tallas del pedido *'+p.id+'*. Nos ponemos en marcha.\n\nPrint & Copy · 923 018 034',nombre:p.clienteNombre})});
       }
+      // Marcar en BD para no repetir
+      sb.from('pedidos').update({tallas_notificado:true}).eq('id',p.id).then(function(){});
       renderTaller();
     });
   });
