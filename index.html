@@ -4737,116 +4737,104 @@ function cargarPresupuestos(){
 
 function checkRecordatoriosPresupuestos(){
   var ahora=new Date();
-  var enviados=(presupuestos||[]).filter(function(p){return p.estado==='enviado';});
-  if(!enviados.length)return;
-  enviados.forEach(function(p){
-    var diasDesde=Math.floor((ahora-new Date(p.updated_at||p.created_at))/(1000*3600*24));
-    var tel=(p.cliente_telefono||'').replace(/\s/g,'').replace(/^\+/,'');
-    if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
-    if(!tel)return;
-    var nombre=(p.cliente_nombre||'').split(' ')[0];
-    var total=parseFloat(p.total||0).toFixed(0);
-    // Recordatorio 1: día 3
-    if(diasDesde>=3&&!p.recordatorio_1_enviado){
-      p.recordatorio_1_enviado=true;
-      var msg1='Hola '+nombre+' 👋 ¿Pudiste revisar el presupuesto *'+p.numero+'* por *'+total+'€*? Si tienes alguna duda o quieres que ajustemos algo, aquí estamos 😊\n\nPrint & Copy · 923 018 034';
-      fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg1,nombre:p.cliente_nombre})})
-        .then(function(r){return r.json();})
-        .then(function(d){
-          if(d.success){sb.from('presupuestos').update({recordatorio_1_enviado:true}).eq('id',p.id).then(function(){});}
-        });
-    }
-    // Recordatorio 2: día 7
-    if(diasDesde>=7&&!p.recordatorio_2_enviado){
-      p.recordatorio_2_enviado=true;
-      var validez=parseInt(p.validez)||15;
-      var diasRestantes=validez-diasDesde;
-      if(diasRestantes<0)diasRestantes=0;
-      var msg2='Hola '+nombre+' ⚡ Te recordamos que el presupuesto *'+p.numero+'* vence en *'+diasRestantes+' días*. Si quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034';
-      fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg2,nombre:p.cliente_nombre})})
-        .then(function(r){return r.json();})
-        .then(function(d){
-          if(d.success){sb.from('presupuestos').update({recordatorio_2_enviado:true}).eq('id',p.id).then(function(){});}
-        });
-    }
-    // Recordatorio 3: día 12 (último aviso)
-    if(diasDesde>=12&&!p.recordatorio_3_enviado){
-      p.recordatorio_3_enviado=true;
-      var msg3='Hola '+nombre+' 👋 Último aviso: el presupuesto *'+p.numero+'* caduca en breve. Si te interesa, confírmanos antes de que expire.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034';
-      fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg3,nombre:p.cliente_nombre})})
-        .then(function(r){return r.json();})
-        .then(function(d){
-          if(d.success){sb.from('presupuestos').update({recordatorio_3_enviado:true}).eq('id',p.id).then(function(){});}
-        });
-    }
-    // Auto-caducar: pasada la validez
-    var validezDias=parseInt(p.validez)||15;
-    if(diasDesde>validezDias){
-      sb.from('presupuestos').update({estado:'rechazado'}).eq('id',p.id).then(function(){});
-      p.estado='rechazado';
-    }
-  });
+  sb.from('presupuestos').select('id,numero,estado,cliente_nombre,cliente_telefono,total,validez,recordatorio_1_enviado,recordatorio_2_enviado,recordatorio_3_enviado,updated_at,created_at')
+    .eq('estado','enviado')
+    .then(function(r){
+      if(!r.data||!r.data.length)return;
+      r.data.forEach(function(p){
+        var diasDesde=Math.floor((ahora-new Date(p.updated_at||p.created_at))/(1000*3600*24));
+        var tel=(p.cliente_telefono||'').replace(/\s/g,'').replace(/^\+/,'');
+        if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+        if(!tel)return;
+        var nombre=(p.cliente_nombre||'').split(' ')[0];
+        var total=parseFloat(p.total||0).toFixed(0);
+        if(diasDesde>=3&&!p.recordatorio_1_enviado){
+          sb.from('presupuestos').update({recordatorio_1_enviado:true}).eq('id',p.id).then(function(){
+            fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' 👋 ¿Pudiste revisar el presupuesto *'+p.numero+'* por *'+total+'€*? Si tienes alguna duda o quieres que ajustemos algo, aquí estamos 😊\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
+          });
+        }
+        if(diasDesde>=7&&!p.recordatorio_2_enviado){
+          var validez=parseInt(p.validez)||15;
+          var diasRestantes=validez-diasDesde;if(diasRestantes<0)diasRestantes=0;
+          sb.from('presupuestos').update({recordatorio_2_enviado:true}).eq('id',p.id).then(function(){
+            fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' ⚡ Te recordamos que el presupuesto *'+p.numero+'* vence en *'+diasRestantes+' días*. Si quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
+          });
+        }
+        if(diasDesde>=12&&!p.recordatorio_3_enviado){
+          sb.from('presupuestos').update({recordatorio_3_enviado:true}).eq('id',p.id).then(function(){
+            fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' 👋 Último aviso: el presupuesto *'+p.numero+'* caduca en breve. Si te interesa, confírmanos antes de que expire.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
+          });
+        }
+        var validezDias=parseInt(p.validez)||15;
+        if(diasDesde>validezDias){
+          sb.from('presupuestos').update({estado:'rechazado'}).eq('id',p.id).then(function(){});
+        }
+      });
+    });
 }
 
 // Recordatorio recogida: pedidos terminados (fase 5) que llevan 3+ días sin recoger
 function checkRecordatorioRecogida(){
   var ahora=new Date();
-  pedidos.filter(function(p){return p.fase===5&&p.clienteTel&&!p._recRecogidaEnviado;}).forEach(function(p){
-    // Buscar cuándo se puso en fase 5 (usamos updated_at o fechaEntrega como aprox)
-    var fechaTerminado=p.fechaEntrega?new Date(p.fechaEntrega+'T12:00:00'):new Date(p.fechaCreacion);
-    var diasDesde=Math.floor((ahora-fechaTerminado)/(1000*3600*24));
-    if(diasDesde<3)return;
-    var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
-    if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
-    var pend=p.total-(p.senal||0);
-    var pendTxt=pend>0.01?'\n💰 Pendiente: *'+pend.toFixed(2)+'€*':'';
-    var msg='Hola '+p.clienteNombre.split(' ')[0]+' 👋\n\nTe recordamos que tu pedido *'+p.id+'* está *listo para recoger* en Print & Copy.'+pendTxt+'\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 10:00-14:00\n\nPrint & Copy · 923 018 034';
-    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.clienteNombre})})
-      .then(function(r){return r.json();})
-      .then(function(d){if(d.success){p._recRecogidaEnviado=true;sb.from('pedidos').update({recordatorio_recogida:true}).eq('id',p.id).then(function(){});}});
-  });
+  sb.from('pedidos').select('id,cliente_nombre,cliente_tel,total,senal,fecha_entrega,fecha_creacion,recordatorio_recogida')
+    .eq('fase',5).neq('recordatorio_recogida',true)
+    .then(function(r){
+      if(!r.data)return;
+      r.data.forEach(function(row){
+        if(!row.cliente_tel)return;
+        var fechaT=row.fecha_entrega?new Date(row.fecha_entrega+'T12:00:00'):new Date(row.fecha_creacion);
+        var diasDesde=Math.floor((ahora-fechaT)/(1000*3600*24));
+        if(diasDesde<3)return;
+        sb.from('pedidos').update({recordatorio_recogida:true}).eq('id',row.id).then(function(){
+          var tel=row.cliente_tel.replace(/\s/g,'').replace(/^\+/,'');
+          if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+          var pend=(parseFloat(row.total)||0)-(parseFloat(row.senal)||0);
+          var pendTxt=pend>0.01?'\n💰 Pendiente: *'+pend.toFixed(2)+'€*':'';
+          var msg='Hola '+(row.cliente_nombre||'').split(' ')[0]+' 👋\n\nTe recordamos que tu pedido *'+row.id+'* está *listo para recoger* en Print & Copy.'+pendTxt+'\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 10:00-14:00\n\nPrint & Copy · 923 018 034';
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:row.cliente_nombre})});
+        });
+      });
+    });
 }
 
 // Recordatorios tallas: cada 2 días (2,4,6,8...) para pedidos TX sin tallas
 function checkRecordatoriosTallas(){
   var ahora=new Date();
-  var fechaMinima=new Date('2026-04-12T00:00:00'); // Solo pedidos desde que tallas está activo
-  var sinTallas=pedidos.filter(function(p){
-    if(p.seccion!=='TX'||p.fase>=4||!p.clienteTel)return false;
-    if(new Date(p.fechaCreacion)<fechaMinima)return false;
-    var tc=p.tallasColores;
-    if(!tc||!tc.length)return true;
-    if(p.tipoPersonalizacion==='individual')return !tc.some(function(f){return f.nombre&&f.nombre.trim();});
-    var sum=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
-    return sum===0;
-  });
-  if(!sinTallas.length)return;
-  sinTallas.forEach(function(p){
-    var creado=new Date(p.fechaCreacion);
-    var diasDesde=Math.floor((ahora-creado)/(1000*3600*24));
-    if(diasDesde<2)return;
-    // Calcular número de recordatorio (día 2=1, día 4=2, día 6=3...)
-    var numRecordatorio=Math.floor(diasDesde/2);
-    var ultimoEnviado=p._recTallasNum||0;
-    if(numRecordatorio<=ultimoEnviado)return;
-    // Enviar
-    var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
-    if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
-    var nombre=p.clienteNombre.split(' ')[0];
-    var esIndividual=p.tipoPersonalizacion==='individual';
-    var link=esIndividual?'https://printcopy.vercel.app/penas.html?p='+p.id:'https://printcopy.vercel.app/tallas.html?p='+p.id;
-    var msg=diasDesde<=4
-      ?'Hola '+nombre+' 👋\n\nTe recordamos que necesitamos los datos de tallas para tu pedido *'+p.id+'*.\n\nAccede aquí para rellenarlo:\n'+link+'\n\nPrint & Copy · 923 018 034'
-      :'Hola '+nombre+' ⏰\n\nLlevamos '+diasDesde+' días esperando los datos de tallas de tu pedido *'+p.id+'*. Sin ellos no podemos arrancar la producción.\n\nRellénalo aquí:\n'+link+'\n\nPrint & Copy · 923 018 034';
-    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.clienteNombre})})
-      .then(function(r){return r.json();})
-      .then(function(d){
-        if(d.success){
-          p._recTallasNum=numRecordatorio;
-          sb.from('pedidos').update({recordatorio_tallas_num:numRecordatorio}).eq('id',p.id).then(function(){});
+  var fechaMinima='2026-04-12';
+  // Consultar BD directamente: pedidos TX sin tallas, fase<4, creados después de fechaMinima
+  sb.from('pedidos').select('id,cliente_nombre,cliente_tel,tipo_personalizacion,tallas_colores,fecha_creacion,recordatorio_tallas_num')
+    .eq('seccion','TX').lt('fase',4).gte('fecha_creacion',fechaMinima)
+    .then(function(r){
+      if(!r.data)return;
+      r.data.forEach(function(row){
+        if(!row.cliente_tel)return;
+        // Verificar si tiene tallas reales
+        var tc=row.tallas_colores;
+        var sinDatos=true;
+        if(tc&&tc.length){
+          if(row.tipo_personalizacion==='individual')sinDatos=!tc.some(function(f){return f.nombre&&f.nombre.trim();});
+          else sinDatos=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0)===0;
         }
+        if(!sinDatos)return;
+        var diasDesde=Math.floor((ahora-new Date(row.fecha_creacion))/(1000*3600*24));
+        if(diasDesde<2)return;
+        var numRec=Math.floor(diasDesde/2);
+        var ultimo=row.recordatorio_tallas_num||0;
+        if(numRec<=ultimo)return;
+        // Marcar en BD ANTES de enviar
+        sb.from('pedidos').update({recordatorio_tallas_num:numRec}).eq('id',row.id).then(function(){
+          var tel=row.cliente_tel.replace(/\s/g,'').replace(/^\+/,'');
+          if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+          var nombre=(row.cliente_nombre||'').split(' ')[0];
+          var esInd=row.tipo_personalizacion==='individual';
+          var link=esInd?'https://printcopy.vercel.app/penas.html?p='+row.id:'https://printcopy.vercel.app/tallas.html?p='+row.id;
+          var msg=diasDesde<=4
+            ?'Hola '+nombre+' 👋\n\nTe recordamos que necesitamos los datos de tallas para tu pedido *'+row.id+'*.\n\nAccede aquí para rellenarlo:\n'+link+'\n\nPrint & Copy · 923 018 034'
+            :'Hola '+nombre+' ⏰\n\nLlevamos '+diasDesde+' días esperando los datos de tallas de tu pedido *'+row.id+'*. Sin ellos no podemos arrancar la producción.\n\nRellénalo aquí:\n'+link+'\n\nPrint & Copy · 923 018 034';
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:row.cliente_nombre})});
+        });
       });
-  });
+    });
 }
 
 function renderVentas(){
