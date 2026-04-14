@@ -7644,8 +7644,8 @@ function checkRecordatorioPago(){
 }
 setInterval(checkRecordatorioPago,4*60*60*1000);
 // Recordatorios automáticos tallas cada 4h
-setInterval(checkRecordatoriosTallas,4*60*60*1000);
-setInterval(checkRecordatorioRecogida,4*60*60*1000);
+// DESACTIVADO: setInterval(checkRecordatoriosTallas,4*60*60*1000);
+// DESACTIVADO: setInterval(checkRecordatorioRecogida,4*60*60*1000);
 // Alerta interna: previas con cambios sin resubir > 24h
 setInterval(function(){
   var ahora=new Date();
