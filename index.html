@@ -6106,20 +6106,26 @@ function nvCrearPedido(){
           fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telD,mensaje:msgD,nombre:nombre})}).then(function(r){return r.json();}).then(function(d){
             if(!d.success)console.warn('WA pedido directo:',d.error);
           }).catch(function(e){console.error('WA confirmacion error:',e);});
-          // WA de tallas DESPUÉS de confirmación (con 3s delay, independiente)
-          setTimeout(function(){
-            validos.forEach(function(v){
-              if(v.sec!=='TX')return;
-              var tc=_nvTipoTallas==='individual'?nvIndGetDatos():nvTTGetDatos();
-              var vacia=true;
-              if(v.tipoPers==='individual')vacia=!tc.some(function(f){return f.nombre&&f.nombre.trim();});
-              else{var sum=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0);vacia=sum===0;}
-              if(!vacia)return;
-              var linkT=v.tipoPers==='individual'?'https://printcopy.vercel.app/penas.html?p='+v.num:'https://printcopy.vercel.app/tallas.html?p='+v.num;
-              var msgT='📏 '+nombre.split(' ')[0]+', para completar tu pedido *'+v.num+'* necesitamos las tallas'+(v.tipoPers==='individual'?' y datos de cada persona':'')+'.\n\nRellénalas aquí:\n'+linkT+'\n\nPrint & Copy · 923 018 034';
-              fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telD,mensaje:msgT,nombre:nombre})}).catch(function(e){console.error('WA tallas error:',e);});
-            });
-          },3000);
+          // WA de tallas: capturar datos AHORA (antes de cerrar modal)
+          var _tallasData=[];
+          validos.forEach(function(v){
+            if(v.sec!=='TX')return;
+            var tc=_nvTipoTallas==='individual'?nvIndGetDatos():nvTTGetDatos();
+            var vacia=true;
+            if(v.tipoPers==='individual')vacia=!tc.some(function(f){return f.nombre&&f.nombre.trim();});
+            else{var sum=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0);vacia=sum===0;}
+            if(vacia)_tallasData.push(v);
+          });
+          // Enviar WA tallas con 3s delay (datos ya capturados)
+          if(_tallasData.length){
+            setTimeout(function(){
+              _tallasData.forEach(function(v){
+                var linkT=v.tipoPers==='individual'?'https://printcopy.vercel.app/penas.html?p='+v.num:'https://printcopy.vercel.app/tallas.html?p='+v.num;
+                var msgT='📏 '+nombre.split(' ')[0]+', para completar tu pedido *'+v.num+'* necesitamos las tallas'+(v.tipoPers==='individual'?' y datos de cada persona':'')+'.\n\nRellénalas aquí:\n'+linkT+'\n\nPrint & Copy · 923 018 034';
+                fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telD,mensaje:msgT,nombre:nombre})}).catch(function(e){console.error('WA tallas error:',e);});
+              });
+            },3000);
+          }
         }
         closeModal('modal-venta');cargarDatos();
 cargarProveedores();
