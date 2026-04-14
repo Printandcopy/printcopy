@@ -7725,62 +7725,41 @@ setInterval(function(){
 // Pedir permiso notificaciones
 if('Notification' in window&&Notification.permission==='default')Notification.requestPermission();
 
-// Polling tallas — DESACTIVADO temporalmente, se reactivará con lógica corregida
-/*
+// Polling tallas: consulta BD directamente, marca ANTES de enviar WA
 setInterval(function(){
-  var sinTallas=pedidos.filter(function(p){
-    if(p.seccion!=='TX'||p.fase>=4||p._tallasNotificado||_tallasYaNotificadas[p.id])return false;
-    var tc=p.tallasColores;
-    if(!tc||!tc.length)return true;
-    if(p.tipoPersonalizacion==='individual')return !tc.some(function(f){return f.nombre&&f.nombre.trim();});
-    var sum=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
-    return sum===0;
-  });
-  if(!sinTallas.length)return;
-  var ids=sinTallas.map(function(p){return p.id;});
-  sb.from('pedidos').select('id,tallas_colores,tipo_personalizacion').in('id',ids).then(function(r){
-    if(!r.data)return;
-    r.data.forEach(function(row){
-      if(!row.tallas_colores||!row.tallas_colores.length)return;
-      var p=pedidos.find(function(x){return x.id===row.id;});
-      if(!p)return;
-      // Verificar si los datos de BD tienen contenido real
-      var bdTieneDatos=false;
-      var esInd=row.tipo_personalizacion==='individual';
-      if(esInd)bdTieneDatos=row.tallas_colores.some(function(f){return f.nombre&&f.nombre.trim();});
-      else bdTieneDatos=row.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0)>0;
-      if(!bdTieneDatos)return;
-      // Verificar si ya notificamos (flag en memoria)
-      if(p._tallasNotificado||_tallasYaNotificadas[p.id])return;
-      p._tallasNotificado=true;
-      _tallasYaNotificadas[p.id]=true;
-      p.tallasColores=row.tallas_colores;
-      if(row.tipo_personalizacion)p.tipoPersonalizacion=row.tipo_personalizacion;
-      var total=0;
-      if(esInd){
-        total=row.tallas_colores.filter(function(f){return f.nombre;}).length;
-      } else {
-        total=row.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
-      }
-      var t=document.createElement('div');
-      t.style.cssText='position:fixed;bottom:20px;right:20px;background:#185FA5;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px';
-      t.textContent=esIndividual?'🏷 '+p.clienteNombre+' envió lista ('+total+' personas) · '+p.id:'👕 '+p.clienteNombre+' envió tallas ('+total+' uds) · '+p.id;
-      t.onclick=function(){verPedido(p.id);t.remove();};
-      document.body.appendChild(t);
-      setTimeout(function(){if(t.parentNode)t.remove();},8000);
-      // WA confirmación tallas recibidas al cliente
-      if(p.clienteTel){
-        var _telC=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
-        if(_telC.length===9&&!_telC.startsWith('34'))_telC='34'+_telC;
-        fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:_telC,mensaje:'✅ Recibidas las tallas del pedido *'+p.id+'*. Nos ponemos en marcha.\n\nPrint & Copy · 923 018 034',nombre:p.clienteNombre})});
-      }
-      // Marcar en BD para no repetir
-      sb.from('pedidos').update({tallas_notificado:true}).eq('id',p.id).then(function(){});
-      renderTaller();
+  sb.from('pedidos').select('id,cliente_nombre,cliente_tel,tallas_colores,tipo_personalizacion')
+    .eq('seccion','TX').lt('fase',4).or('tallas_notificado.is.null,tallas_notificado.eq.false')
+    .not('tallas_colores','is',null)
+    .then(function(r){
+      if(!r.data||!r.data.length)return;
+      r.data.forEach(function(row){
+        var tc=row.tallas_colores;
+        if(!tc||!tc.length)return;
+        if(_tallasYaNotificadas[row.id])return;
+        var esInd=row.tipo_personalizacion==='individual';
+        var tieneDatos=false;
+        if(esInd)tieneDatos=tc.some(function(f){return f.nombre&&f.nombre.trim();});
+        else tieneDatos=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0)>0;
+        if(!tieneDatos)return;
+        _tallasYaNotificadas[row.id]=true;
+        sb.from('pedidos').update({tallas_notificado:true}).eq('id',row.id).then(function(){
+          var p=pedidos.find(function(x){return x.id===row.id;});
+          if(p){p.tallasColores=tc;p._tallasNotificado=true;}
+          var total=esInd?tc.filter(function(f){return f.nombre;}).length:tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
+          var t=document.createElement('div');
+          t.style.cssText='position:fixed;bottom:20px;right:20px;background:#185FA5;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px';
+          t.textContent=(esInd?'\ud83c\udff7 ':'\ud83d\udc55 ')+(row.cliente_nombre||'')+' envio tallas ('+total+(esInd?' personas':' uds')+') '+row.id;
+          t.onclick=function(){verPedido(row.id);t.remove();};
+          document.body.appendChild(t);
+          setTimeout(function(){if(t.parentNode)t.remove();},8000);
+          var tel=(row.cliente_tel||'').replace(/\s/g,'').replace(/^\+/,'');
+          if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+          if(tel)fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'\u2705 Recibidas las tallas del pedido *'+row.id+'*. Nos ponemos en marcha.\n\nPrint & Copy \u00b7 923 018 034',nombre:row.cliente_nombre})});
+          renderTaller();
+        });
+      });
     });
-  });
 },45000);
-*/
 
 // Polling cada 30s para detectar respuestas de clientes en previas
 setInterval(function(){
