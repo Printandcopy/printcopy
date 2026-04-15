@@ -337,7 +337,19 @@ function render() {
 
   // Guía de tallas con foto real
   var _ref=PRENDA_REF[_prendaDetectada]||'CA6554';
-  var _esquemas={'Camisetas':'img/esquema_camiseta.png'};
+  var _esquemas={
+    'Camisetas':'img/esquema_camiseta.png','Sudaderas':'img/esquema_sudaderas.png',
+    'Sudaderas c/capucha':'img/esquema_sudaderas_capucha.png','Polos':'img/esquema_polos.png',
+    'Chaleco Thunder':'img/esquema_chaleco_thunder.png','Pantalón Thunder':'img/esquema_pantalon_thunder.png',
+    'Parka Traffic':'img/esquema_parka_traffic.png','Buzo Kevin':'img/esquema_buzo_kevin.png',
+    'Petos':'img/esquema_peto_fiestas.png','Totebag':'img/esquema_totebag.png',
+    'Mochila':'img/esquema_mochila.png','Pañuelo':'img/esquema_panuelo.png',
+    'Gorras':'img/esquema_gorras.png','Delantal Mini':'img/esquema_delantal_mini.png',
+    'Delantal Classic':'img/esquema_delantal_classic.png','Delantal Benoit':'img/esquema_delantal_benoit.png',
+    'Camisa Aifos':'img/esquema_camisa_aifos.png','Panacea':'img/esquema_panacea.png',
+    'Arzak':'img/esquema_arzak.png','Vademécum':'img/esquema_vademecum.png',
+    'Vaccine':'img/esquema_vaccine.png'
+  };
   var _imgGuia=_esquemas[_prendaDetectada]||('https://www.camisetas.com/img/img-products/medium/Roly/'+_ref+'-58.jpg');
   var _tieneEsquemaReal=!!_esquemas[_prendaDetectada];
   var _medidas=PRENDA_MEDIDAS[_prendaDetectada]||{};
