@@ -2532,8 +2532,14 @@ function setFaseModal(id,fase){
     var tel5=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
     if(tel5.length===9&&!tel5.startsWith('34'))tel5='34'+tel5;
     var pend5=p.total-(p.senal||0);
-    var pendTxt5=pend5>0.01?'\n💰 Pendiente al recoger: *'+pend5.toFixed(2)+'€*':'\n✅ Pagado completo';
-    var msg5='Hola '+p.clienteNombre.split(' ')[0]+' 👋\n\nTu pedido *'+p.id+'* ya está *listo para recoger* en Print & Copy 🎉\n\n📦 '+p.descripcion.substring(0,80)+'\n'+pendTxt5+'\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 10:00-14:00\n\n¡Te esperamos! 😊';
+    var pendTxt5='';
+    if(pend5>0.01){
+      var dtoEf=cV2R2(pend5*0.97);
+      pendTxt5='\n💰 Pendiente: *'+pend5.toFixed(2)+'€*\n💵 Paga en efectivo y te ahorras un 3% → *'+dtoEf.toFixed(2)+'€*';
+    }else{
+      pendTxt5='\n✅ Pagado completo';
+    }
+    var msg5='Hola '+p.clienteNombre.split(' ')[0]+' 👋\n\nTu pedido *'+p.id+'* ya está *listo para recoger* en Print & Copy 🎉\n\n📦 '+p.descripcion.substring(0,80)+pendTxt5+'\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 10:00-14:00\n\nPrint & Copy · 923 018 034';
     fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel5,mensaje:msg5,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA fase5:',d.error);});
   }
   // Registrar cambio en log
@@ -4889,7 +4895,8 @@ function checkRecordatorioRecogida(){
           var tel=row.cliente_tel.replace(/\s/g,'').replace(/^\+/,'');
           if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
           var pend=(parseFloat(row.total)||0)-(parseFloat(row.senal)||0);
-          var pendTxt=pend>0.01?'\n💰 Pendiente: *'+pend.toFixed(2)+'€*':'';
+          var pendTxt='';
+          if(pend>0.01){var dtoEf=Math.round(pend*0.97*100)/100;pendTxt='\n💰 Pendiente: *'+pend.toFixed(2)+'€*\n💵 Paga en efectivo y te ahorras un 3% → *'+dtoEf.toFixed(2)+'€*';}
           var msg='Hola '+(row.cliente_nombre||'').split(' ')[0]+' 👋\n\nTe recordamos que tu pedido *'+row.id+'* está *listo para recoger* en Print & Copy.'+pendTxt+'\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 10:00-14:00\n\nPrint & Copy · 923 018 034';
           fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:row.cliente_nombre})});
         });
