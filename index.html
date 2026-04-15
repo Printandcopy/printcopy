@@ -4731,46 +4731,88 @@ function cargarPresupuestos(){
   });
 }
 
+// Horario de envío de recordatorios: 9:00 - 21:00
+function enHorarioEnvio(){var h=new Date().getHours();return h>=9&&h<21;}
+
 function checkRecordatoriosPresupuestos(){
+  if(!enHorarioEnvio())return;
   var ahora=new Date();
-  sb.from('presupuestos').select('id,numero,estado,cliente_nombre,cliente_telefono,total,validez,recordatorio_1_enviado,recordatorio_2_enviado,recordatorio_3_enviado,updated_at,created_at')
-    .eq('estado','enviado')
+  // 3 consultas separadas para cada recordatorio, filtrando en BD
+  // Recordatorio 1: día 3+, no enviado aún
+  sb.from('presupuestos').select('id,numero,cliente_nombre,cliente_telefono,total,updated_at,created_at')
+    .eq('estado','enviado').or('recordatorio_1_enviado.is.null,recordatorio_1_enviado.eq.false')
     .then(function(r){
-      if(!r.data||!r.data.length)return;
+      if(!r.data)return;
       r.data.forEach(function(p){
         var diasDesde=Math.floor((ahora-new Date(p.updated_at||p.created_at))/(1000*3600*24));
+        if(diasDesde<3)return;
         var tel=(p.cliente_telefono||'').replace(/\s/g,'').replace(/^\+/,'');
         if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
         if(!tel)return;
         var nombre=(p.cliente_nombre||'').split(' ')[0];
         var total=parseFloat(p.total||0).toFixed(0);
-        if(diasDesde>=3&&!p.recordatorio_1_enviado){
-          sb.from('presupuestos').update({recordatorio_1_enviado:true}).eq('id',p.id).then(function(){
-            fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' 👋 ¿Pudiste revisar el presupuesto *'+p.numero+'* por *'+total+'€*? Si tienes alguna duda o quieres que ajustemos algo, aquí estamos 😊\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
-          });
-        }
-        if(diasDesde>=7&&!p.recordatorio_2_enviado){
-          var validez=parseInt(p.validez)||15;
-          var diasRestantes=validez-diasDesde;if(diasRestantes<0)diasRestantes=0;
-          sb.from('presupuestos').update({recordatorio_2_enviado:true}).eq('id',p.id).then(function(){
-            fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' ⚡ Te recordamos que el presupuesto *'+p.numero+'* vence en *'+diasRestantes+' días*. Si quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
-          });
-        }
-        if(diasDesde>=12&&!p.recordatorio_3_enviado){
-          sb.from('presupuestos').update({recordatorio_3_enviado:true}).eq('id',p.id).then(function(){
-            fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' 👋 Último aviso: el presupuesto *'+p.numero+'* caduca en breve. Si te interesa, confírmanos antes de que expire.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
-          });
-        }
-        var validezDias=parseInt(p.validez)||15;
-        if(diasDesde>validezDias){
-          sb.from('presupuestos').update({estado:'rechazado'}).eq('id',p.id).then(function(){});
-        }
+        sb.from('presupuestos').update({recordatorio_1_enviado:true}).eq('id',p.id).eq('recordatorio_1_enviado',false).then(function(ur){
+          if(ur.error)return;
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' 👋 ¿Pudiste revisar el presupuesto *'+p.numero+'* por *'+total+'€*? Si tienes alguna duda o quieres que ajustemos algo, aquí estamos 😊\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
+        });
       });
     });
+  // Recordatorio 2: día 7+, rec1 enviado, rec2 no enviado
+  sb.from('presupuestos').select('id,numero,cliente_nombre,cliente_telefono,total,validez,updated_at,created_at')
+    .eq('estado','enviado').eq('recordatorio_1_enviado',true).or('recordatorio_2_enviado.is.null,recordatorio_2_enviado.eq.false')
+    .then(function(r){
+      if(!r.data)return;
+      r.data.forEach(function(p){
+        var diasDesde=Math.floor((ahora-new Date(p.updated_at||p.created_at))/(1000*3600*24));
+        if(diasDesde<7)return;
+        var tel=(p.cliente_telefono||'').replace(/\s/g,'').replace(/^\+/,'');
+        if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+        if(!tel)return;
+        var nombre=(p.cliente_nombre||'').split(' ')[0];
+        var total=parseFloat(p.total||0).toFixed(0);
+        var validez=parseInt(p.validez)||15;
+        var diasRestantes=validez-diasDesde;if(diasRestantes<0)diasRestantes=0;
+        sb.from('presupuestos').update({recordatorio_2_enviado:true}).eq('id',p.id).eq('recordatorio_2_enviado',false).then(function(ur){
+          if(ur.error)return;
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' ⚡ Te recordamos que el presupuesto *'+p.numero+'* vence en *'+diasRestantes+' días*. Si quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
+        });
+      });
+    });
+  // Recordatorio 3: día 12+, rec2 enviado, rec3 no enviado
+  sb.from('presupuestos').select('id,numero,cliente_nombre,cliente_telefono,total,updated_at,created_at')
+    .eq('estado','enviado').eq('recordatorio_2_enviado',true).or('recordatorio_3_enviado.is.null,recordatorio_3_enviado.eq.false')
+    .then(function(r){
+      if(!r.data)return;
+      r.data.forEach(function(p){
+        var diasDesde=Math.floor((ahora-new Date(p.updated_at||p.created_at))/(1000*3600*24));
+        if(diasDesde<12)return;
+        var tel=(p.cliente_telefono||'').replace(/\s/g,'').replace(/^\+/,'');
+        if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+        if(!tel)return;
+        var nombre=(p.cliente_nombre||'').split(' ')[0];
+        var total=parseFloat(p.total||0).toFixed(0);
+        sb.from('presupuestos').update({recordatorio_3_enviado:true}).eq('id',p.id).eq('recordatorio_3_enviado',false).then(function(ur){
+          if(ur.error)return;
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' 👋 Último aviso: el presupuesto *'+p.numero+'* caduca en breve. Si te interesa, confírmanos antes de que expire.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
+        });
+      });
+    });
+  // Auto-caducar
+  sb.from('presupuestos').select('id,validez,updated_at,created_at').eq('estado','enviado').then(function(r){
+    if(!r.data)return;
+    r.data.forEach(function(p){
+      var diasDesde=Math.floor((ahora-new Date(p.updated_at||p.created_at))/(1000*3600*24));
+      var validezDias=parseInt(p.validez)||15;
+      if(diasDesde>validezDias){
+        sb.from('presupuestos').update({estado:'rechazado'}).eq('id',p.id).then(function(){});
+      }
+    });
+  });
 }
 
 // Recordatorio recogida: pedidos terminados (fase 5) que llevan 3+ días sin recoger
 function checkRecordatorioRecogida(){
+  if(!enHorarioEnvio())return;
   var ahora=new Date();
   sb.from('pedidos').select('id,cliente_nombre,cliente_tel,total,senal,fecha_entrega,fecha_creacion,recordatorio_recogida')
     .eq('fase',5).neq('recordatorio_recogida',true)
@@ -4795,9 +4837,9 @@ function checkRecordatorioRecogida(){
 
 // Recordatorios tallas: cada 2 días (2,4,6,8...) para pedidos TX sin tallas
 function checkRecordatoriosTallas(){
+  if(!enHorarioEnvio())return;
   var ahora=new Date();
-  var fechaMinima='2026-04-12';
-  // Consultar BD directamente: pedidos TX sin tallas, fase<4, creados después de fechaMinima
+  var fechaMinima='2026-04-12';: pedidos TX sin tallas, fase<4, creados después de fechaMinima
   sb.from('pedidos').select('id,cliente_nombre,cliente_tel,tipo_personalizacion,tallas_colores,fecha_creacion,recordatorio_tallas_num')
     .eq('seccion','TX').lt('fase',4).gte('fecha_creacion',fechaMinima)
     .then(function(r){
@@ -4818,7 +4860,7 @@ function checkRecordatoriosTallas(){
         var ultimo=row.recordatorio_tallas_num||0;
         if(numRec<=ultimo)return;
         // Marcar en BD ANTES de enviar
-        sb.from('pedidos').update({recordatorio_tallas_num:numRec}).eq('id',row.id).then(function(){
+        sb.from('pedidos').update({recordatorio_tallas_num:numRec}).eq('id',row.id).lt('recordatorio_tallas_num',numRec).then(function(){
           var tel=row.cliente_tel.replace(/\s/g,'').replace(/^\+/,'');
           if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
           var nombre=(row.cliente_nombre||'').split(' ')[0];
@@ -7573,6 +7615,7 @@ showScreen('mostrador',document.querySelector('.nav-tab'));
 setInterval(checkRecordatoriosPresupuestos,4*60*60*1000);
 // Recordatorio pago: presupuestos aceptados sin pago (transferencia o tienda)
 function checkRecordatorioPago(){
+  if(!enHorarioEnvio())return;
   var ahora=new Date();
   var aceptados=(presupuestos||[]).filter(function(p){
     if(p.estado!=='aceptado'||p.convertido)return false;
