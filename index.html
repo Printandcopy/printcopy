@@ -715,6 +715,7 @@ textarea{resize:vertical;min-height:64px}
   <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center">
     <input type="text" id="search-clientes" placeholder="Buscar cliente..." oninput="renderClientes(this.value)" style="flex:1">
     <button class="btn btn-primary" onclick="abrirNuevoCliente()">+ Nuevo cliente</button>
+    <button class="btn btn-secondary" onclick="dedupClientes()" title="Fusionar clientes con mismo teléfono" style="font-size:12px">🔄 Fusionar duplicados</button>
   </div>
   <div id="clientes-list"></div>
   <!-- Panel gestión colores textil -->
@@ -1261,11 +1262,12 @@ textarea{resize:vertical;min-height:64px}
     <div class="field" style="margin-bottom:16px">
       <label style="font-weight:600">Método de pago</label>
       <div class="radio-group" style="margin-top:6px">
-        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="efectivo"> 💵 Efectivo</label>
-        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="tarjeta"> 💳 Tarjeta</label>
-        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="bizum" checked> 📱 Bizum</label>
-        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="transferencia"> 🏦 Transf.</label>
+        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="efectivo" onchange="aplicarDtoEfectivo()"> 💵 Efectivo (-3%)</label>
+        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="tarjeta" onchange="aplicarDtoEfectivo()"> 💳 Tarjeta</label>
+        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="bizum" checked onchange="aplicarDtoEfectivo()"> 📱 Bizum</label>
+        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="transferencia" onchange="aplicarDtoEfectivo()"> 🏦 Transf.</label>
       </div>
+      <div id="dto-efectivo-msg" style="display:none;font-size:12px;color:#3B6D11;background:#EAF3DE;padding:6px 10px;border-radius:6px;margin-top:6px">💰 Descuento 3% por pago en efectivo aplicado</div>
     </div>
     <div class="btn-row">
       <button class="btn btn-secondary" onclick="closeModal('modal-cobro-resto')">Cancelar</button>
@@ -2544,6 +2546,20 @@ function setFaseModal(id,fase){
   renderTaller();
 }
 
+function aplicarDtoEfectivo(){
+  var metodoEl=document.querySelector('input[name="cobro-resto-metodo"]:checked');
+  var pend=window._cobroRestoPendiente||0;
+  var msg=document.getElementById('dto-efectivo-msg');
+  if(metodoEl&&metodoEl.value==='efectivo'){
+    var dto=cV2R2(pend*0.97);
+    document.getElementById('cobro-resto-importe').value=dto.toFixed(2);
+    if(msg)msg.style.display='block';
+  }else{
+    document.getElementById('cobro-resto-importe').value=pend.toFixed(2);
+    if(msg)msg.style.display='none';
+  }
+}
+
 function ejecutarCobroResto(){
   var id=window._cobroRestoId;
   var fase=window._cobroRestoFase;
@@ -3583,6 +3599,54 @@ function eliminarCliente(id){
     if(r.error){alert('Error: '+r.error.message);return;}
     clientes=clientes.filter(function(x){return x.id!==id;});
     renderClientes();
+  });
+}
+// Dedup: detectar y fusionar clientes con mismo teléfono
+function dedupClientes(){
+  var porTel={};
+  clientes.forEach(function(c){
+    var t=(c.telefono||'').replace(/\s/g,'').replace(/^\+34/,'');
+    if(!t||t.length<9)return;
+    if(!porTel[t])porTel[t]=[];
+    porTel[t].push(c);
+  });
+  var dups=Object.keys(porTel).filter(function(t){return porTel[t].length>1;});
+  if(!dups.length){alert('No se encontraron clientes duplicados por teléfono.');return;}
+  var resumen=dups.map(function(t){
+    var cs=porTel[t];
+    var nombres=cs.map(function(c){
+      var n=pedidos.filter(function(p){return p.clienteId===c.id;}).length;
+      return c.nombre+' ('+n+' ped.)';
+    });
+    return t+': '+nombres.join(' vs ');
+  }).join('\n');
+  if(!confirm('Se encontraron '+dups.length+' teléfonos duplicados:\n\n'+resumen+'\n\n¿Fusionar? Se mantiene el cliente con más pedidos y se reasignan los pedidos del otro.'))return;
+  var fusionados=0;
+  var promesas=[];
+  dups.forEach(function(t){
+    var cs=porTel[t].slice().sort(function(a,b){
+      var na=pedidos.filter(function(p){return p.clienteId===a.id;}).length;
+      var nb=pedidos.filter(function(p){return p.clienteId===b.id;}).length;
+      return nb-na;
+    });
+    var principal=cs[0];
+    for(var i=1;i<cs.length;i++){
+      var dup=cs[i];
+      // Reasignar pedidos del duplicado al principal
+      var pedsDup=pedidos.filter(function(p){return p.clienteId===dup.id;});
+      pedsDup.forEach(function(p){
+        promesas.push(sb.from('pedidos').update({cliente_id:principal.id,cliente_nombre:principal.nombre,cliente_tel:principal.telefono,cliente_email:principal.email||null}).eq('id',p.id));
+      });
+      // Reasignar presupuestos
+      promesas.push(sb.from('presupuestos').update({cliente_id:principal.id,cliente_nombre:principal.nombre,cliente_telefono:principal.telefono}).eq('cliente_id',dup.id));
+      // Eliminar duplicado
+      promesas.push(sb.from('clientes').delete().eq('id',dup.id));
+      fusionados++;
+    }
+  });
+  Promise.all(promesas).then(function(){
+    alert('Fusionados '+fusionados+' clientes duplicados.');
+    cargarDatos();
   });
 }
 function editarCliente(id){
