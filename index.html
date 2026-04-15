@@ -4839,7 +4839,7 @@ function checkRecordatorioRecogida(){
 function checkRecordatoriosTallas(){
   if(!enHorarioEnvio())return;
   var ahora=new Date();
-  var fechaMinima='2026-04-12';: pedidos TX sin tallas, fase<4, creados después de fechaMinima
+  var fechaMinima='2026-04-12';
   sb.from('pedidos').select('id,cliente_nombre,cliente_tel,tipo_personalizacion,tallas_colores,fecha_creacion,recordatorio_tallas_num')
     .eq('seccion','TX').lt('fase',4).gte('fecha_creacion',fechaMinima)
     .then(function(r){
