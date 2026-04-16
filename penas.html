@@ -108,6 +108,10 @@ var PRENDA_MEDIDAS = {
   'Vademécum':{XS:'33×108',S:'35×109',M:'37×110',L:'39×111',XL:'41×112','2XL':'43×113','3XL':'45×114'},
   'Vaccine':{XS:'51×95',S:'54×97',M:'57×99',L:'60×101',XL:'63×103','2XL':'67×104','3XL':'71×105','4XL':'75×106'}
 };
+var FICHAS_PDF = {
+  'Camisetas':'fichas/CA6554.pdf'
+  // Resto de modelos pendientes de añadir
+};
 function rolyImgUrl(prenda,codColor){
   var ref=PRENDA_REF[prenda]||'CA6554';
   return'https://www.camisetas.com/img/img-products/medium/Roly/'+ref+'-'+codColor+'.jpg';
@@ -329,7 +333,7 @@ function render() {
     +'</div>';
 
   // Guía de tallas con foto real
-  html += '<div class="card" style="padding:12px">'
+  html += '<div class="card" id="card-guia-tallas" style="padding:12px">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="var g=document.getElementById(\'guia-tallas\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'">'
     +'<span style="font-size:13px;font-weight:700;color:#185FA5">📏 Guía de tallas</span>'
     +'<span style="font-size:11px;color:#aaa">▼</span>'
@@ -521,6 +525,32 @@ function show(html){ document.getElementById('main-content').innerHTML = html; }
 
 function actualizarGuiaTallas(){
   var prenda=(_filas[0]&&_filas[0].prenda)||'Camisetas';
+  // Si hay ficha técnica PDF para esta prenda, sustituir la guía por un botón al PDF
+  var fichaPdf=FICHAS_PDF[prenda];
+  var cardGuia=document.getElementById('card-guia-tallas');
+  if(!cardGuia) return;
+  if(fichaPdf){
+    cardGuia.outerHTML='<a id="card-guia-tallas" href="'+fichaPdf+'" target="_blank" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;background:linear-gradient(135deg,#185FA5,#2475C7);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;box-shadow:0 2px 6px rgba(24,95,165,.25);margin-bottom:14px;box-sizing:border-box">'
+      +'<div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">PDF</div>'
+      +'<div style="flex:1;text-align:left">'
+      +'<strong style="display:block;font-size:14px;margin-bottom:2px">Consulta colores y guía de tallas aquí</strong>'
+      +'<span style="font-size:11px;opacity:.9;line-height:1.4">Ficha técnica descargable · '+prenda+'</span>'
+      +'</div>'
+      +'<div style="font-size:20px;opacity:.7">⬇</div>'
+      +'</a>';
+    return;
+  }
+  // Sin ficha: asegurar que la card (guía clásica) exista; si fue sustituida antes por un <a>, restaurarla
+  if(cardGuia.tagName==='A'){
+    cardGuia.outerHTML='<div class="card" id="card-guia-tallas" style="padding:12px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="var g=document.getElementById(\'guia-tallas\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'">'
+      +'<span style="font-size:13px;font-weight:700;color:#185FA5">📏 Guía de tallas</span>'
+      +'<span style="font-size:11px;color:#aaa">▼</span>'
+      +'</div>'
+      +'<div id="guia-tallas" style="margin-top:10px">'
+      +'<div id="guia-tallas-contenido"></div>'
+      +'</div></div>';
+  }
   var medidas=PRENDA_MEDIDAS[prenda];
   var el=document.getElementById('guia-tallas-contenido');
   if(!el)return;
