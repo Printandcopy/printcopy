@@ -90,8 +90,8 @@ var PRENDA_REF = {
   'Camisetas':'CA6554','Sudaderas':'SU1070','Sudaderas c/capucha':'SU1067',
   'Polos':'PO6638','Petos':'CA6554','Totebag':'BO7601',
   'Mochila':'BO7114','Pañuelo':'PN9003','Gorras':'GO7000',
-  'Delantal Mini':'DE9124','Delantal Classic':'DE9078','Delantal Benoit':'DE9125',
-  'Camisa Aifos':'CM5503','Panacea':'CA9098','Arzak':'DE9091',
+  'Delantal Mini':'DE9124','Delantal Classic':'DE9123','Delantal Benoit':'DE9125',
+  'Camisa Aifos':'CM5504','Panacea':'CA9098','Arzak':'DE9091',
   'Vademécum':'PA9097','Vaccine':'BA9094'
 };
 var PRENDA_MEDIDAS = {
@@ -142,50 +142,39 @@ var PRENDA_COLORES = {
     {cod:'108',nombre:'Gris Piedra',hex:'#C0C0C0'},{cod:'46',nombre:'Plomo Oscuro',hex:'#4A4A4A'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'}
   ],
   'Sudaderas':[
-    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'132',nombre:'Blanco Vintage',hex:'#F0EBE0',borde:true},{cod:'07',nombre:'Arena',hex:'#C8B88A'},
-    {cod:'08',nombre:'Moca',hex:'#8B6F4E'},{cod:'229',nombre:'Ángora',hex:'#D4C5B0'},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},
-    {cod:'172',nombre:'Ocre',hex:'#C49B22'},{cod:'31',nombre:'Naranja',hex:'#E87020'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},{cod:'46',nombre:'Plomo Oscuro',hex:'#4A4A4A'},
+    {cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},{cod:'31',nombre:'Naranja',hex:'#E87020'},
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},
+    {cod:'78',nombre:'Rosetón',hex:'#E8608A'},{cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'10',nombre:'Celeste',hex:'#6AAED6'},
+    {cod:'12',nombre:'Turquesa',hex:'#00A6A6'},{cod:'100',nombre:'Azul Océano',hex:'#1565C0'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'114',nombre:'Verde Oasis',hex:'#5BAD6F'},{cod:'20',nombre:'Verde Kelly',hex:'#4CBB17'},
+    {cod:'56',nombre:'Verde Botella',hex:'#1B5E20'}
+  ],
+  'Sudaderas c/capucha':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'132',nombre:'Blanco Vintage',hex:'#F0EBE0',borde:true},{cod:'177',nombre:'Blanco Ceniza Vig.',hex:'#E8E4DC',borde:true},
+    {cod:'07',nombre:'Arena',hex:'#C8B88A'},{cod:'08',nombre:'Moca',hex:'#8B6F4E'},{cod:'229',nombre:'Ángora',hex:'#D4C5B0'},
+    {cod:'03',nombre:'Amarillo',hex:'#F5D300'},{cod:'31',nombre:'Naranja',hex:'#E87020'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},
     {cod:'120',nombre:'Coral',hex:'#F07060'},{cod:'168',nombre:'Rojo Pálido',hex:'#E88B8B'},{cod:'169',nombre:'Rojo Baya',hex:'#9E2B2B'},
     {cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'78',nombre:'Rosetón',hex:'#E8608A'},{cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},
     {cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'121',nombre:'Lila',hex:'#B09CC8'},{cod:'711',nombre:'Purple Iris',hex:'#6A4C93'},
     {cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'10',nombre:'Celeste',hex:'#6AAED6'},{cod:'12',nombre:'Turquesa',hex:'#00A6A6'},
-    {cod:'100',nombre:'Azul Océano',hex:'#1565C0'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'263',nombre:'Azul Zen',hex:'#6B8DAD'},
-    {cod:'170',nombre:'Azul Tormenta',hex:'#4A6A8A'},{cod:'430',nombre:'Azul Lago',hex:'#3A7CA5'},{cod:'264',nombre:'Verde Niebla',hex:'#A8C5A8'},
-    {cod:'114',nombre:'Verde Oasis',hex:'#5BAD6F'},{cod:'20',nombre:'Verde Kelly',hex:'#4CBB17'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},
-    {cod:'275',nombre:'Verde Laurel',hex:'#5E7D5E'},{cod:'152',nombre:'Verde Aventura',hex:'#5F8A4E'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},
-    {cod:'108',nombre:'Gris Piedra',hex:'#C0C0C0'},{cod:'231',nombre:'Ébano',hex:'#3C3C3C'},{cod:'46',nombre:'Plomo Oscuro',hex:'#4A4A4A'},
-    {cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'177',nombre:'Blanco Ceniza Vig.',hex:'#E8E4DC',borde:true}
-  ],
-  'Sudaderas c/capucha':[
-    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'132',nombre:'Blanco Vintage',hex:'#F0EBE0',borde:true},{cod:'07',nombre:'Arena',hex:'#C8B88A'},
-    {cod:'08',nombre:'Moca',hex:'#8B6F4E'},{cod:'229',nombre:'Ángora',hex:'#D4C5B0'},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},
-    {cod:'172',nombre:'Ocre',hex:'#C49B22'},{cod:'31',nombre:'Naranja',hex:'#E87020'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},
-    {cod:'120',nombre:'Coral',hex:'#F07060'},{cod:'168',nombre:'Rojo Pálido',hex:'#E88B8B'},{cod:'169',nombre:'Rojo Baya',hex:'#9E2B2B'},
-    {cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'78',nombre:'Rosetón',hex:'#E8608A'},{cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},
-    {cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'121',nombre:'Lila',hex:'#B09CC8'},{cod:'711',nombre:'Purple Iris',hex:'#6A4C93'},
-    {cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'12',nombre:'Turquesa',hex:'#00A6A6'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},
-    {cod:'263',nombre:'Azul Zen',hex:'#6B8DAD'},{cod:'170',nombre:'Azul Tormenta',hex:'#4A6A8A'},{cod:'430',nombre:'Azul Lago',hex:'#3A7CA5'},
-    {cod:'264',nombre:'Verde Niebla',hex:'#A8C5A8'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},{cod:'275',nombre:'Verde Laurel',hex:'#5E7D5E'},
-    {cod:'152',nombre:'Verde Aventura',hex:'#5F8A4E'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},{cod:'108',nombre:'Gris Piedra',hex:'#C0C0C0'},
-    {cod:'231',nombre:'Ébano',hex:'#3C3C3C'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'177',nombre:'Blanco Ceniza Vig.',hex:'#E8E4DC',borde:true},
-    {cod:'0155',nombre:'Blanco/Marino',hex:'#FFFFFF',borde:true},{cod:'5802',nombre:'Gris Vig./Negro',hex:'#9C9C9C'},{cod:'5758',nombre:'Granate/Gris',hex:'#7B1F2E'},
-    {cod:'4858',nombre:'Rosa/Gris',hex:'#F5B8C4'},{cod:'0501',nombre:'Royal/Blanco',hex:'#2651A0'},{cod:'1001',nombre:'Celeste/Blanco',hex:'#6AAED6'},
-    {cod:'5558',nombre:'Marino/Gris',hex:'#1B2A6B'},{cod:'2001',nombre:'Kelly/Blanco',hex:'#4CBB17'},{cod:'5658',nombre:'Vde Bot./Gris',hex:'#1B5E20'},
-    {cod:'0258',nombre:'Negro/Gris',hex:'#1a1a1a'}
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'263',nombre:'Azul Zen',hex:'#6B8DAD'},{cod:'170',nombre:'Azul Tormenta',hex:'#4A6A8A'},
+    {cod:'430',nombre:'Azul Lago',hex:'#3A7CA5'},{cod:'264',nombre:'Verde Niebla',hex:'#A8C5A8'},{cod:'108',nombre:'Gris Piedra',hex:'#C0C0C0'},
+    {cod:'152',nombre:'Verde Aventura',hex:'#5F8A4E'},{cod:'275',nombre:'Verde Laurel',hex:'#5E7D5E'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},
+    {cod:'231',nombre:'Ébano',hex:'#3C3C3C'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'0155',nombre:'Blanco/Marino',hex:'#FFFFFF',hex2:'#1B2A6B',borde:true},
+    {cod:'5802',nombre:'Gris Vig./Negro',hex:'#9C9C9C',hex2:'#1a1a1a'},{cod:'5758',nombre:'Granate/Gris',hex:'#7B1F2E',hex2:'#9C9C9C'},{cod:'4858',nombre:'Rosa/Gris',hex:'#F5B8C4',hex2:'#9C9C9C'},
+    {cod:'0501',nombre:'Royal/Blanco',hex:'#2651A0',hex2:'#FFFFFF'},{cod:'1001',nombre:'Celeste/Blanco',hex:'#6AAED6',hex2:'#FFFFFF'},{cod:'5558',nombre:'Marino/Gris',hex:'#1B2A6B',hex2:'#9C9C9C'},
+    {cod:'2001',nombre:'Kelly/Blanco',hex:'#4CBB17',hex2:'#FFFFFF'},{cod:'5658',nombre:'Vde Bot./Gris',hex:'#1B5E20',hex2:'#9C9C9C'},{cod:'0258',nombre:'Negro/Gris',hex:'#1a1a1a',hex2:'#9C9C9C'},
+    {cod:'6002',nombre:'Rojo/Negro',hex:'#CC2222',hex2:'#1a1a1a'}
   ],
   'Polos':[
-    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'07',nombre:'Arena',hex:'#C8B88A'},{cod:'87',nombre:'Chocolate',hex:'#6B4226'},
-    {cod:'03',nombre:'Amarillo',hex:'#F5D300'},{cod:'266',nombre:'Ocre',hex:'#C49B22'},{cod:'31',nombre:'Naranja',hex:'#E87020'},
-    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'262',nombre:'Rojo Pálido',hex:'#E88B8B'},{cod:'168',nombre:'Rojo Baya',hex:'#9E2B2B'},
-    {cod:'169',nombre:'Coral',hex:'#F07060'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'78',nombre:'Rosetón',hex:'#E8608A'},
-    {cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},{cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'121',nombre:'Lila',hex:'#B09CC8'},
-    {cod:'261',nombre:'Purple Iris',hex:'#6A4C93'},{cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'10',nombre:'Celeste',hex:'#6AAED6'},
-    {cod:'12',nombre:'Turquesa',hex:'#00A6A6'},{cod:'86',nombre:'Azul Denim',hex:'#4A6FA5'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},
-    {cod:'263',nombre:'Azul Zen',hex:'#6B8DAD'},{cod:'170',nombre:'Azul Tormenta',hex:'#4A6A8A'},{cod:'171',nombre:'Azul Lago',hex:'#3A7CA5'},
-    {cod:'164',nombre:'Azul Calma',hex:'#7BA5C4'},{cod:'98',nombre:'Verde Menta Osc.',hex:'#5AAD7D'},{cod:'264',nombre:'Verde Niebla',hex:'#A8C5A8'},
-    {cod:'83',nombre:'Verde Grass',hex:'#3A7A3A'},{cod:'216',nombre:'Verde Tropical',hex:'#2E8B57'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},
-    {cod:'152',nombre:'Verde Aventura',hex:'#5F8A4E'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},{cod:'46',nombre:'Plomo Oscuro',hex:'#4A4A4A'},
-    {cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},
+    {cod:'87',nombre:'Chocolate',hex:'#6B4226'},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},{cod:'31',nombre:'Naranja',hex:'#E87020'},
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},
+    {cod:'78',nombre:'Rosetón',hex:'#E8608A'},{cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'10',nombre:'Celeste',hex:'#6AAED6'},
+    {cod:'12',nombre:'Turquesa',hex:'#00A6A6'},{cod:'86',nombre:'Azul Denim',hex:'#1E3A5F'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'83',nombre:'Verde Grass',hex:'#3A7A3A'},{cod:'216',nombre:'Verde Tropical',hex:'#2E8B57'},
+    {cod:'56',nombre:'Verde Botella',hex:'#1B5E20'}
   ],
   'Petos':[
     {cod:'BL',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'VM',nombre:'Verde Manzana',hex:'#7AC142'},{cod:'AFL',nombre:'Amarillo Flúor',hex:'#E8E500'},
@@ -195,7 +184,7 @@ var PRENDA_COLORES = {
     {cod:'MO',nombre:'Azul Marino Orión',hex:'#1B3A6B'},{cod:'NE',nombre:'Negro',hex:'#1a1a1a'}
   ],
   'Totebag':[
-    {cod:'46',nombre:'Natural/Crudo',hex:'#E8DCC8',borde:true}
+    {cod:'29',nombre:'Natural',hex:'#E8DCC8',borde:true}
   ],
   'Chaleco Thunder':[
     {cod:'MOBE',nombre:'Marino/Beige',hex:'#1B2A6B',hex2:'#C8B88A'},{cod:'MOVE',nombre:'Marino/Verde Kelly',hex:'#1B2A6B',hex2:'#4CBB17'},
@@ -228,21 +217,22 @@ var PRENDA_COLORES = {
   ],
   'Mochila':[
     {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},
-    {cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'20',nombre:'Verde Kelly',hex:'#4CBB17'},{cod:'31',nombre:'Naranja',hex:'#E87020'},
-    {cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},
-    {cod:'63',nombre:'Morado',hex:'#7B2D8B'},{cod:'78',nombre:'Rosetón',hex:'#E8608A'}
+    {cod:'31',nombre:'Naranja',hex:'#E87020'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},
+    {cod:'78',nombre:'Rosetón',hex:'#E8608A'},{cod:'63',nombre:'Morado',hex:'#7B2D8B'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'20',nombre:'Verde Kelly',hex:'#4CBB17'}
   ],
   'Pañuelo':[
     {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},
-    {cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'20',nombre:'Verde Kelly',hex:'#4CBB17'},{cod:'31',nombre:'Naranja',hex:'#E87020'},
-    {cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},
-    {cod:'63',nombre:'Morado',hex:'#7B2D8B'},{cod:'78',nombre:'Rosetón',hex:'#E8608A'}
+    {cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'10',nombre:'Celeste',hex:'#6AAED6'},{cod:'24',nombre:'Fucsia',hex:'#D83A7A'},
+    {cod:'31',nombre:'Naranja',hex:'#E87020'},{cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},
+    {cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'63',nombre:'Morado',hex:'#7B2D8B'},
+    {cod:'69',nombre:'Verde Flúor',hex:'#C8FF00'}
   ],
   'Gorras':[
-    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},{cod:'31',nombre:'Naranja',hex:'#E87020'},
-    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'63',nombre:'Morado',hex:'#7B2D8B'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
-    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'226',nombre:'Verde',hex:'#4CBB17'},{cod:'107',nombre:'Gris',hex:'#808080'},
-    {cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'03',nombre:'Amarillo',hex:'#F5D300'},
+    {cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'114',nombre:'Verde Oasis',hex:'#5BAD6F'},{cod:'12',nombre:'Turquesa',hex:'#00A6A6'},
+    {cod:'226',nombre:'Verde',hex:'#4CBB17'},{cod:'31',nombre:'Naranja',hex:'#E87020'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'}
   ],
   'Delantal Mini':[
     {cod:'02',nombre:'Negro',hex:'#1a1a1a'}
@@ -251,22 +241,24 @@ var PRENDA_COLORES = {
     {cod:'02',nombre:'Negro',hex:'#1a1a1a'}
   ],
   'Delantal Benoit':[
-    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'219',nombre:'Arena Piedra',hex:'#B8A888'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'59',nombre:'Rojo Oscuro',hex:'#8B1A1A'},
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'}
   ],
   'Camisa Aifos':[
-    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'}
   ],
   'Panacea':[
-    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'78',nombre:'Rosetón',hex:'#E8608A'},{cod:'95',nombre:'Morado',hex:'#7B2D8B'},
-    {cod:'988',nombre:'Teja',hex:'#C85A4A'},{cod:'44',nombre:'Azul Delfín',hex:'#6AAED6'},{cod:'110',nombre:'Azul Ultramar',hex:'#1565C0'},
-    {cod:'17',nombre:'Verde Quirófano',hex:'#5BAD6F'},{cod:'28',nombre:'Verde Manzana',hex:'#7AC142'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},
-    {cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'110',nombre:'Azul Ultramar',hex:'#1565C0'},
+    {cod:'17',nombre:'Verde Quirófano',hex:'#5BAD6F'},{cod:'28',nombre:'Verde Manzana',hex:'#7AC142'},{cod:'44',nombre:'Azul Delfín',hex:'#6AAED6'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'78',nombre:'Rosetón',hex:'#E8608A'},{cod:'95',nombre:'Morado',hex:'#7B2D8B'},
+    {cod:'988',nombre:'Teja',hex:'#C85A4A'}
   ],
   'Arzak':[
-    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'78',nombre:'Rosetón',hex:'#E8608A'},
-    {cod:'988',nombre:'Teja',hex:'#C85A4A'},{cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'110',nombre:'Azul Ultramar',hex:'#1565C0'},
-    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'17',nombre:'Verde Quirófano',hex:'#5BAD6F'},{cod:'28',nombre:'Verde Manzana',hex:'#7AC142'},
-    {cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'95',nombre:'Morado',hex:'#7B2D8B'}
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'110',nombre:'Azul Ultramar',hex:'#1565C0'},{cod:'17',nombre:'Verde Quirófano',hex:'#5BAD6F'},{cod:'28',nombre:'Verde Manzana',hex:'#7AC142'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'78',nombre:'Rosetón',hex:'#E8608A'},
+    {cod:'95',nombre:'Morado',hex:'#7B2D8B'},{cod:'988',nombre:'Teja',hex:'#C85A4A'}
   ],
   'Vademécum':[
     {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'110',nombre:'Azul Ultramar',hex:'#1565C0'},{cod:'17',nombre:'Verde Quirófano',hex:'#5BAD6F'},
@@ -274,8 +266,8 @@ var PRENDA_COLORES = {
     {cod:'95',nombre:'Morado',hex:'#7B2D8B'},{cod:'988',nombre:'Teja',hex:'#C85A4A'}
   ],
   'Vaccine':[
-    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
-    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'17',nombre:'Verde Quirófano',hex:'#5BAD6F'}
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'17',nombre:'Verde Quirófano',hex:'#5BAD6F'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'60',nombre:'Rojo',hex:'#CC2222'}
   ],
 };
 function getColores(){return PRENDA_COLORES[_prendaDetectada]||PRENDA_COLORES['Camisetas'];}
