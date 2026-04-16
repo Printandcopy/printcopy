@@ -9,19 +9,36 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // KILL SWITCH EMERGENCIA — bloquea TODO hasta que se desactive
+  // KILL SWITCH EMERGENCIA — cambiar a false para reactivar
   const EMERGENCY_STOP = true;
   if (EMERGENCY_STOP) {
+    console.log('WA EMERGENCY STOP -> mensaje bloqueado');
     return res.status(200).json({ success: false, blocked: true, reason: 'Emergency stop activo' });
   }
 
   // BLOQUEO HORARIO SERVER-SIDE: solo enviar entre 9:00 y 21:00 hora Madrid
-  const madridHour = parseInt(new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false }));
-  const isManual = req.body && req.body.manual === true;
+  // Método robusto: UTC + offset España (UTC+1 invierno, UTC+2 verano)
+  function getMadridHour() {
+    var now = new Date();
+    // Intentar toLocaleString primero
+    try {
+      var h = parseInt(now.toLocaleString('en-US', { timeZone: 'Europe/Madrid', hour: 'numeric', hour12: false }));
+      if (!isNaN(h)) return h;
+    } catch(e) {}
+    // Fallback: calcular manualmente UTC+2 (verano) o UTC+1 (invierno)
+    // España: último domingo de marzo a último domingo de octubre = UTC+2
+    var month = now.getUTCMonth(); // 0-11
+    var utcH = now.getUTCHours();
+    var isVerano = month >= 2 && month <= 9; // marzo(2) a octubre(9) aprox
+    return isVerano ? (utcH + 2) % 24 : (utcH + 1) % 24;
+  }
+  var madridHour = getMadridHour();
+  var isManual = req.body && req.body.manual === true;
   if (!isManual && (madridHour < 9 || madridHour >= 21)) {
-    console.log('WA BLOCKED -> Fuera de horario Madrid:', madridHour + 'h. Mensaje no enviado.');
+    console.log('WA BLOCKED -> Fuera de horario Madrid:', madridHour + 'h. Mensaje NO enviado.');
     return res.status(200).json({ success: false, blocked: true, reason: 'Fuera de horario (9-21h Madrid)', hora: madridHour });
   }
+  console.log('WA ALLOWED -> Hora Madrid:', madridHour + 'h. Manual:', isManual);
 
   try {
     const { telefono, mensaje, nombre } = req.body;
