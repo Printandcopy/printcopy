@@ -116,6 +116,10 @@ var PRENDA_MEDIDAS = {
   'Vademécum':{XS:'33×108',S:'35×109',M:'37×110',L:'39×111',XL:'41×112','2XL':'43×113','3XL':'45×114'},
   'Vaccine':{XS:'51×95',S:'54×97',M:'57×99',L:'60×101',XL:'63×103','2XL':'67×104','3XL':'71×105','4XL':'75×106'}
 };
+var FICHAS_PDF = {
+  'Camisetas':'fichas/CA6554.pdf'
+  // Resto de modelos pendientes de añadir
+};
 var _prendaDetectada='Camisetas';
 var _cantPedido=0;
 var COLORES_BASE = [
@@ -353,7 +357,17 @@ function render() {
   var _imgGuia=_esquemas[_prendaDetectada]||('https://www.camisetas.com/img/img-products/medium/Roly/'+_ref+'-58.jpg');
   var _tieneEsquemaReal=!!_esquemas[_prendaDetectada];
   var _medidas=PRENDA_MEDIDAS[_prendaDetectada]||{};
-  if(Object.keys(_medidas).length){
+  var _fichaPdf=FICHAS_PDF[_prendaDetectada];
+  if(_fichaPdf){
+    html+='<a href="'+_fichaPdf+'" target="_blank" style="display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;background:linear-gradient(135deg,#185FA5,#2475C7);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;box-shadow:0 2px 6px rgba(24,95,165,.25);margin-bottom:14px;box-sizing:border-box">'
+      +'<div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">PDF</div>'
+      +'<div style="flex:1;text-align:left">'
+      +'<strong style="display:block;font-size:14px;margin-bottom:2px">Consulta colores y guía de tallas aquí</strong>'
+      +'<span style="font-size:11px;opacity:.9;line-height:1.4">Ficha técnica descargable · '+_prendaDetectada+'</span>'
+      +'</div>'
+      +'<div style="font-size:20px;opacity:.7">⬇</div>'
+      +'</a>';
+  } else if(Object.keys(_medidas).length){
     html+='<div class="card" style="padding:12px">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="var g=document.getElementById(\'guia-tallas\');g.style.display=g.style.display===\'none\'?\'block\':\'none\'">'
       +'<span style="font-size:13px;font-weight:700;color:#185FA5">📏 Guía de tallas — '+_prendaDetectada+'</span>'
