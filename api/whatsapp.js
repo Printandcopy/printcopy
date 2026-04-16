@@ -9,6 +9,12 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // KILL SWITCH EMERGENCIA — bloquea TODO hasta que se desactive
+  const EMERGENCY_STOP = true;
+  if (EMERGENCY_STOP) {
+    return res.status(200).json({ success: false, blocked: true, reason: 'Emergency stop activo' });
+  }
+
   // BLOQUEO HORARIO SERVER-SIDE: solo enviar entre 9:00 y 21:00 hora Madrid
   const madridHour = parseInt(new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false }));
   const isManual = req.body && req.body.manual === true;
