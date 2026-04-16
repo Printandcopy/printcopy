@@ -9,6 +9,14 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // BLOQUEO HORARIO SERVER-SIDE: solo enviar entre 9:00 y 21:00 hora Madrid
+  const madridHour = parseInt(new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false }));
+  const isManual = req.body && req.body.manual === true;
+  if (!isManual && (madridHour < 9 || madridHour >= 21)) {
+    console.log('WA BLOCKED -> Fuera de horario Madrid:', madridHour + 'h. Mensaje no enviado.');
+    return res.status(200).json({ success: false, blocked: true, reason: 'Fuera de horario (9-21h Madrid)', hora: madridHour });
+  }
+
   try {
     const { telefono, mensaje, nombre } = req.body;
     if (!telefono || !mensaje) return res.status(400).json({ error: 'Faltan campos' });
