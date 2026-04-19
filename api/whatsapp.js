@@ -10,7 +10,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   // KILL SWITCH EMERGENCIA — cambiar a false para reactivar
-  const EMERGENCY_STOP = true;
+  const EMERGENCY_STOP = false;
   if (EMERGENCY_STOP) {
     console.log('WA EMERGENCY STOP -> mensaje bloqueado');
     return res.status(200).json({ success: false, blocked: true, reason: 'Emergency stop activo' });
