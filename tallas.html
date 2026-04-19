@@ -332,13 +332,24 @@ function init() {
   api('pedidos?id=eq.'+pedidoId+'&select=id,cliente_nombre,descripcion,tallas_colores').then(function(r){
     if(!r||!r.length){show('<div class="error">❌ Pedido no encontrado.</div>');return;}
     _pedido = r[0];
-    // Detectar prenda desde descripción
+    // Detectar prenda desde descripción — primero nombre completo, luego keywords
     var _d=(_pedido.descripcion||'').toUpperCase();
-    if(_d.includes('SUDADERA')&&_d.includes('CAPUCHA'))_prendaDetectada='Sudadera Urban 1067';
-    else if(_d.includes('SUDADERA'))_prendaDetectada='Sudadera Clásica 1070';
-    else if(_d.includes('POLO'))_prendaDetectada='Polo Star 6638';
-    else if(_d.includes('PETO'))_prendaDetectada='Peto Pregón 1500';
-    else _prendaDetectada='Camiseta Beagle 6554';
+    var _allPrendas=['Sudadera Urban 1067','Sudadera Clásica 1070','Polo Star 6638','Peto Pregón 1500',
+      'Totebag Hill 7601','Mochila Hamelin 7114','Gorra Eris 7019','Pañuelo Festero 9003',
+      'Delantal Mini 9124','Delantal Classic 9123','Delantal Benoit 9125',
+      'Camisa Aifos 5503','Camisa Aifos L/S 5504','Casaca Panacea 9098','Casulla Arzak 9091',
+      'Pantalón Vademécum 9097','Bata Vaccine 9094','Chaleco Thunder','Pantalón Thunder',
+      'Parka Traffic','Buzo Kevin','Camiseta Beagle 6554'];
+    _prendaDetectada='Camiseta Beagle 6554';
+    for(var _pi=0;_pi<_allPrendas.length;_pi++){
+      if(_d.indexOf(_allPrendas[_pi].toUpperCase())>=0){_prendaDetectada=_allPrendas[_pi];break;}
+    }
+    if(_prendaDetectada==='Camiseta Beagle 6554'){
+      if(_d.indexOf('URBAN')>=0||(_d.indexOf('SUDADERA')>=0&&_d.indexOf('CAPUCHA')>=0))_prendaDetectada='Sudadera Urban 1067';
+      else if(_d.indexOf('CLÁSICA')>=0||_d.indexOf('CLASICA')>=0||_d.indexOf('SUDADERA')>=0)_prendaDetectada='Sudadera Clásica 1070';
+      else if(_d.indexOf('POLO')>=0||_d.indexOf('STAR')>=0)_prendaDetectada='Polo Star 6638';
+      else if(_d.indexOf('PETO')>=0||_d.indexOf('PREGÓN')>=0)_prendaDetectada='Peto Pregón 1500';
+    }
     var _m=(_pedido.descripcion||'').match(/[×x](\d+)/i);
     _cantPedido=_m?parseInt(_m[1]):0;
     COLORES=getColores();
@@ -374,7 +385,7 @@ function render() {
     'Mochila Hamelin 7114':'img/esquema_mochila.png','Pañuelo Festero 9003':'img/esquema_panuelo.png',
     'Gorra Eris 7019':'img/esquema_gorras.png','Delantal Mini 9124':'img/esquema_delantal_mini.png',
     'Delantal Classic 9123':'img/esquema_delantal_classic.png','Delantal Benoit 9125':'img/esquema_delantal_benoit.png',
-    'Camisa Aifos 5504':'img/esquema_camisa_aifos.png','Casaca Panacea 9098':'img/esquema_panacea.png',
+    'Camisa Aifos 5503':'img/esquema_camisa_aifos.png','Camisa Aifos L/S 5504':'img/esquema_camisa_aifos.png','Casaca Panacea 9098':'img/esquema_panacea.png',
     'Casulla Arzak 9091':'img/esquema_arzak.png','Pantalón Vademécum 9097':'img/esquema_vademecum.png',
     'Bata Vaccine 9094':'img/esquema_vaccine.png'
   };
