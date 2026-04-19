@@ -359,6 +359,8 @@ function init() {
     _cantPedido=_m?parseInt(_m[1]):0;
     if(_pedido.tallas_colores && _pedido.tallas_colores.length) {
       _filas = JSON.parse(JSON.stringify(_pedido.tallas_colores));
+      // Forzar la prenda detectada del pedido sobre los datos guardados
+      _filas.forEach(function(f){f.prenda=_prendaDetectada;});
     } else {
       _filas = [{prenda:_prendaDetectada,color:'Negro',hex:'#1a1a1a',talla:'M',nombre:'',numero:''}];
     }
@@ -565,7 +567,7 @@ function enviar() {
 function show(html){ document.getElementById('main-content').innerHTML = html; }
 
 function actualizarGuiaTallas(){
-  var prenda=(_filas[0]&&_filas[0].prenda)||'Camiseta Beagle 6554';
+  var prenda=window._prendaPedido||(_filas[0]&&_filas[0].prenda)||'Camiseta Beagle 6554';
   // Si hay ficha técnica PDF para esta prenda, sustituir la guía por un botón al PDF
   var fichaPdf=FICHAS_PDF[prenda];
   var cardGuia=document.getElementById('card-guia-tallas');
