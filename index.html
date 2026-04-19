@@ -2036,7 +2036,7 @@ function showScreen(id,el){
   if(id==='analytics')renderAnalytics();
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-document.addEventListener('click',function(e){if(e.target.classList.contains('modal-overlay')&&!window.getSelection().toString())e.target.classList.remove('open');});
+// Modal: NO cerrar al hacer click fuera (solo con botón cerrar/cancelar)
 // Tabulacion dentro de modales
 document.addEventListener('keydown',function(e){
   if(e.key!=='Tab')return;
