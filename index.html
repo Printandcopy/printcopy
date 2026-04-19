@@ -2624,7 +2624,7 @@ function enviarWAResenaAuto(p){
   if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
   var nombre=(p.clienteNombre||'').split(' ')[0];
   var msg='¡Hola '+nombre+'! 👋\n\nGracias por recoger tu pedido en Print & Copy. Esperamos que todo esté perfecto. 🙌\n\nSi tienes un momento, nos ayudaría mucho una reseña en Google:\nhttps://g.page/r/CWmxJawMlrReEBM/review\n\n¡Gracias y hasta pronto! 😊';
-  fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA reseña auto:',d.error);}).catch(function(e){console.error('Error WA:',e);});
+  fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({auto:true,telefono:tel,mensaje:msg,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA reseña auto:',d.error);}).catch(function(e){console.error('Error WA:',e);});
 }
 function enviarWAResena(p){
   if(!confirm('¿Enviar WhatsApp pidiendo reseña en Google?'))return;
@@ -4827,7 +4827,7 @@ function checkRecordatoriosPresupuestos(){
         var total=parseFloat(p.total||0).toFixed(0);
         sb.from('presupuestos').update({recordatorio_1_enviado:true}).eq('id',p.id).eq('recordatorio_1_enviado',false).then(function(ur){
           if(ur.error)return;
-          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' 👋 ¿Pudiste revisar el presupuesto *'+p.numero+'* por *'+total+'€*? Si tienes alguna duda o quieres que ajustemos algo, aquí estamos 😊\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({auto:true,telefono:tel,mensaje:'Hola '+nombre+' 👋 ¿Pudiste revisar el presupuesto *'+p.numero+'* por *'+total+'€*? Si tienes alguna duda o quieres que ajustemos algo, aquí estamos 😊\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
         });
       });
     });
@@ -4848,7 +4848,7 @@ function checkRecordatoriosPresupuestos(){
         var diasRestantes=validez-diasDesde;if(diasRestantes<0)diasRestantes=0;
         sb.from('presupuestos').update({recordatorio_2_enviado:true}).eq('id',p.id).eq('recordatorio_2_enviado',false).then(function(ur){
           if(ur.error)return;
-          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' ⚡ Te recordamos que el presupuesto *'+p.numero+'* vence en *'+diasRestantes+' días*. Si quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({auto:true,telefono:tel,mensaje:'Hola '+nombre+' ⚡ Te recordamos que el presupuesto *'+p.numero+'* vence en *'+diasRestantes+' días*. Si quieres confirmar, avísanos y lo ponemos en marcha hoy mismo.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
         });
       });
     });
@@ -4867,7 +4867,7 @@ function checkRecordatoriosPresupuestos(){
         var total=parseFloat(p.total||0).toFixed(0);
         sb.from('presupuestos').update({recordatorio_3_enviado:true}).eq('id',p.id).eq('recordatorio_3_enviado',false).then(function(ur){
           if(ur.error)return;
-          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:'Hola '+nombre+' 👋 Último aviso: el presupuesto *'+p.numero+'* caduca en breve. Si te interesa, confírmanos antes de que expire.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({auto:true,telefono:tel,mensaje:'Hola '+nombre+' 👋 Último aviso: el presupuesto *'+p.numero+'* caduca en breve. Si te interesa, confírmanos antes de que expire.\n\nTotal: *'+total+'€*\n\nPrint & Copy · 923 018 034',nombre:p.cliente_nombre})});
         });
       });
     });
@@ -4904,7 +4904,7 @@ function checkRecordatorioRecogida(){
           var pendTxt='';
           if(pend>0.01){var dtoEf=Math.round(pend*0.97*100)/100;pendTxt='\n💰 Pendiente: *'+pend.toFixed(2)+'€*\n💵 Paga en efectivo y te ahorras un 3% → *'+dtoEf.toFixed(2)+'€*';}
           var msg='Hola '+(row.cliente_nombre||'').split(' ')[0]+' 👋\n\nTe recordamos que tu pedido *'+row.id+'* está *listo para recoger* en Print & Copy.'+pendTxt+'\n\n📍 Av. Portugal 62, Salamanca\n⏰ L-V 9:30-14:00 y 17:00-20:00 · Sáb 10:00-14:00\n\nPrint & Copy · 923 018 034';
-          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:row.cliente_nombre})});
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({auto:true,telefono:tel,mensaje:msg,nombre:row.cliente_nombre})});
         });
       });
     });
@@ -4944,7 +4944,7 @@ function checkRecordatoriosTallas(){
           var msg=diasDesde<=4
             ?'Hola '+nombre+' 👋\n\nTe recordamos que necesitamos los datos de tallas para tu pedido *'+row.id+'*.\n\nAccede aquí para rellenarlo:\n'+link+'\n\nPrint & Copy · 923 018 034'
             :'Hola '+nombre+' ⏰\n\nLlevamos '+diasDesde+' días esperando los datos de tallas de tu pedido *'+row.id+'*. Sin ellos no podemos arrancar la producción.\n\nRellénalo aquí:\n'+link+'\n\nPrint & Copy · 923 018 034';
-          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:row.cliente_nombre})});
+          fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({auto:true,telefono:tel,mensaje:msg,nombre:row.cliente_nombre})});
         });
       });
     });
@@ -7757,7 +7757,7 @@ function checkRecordatorioPago(){
     }
     if(!msg||!nuevoRec)return;
     p.recordatorio_pago_num=nuevoRec;
-    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
+    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({auto:true,telefono:tel,mensaje:msg,nombre:p.cliente_nombre})})
       .then(function(r){return r.json();})
       .then(function(d){
         if(d.success){sb.from('presupuestos').update({recordatorio_pago_num:nuevoRec}).eq('id',p.id).then(function(){});}
