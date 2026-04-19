@@ -334,13 +334,28 @@ function init() {
   api('pedidos?id=eq.'+pedidoId+'&select=id,cliente_nombre,descripcion,tallas_colores').then(function(r){
     if(!r||!r.length){show('<div class="error">Pedido no encontrado.</div>');return;}
     _pedido = r[0];
+    // Detectar prenda del pedido desde la descripción
+    var _desc = (_pedido.descripcion||'').toUpperCase();
+    var _prendaDetectada = 'Camiseta Beagle 6554';
+    var _prendas = ['Sudadera Urban 1067','Sudadera Clásica 1070','Polo Star 6638','Peto Pregón 1500','Camiseta Beagle 6554'];
+    for(var pi=0;pi<_prendas.length;pi++){
+      if(_desc.indexOf(_prendas[pi].toUpperCase())>=0){_prendaDetectada=_prendas[pi];break;}
+    }
+    // Fallback por keywords
+    if(_prendaDetectada==='Camiseta Beagle 6554'){
+      if(_desc.indexOf('URBAN')>=0||(_desc.indexOf('SUDADERA')>=0&&_desc.indexOf('CAPUCHA')>=0))_prendaDetectada='Sudadera Urban 1067';
+      else if(_desc.indexOf('CLÁSICA')>=0||_desc.indexOf('CLASICA')>=0||_desc.indexOf('SUDADERA')>=0)_prendaDetectada='Sudadera Clásica 1070';
+      else if(_desc.indexOf('POLO')>=0||_desc.indexOf('STAR')>=0)_prendaDetectada='Polo Star 6638';
+      else if(_desc.indexOf('PETO')>=0||_desc.indexOf('PREGÓN')>=0)_prendaDetectada='Peto Pregón 1500';
+    }
+    window._prendaPedido = _prendaDetectada;
     // Extraer cantidad del pedido de la descripción (ej: "×15")
     var _m=(_pedido.descripcion||'').match(/[×x](\d+)/i);
     _cantPedido=_m?parseInt(_m[1]):0;
     if(_pedido.tallas_colores && _pedido.tallas_colores.length) {
       _filas = JSON.parse(JSON.stringify(_pedido.tallas_colores));
     } else {
-      _filas = [{prenda:'Camiseta Beagle 6554',color:'Negro',hex:'#1a1a1a',talla:'M',nombre:'',numero:''}];
+      _filas = [{prenda:_prendaDetectada,color:'Negro',hex:'#1a1a1a',talla:'M',nombre:'',numero:''}];
     }
     render();
   }).catch(function(){show('<div class="error">Error de conexión.</div>');});
@@ -399,7 +414,7 @@ function renderFila(f, i) {
     +(i>0?'<button onclick="delFila('+i+')" style="margin-left:auto;background:none;border:none;color:#ccc;font-size:18px;cursor:pointer">✕</button>':'')
     +'</div>'
     +'<div class="field-row">'
-    +'<div class="field"><label>Prenda</label><select onchange="onFieldChange('+i+',\'prenda\',this.value)">'+prendaOpts+'</select></div>'
+    +'<div class="field"><label>Prenda</label><select disabled onchange="onFieldChange('+i+',\'prenda\',this.value)" style="opacity:.7">'+prendaOpts+'</select></div>'
     +'<div class="field"><label>Talla</label><select onchange="onFieldChange('+i+',\'talla\',this.value)">'+tallaOpts+'</select></div>'
     +'</div>'
     +'<div class="field-row">'
@@ -444,7 +459,7 @@ function addFila() {
     alert('El pedido es de '+_cantPedido+' unidades. No puedes añadir más personas.');
     return;
   }
-  _filas.push({prenda:'Camiseta Beagle 6554',color:'Negro',hex:'#1a1a1a',talla:'M',nombre:'',numero:''});
+  _filas.push({prenda:window._prendaPedido||'Camiseta Beagle 6554',color:'Negro',hex:'#1a1a1a',talla:'M',nombre:'',numero:''});
   var container = document.getElementById('filas-container');
   if(container) container.insertAdjacentHTML('beforeend', renderFila(_filas[_filas.length-1], _filas.length-1));
   var res = document.getElementById('resumen');
