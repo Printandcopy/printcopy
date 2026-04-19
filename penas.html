@@ -337,7 +337,12 @@ function init() {
     // Detectar prenda del pedido desde la descripción
     var _desc = (_pedido.descripcion||'').toUpperCase();
     var _prendaDetectada = 'Camiseta Beagle 6554';
-    var _prendas = ['Sudadera Urban 1067','Sudadera Clásica 1070','Polo Star 6638','Peto Pregón 1500','Camiseta Beagle 6554'];
+    var _prendas = ['Sudadera Urban 1067','Sudadera Clásica 1070','Polo Star 6638','Peto Pregón 1500',
+      'Totebag Hill 7601','Mochila Hamelin 7114','Gorra Eris 7019','Pañuelo Festero 9003',
+      'Delantal Mini 9124','Delantal Classic 9123','Delantal Benoit 9125',
+      'Camisa Aifos 5503','Camisa Aifos L/S 5504','Casaca Panacea 9098','Casulla Arzak 9091',
+      'Pantalón Vademécum 9097','Bata Vaccine 9094','Chaleco Thunder','Pantalón Thunder',
+      'Parka Traffic','Buzo Kevin','Camiseta Beagle 6554'];
     for(var pi=0;pi<_prendas.length;pi++){
       if(_desc.indexOf(_prendas[pi].toUpperCase())>=0){_prendaDetectada=_prendas[pi];break;}
     }
