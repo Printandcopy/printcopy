@@ -3111,65 +3111,12 @@ function tarjetaTaller(p){
     checksHTML=renderSemaforoTaller(p);
   }
   var listoClass=esListoProducir(p)?' listo-producir':'';
-  var cambiosHTML=p.previaEstado==="rechazada"&&p.previaCambios?'<div class="tc-cambios">"'+ p.previaCambios +'"</div>':'';
-  var sigBtn=siguienteFaseBtn(p);
+  var cambiosHTML=p.previaEstado==="rechazada"&&p.previaCambios?'<div class="tc-cambios">"'+ p.previaCambios +'"</div>':''; 
   return '<div class="taller-card '+urgente+listoClass+'" onclick="verPedido(\''+ p.id +'\')">'
     +'<div class="tc-header"><div class="tc-left"><div class="tc-id">'+p.id+'</div><div class="tc-meta"><span class="badge sec-'+p.seccion+'">'+SECS[p.seccion]+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span>'+previaBadge+extBadge+'</div><div class="tc-op">👤 '+p.operario+'</div></div>'
     +'<div class="tc-right">'+entregaTxt+pendPill+'</div></div>'
     +'<div class="tc-body"><div class="tc-cliente">'+p.clienteNombre+'</div><div class="tc-desc">'+p.descripcion+'</div>'+(p.notas?'<div class="tc-notas">'+p.notas+'</div>':'')+cambiosHTML+checksHTML
-    +'<textarea id="nota-taller-'+p.id+'" class="nota-operario" rows="2" placeholder="Anotaciones del operario..." onclick="event.stopPropagation()" onblur="guardarAnotacion(\''+ p.id +'\',this.value)">'+( p.anotacion||"")+'</textarea>'
-    +sigBtn
-    +'</div></div>';
-}
-
-// Botón "Siguiente fase" contextual según estado del pedido
-function siguienteFaseBtn(p){
-  if(p.fase>=6)return''; // ya cobrado o recogido: sin botón
-  var destino, label, bg='#185FA5', ico='→';
-
-  // Lógica específica textil con previas
-  if(p.seccion==='TX'){
-    if(p.fase===0)return''; // en Mostrador, no en taller
-    if(!tallasCompletas(p)){
-      // Aún sin tallas del cliente — no avanzar
-      return '<div style="margin-top:8px;padding:7px 10px;background:#FCEBEB;border-radius:6px;font-size:11px;color:#A32D2D;text-align:center;font-weight:600">⏳ Esperando tallas del cliente</div>';
-    }
-    if(p.previaEstado!=='aceptada' && p.fase<3){
-      // Debe pasar por previa antes de producir
-      destino=p.previaEstado==='enviada'?3:2;
-      label=destino===2?'Enviar previa →':'Marcar previa OK →';
-      bg='#BA7517';
-      ico='👁️';
-    }else if(p.fase<4){
-      destino=4;label='A producción →';bg='#534AB7';ico='🚀';
-    }else if(p.fase===4){
-      destino=5;label='Terminado ✓';bg='#3B6D11';ico='✅';
-    }else if(p.fase===5){
-      destino=6;label='Cobrar y recoger →';bg='#A32D2D';ico='💰';
-    }
-  }else{
-    // Secciones no-textil (más simple)
-    if(p.fase===0)return'';
-    if(p.fase<4){destino=4;label='A producción →';bg='#534AB7';ico='🚀';}
-    else if(p.fase===4){destino=5;label='Terminado ✓';bg='#3B6D11';ico='✅';}
-    else if(p.fase===5){destino=6;label='Cobrar y recoger →';bg='#A32D2D';ico='💰';}
-  }
-
-  if(!destino)return'';
-  return '<button onclick="event.stopPropagation();siguienteFaseDesdeCard(\''+p.id+'\','+destino+')" style="margin-top:8px;width:100%;padding:10px;background:'+bg+';color:#fff;border:none;border-radius:6px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"><span style="font-size:14px">'+ico+'</span>'+label+'</button>';
-}
-
-// Wrapper: confirma antes de cambiar fase desde tarjeta
-function siguienteFaseDesdeCard(id,fase){
-  var p=pedidos.find(function(x){return x.id===id;});
-  if(!p)return;
-  var destLabel=FASES[fase]||('fase '+fase);
-  // Confirmación ligera (setFaseModal ya pide confirmación si hay pendiente o es cobro)
-  if(fase!==6 && fase!==5){
-    // Cobro y Terminado ya preguntan ellos mismos; el resto pedimos confirmación simple
-    if(!confirm('Pasar '+p.id+' a "'+destLabel+'"?'))return;
-  }
-  setFaseModal(id,fase);
+    +'<textarea id="nota-taller-'+p.id+'" class="nota-operario" rows="2" placeholder="Anotaciones del operario..." onclick="event.stopPropagation()" onblur="guardarAnotacion(\''+ p.id +'\',this.value)">'+( p.anotacion||"")+'</textarea></div></div>';
 }
 function filtrarPorPresupuesto(presId){
   activeFilters={fase:'all',entrega:'all',pago:'all',sfase:'all'};
