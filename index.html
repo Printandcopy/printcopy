@@ -1239,7 +1239,6 @@ textarea{resize:vertical;min-height:64px}
       <div class="radio-group" style="margin-top:6px">
         <label class="radio-opt"><input type="radio" name="cobro-metodo" value="efectivo"> 💵 Efectivo</label>
         <label class="radio-opt"><input type="radio" name="cobro-metodo" value="tarjeta"> 💳 Tarjeta</label>
-        <label class="radio-opt"><input type="radio" name="cobro-metodo" value="bizum"> 📱 Bizum</label>
         <label class="radio-opt"><input type="radio" name="cobro-metodo" value="transferencia" checked> 🏦 Transf.</label>
       </div>
     </div>
@@ -1264,7 +1263,6 @@ textarea{resize:vertical;min-height:64px}
       <div class="radio-group" style="margin-top:6px">
         <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="efectivo" onchange="aplicarDtoEfectivo()"> 💵 Efectivo (-3%)</label>
         <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="tarjeta" checked onchange="aplicarDtoEfectivo()"> 💳 Tarjeta</label>
-        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="bizum" onchange="aplicarDtoEfectivo()"> 📱 Bizum</label>
         <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="transferencia" onchange="aplicarDtoEfectivo()"> 🏦 Transf.</label>
       </div>
       <div id="dto-efectivo-msg" style="display:none;font-size:12px;color:#3B6D11;background:#EAF3DE;padding:6px 10px;border-radius:6px;margin-top:6px">💰 Descuento 3% por pago en efectivo aplicado</div>
@@ -6956,9 +6954,9 @@ function cotAceptarYCobrar(){
     +(condPago==='50_50'?' · Señal: '+senal.toFixed(2)+'€ · Resto: '+queda:'')
     +'</span>';
   document.getElementById('cobro-importe').value=senal>0.01?senal.toFixed(2):total.toFixed(2);
-  // Seleccionar bizum por defecto
-  var biz=document.querySelector('input[name="cobro-metodo"][value="bizum"]');
-  if(biz)biz.checked=true;
+  // Seleccionar transferencia por defecto (bizum ya no es opción en tienda)
+  var tr=document.querySelector('input[name="cobro-metodo"][value="transferencia"]');
+  if(tr)tr.checked=true;
   closeModal('modal-cot');
   document.getElementById('modal-cobro-senal').classList.add('open');
 }
