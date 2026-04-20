@@ -186,6 +186,14 @@ textarea{resize:vertical;min-height:64px}
 .tc-desc{font-size:13px;color:#333;margin-top:3px}
 .tc-notas{font-size:12px;color:#777;margin-top:3px}
 .tc-cambios{background:#FCEBEB;border-radius:5px;padding:6px 8px;margin-top:6px;font-size:11px;color:#A32D2D;font-style:italic}
+.taller-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.taller-btn{flex:1;min-width:120px;padding:11px 10px;border:none;border-radius:6px;font-weight:700;font-size:13px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:opacity .15s}
+.taller-btn:hover{opacity:.88}
+.taller-btn:active{transform:scale(.98)}
+.taller-btn-ropa{background:#BA7517}
+.taller-btn-dtf{background:#534AB7}
+.taller-btn-term{background:#3B6D11}
+.taller-btn-cob{background:#A32D2D}
 .tc-checks{display:flex;gap:16px;margin-top:8px;padding:7px 10px;background:#fce8e8;border-radius:6px}
 .tc-check-item{display:flex;flex-direction:column;gap:2px}
 .tc-check-item label{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:#7a1a1a;cursor:pointer}
@@ -3096,6 +3104,27 @@ function renderSemaforoTaller(p){
   html+='</div>';
   return html;
 }
+function accionesTallerBtn(p){
+  // Devuelve HTML con botones grandes SOLO para acciones manuales reales
+  // Las transiciones de fase automáticas (previas env, previas OK, producción) no muestran botón
+  var btns=[];
+  var stop='onclick="event.stopPropagation();';
+  // TX: ropa/DTF manual cuando hay tallas
+  if(p.seccion==='TX'&&p.fase>=1&&p.fase<4&&tallasCompletas(p)){
+    if(!p.ropaOk)btns.push('<button class="taller-btn taller-btn-ropa" '+stop+'toggleCheckModal(\''+p.id+'\',\'ropaOk\',true)">📦 Ropa pedida</button>');
+    if(!p.dtfOk)btns.push('<button class="taller-btn taller-btn-dtf" '+stop+'toggleCheckModal(\''+p.id+'\',\'dtfOk\',true)">🖨️ DTF pedido</button>');
+  }
+  // Terminado: cuando está en Producción (fase 4) y es TX o XR
+  if(p.fase===4){
+    btns.push('<button class="taller-btn taller-btn-term" '+stop+'if(confirm(\'Marcar '+p.id+' como Terminado?\'))setFaseModal(\''+p.id+'\',5)">✅ Terminado</button>');
+  }
+  // Cobrar y entregar: cuando está Terminado (fase 5)
+  if(p.fase===5){
+    btns.push('<button class="taller-btn taller-btn-cob" '+stop+'mostCobrarEntregar(\''+p.id+'\')">💰 Cobrar y entregar</button>');
+  }
+  if(!btns.length)return'';
+  return'<div class="taller-actions">'+btns.join('')+'</div>';
+}
 function tarjetaTaller(p){
   var pend=p.total-(p.senal||0),hoy=new Date();hoy.setHours(0,0,0,0);
   var fe=p.fechaEntrega?new Date(p.fechaEntrega+"T00:00:00"):null;
@@ -3112,11 +3141,12 @@ function tarjetaTaller(p){
   }
   var listoClass=esListoProducir(p)?' listo-producir':'';
   var cambiosHTML=p.previaEstado==="rechazada"&&p.previaCambios?'<div class="tc-cambios">"'+ p.previaCambios +'"</div>':''; 
+  var accionesHTML=accionesTallerBtn(p);
   return '<div class="taller-card '+urgente+listoClass+'" onclick="verPedido(\''+ p.id +'\')">'
     +'<div class="tc-header"><div class="tc-left"><div class="tc-id">'+p.id+'</div><div class="tc-meta"><span class="badge sec-'+p.seccion+'">'+SECS[p.seccion]+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span>'+previaBadge+extBadge+'</div><div class="tc-op">👤 '+p.operario+'</div></div>'
     +'<div class="tc-right">'+entregaTxt+pendPill+'</div></div>'
     +'<div class="tc-body"><div class="tc-cliente">'+p.clienteNombre+'</div><div class="tc-desc">'+p.descripcion+'</div>'+(p.notas?'<div class="tc-notas">'+p.notas+'</div>':'')+cambiosHTML+checksHTML
-    +'<textarea id="nota-taller-'+p.id+'" class="nota-operario" rows="2" placeholder="Anotaciones del operario..." onclick="event.stopPropagation()" onblur="guardarAnotacion(\''+ p.id +'\',this.value)">'+( p.anotacion||"")+'</textarea></div></div>';
+    +'<textarea id="nota-taller-'+p.id+'" class="nota-operario" rows="2" placeholder="Anotaciones del operario..." onclick="event.stopPropagation()" onblur="guardarAnotacion(\''+ p.id +'\',this.value)">'+( p.anotacion||"")+'</textarea>'+accionesHTML+'</div></div>';
 }
 function filtrarPorPresupuesto(presId){
   activeFilters={fase:'all',entrega:'all',pago:'all',sfase:'all'};
