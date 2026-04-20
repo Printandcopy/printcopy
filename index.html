@@ -84,7 +84,8 @@ textarea{resize:vertical;min-height:64px}
 .taller-body strong{color:#1a1a1a;font-weight:500}
 
 /* Mini Calendario */
-.entrega-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.entrega-wrap{display:flex;align-items:center;gap:10px;flex-shrink:0;padding:4px 8px;border-radius:8px;transition:background 0.2s}
+.entrega-wrap.entrega-fija{background:#FCEBEB;border:1px solid #F09595;padding:4px 8px}
 .entrega-texto{font-size:12px;color:#888;text-align:right;min-width:65px}
 .et-dias{font-size:13px;font-weight:600;color:#1a1a1a}
 .et-fecha{font-size:11px;color:#888;display:flex;align-items:center;gap:4px;justify-content:flex-end}
@@ -2396,7 +2397,14 @@ function verPedido(id){
   var p=pedidos.find(function(x){return x.id===id;});if(!p)return;
   _pedidoModal=p;
   var pend=p.total-(p.senal||0);
-  var fentrega=p.fechaEntrega?(p.fechaTipo==='fija'?'FIJA: ':'aprox. ')+formatDate(p.fechaEntrega):'Sin fecha';
+  var esFija=p.fechaTipo==='fija';
+  var fechaTxt=p.fechaEntrega?formatDate(p.fechaEntrega):'Sin fecha';
+  var fentrega=p.fechaEntrega?(esFija?'FIJA: ':'aprox. ')+fechaTxt:'Sin fecha';
+  // Badge visual destacado para entrega FIJA
+  var entregaBadge=p.fechaEntrega?(esFija
+    ? '<div style="display:inline-block;background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-bottom:4px">⚠️ FIJA</div>'
+    : '<div style="display:inline-block;background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;margin-bottom:4px">APROX.</div>')
+    :'';
   var pagoStr={pagado:'Pagado completo',senal:'Se&ntilde;al entregada',pendiente:'Pendiente de pago'}[p.pago]||'';
 
   document.getElementById('mp-title').innerHTML=
@@ -2411,7 +2419,10 @@ function verPedido(id){
   html+='<div class="stat-card"><div class="sv" style="font-size:14px">'+p.clienteNombre+'</div><div class="sl">Cliente</div></div>';
   html+='<div class="stat-card"><div class="sv" style="font-size:14px">'+p.operario+'</div><div class="sl">Atendido por</div></div>';
   html+='<div class="stat-card"><div class="sv" style="font-size:12px">'+formatDateTime(p.fechaCreacion)+'</div><div class="sl">Fecha creaci&oacute;n</div></div>';
-  html+='<div class="stat-card"><div class="sv" style="font-size:12px;color:'+(p.fechaTipo==='fija'?'#A32D2D':'#1a1a1a')+'">'+fentrega+'</div><div class="sl">Entrega</div></div>';
+  html+='<div class="stat-card" style="'+(esFija?'background:#FCEBEB;border:1px solid #F09595':'')+'">'
+    +entregaBadge
+    +'<div class="sv" style="font-size:14px;font-weight:700;color:'+(esFija?'#A32D2D':'#1a1a1a')+'">'+fechaTxt+'</div>'
+    +'<div class="sl">Entrega</div></div>';
   html+='</div>';
 
   html+='<div style="background:#f9f9f7;border-radius:7px;padding:10px 12px;margin-bottom:10px">';
@@ -3014,9 +3025,13 @@ function buildMiniCalendario(fechaEntrega, fechaTipo){
     calDias += '<div class="' + clases + '"><span class="mc-name">' + dNombre + '</span><span class="mc-num">' + dNum + '</span></div>';
   }
   
-  var fijaTag = fechaTipo === 'fija' ? '<span style="color:#A32D2D;font-size:10px;font-weight:700">FIJA</span>' : '';
-  
-  return '<div class="entrega-wrap">' +
+  var fijaTag = fechaTipo === 'fija'
+    ? '<span style="display:inline-block;background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;padding:1px 7px;border-radius:99px;font-size:9.5px;font-weight:700;margin-left:6px;letter-spacing:.3px">⚠️ FIJA</span>'
+    : '';
+  // Fondo rojizo suave para filas con fecha fija
+  var wrapClass = 'entrega-wrap' + (fechaTipo === 'fija' ? ' entrega-fija' : '');
+
+  return '<div class="' + wrapClass + '">' +
     '<div class="entrega-texto ' + diasClase + '">' +
       '<div class="et-dias">' + diasTexto + '</div>' +
       '<div class="et-fecha">' + fechaTexto + fijaTag + '</div>' +
