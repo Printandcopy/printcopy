@@ -1180,7 +1180,7 @@ textarea{resize:vertical;min-height:64px}
             <div class="field"><label>Señal (€)</label><input type="number" id="nv-senal" value="0" step="0.01" min="0" oninput="nvCalcPendiente()"></div>
             <div class="field"><label style="color:#A32D2D;font-weight:600">Queda por cobrar</label><div id="nv-pendiente" style="font-size:16px;font-weight:700;color:#A32D2D;padding:7px 0">0,00 €</div></div>
           </div>
-          <div class="field" style="margin-top:8px"><label>Método de pago</label><select id="nv-metodo-pago"><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option><option value="bizum">Bizum</option><option value="transferencia">Transferencia</option></select></div>
+          <div class="field" style="margin-top:8px"><label>Método de pago <span id="nv-metodo-hint" style="color:#888;font-weight:400;font-size:11px"></span></label><select id="nv-metodo-pago"><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option></select></div>
           <div id="nv-info-condicion" style="margin-top:10px;padding:10px 12px;background:#f8f9fa;border-radius:6px;font-size:13px;color:#555"></div>
           <button class="btn btn-success" onclick="nvCrearPedido()" style="width:100%;margin-top:12px">✓ Confirmar cobro y crear pedido</button>
         </div>
@@ -1263,8 +1263,8 @@ textarea{resize:vertical;min-height:64px}
       <label style="font-weight:600">Método de pago</label>
       <div class="radio-group" style="margin-top:6px">
         <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="efectivo" onchange="aplicarDtoEfectivo()"> 💵 Efectivo (-3%)</label>
-        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="tarjeta" onchange="aplicarDtoEfectivo()"> 💳 Tarjeta</label>
-        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="bizum" checked onchange="aplicarDtoEfectivo()"> 📱 Bizum</label>
+        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="tarjeta" checked onchange="aplicarDtoEfectivo()"> 💳 Tarjeta</label>
+        <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="bizum" onchange="aplicarDtoEfectivo()"> 📱 Bizum</label>
         <label class="radio-opt"><input type="radio" name="cobro-resto-metodo" value="transferencia" onchange="aplicarDtoEfectivo()"> 🏦 Transf.</label>
       </div>
       <div id="dto-efectivo-msg" style="display:none;font-size:12px;color:#3B6D11;background:#EAF3DE;padding:6px 10px;border-radius:6px;margin-top:6px">💰 Descuento 3% por pago en efectivo aplicado</div>
@@ -5881,6 +5881,19 @@ function nvCalcPendiente(){
   var esCredito=condicion==='credito_senal'||condicion==='credito_total';
   var senalInput=document.getElementById('nv-senal');
   if(senalInput){senalInput.disabled=esCredito;senalInput.style.opacity=esCredito?'0.4':'1';}
+  // Hint y estado del método de pago según señal
+  var metSel=document.getElementById('nv-metodo-pago');
+  var metHint=document.getElementById('nv-metodo-hint');
+  var senalAct=parseFloat(document.getElementById('nv-senal').value)||0;
+  if(metSel&&metHint){
+    if(senalAct<=0){
+      metSel.disabled=true;metSel.style.opacity='0.4';
+      metHint.textContent='· no aplica (sin señal ahora)';
+    }else{
+      metSel.disabled=false;metSel.style.opacity='1';
+      metHint.textContent='· para cobrar '+cV2Fmt(senalAct)+' ahora';
+    }
+  }
 }
 
 function crearClienteSiNoExiste(nombre,tel,email,sector){
@@ -6127,6 +6140,8 @@ function nvCrearPedido(){
   var condicion=document.getElementById('nv-condicion').value;
   var senal=parseFloat(document.getElementById('nv-senal').value)||0;
   var metodoPago=document.getElementById('nv-metodo-pago')?document.getElementById('nv-metodo-pago').value:'efectivo';
+  // Si no se cobra señal en el momento, el método queda pendiente (se actualiza al cobrar)
+  if(senal<=0)metodoPago='pendiente';
   var incluyeMontaje=document.getElementById('nv-montaje').checked;
   var sub=nvLineas.reduce(function(s,l){return s+l.total;},0);
   var dto=parseFloat(document.getElementById('nv-dto').value)||0;
