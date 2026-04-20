@@ -83,7 +83,7 @@ var PRENDAS = ['Camiseta Beagle 6554','Sudadera Clásica 1070','Sudadera Urban 1
   'Camisa Aifos 5503','Camisa Aifos L/S 5504','Casaca Panacea 9098','Casulla Arzak 9091',
   'Pantalón Vademécum 9097','Bata Vaccine 9094','Chaleco Thunder','Pantalón Thunder',
   'Parka Traffic','Buzo Kevin','Peto Pregón 1500','Camiseta Jamaica 6627','Camiseta Bahrain 0407',
-  'Softshell Antártida 6432','Softshell Nebraska 6436'];
+  'Softshell Antártida 6432','Softshell Nebraska 6436','Polar New Artic 6414'];
 var PRENDA_REF = {
   'Camiseta Beagle 6554':'CA6554','Sudadera Clásica 1070':'SU1070','Sudadera Urban 1067':'SU1067',
   'Polo Star 6638':'PO6638','Peto Pregón 1500':'CA6554','Totebag Hill 7601':'BO7601',
@@ -92,7 +92,8 @@ var PRENDA_REF = {
   'Camisa Aifos 5504':'CM5504','Casaca Panacea 9098':'CA9098','Casulla Arzak 9091':'DE9091',
   'Pantalón Vademécum 9097':'PA9097','Bata Vaccine 9094':'BA9094',
   'Camiseta Jamaica 6627':'CA6627','Camiseta Bahrain 0407':'CA0407',
-  'Softshell Antártida 6432':'SS6432','Softshell Nebraska 6436':'SS6436'
+  'Softshell Antártida 6432':'SS6432','Softshell Nebraska 6436':'SS6436',
+  'Polar New Artic 6414':'CQ6414'
 };
 var PRENDA_MEDIDAS = {
   'Camiseta Beagle 6554':{XS:'46×66',S:'49×69',M:'52×71',L:'55×73',XL:'58×75','2XL':'62×77','3XL':'66×79','4XL':'70×81','5XL':'74×83'},
@@ -116,7 +117,8 @@ var PRENDA_MEDIDAS = {
   'Pantalón Vademécum 9097':{XS:'33×108',S:'35×109',M:'37×110',L:'39×111',XL:'41×112','2XL':'43×113','3XL':'45×114'},
   'Bata Vaccine 9094':{XS:'51×95',S:'54×97',M:'57×99',L:'60×101',XL:'63×103','2XL':'67×104','3XL':'71×105','4XL':'75×106'},
   'Softshell Antártida 6432':{S:'53×74',M:'55×75',L:'58×76',XL:'62×77','2XL':'65×78','3XL':'67×79'},
-  'Softshell Nebraska 6436':{S:'53×74',M:'55×75',L:'58×76',XL:'62×77','2XL':'65×78','3XL':'67×79','4XL':'69×80'}
+  'Softshell Nebraska 6436':{S:'53×74',M:'55×75',L:'58×76',XL:'62×77','2XL':'65×78','3XL':'67×79','4XL':'69×80'},
+  'Polar New Artic 6414':{S:'52×69',M:'55×71',L:'58×73',XL:'63×75','2XL':'67×78','3XL':'71×81','4XL':'75×83'}
 };
 var FICHAS_PDF = {
   'Camiseta Beagle 6554':'fichas/CA6554.pdf',
@@ -141,7 +143,8 @@ var FICHAS_PDF = {
   'Buzo Kevin':'fichas/BUZO_KEVIN.pdf',
   'Peto Pregón 1500':'fichas/PETO_PREGON.pdf',
   'Softshell Antártida 6432':'fichas/SS6432.pdf',
-  'Softshell Nebraska 6436':'fichas/SS6436.pdf'
+  'Softshell Nebraska 6436':'fichas/SS6436.pdf',
+  'Polar New Artic 6414':'fichas/CQ6414.pdf'
 };
 function rolyImgUrl(prenda,codColor){
   var ref=PRENDA_REF[prenda]||'CA6554';
@@ -334,6 +337,12 @@ var PRENDA_COLORES = {
     {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'45',nombre:'Azul Luz de Luna',hex:'#3F51B5'},{cod:'219',nombre:'Arena Piedra',hex:'#B8A888'},
     {cod:'236',nombre:'Turquesa Kids',hex:'#00C4C4'},{cod:'235',nombre:'Amarillo Flúor Kids',hex:'#D4E800'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},
     {cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+  ],
+  'Polar New Artic 6414':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'07',nombre:'Arena',hex:'#C8B88A'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},
+    {cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},{cod:'159',nombre:'Verde Pino',hex:'#5A6B4A'},
+    {cod:'23',nombre:'Plomo',hex:'#737373'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'}
   ]
 };
 var COLORES = [
@@ -387,7 +396,7 @@ function init() {
       'Camisa Aifos 5503','Camisa Aifos L/S 5504','Casaca Panacea 9098','Casulla Arzak 9091',
       'Pantalón Vademécum 9097','Bata Vaccine 9094','Chaleco Thunder','Pantalón Thunder',
       'Parka Traffic','Buzo Kevin','Camiseta Jamaica 6627','Camiseta Bahrain 0407',
-      'Softshell Antártida 6432','Softshell Nebraska 6436','Camiseta Beagle 6554'];
+      'Softshell Antártida 6432','Softshell Nebraska 6436','Polar New Artic 6414','Camiseta Beagle 6554'];
     for(var pi=0;pi<_prendas.length;pi++){
       if(_desc.indexOf(_prendas[pi].toUpperCase())>=0){_prendaDetectada=_prendas[pi];break;}
     }
@@ -395,6 +404,7 @@ function init() {
     if(_prendaDetectada==='Camiseta Beagle 6554'){
       if(_desc.indexOf('NEBRASKA')>=0)_prendaDetectada='Softshell Nebraska 6436';
       else if(_desc.indexOf('ANTÁRTIDA')>=0||_desc.indexOf('ANTARTIDA')>=0)_prendaDetectada='Softshell Antártida 6432';
+      else if(_desc.indexOf('ARTIC')>=0||_desc.indexOf('ÁRTIC')>=0)_prendaDetectada='Polar New Artic 6414';
       else if(_desc.indexOf('JAMAICA')>=0)_prendaDetectada='Camiseta Jamaica 6627';
       else if(_desc.indexOf('BAHRAIN')>=0)_prendaDetectada='Camiseta Bahrain 0407';
       else if(_desc.indexOf('URBAN')>=0||(_desc.indexOf('SUDADERA')>=0&&_desc.indexOf('CAPUCHA')>=0))_prendaDetectada='Sudadera Urban 1067';
