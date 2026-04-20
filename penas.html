@@ -388,30 +388,40 @@ function init() {
     if(!r||!r.length){show('<div class="error">Pedido no encontrado.</div>');return;}
     _pedido = r[0];
     // Detectar prenda del pedido desde la descripción
-    var _desc = (_pedido.descripcion||'').toUpperCase();
+    // Normalizamos sin acentos para evitar bugs de NFC/NFD
+    var _descRaw = (_pedido.descripcion||'');
+    var _desc = _descRaw.toUpperCase();
+    var _descSA = _desc.normalize('NFD').replace(/[\u0300-\u036f]/g,''); // sin acentos
     var _prendaDetectada = 'Camiseta Beagle 6554';
-    var _prendas = ['Sudadera Urban 1067','Sudadera Clásica 1070','Polo Star 6638','Peto Pregón 1500',
-      'Totebag Hill 7601','Mochila Hamelin 7114','Gorra Eris 7019','Pañuelo Festero 9003',
-      'Delantal Mini 9124','Delantal Classic 9123','Delantal Benoit 9125',
-      'Camisa Aifos 5503','Camisa Aifos L/S 5504','Casaca Panacea 9098','Casulla Arzak 9091',
-      'Pantalón Vademécum 9097','Bata Vaccine 9094','Chaleco Thunder','Pantalón Thunder',
-      'Parka Traffic','Buzo Kevin','Camiseta Jamaica 6627','Camiseta Bahrain 0407',
-      'Softshell Antártida 6432','Softshell Nebraska 6436','Polar New Artic 6414','Camiseta Beagle 6554'];
-    for(var pi=0;pi<_prendas.length;pi++){
-      if(_desc.indexOf(_prendas[pi].toUpperCase())>=0){_prendaDetectada=_prendas[pi];break;}
-    }
-    // Fallback por keywords
-    if(_prendaDetectada==='Camiseta Beagle 6554'){
-      if(_desc.indexOf('NEBRASKA')>=0)_prendaDetectada='Softshell Nebraska 6436';
-      else if(_desc.indexOf('ANTÁRTIDA')>=0||_desc.indexOf('ANTARTIDA')>=0)_prendaDetectada='Softshell Antártida 6432';
-      else if(_desc.indexOf('ARTIC')>=0||_desc.indexOf('ÁRTIC')>=0)_prendaDetectada='Polar New Artic 6414';
-      else if(_desc.indexOf('JAMAICA')>=0)_prendaDetectada='Camiseta Jamaica 6627';
-      else if(_desc.indexOf('BAHRAIN')>=0)_prendaDetectada='Camiseta Bahrain 0407';
-      else if(_desc.indexOf('URBAN')>=0||(_desc.indexOf('SUDADERA')>=0&&_desc.indexOf('CAPUCHA')>=0))_prendaDetectada='Sudadera Urban 1067';
-      else if(_desc.indexOf('CLÁSICA')>=0||_desc.indexOf('CLASICA')>=0||_desc.indexOf('SUDADERA')>=0)_prendaDetectada='Sudadera Clásica 1070';
-      else if(_desc.indexOf('POLO')>=0||_desc.indexOf('STAR')>=0)_prendaDetectada='Polo Star 6638';
-      else if(_desc.indexOf('PETO')>=0||_desc.indexOf('PREGÓN')>=0)_prendaDetectada='Peto Pregón 1500';
-    }
+
+    // PRIORIDAD 1 — Keywords más específicos (van primero para no colisionar)
+    if(_descSA.indexOf('NEBRASKA')>=0) _prendaDetectada='Softshell Nebraska 6436';
+    else if(_descSA.indexOf('ANTARTIDA')>=0) _prendaDetectada='Softshell Antártida 6432';
+    else if(_descSA.indexOf('ARTIC')>=0) _prendaDetectada='Polar New Artic 6414';
+    else if(_descSA.indexOf('JAMAICA')>=0) _prendaDetectada='Camiseta Jamaica 6627';
+    else if(_descSA.indexOf('BAHRAIN')>=0) _prendaDetectada='Camiseta Bahrain 0407';
+    else if(_descSA.indexOf('VACCINE')>=0) _prendaDetectada='Bata Vaccine 9094';
+    else if(_descSA.indexOf('VADEMECUM')>=0) _prendaDetectada='Pantalón Vademécum 9097';
+    else if(_descSA.indexOf('ARZAK')>=0) _prendaDetectada='Casulla Arzak 9091';
+    else if(_descSA.indexOf('PANACEA')>=0) _prendaDetectada='Casaca Panacea 9098';
+    else if(_descSA.indexOf('AIFOS L/S')>=0||_descSA.indexOf('AIFOS LS')>=0||_descSA.indexOf('AIFOS 5504')>=0) _prendaDetectada='Camisa Aifos L/S 5504';
+    else if(_descSA.indexOf('AIFOS')>=0) _prendaDetectada='Camisa Aifos 5503';
+    else if(_descSA.indexOf('BENOIT')>=0) _prendaDetectada='Delantal Benoit 9125';
+    else if(_descSA.indexOf('CLASSIC')>=0&&_descSA.indexOf('DELANTAL')>=0) _prendaDetectada='Delantal Classic 9123';
+    else if(_descSA.indexOf('DELANTAL MINI')>=0||(_descSA.indexOf('MINI')>=0&&_descSA.indexOf('DELANTAL')>=0)) _prendaDetectada='Delantal Mini 9124';
+    else if(_descSA.indexOf('ERIS')>=0||_descSA.indexOf('GORRA')>=0) _prendaDetectada='Gorra Eris 7019';
+    else if(_descSA.indexOf('FESTERO')>=0||_descSA.indexOf('PANUELO')>=0) _prendaDetectada='Pañuelo Festero 9003';
+    else if(_descSA.indexOf('HAMELIN')>=0||_descSA.indexOf('MOCHILA')>=0) _prendaDetectada='Mochila Hamelin 7114';
+    else if(_descSA.indexOf('BUZO')>=0||_descSA.indexOf('KEVIN')>=0) _prendaDetectada='Buzo Kevin';
+    else if(_descSA.indexOf('TRAFFIC')>=0||_descSA.indexOf('PARKA')>=0) _prendaDetectada='Parka Traffic';
+    else if(_descSA.indexOf('PANTALON THUNDER')>=0) _prendaDetectada='Pantalón Thunder';
+    else if(_descSA.indexOf('CHALECO')>=0||_descSA.indexOf('THUNDER')>=0) _prendaDetectada='Chaleco Thunder';
+    else if(_descSA.indexOf('HILL')>=0||_descSA.indexOf('TOTEBAG')>=0) _prendaDetectada='Totebag Hill 7601';
+    else if(_descSA.indexOf('URBAN')>=0||(_descSA.indexOf('SUDADERA')>=0&&_descSA.indexOf('CAPUCHA')>=0)) _prendaDetectada='Sudadera Urban 1067';
+    else if(_descSA.indexOf('CLASICA')>=0||_descSA.indexOf('SUDADERA')>=0) _prendaDetectada='Sudadera Clásica 1070';
+    else if(_descSA.indexOf('STAR')>=0||_descSA.indexOf('POLO')>=0) _prendaDetectada='Polo Star 6638';
+    else if(_descSA.indexOf('PREGON')>=0||_descSA.indexOf('PETO')>=0) _prendaDetectada='Peto Pregón 1500';
+    else if(_descSA.indexOf('BEAGLE')>=0||_descSA.indexOf('CAMISETA')>=0) _prendaDetectada='Camiseta Beagle 6554';
     window._prendaPedido = _prendaDetectada;
     // Extraer cantidad del pedido de la descripción (ej: "×15")
     var _m=(_pedido.descripcion||'').match(/[×x](\d+)/i);
