@@ -996,59 +996,60 @@ textarea{resize:vertical;min-height:64px}
         <!-- Calculadora embebida -->
         <div class="card">
           <div class="card-title">Añadir producto (calculadora)</div>
-          <div class="field" style="margin-bottom:10px">
-            <label>Categoría</label>
-            <select id="nv-cat" onchange="nvCatChange()">
+          <div class="field" style="margin-bottom:10px;position:relative">
+            <label>Producto <span style="font-size:10px;color:#888;font-weight:400">(o pulsa <kbd style="padding:1px 5px;background:#f0f0f0;border:1px solid #ccc;border-radius:3px;font-size:10px">/</kbd> para buscar)</span></label>
+            <!-- Hidden select que preserva compatibilidad con código existente -->
+            <select id="nv-cat" onchange="nvCatChange()" style="display:none">
               <option value="">— Seleccionar producto —</option>
-              <optgroup label="── Textil ──">
-                <option value="textil">Textil (camisetas, sudaderas...)</option>
-              </optgroup>
-              <optgroup label="── Gran Formato ──">
-                <option value="rotulacion">Rotulación (por m²)</option>
-                <option value="placas">Placas personalizadas</option>
-                <option value="xbanner">X Banner / Fotocall</option>
-                <option value="rollup">Roll Up / Fotocall Roll Up</option>
-                <option value="banderas">Banderas</option>
-                <option value="neones">Neones LED flex</option>
-              </optgroup>
-              <optgroup label="── Impresión ──">
-                <option value="tarjetas">Tarjetas de visita</option>
-                <option value="tarjetas_troq">Tarjetas troqueladas</option>
-                <option value="tarjetas_pvc">Tarjetas PVC</option>
-                <option value="tarjetas_especiales">Tarjetas acabados especiales</option>
-                <option value="flyers">Flyers / Dípticos / Trípticos</option>
-                <option value="carteles">Carteles publicitarios</option>
-                <option value="carpetas">Carpetas plegables</option>
-                <option value="sobres">Sobres comerciales</option>
-                <option value="talonarios">Talonarios autocopiativos</option>
-                <option value="pegatinas">Pegatinas troqueladas</option>
-                <option value="sellos">Sellos automáticos Colop</option>
-                <option value="manteles">Manteles personalizados</option>
-                <option value="cartas">Cartas hostelería</option>
-                <option value="tarjetones">Tarjetones / Cheques regalo</option>
-                <option value="acreditaciones">Acreditaciones</option>
-                <option value="lanyares">Lanyares</option>
-              </optgroup>
-              <optgroup label="── Merchandising ──">
-                <option value="chapas">Chapas personalizadas</option>
-                <option value="tazas">Tazas personalizadas</option>
-                <option value="vasos">Vasos personalizados</option>
-                <option value="pulseras">Pulseras personalizadas</option>
-                <option value="lanyares_merch">Lanyares merchandising</option>
-                <option value="mochilas">Mochilas personalizadas</option>
-                <option value="panuelos_merch">Pañuelos personalizados</option>
-                <option value="tarjeton_balsamo">Tarjetón y Bálsamo Epson</option>
-                <option value="boligrafos">Bolígrafos personalizados</option>
-                <option value="mecheros">Mecheros personalizados</option>
-                <option value="cargador3en1">Cargador 3 en 1</option>
-                <option value="bolsas_tela">Bolsas de tela</option>
-                <option value="abanicos">Abanicos personalizados</option>
-                <option value="bidones">Bidones personalizados</option>
-                <option value="bolsas_papel">Bolsas de papel</option>
-                <option value="bolsas_papel_pers">Bolsas papel personalizadas</option>
-                <option value="imanes">Imanes troquelados</option>
-              </optgroup>
+              <option value="textil">Textil</option>
+              <option value="rotulacion">Rotulación (por m²)</option>
+              <option value="placas">Placas personalizadas</option>
+              <option value="xbanner">X Banner / Fotocall</option>
+              <option value="rollup">Roll Up / Fotocall Roll Up</option>
+              <option value="banderas">Banderas</option>
+              <option value="neones">Neones LED flex</option>
+              <option value="tarjetas">Tarjetas de visita</option>
+              <option value="tarjetas_troq">Tarjetas troqueladas</option>
+              <option value="tarjetas_pvc">Tarjetas PVC</option>
+              <option value="tarjetas_especiales">Tarjetas acabados especiales</option>
+              <option value="flyers">Flyers / Dípticos / Trípticos</option>
+              <option value="carteles">Carteles publicitarios</option>
+              <option value="carpetas">Carpetas plegables</option>
+              <option value="sobres">Sobres comerciales</option>
+              <option value="talonarios">Talonarios autocopiativos</option>
+              <option value="pegatinas">Pegatinas troqueladas</option>
+              <option value="sellos">Sellos automáticos Colop</option>
+              <option value="manteles">Manteles personalizados</option>
+              <option value="cartas">Cartas hostelería</option>
+              <option value="tarjetones">Tarjetones / Cheques regalo</option>
+              <option value="acreditaciones">Acreditaciones</option>
+              <option value="lanyares">Lanyares</option>
+              <option value="chapas">Chapas personalizadas</option>
+              <option value="tazas">Tazas personalizadas</option>
+              <option value="vasos">Vasos personalizados</option>
+              <option value="pulseras">Pulseras personalizadas</option>
+              <option value="lanyares_merch">Lanyares merchandising</option>
+              <option value="mochilas">Mochilas personalizadas</option>
+              <option value="panuelos_merch">Pañuelos personalizados</option>
+              <option value="tarjeton_balsamo">Tarjetón y Bálsamo Epson</option>
+              <option value="boligrafos">Bolígrafos personalizados</option>
+              <option value="mecheros">Mecheros personalizados</option>
+              <option value="cargador3en1">Cargador 3 en 1</option>
+              <option value="bolsas_tela">Bolsas de tela</option>
+              <option value="abanicos">Abanicos personalizados</option>
+              <option value="bidones">Bidones personalizados</option>
+              <option value="bolsas_papel">Bolsas de papel</option>
+              <option value="bolsas_papel_pers">Bolsas papel personalizadas</option>
+              <option value="imanes">Imanes troquelados</option>
             </select>
+            <!-- Combobox con búsqueda -->
+            <div id="nv-prod-box" style="position:relative">
+              <input type="text" id="nv-prod-search" placeholder="Empieza a escribir... (ej: tarje, sud, softshell)" autocomplete="off"
+                     onfocus="nvProdOpen()" oninput="nvProdFilter()" onkeydown="nvProdKey(event)"
+                     style="width:100%;padding-right:32px">
+              <span id="nv-prod-chev" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:#888;font-size:10px">▼</span>
+              <div id="nv-prod-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #d1d1d1;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.12);max-height:340px;overflow-y:auto;z-index:1000"></div>
+            </div>
           </div>
           <!-- Campos dinámicos -->
           <div id="nv-campos-dinamicos"></div>
@@ -5246,6 +5247,7 @@ function nuevaVenta(modo){
   document.getElementById('nv-sector').value='';
   var _t=document.getElementById('nv-cliente-toast');if(_t)_t.style.display='none';
   document.getElementById('nv-cat').value='';
+  var _nvps=document.getElementById('nv-prod-search');if(_nvps)_nvps.value='';
   document.getElementById('nv-campos-dinamicos').innerHTML='';
   document.getElementById('nv-unidades-wrap').style.display='none';
   document.getElementById('nv-extras-wrap').style.display='none';
@@ -5371,7 +5373,7 @@ function abrirVentaDesdeCarrito(){
   nvLineas=carrito.map(function(c){return{sec:CAT_TO_SEC[c.cat]||'XR',desc:c.desc,total:c.total,cat:c.cat,plazo:P[c.cat]&&P[c.cat].plazo||0};});
   limpiarCarrito();
   document.getElementById('nv-nombre').value='';document.getElementById('nv-tel').value='';document.getElementById('nv-email').value='';document.getElementById('nv-sector').value='';
-  document.getElementById('nv-cat').value='';document.getElementById('nv-campos-dinamicos').innerHTML='';document.getElementById('nv-unidades-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-tallas-wrap').style.display='none';document.getElementById('nv-tipo-tallas-wrap').style.display='none';document.getElementById('nv-result').style.display='none';// nv-upsell removeddocument.getElementById('nv-btn-add').style.display='none';
+  document.getElementById('nv-cat').value='';var _nvps2=document.getElementById('nv-prod-search');if(_nvps2)_nvps2.value='';document.getElementById('nv-campos-dinamicos').innerHTML='';document.getElementById('nv-unidades-wrap').style.display='none';document.getElementById('nv-extras-wrap').style.display='none';document.getElementById('nv-textil-wrap').style.display='none';document.getElementById('nv-tallas-wrap').style.display='none';document.getElementById('nv-tipo-tallas-wrap').style.display='none';document.getElementById('nv-result').style.display='none';// nv-upsell removeddocument.getElementById('nv-btn-add').style.display='none';
   document.getElementById('nv-fecha').value='';
   nvRenderLineas();
   nvActualizarFecha();
@@ -5416,6 +5418,137 @@ function nvSelCliente(id){
     toast.style.display='flex';
   }
 }
+
+// ───── COMBOBOX PRODUCTO CON BÚSQUEDA ─────
+var NV_PROD_CATS = {
+  'textil':'Textil','rotulacion':'Gran Formato','placas':'Gran Formato','xbanner':'Gran Formato','rollup':'Gran Formato','banderas':'Gran Formato','neones':'Gran Formato',
+  'tarjetas':'Impresión','tarjetas_troq':'Impresión','tarjetas_pvc':'Impresión','tarjetas_especiales':'Impresión','flyers':'Impresión','carteles':'Impresión','carpetas':'Impresión','sobres':'Impresión','talonarios':'Impresión','pegatinas':'Impresión','sellos':'Impresión','manteles':'Impresión','cartas':'Impresión','tarjetones':'Impresión','acreditaciones':'Impresión','lanyares':'Impresión',
+  'chapas':'Merchandising','tazas':'Merchandising','vasos':'Merchandising','pulseras':'Merchandising','lanyares_merch':'Merchandising','mochilas':'Merchandising','panuelos_merch':'Merchandising','tarjeton_balsamo':'Merchandising','boligrafos':'Merchandising','mecheros':'Merchandising','cargador3en1':'Merchandising','bolsas_tela':'Merchandising','abanicos':'Merchandising','bidones':'Merchandising','bolsas_papel':'Merchandising','bolsas_papel_pers':'Merchandising','imanes':'Merchandising'
+};
+function nvProdGetItems(){
+  var sel=document.getElementById('nv-cat');
+  if(!sel)return[];
+  return Array.prototype.slice.call(sel.querySelectorAll('option')).filter(function(o){return o.value;}).map(function(o){
+    return{value:o.value,label:o.textContent,cat:NV_PROD_CATS[o.value]||'Otros'};
+  });
+}
+function nvProdTopUsed(){
+  try{var r=JSON.parse(localStorage.getItem('pc_prod_top')||'{}');
+    var arr=Object.keys(r).map(function(k){return{v:k,n:r[k]};}).sort(function(a,b){return b.n-a.n;});
+    return arr.slice(0,5).map(function(x){return x.v;});
+  }catch(e){return[];}
+}
+function nvProdBumpUsed(val){
+  try{var r=JSON.parse(localStorage.getItem('pc_prod_top')||'{}');
+    r[val]=(r[val]||0)+1;
+    localStorage.setItem('pc_prod_top',JSON.stringify(r));
+  }catch(e){}
+}
+function nvProdNormaliza(s){return(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function nvProdHighlight(text,q){
+  if(!q)return text;
+  var tN=nvProdNormaliza(text);var qN=nvProdNormaliza(q);
+  var i=tN.indexOf(qN);if(i<0)return text;
+  return text.slice(0,i)+'<mark style="background:#FFF8E6;color:#BA7517;padding:0 2px;border-radius:2px">'+text.slice(i,i+q.length)+'</mark>'+text.slice(i+q.length);
+}
+var _nvProdIdx=-1;var _nvProdFiltered=[];
+function nvProdOpen(){
+  document.getElementById('nv-prod-dropdown').style.display='block';
+  nvProdFilter();
+}
+function nvProdClose(){
+  document.getElementById('nv-prod-dropdown').style.display='none';
+  _nvProdIdx=-1;
+}
+function nvProdFilter(){
+  var q=document.getElementById('nv-prod-search').value.trim();
+  var items=nvProdGetItems();
+  var dd=document.getElementById('nv-prod-dropdown');
+  var html='';
+  if(!q){
+    // Sin búsqueda: mostrar top usados + todos agrupados
+    var topVals=nvProdTopUsed();
+    if(topVals.length){
+      html+='<div style="padding:6px 12px;font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;background:#fafafa;border-bottom:1px solid #eee">★ Más usados</div>';
+      var tops=topVals.map(function(v){return items.find(function(x){return x.value===v;});}).filter(Boolean);
+      _nvProdFiltered=tops.slice();
+      tops.forEach(function(it,i){
+        html+=nvProdRenderItem(it,i,'');
+      });
+    }
+    // Separador
+    html+='<div style="padding:6px 12px;font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;background:#fafafa;border-top:1px solid #eee;border-bottom:1px solid #eee">Todos los productos</div>';
+    var rest=items.filter(function(x){return topVals.indexOf(x.value)<0;});
+    rest.forEach(function(it,i){
+      html+=nvProdRenderItem(it,_nvProdFiltered.length+i,'');
+    });
+    _nvProdFiltered=_nvProdFiltered.concat(rest);
+  }else{
+    var qN=nvProdNormaliza(q);
+    _nvProdFiltered=items.filter(function(x){
+      return nvProdNormaliza(x.label).indexOf(qN)>=0||nvProdNormaliza(x.cat).indexOf(qN)>=0;
+    });
+    if(!_nvProdFiltered.length){
+      html='<div style="padding:14px;text-align:center;font-size:12px;color:#888">Sin resultados para "'+q+'"</div>';
+    }else{
+      _nvProdFiltered.forEach(function(it,i){html+=nvProdRenderItem(it,i,q);});
+    }
+  }
+  dd.innerHTML=html;
+  _nvProdIdx=_nvProdFiltered.length?0:-1;
+  nvProdMarkActive();
+}
+function nvProdRenderItem(it,idx,q){
+  return '<div class="nv-prod-it" data-idx="'+idx+'" data-val="'+it.value+'" onclick="nvProdSelect(\''+it.value+'\')" '
+    +'style="padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f5f5f5"'
+    +'onmouseover="this.style.background=\'#f5f9ff\'" onmouseout="this.style.background=\'#fff\'">'
+    +'<span style="font-size:13px">'+nvProdHighlight(it.label,q)+'</span>'
+    +'<span style="font-size:10px;color:#888;background:#f0f0f0;padding:2px 8px;border-radius:99px">'+it.cat+'</span>'
+    +'</div>';
+}
+function nvProdMarkActive(){
+  var dd=document.getElementById('nv-prod-dropdown');
+  var items=dd.querySelectorAll('.nv-prod-it');
+  items.forEach(function(el,i){
+    el.style.background=(i===_nvProdIdx)?'#E6F1FB':'#fff';
+  });
+  var cur=items[_nvProdIdx];if(cur&&cur.scrollIntoView)cur.scrollIntoView({block:'nearest'});
+}
+function nvProdKey(e){
+  var dd=document.getElementById('nv-prod-dropdown');
+  if(dd.style.display==='none'){nvProdOpen();return;}
+  if(e.key==='ArrowDown'){e.preventDefault();if(_nvProdIdx<_nvProdFiltered.length-1)_nvProdIdx++;nvProdMarkActive();}
+  else if(e.key==='ArrowUp'){e.preventDefault();if(_nvProdIdx>0)_nvProdIdx--;nvProdMarkActive();}
+  else if(e.key==='Enter'){e.preventDefault();if(_nvProdIdx>=0&&_nvProdFiltered[_nvProdIdx])nvProdSelect(_nvProdFiltered[_nvProdIdx].value);}
+  else if(e.key==='Escape'){nvProdClose();document.getElementById('nv-prod-search').blur();}
+}
+function nvProdSelect(val){
+  var items=nvProdGetItems();
+  var it=items.find(function(x){return x.value===val;});
+  if(!it)return;
+  document.getElementById('nv-prod-search').value=it.label;
+  var sel=document.getElementById('nv-cat');
+  sel.value=val;
+  nvProdBumpUsed(val);
+  nvProdClose();
+  nvCatChange();
+}
+// Cerrar al click fuera
+document.addEventListener('click',function(e){
+  var box=document.getElementById('nv-prod-box');
+  if(box&&!box.contains(e.target))nvProdClose();
+});
+// Tecla "/" global abre buscador cuando el modal está abierto
+document.addEventListener('keydown',function(e){
+  if(e.key==='/'&&!/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName||''))){
+    var modal=document.getElementById('modal-nueva-venta')||document.getElementById('modal-venta');
+    if(modal&&modal.classList.contains('open')){
+      e.preventDefault();
+      var inp=document.getElementById('nv-prod-search');
+      if(inp){inp.focus();inp.select();}
+    }
+  }
+});
 
 function nvCatChange(){
   var cat=document.getElementById('nv-cat').value;
@@ -5776,6 +5909,7 @@ function nvAddLinea(){
   
   // Limpiar para siguiente producto
   document.getElementById('nv-cat').value='';
+  var _nvps3=document.getElementById('nv-prod-search');if(_nvps3)_nvps3.value='';
   document.getElementById('nv-campos-dinamicos').innerHTML='';
   document.getElementById('nv-unidades-wrap').style.display='none';
   document.getElementById('nv-extras-wrap').style.display='none';
