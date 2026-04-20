@@ -92,7 +92,11 @@ var PRENDA_REF = {
   'Mochila Hamelin 7114':'BO7114','Pañuelo Festero 9003':'PN9003','Gorra Eris 7019':'GO7000',
   'Delantal Mini 9124':'DE9124','Delantal Classic 9123':'DE9123','Delantal Benoit 9125':'DE9125',
   'Camisa Aifos 5504':'CM5504','Casaca Panacea 9098':'CA9098','Casulla Arzak 9091':'DE9091',
-  'Pantalón Vademécum 9097':'PA9097','Bata Vaccine 9094':'BA9094'
+  'Pantalón Vademécum 9097':'PA9097','Bata Vaccine 9094':'BA9094',
+  'Camiseta Jamaica 6627':'CA6627','Camiseta Bahrain 0407':'CA0407',
+  'Softshell Antártida 6432':'SS6432','Softshell Nebraska 6436':'SS6436',
+  'Polar New Artic 6414':'CQ6414',
+  'Sudadera Montblanc 6421':'CQ6421','Sudadera Ulan 6439':'CQ6439'
 };
 var PRENDA_MEDIDAS = {
   'Camiseta Beagle 6554':{XS:'46×66',S:'49×69',M:'52×71',L:'55×73',XL:'58×75','2XL':'62×77','3XL':'66×79','4XL':'70×81','5XL':'74×83'},
@@ -114,7 +118,14 @@ var PRENDA_MEDIDAS = {
   'Casaca Panacea 9098':{XS:'54×68',S:'57×70',M:'60×72',L:'63×74',XL:'66×76','2XL':'69×78','3XL':'72×80'},
   'Casulla Arzak 9091':{'Talla única':'53×84'},
   'Pantalón Vademécum 9097':{XS:'33×108',S:'35×109',M:'37×110',L:'39×111',XL:'41×112','2XL':'43×113','3XL':'45×114'},
-  'Bata Vaccine 9094':{XS:'51×95',S:'54×97',M:'57×99',L:'60×101',XL:'63×103','2XL':'67×104','3XL':'71×105','4XL':'75×106'}
+  'Bata Vaccine 9094':{XS:'51×95',S:'54×97',M:'57×99',L:'60×101',XL:'63×103','2XL':'67×104','3XL':'71×105','4XL':'75×106'},
+  'Camiseta Jamaica 6627':{S:'41×62',M:'44×64',L:'47×66',XL:'50×68','2XL':'54×69','3XL':'57×70'},
+  'Camiseta Bahrain 0407':{S:'48×69',M:'51×71',L:'54×72',XL:'57×73','2XL':'60×74','3XL':'63×75','4XL':'66×76'},
+  'Softshell Antártida 6432':{S:'53×74',M:'55×75',L:'58×76',XL:'62×77','2XL':'65×78','3XL':'67×79'},
+  'Softshell Nebraska 6436':{S:'53×74',M:'55×75',L:'58×76',XL:'62×77','2XL':'65×78','3XL':'67×79','4XL':'69×80'},
+  'Polar New Artic 6414':{S:'52×69',M:'55×71',L:'58×73',XL:'63×75','2XL':'67×78','3XL':'71×81','4XL':'75×83'},
+  'Sudadera Montblanc 6421':{XS:'51×63',S:'54×66',M:'57×69',L:'60×72',XL:'63×75','2XL':'66×78','3XL':'70×81'},
+  'Sudadera Ulan 6439':{XS:'51×67',S:'54×69',M:'57×71',L:'60×73',XL:'64×75','2XL':'68×76','3XL':'72×77'}
 };
 var FICHAS_PDF = {
   'Camiseta Beagle 6554':'fichas/CA6554.pdf',
@@ -137,7 +148,14 @@ var FICHAS_PDF = {
   'Pantalón Thunder':'fichas/PANTALON_THUNDER.pdf',
   'Parka Traffic':'fichas/PARKA_TRAFFIC.pdf',
   'Buzo Kevin':'fichas/BUZO_KEVIN.pdf',
-  'Peto Pregón 1500':'fichas/PETO_PREGON.pdf'
+  'Peto Pregón 1500':'fichas/PETO_PREGON.pdf',
+  'Camiseta Jamaica 6627':'fichas/CA6627.pdf',
+  'Camiseta Bahrain 0407':'fichas/CA0407.pdf',
+  'Softshell Antártida 6432':'fichas/SS6432.pdf',
+  'Softshell Nebraska 6436':'fichas/SS6436.pdf',
+  'Polar New Artic 6414':'fichas/CQ6414.pdf',
+  'Sudadera Montblanc 6421':'fichas/CQ6421.pdf',
+  'Sudadera Ulan 6439':'fichas/CQ6439.pdf'
 };
 var _prendaDetectada='Camiseta Beagle 6554';
 var _cantPedido=0;
@@ -322,6 +340,32 @@ var PRENDA_COLORES = {
     {cod:'47',nombre:'Verde Militar',hex:'#5A6340'},{cod:'46',nombre:'Plomo Oscuro',hex:'#4A4A4A'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'},
     {cod:'221',nombre:'Amarillo Flúor',hex:'#E8E500'},{cod:'223',nombre:'Coral Flúor',hex:'#FF6B6B'},{cod:'234',nombre:'Rosa Flúor Lady',hex:'#FF69B4'},
     {cod:'125',nombre:'Rosa Flúor',hex:'#FF6B8A'},{cod:'228',nombre:'Verde Flúor',hex:'#76FF03'},{cod:'222',nombre:'Verde Flúor',hex:'#76FF03'}
+  ],
+  'Softshell Antártida 6432':[
+    {cod:'011',nombre:'Blanco Perla',hex:'#F5F1E8',borde:true},{cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+  ],
+  'Softshell Nebraska 6436':[
+    {cod:'316',nombre:'Naranja Fuego',hex:'#FF5E1A'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'45',nombre:'Azul Luz de Luna',hex:'#3F51B5'},{cod:'219',nombre:'Arena Piedra',hex:'#B8A888'},
+    {cod:'236',nombre:'Aguamarina',hex:'#00B5B8'},{cod:'235',nombre:'Lima Punch',hex:'#B8D900'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},
+    {cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+  ],
+  'Polar New Artic 6414':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'07',nombre:'Arena',hex:'#C8B88A'},{cod:'60',nombre:'Rojo',hex:'#CC2222'},
+    {cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},{cod:'159',nombre:'Verde Pino',hex:'#5A6B4A'},
+    {cod:'23',nombre:'Plomo',hex:'#737373'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+  ],
+  'Sudadera Montblanc 6421':[
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},
+    {cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+  ],
+  'Sudadera Ulan 6439':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},
+    {cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},
+    {cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'}
   ]
 };
 function getColores(){return PRENDA_COLORES[_prendaDetectada]||PRENDA_COLORES['Camiseta Beagle 6554'];}
@@ -354,24 +398,42 @@ function init() {
   api('pedidos?id=eq.'+pedidoId+'&select=id,cliente_nombre,descripcion,tallas_colores').then(function(r){
     if(!r||!r.length){show('<div class="error">❌ Pedido no encontrado.</div>');return;}
     _pedido = r[0];
-    // Detectar prenda desde descripción — primero nombre completo, luego keywords
-    var _d=(_pedido.descripcion||'').toUpperCase();
-    var _allPrendas=['Sudadera Urban 1067','Sudadera Clásica 1070','Polo Star 6638','Peto Pregón 1500',
-      'Totebag Hill 7601','Mochila Hamelin 7114','Gorra Eris 7019','Pañuelo Festero 9003',
-      'Delantal Mini 9124','Delantal Classic 9123','Delantal Benoit 9125',
-      'Camisa Aifos 5503','Camisa Aifos L/S 5504','Casaca Panacea 9098','Casulla Arzak 9091',
-      'Pantalón Vademécum 9097','Bata Vaccine 9094','Chaleco Thunder','Pantalón Thunder',
-      'Parka Traffic','Buzo Kevin','Camiseta Beagle 6554'];
+    // Detectar prenda desde descripción — normalizada sin acentos (NFC/NFD safe)
+    var _descRaw=(_pedido.descripcion||'');
+    var _d=_descRaw.toUpperCase();
+    var _dSA=_d.normalize('NFD').replace(/[\u0300-\u036f]/g,''); // sin acentos
     _prendaDetectada='Camiseta Beagle 6554';
-    for(var _pi=0;_pi<_allPrendas.length;_pi++){
-      if(_d.indexOf(_allPrendas[_pi].toUpperCase())>=0){_prendaDetectada=_allPrendas[_pi];break;}
-    }
-    if(_prendaDetectada==='Camiseta Beagle 6554'){
-      if(_d.indexOf('URBAN')>=0||(_d.indexOf('SUDADERA')>=0&&_d.indexOf('CAPUCHA')>=0))_prendaDetectada='Sudadera Urban 1067';
-      else if(_d.indexOf('CLÁSICA')>=0||_d.indexOf('CLASICA')>=0||_d.indexOf('SUDADERA')>=0)_prendaDetectada='Sudadera Clásica 1070';
-      else if(_d.indexOf('POLO')>=0||_d.indexOf('STAR')>=0)_prendaDetectada='Polo Star 6638';
-      else if(_d.indexOf('PETO')>=0||_d.indexOf('PREGÓN')>=0)_prendaDetectada='Peto Pregón 1500';
-    }
+
+    // Detección por keywords específicos (de más específico a más genérico)
+    if(_dSA.indexOf('NEBRASKA')>=0) _prendaDetectada='Softshell Nebraska 6436';
+    else if(_dSA.indexOf('ANTARTIDA')>=0) _prendaDetectada='Softshell Antártida 6432';
+    else if(_dSA.indexOf('ARTIC')>=0) _prendaDetectada='Polar New Artic 6414';
+    else if(_dSA.indexOf('MONTBLANC')>=0) _prendaDetectada='Sudadera Montblanc 6421';
+    else if(_dSA.indexOf('ULAN')>=0) _prendaDetectada='Sudadera Ulan 6439';
+    else if(_dSA.indexOf('JAMAICA')>=0) _prendaDetectada='Camiseta Jamaica 6627';
+    else if(_dSA.indexOf('BAHRAIN')>=0) _prendaDetectada='Camiseta Bahrain 0407';
+    else if(_dSA.indexOf('VACCINE')>=0) _prendaDetectada='Bata Vaccine 9094';
+    else if(_dSA.indexOf('VADEMECUM')>=0) _prendaDetectada='Pantalón Vademécum 9097';
+    else if(_dSA.indexOf('ARZAK')>=0) _prendaDetectada='Casulla Arzak 9091';
+    else if(_dSA.indexOf('PANACEA')>=0) _prendaDetectada='Casaca Panacea 9098';
+    else if(_dSA.indexOf('AIFOS L/S')>=0||_dSA.indexOf('AIFOS LS')>=0||_dSA.indexOf('AIFOS 5504')>=0) _prendaDetectada='Camisa Aifos L/S 5504';
+    else if(_dSA.indexOf('AIFOS')>=0) _prendaDetectada='Camisa Aifos 5503';
+    else if(_dSA.indexOf('BENOIT')>=0) _prendaDetectada='Delantal Benoit 9125';
+    else if(_dSA.indexOf('CLASSIC')>=0&&_dSA.indexOf('DELANTAL')>=0) _prendaDetectada='Delantal Classic 9123';
+    else if(_dSA.indexOf('DELANTAL MINI')>=0||(_dSA.indexOf('MINI')>=0&&_dSA.indexOf('DELANTAL')>=0)) _prendaDetectada='Delantal Mini 9124';
+    else if(_dSA.indexOf('ERIS')>=0||_dSA.indexOf('GORRA')>=0) _prendaDetectada='Gorra Eris 7019';
+    else if(_dSA.indexOf('FESTERO')>=0||_dSA.indexOf('PANUELO')>=0) _prendaDetectada='Pañuelo Festero 9003';
+    else if(_dSA.indexOf('HAMELIN')>=0||_dSA.indexOf('MOCHILA')>=0) _prendaDetectada='Mochila Hamelin 7114';
+    else if(_dSA.indexOf('BUZO')>=0||_dSA.indexOf('KEVIN')>=0) _prendaDetectada='Buzo Kevin';
+    else if(_dSA.indexOf('TRAFFIC')>=0||_dSA.indexOf('PARKA')>=0) _prendaDetectada='Parka Traffic';
+    else if(_dSA.indexOf('PANTALON THUNDER')>=0) _prendaDetectada='Pantalón Thunder';
+    else if(_dSA.indexOf('CHALECO')>=0||_dSA.indexOf('THUNDER')>=0) _prendaDetectada='Chaleco Thunder';
+    else if(_dSA.indexOf('HILL')>=0||_dSA.indexOf('TOTEBAG')>=0) _prendaDetectada='Totebag Hill 7601';
+    else if(_dSA.indexOf('URBAN')>=0||(_dSA.indexOf('SUDADERA')>=0&&_dSA.indexOf('CAPUCHA')>=0)) _prendaDetectada='Sudadera Urban 1067';
+    else if(_dSA.indexOf('CLASICA')>=0||_dSA.indexOf('SUDADERA')>=0) _prendaDetectada='Sudadera Clásica 1070';
+    else if(_dSA.indexOf('STAR')>=0||_dSA.indexOf('POLO')>=0) _prendaDetectada='Polo Star 6638';
+    else if(_dSA.indexOf('PREGON')>=0||_dSA.indexOf('PETO')>=0) _prendaDetectada='Peto Pregón 1500';
+    else if(_dSA.indexOf('BEAGLE')>=0||_dSA.indexOf('CAMISETA')>=0) _prendaDetectada='Camiseta Beagle 6554';
     var _m=(_pedido.descripcion||'').match(/[×x](\d+)/i);
     _cantPedido=_m?parseInt(_m[1]):0;
     COLORES=getColores();
