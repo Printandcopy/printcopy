@@ -83,7 +83,8 @@ var PRENDAS = ['Camiseta Beagle 6554','Sudadera Clásica 1070','Sudadera Urban 1
   'Camisa Aifos 5503','Camisa Aifos L/S 5504','Casaca Panacea 9098','Casulla Arzak 9091',
   'Pantalón Vademécum 9097','Bata Vaccine 9094','Chaleco Thunder','Pantalón Thunder',
   'Parka Traffic','Buzo Kevin','Peto Pregón 1500','Camiseta Jamaica 6627','Camiseta Bahrain 0407',
-  'Softshell Antártida 6432','Softshell Nebraska 6436','Polar New Artic 6414'];
+  'Softshell Antártida 6432','Softshell Nebraska 6436','Polar New Artic 6414',
+  'Sudadera Montblanc 6421','Sudadera Ulan 6439'];
 var PRENDA_REF = {
   'Camiseta Beagle 6554':'CA6554','Sudadera Clásica 1070':'SU1070','Sudadera Urban 1067':'SU1067',
   'Polo Star 6638':'PO6638','Peto Pregón 1500':'CA6554','Totebag Hill 7601':'BO7601',
@@ -93,7 +94,8 @@ var PRENDA_REF = {
   'Pantalón Vademécum 9097':'PA9097','Bata Vaccine 9094':'BA9094',
   'Camiseta Jamaica 6627':'CA6627','Camiseta Bahrain 0407':'CA0407',
   'Softshell Antártida 6432':'SS6432','Softshell Nebraska 6436':'SS6436',
-  'Polar New Artic 6414':'CQ6414'
+  'Polar New Artic 6414':'CQ6414',
+  'Sudadera Montblanc 6421':'CQ6421','Sudadera Ulan 6439':'CQ6439'
 };
 var PRENDA_MEDIDAS = {
   'Camiseta Beagle 6554':{XS:'46×66',S:'49×69',M:'52×71',L:'55×73',XL:'58×75','2XL':'62×77','3XL':'66×79','4XL':'70×81','5XL':'74×83'},
@@ -118,7 +120,9 @@ var PRENDA_MEDIDAS = {
   'Bata Vaccine 9094':{XS:'51×95',S:'54×97',M:'57×99',L:'60×101',XL:'63×103','2XL':'67×104','3XL':'71×105','4XL':'75×106'},
   'Softshell Antártida 6432':{S:'53×74',M:'55×75',L:'58×76',XL:'62×77','2XL':'65×78','3XL':'67×79'},
   'Softshell Nebraska 6436':{S:'53×74',M:'55×75',L:'58×76',XL:'62×77','2XL':'65×78','3XL':'67×79','4XL':'69×80'},
-  'Polar New Artic 6414':{S:'52×69',M:'55×71',L:'58×73',XL:'63×75','2XL':'67×78','3XL':'71×81','4XL':'75×83'}
+  'Polar New Artic 6414':{S:'52×69',M:'55×71',L:'58×73',XL:'63×75','2XL':'67×78','3XL':'71×81','4XL':'75×83'},
+  'Sudadera Montblanc 6421':{XS:'51×63',S:'54×66',M:'57×69',L:'60×72',XL:'63×75','2XL':'66×78','3XL':'70×81'},
+  'Sudadera Ulan 6439':{XS:'51×67',S:'54×69',M:'57×71',L:'60×73',XL:'64×75','2XL':'68×76','3XL':'72×77'}
 };
 var FICHAS_PDF = {
   'Camiseta Beagle 6554':'fichas/CA6554.pdf',
@@ -144,7 +148,9 @@ var FICHAS_PDF = {
   'Peto Pregón 1500':'fichas/PETO_PREGON.pdf',
   'Softshell Antártida 6432':'fichas/SS6432.pdf',
   'Softshell Nebraska 6436':'fichas/SS6436.pdf',
-  'Polar New Artic 6414':'fichas/CQ6414.pdf'
+  'Polar New Artic 6414':'fichas/CQ6414.pdf',
+  'Sudadera Montblanc 6421':'fichas/CQ6421.pdf',
+  'Sudadera Ulan 6439':'fichas/CQ6439.pdf'
 };
 function rolyImgUrl(prenda,codColor){
   var ref=PRENDA_REF[prenda]||'CA6554';
@@ -343,6 +349,16 @@ var PRENDA_COLORES = {
     {cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
     {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},{cod:'159',nombre:'Verde Pino',hex:'#5A6B4A'},
     {cod:'23',nombre:'Plomo',hex:'#737373'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+  ],
+  'Sudadera Montblanc 6421':[
+    {cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'05',nombre:'Royal',hex:'#2651A0'},
+    {cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},
+    {cod:'02',nombre:'Negro',hex:'#1a1a1a'}
+  ],
+  'Sudadera Ulan 6439':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true},{cod:'60',nombre:'Rojo',hex:'#CC2222'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},
+    {cod:'05',nombre:'Royal',hex:'#2651A0'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B'},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},
+    {cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},{cod:'02',nombre:'Negro',hex:'#1a1a1a'}
   ]
 };
 var COLORES = [
@@ -417,6 +433,8 @@ function init() {
     else if(_descSA.indexOf('PANTALON THUNDER')>=0) _prendaDetectada='Pantalón Thunder';
     else if(_descSA.indexOf('CHALECO')>=0||_descSA.indexOf('THUNDER')>=0) _prendaDetectada='Chaleco Thunder';
     else if(_descSA.indexOf('HILL')>=0||_descSA.indexOf('TOTEBAG')>=0) _prendaDetectada='Totebag Hill 7601';
+    else if(_descSA.indexOf('MONTBLANC')>=0) _prendaDetectada='Sudadera Montblanc 6421';
+    else if(_descSA.indexOf('ULAN')>=0) _prendaDetectada='Sudadera Ulan 6439';
     else if(_descSA.indexOf('URBAN')>=0||(_descSA.indexOf('SUDADERA')>=0&&_descSA.indexOf('CAPUCHA')>=0)) _prendaDetectada='Sudadera Urban 1067';
     else if(_descSA.indexOf('CLASICA')>=0||_descSA.indexOf('SUDADERA')>=0) _prendaDetectada='Sudadera Clásica 1070';
     else if(_descSA.indexOf('STAR')>=0||_descSA.indexOf('POLO')>=0) _prendaDetectada='Polo Star 6638';
