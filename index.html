@@ -1120,10 +1120,16 @@ textarea{resize:vertical;min-height:64px}
         <!-- Entrega -->
         <div class="card">
           <div class="card-title">Entrega</div>
-          <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr">
-            <div class="field"><label>Fecha</label><input type="date" id="nv-fecha"></div>
-            <div class="field"><label>Tipo</label><select id="nv-ftipo" onchange="nvTipoFechaChange()"><option value="aprox">Aproximada</option><option value="fija">Fija</option></select></div>
+          <div class="form-grid" style="grid-template-columns:1.2fr 1fr 1fr">
+            <div class="field">
+              <label>Fecha <span id="nv-ftipo-badge" style="margin-left:6px;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;vertical-align:middle">Aproximada</span></label>
+              <input type="date" id="nv-fecha" onchange="nvFechaChange()">
+              <!-- Hidden: mantiene compatibilidad con todo el código existente -->
+              <input type="hidden" id="nv-ftipo" value="aprox">
+              <div id="nv-ftipo-hint" style="margin-top:4px;font-size:10.5px;color:#888">Calculada automáticamente según plazos de producción</div>
+            </div>
             <div class="field"><label>Operario</label><select id="nv-operario"><option>Marilia</option><option>Álvaro</option><option>Charo</option><option>Raúl</option><option>Bea</option></select></div>
+            <div class="field"><label>&nbsp;</label><button type="button" onclick="nvResetFechaAuto()" id="nv-reset-fecha" style="display:none;padding:6px 10px;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;cursor:pointer;font-size:12px;color:#555">↺ Volver a fecha calculada</button></div>
           </div>
           <div id="nv-aviso-plazos" style="display:none;margin-top:8px;padding:8px 12px;background:#fff8e1;border-radius:6px;font-size:12px;color:#8d6e00;border:1px solid #ffe082"></div>
         </div>
@@ -5263,6 +5269,8 @@ function nuevaVenta(modo){
   if(document.getElementById('nv-tramos'))document.getElementById('nv-tramos').style.display='none';
   document.getElementById('nv-fecha').value='';
   document.getElementById('nv-ftipo').value='aprox';
+  _nvFechaAutoCalc=null;
+  if(typeof nvSetTipoBadge==='function')nvSetTipoBadge('aprox');
   document.getElementById('nv-operario').value='Marilia';
   document.getElementById('nv-notas').value='';
   document.getElementById('nv-dto').value='0';
@@ -5815,16 +5823,61 @@ function calcFechaEntrega(diasHabiles){
   return fecha.toISOString().split('T')[0];
 }
 
-// Obtener plazo máximo de las líneas añadidas
-function nvTipoFechaChange(){
-  var tipo=document.getElementById('nv-ftipo').value;
-  var fechaInput=document.getElementById('nv-fecha');
+// ───── LÓGICA FECHA/TIPO AUTOMÁTICA ─────
+// Cuando el sistema calcula la fecha → "aprox"
+// Cuando el dependiente la cambia manualmente → "fija" con aviso visual
+var _nvFechaAutoCalc = null; // guarda la última fecha calculada por el sistema
+
+function nvSetTipoBadge(tipo){
+  var badge = document.getElementById('nv-ftipo-badge');
+  var hidden = document.getElementById('nv-ftipo');
+  var hint = document.getElementById('nv-ftipo-hint');
+  var btnReset = document.getElementById('nv-reset-fecha');
+  if(!badge||!hidden)return;
+  hidden.value = tipo;
   if(tipo==='fija'){
-    fechaInput.value='';
-    fechaInput.required=true;
+    badge.textContent = '⚠️ FIJA';
+    badge.style.background = '#FCEBEB';
+    badge.style.color = '#A32D2D';
+    badge.style.border = '1px solid #F09595';
+    if(hint)hint.textContent = 'Fecha fijada manualmente — se avisará en taller como entrega urgente';
+    if(hint)hint.style.color = '#A32D2D';
+    if(btnReset)btnReset.style.display = _nvFechaAutoCalc?'block':'none';
   }else{
-    fechaInput.required=false;
+    badge.textContent = 'Aproximada';
+    badge.style.background = '#E6F1FB';
+    badge.style.color = '#0C447C';
+    badge.style.border = '1px solid #B5D4F4';
+    if(hint)hint.textContent = 'Calculada automáticamente según plazos de producción';
+    if(hint)hint.style.color = '#888';
+    if(btnReset)btnReset.style.display = 'none';
   }
+}
+
+function nvFechaChange(){
+  // Cuando el usuario edita el input fecha manualmente
+  var fechaInput = document.getElementById('nv-fecha');
+  if(!fechaInput)return;
+  var val = fechaInput.value;
+  if(!val){
+    // Si borra la fecha, volvemos a aproximada
+    nvSetTipoBadge('aprox');
+    return;
+  }
+  if(_nvFechaAutoCalc && val === _nvFechaAutoCalc){
+    // Coincide con la calculada → sigue siendo aprox
+    nvSetTipoBadge('aprox');
+  }else{
+    // Es distinta de la calculada → es fija (manual)
+    nvSetTipoBadge('fija');
+  }
+}
+
+function nvResetFechaAuto(){
+  // Botón "volver a fecha calculada"
+  if(!_nvFechaAutoCalc)return;
+  document.getElementById('nv-fecha').value = _nvFechaAutoCalc;
+  nvSetTipoBadge('aprox');
 }
 
 function nvActualizarFecha(){
@@ -5851,8 +5904,17 @@ function nvActualizarFecha(){
   // Fecha sugerida = la mayor
   var fechaSugerida=calcFechaEntrega(maxPlazo);
   var fechaInput=document.getElementById('nv-fecha');
+  // Guardar la fecha auto-calculada como referencia
+  _nvFechaAutoCalc = fechaSugerida;
   if(!fechaInput.value||fechaInput.value<fechaSugerida){
     fechaInput.value=fechaSugerida;
+    // Acaba de asignarse por el sistema → es aproximada
+    nvSetTipoBadge('aprox');
+  }else if(fechaInput.value === fechaSugerida){
+    nvSetTipoBadge('aprox');
+  }else{
+    // El usuario ya tenía una fecha distinta → es manual (fija)
+    nvSetTipoBadge('fija');
   }
   
   // Mostrar aviso si hay plazos diferentes
@@ -7105,7 +7167,8 @@ function cotConvertir(){
   document.getElementById('nv-email').value=_cotActual.cliente_email||'';
   document.getElementById('nv-sector').value=_cotActual.cliente_sector||'';
   document.getElementById('nv-ftipo').value='aprox';
-  // Calcular fecha basada en el mayor plazo de las líneas
+  _nvFechaAutoCalc=null;
+  if(typeof nvSetTipoBadge==='function')nvSetTipoBadge('aprox');
   var maxPlazo=3;
   nvLineas.forEach(function(l){if(l.plazo>maxPlazo)maxPlazo=l.plazo;});
   var fechaEntrega=new Date();
