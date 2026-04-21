@@ -238,6 +238,11 @@ textarea{resize:vertical;min-height:64px}
 .kids-dot-overlay{position:absolute;top:-5px;left:-3px;background:#1D9E75;color:#fff;font-size:7.5px;font-weight:600;padding:0 3px;border-radius:3px;letter-spacing:.2px;line-height:1.3;pointer-events:none;z-index:2}
 .kids-info-banner{background:#EAF3DE;color:#173404;border:0.5px solid #97C459;border-radius:6px;padding:6px 10px;font-size:11.5px;margin:6px 0;display:flex;align-items:center;gap:6px}
 .kids-error{background:#FCEBEB;color:#501313;border:0.5px solid #E24B4A;border-radius:6px;padding:10px 12px;font-size:12.5px;margin:8px 0;display:flex;gap:8px;align-items:flex-start;font-weight:500}
+.nv-tallas-seccion{margin-bottom:4px}
+.nv-tallas-seccion-head{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.nv-pill-adulto{background:#E6F1FB;color:#0C447C;font-size:10.5px;padding:2px 9px;border-radius:99px;font-weight:600;letter-spacing:.3px}
+.nv-pill-nino{background:#FAEEDA;color:#633806;font-size:10.5px;padding:2px 9px;border-radius:99px;font-weight:600;letter-spacing:.3px}
+.nv-th-nino{background:#FAEEDA !important;color:#633806 !important}
 .tt-color-opt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
 .tt-color-opt:hover{background:#f0f7ff}
 .tt-color-opt .dot{width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
@@ -7438,27 +7443,32 @@ function nvRenderTablaTallas(){
     +'<button type="button" onclick="var g=document.getElementById(\'nv-tt-guia\');if(g)g.style.display=g.style.display===\'none\'?\'block\':\'none\'" style="background:none;border:1px solid #B5D4F4;border-radius:5px;padding:3px 8px;font-size:11px;color:#185FA5;cursor:pointer">📏 Guía tallas</button>'
     +'</div></div>'
     +medidasHTML
-    +'<div class="tt-body">'
-    +'<table class="tt-table" id="nv-tt-table">'
+    +'<div class="tt-body" style="padding:10px 12px">'
+    // TABLA ADULTO
+    +'<div class="nv-tallas-seccion">'
+    +'<div class="nv-tallas-seccion-head"><span class="nv-pill-adulto">Adulto</span></div>'
+    +'<table class="tt-table" id="nv-tt-table-adulto">'
     +'<thead><tr><th style="text-align:left;min-width:120px">Color</th>'
     +getTallasAdulto(prendaSel).map(function(t){return'<th>'+t+'</th>';}).join('')
-    +(tieneKids(prendaSel)?getTallasNinos(prendaSel).map(function(t){return'<th style="background:#FAEEDA;color:#633806">'+t+(/^\d+$/.test(t)?'a':'')+'</th>';}).join(''):'')
-    +'<th>Total</th></tr></thead>'
-    +'<tbody id="nv-tt-tbody">'+nvTTRenderFila({color:(colores[0]||{nombre:'Negro',hex:'#1a1a1a'}).nombre,hex:(colores[0]||{nombre:'Negro',hex:'#1a1a1a'}).hex,tallas:{}},0,colorOpts)+'</tbody>'
-    +'</table>'
-    +'<button class="tt-add-btn" onclick="nvTTAddFila()">+ Añadir color</button>'
+    +'<th>Total</th><th style="width:20px"></th></tr></thead>'
+    +'<tbody id="nv-tt-tbody-adulto">'+nvTTRenderFilaAdulto({color:(colores[0]||{nombre:'Negro',hex:'#1a1a1a'}).nombre,hex:(colores[0]||{nombre:'Negro',hex:'#1a1a1a'}).hex,tallas:{}},0)+'</tbody>'
+    +'</table></div>'
+    // TABLA NIÑO (solo si el modelo tiene KIDS)
+    +(tieneKids(prendaSel)?('<div class="nv-tallas-seccion" style="margin-top:10px">'
+      +'<div class="nv-tallas-seccion-head"><span class="nv-pill-nino">Niño</span></div>'
+      +'<table class="tt-table" id="nv-tt-table-nino">'
+      +'<thead><tr><th style="text-align:left;min-width:120px">Color</th>'
+      +getTallasNinos(prendaSel).map(function(t){return'<th class="nv-th-nino">'+t+(/^\d+$/.test(t)?'a':'')+'</th>';}).join('')
+      +'<th>Total</th></tr></thead>'
+      +'<tbody id="nv-tt-tbody-nino">'+nvTTRenderFilaNino({color:(colores[0]||{nombre:'Negro',hex:'#1a1a1a'}).nombre,hex:(colores[0]||{nombre:'Negro',hex:'#1a1a1a'}).hex,tallas:{}},0)+'</tbody>'
+      +'</table></div>'):'')
+    +'<button class="tt-add-btn" onclick="nvTTAddFila()" style="margin-top:10px">+ Añadir color</button>'
     +'<div id="nv-tt-resumen" class="tt-resumen">Sin tallas introducidas</div>'
     +'</div></div>';
   return html;
 }
 
-function nvTTRenderFila(fila,idx,colorOpts){
-  if(!colorOpts){
-    var _cols=getColoresPrenda(nvGetPrendaSeleccionada());
-    colorOpts=_cols.map(function(c){
-      return'<option value="'+c.nombre+'" data-hex="'+c.hex+'" '+(c.borde?'data-borde="1"':'')+'>'+c.nombre+'</option>';
-    }).join('');
-  }
+function _nvColorCeldaTT(fila,idx,suf){
   var hex=fila.hex||'#1a1a1a';
   var borde=fila.borde?'border:1px solid #ccc;':'';
   var colorNombre=fila.color||'Negro';
@@ -7466,16 +7476,15 @@ function nvTTRenderFila(fila,idx,colorOpts){
   var _currentColor=_pCols.find(function(c){return c.nombre===colorNombre;})||{};
   var colorCod=_currentColor.cod||'';
   var btnKids=_currentColor.kids?'<span class="kids-badge-sm" style="margin-left:3px">KIDS</span>':'';
-  var html='<tr id="nv-tt-fila-'+idx+'">'
-    +'<td><div style="display:flex;align-items:center;gap:4px">'
-    +'<div class="tt-color-picker" id="nv-tt-picker-'+idx+'">'
-    +'<div class="tt-color-btn" onclick="nvTTOpenPicker('+idx+')">'
-    +'<span class="dot" id="nv-tt-dot-'+idx+'" style="background:'+hex+';'+(borde?'border:1px solid #ccc;':'')+'"></span>'
-    +'<span id="nv-tt-lbl-'+idx+'">'+colorNombre+'</span>'
-    +'<span class="cod" id="nv-tt-cod-'+idx+'">'+colorCod+'</span>'
-    +'<span id="nv-tt-kids-'+idx+'">'+btnKids+'</span>'
+  return '<td><div style="display:flex;align-items:center;gap:4px">'
+    +'<div class="tt-color-picker" id="nv-tt-picker-'+idx+'-'+suf+'">'
+    +'<div class="tt-color-btn" onclick="nvTTOpenPicker('+idx+',\''+suf+'\')">'
+    +'<span class="dot" id="nv-tt-dot-'+idx+'-'+suf+'" style="background:'+hex+';'+(borde?'border:1px solid #ccc;':'')+'"></span>'
+    +'<span id="nv-tt-lbl-'+idx+'-'+suf+'">'+colorNombre+'</span>'
+    +'<span class="cod" id="nv-tt-cod-'+idx+'-'+suf+'">'+colorCod+'</span>'
+    +'<span id="nv-tt-kids-'+idx+'-'+suf+'">'+btnKids+'</span>'
     +'</div>'
-    +'<div class="tt-color-dropdown" id="nv-tt-drop-'+idx+'">'
+    +'<div class="tt-color-dropdown" id="nv-tt-drop-'+idx+'-'+suf+'">'
     +_pCols.map(function(c,ci){
       return'<div class="tt-color-opt" onclick="nvTTSelColor('+idx+','+ci+')">'
         +'<span class="dot" style="background:'+c.hex+';'+(c.borde?'border:1.5px solid #ccc;':'')+'"></span>'
@@ -7484,44 +7493,74 @@ function nvTTRenderFila(fila,idx,colorOpts){
         +(c.kids?'<span class="kids-badge-sm">KIDS</span>':'')
         +'</div>';
     }).join('')
-    +'</div></div>'
-    +(idx>0?'<button onclick="nvTTRemoveFila('+idx+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:14px;padding:0 4px">✕</button>':'')
-    +'</div></td>';
+    +'</div></div></div></td>';
+}
+function _nvTotalAdultoTT(fila){
+  var _ad=getTallasAdulto(nvGetPrendaSeleccionada());
+  var s=0;_ad.forEach(function(t){s+=parseInt((fila.tallas||{})[t])||0;});
+  return s;
+}
+function _nvTotalNinoTT(fila){
+  var s=0;
+  Object.keys(fila.tallas||{}).forEach(function(k){if(k.indexOf('N:')===0)s+=parseInt(fila.tallas[k])||0;});
+  return s;
+}
+function nvTTRenderFilaAdulto(fila,idx){
   var _prTT=nvGetPrendaSeleccionada();
+  var html='<tr id="nv-tt-fila-ad-'+idx+'">'
+    +_nvColorCeldaTT(fila,idx,'ad');
   getTallasAdulto(_prTT).forEach(function(t){
-    html+='<td><input class="tt-inp" type="number" min="0" value="0" placeholder="0" oninput="nvTTCalc('+idx+',\''+t+'\',this.value)"></td>';
+    var val=(fila.tallas&&fila.tallas[t])?fila.tallas[t]:0;
+    html+='<td><input class="tt-inp" type="number" min="0" value="'+val+'" placeholder="0" oninput="nvTTCalc('+idx+',\''+t+'\',this.value)"></td>';
   });
-  if(tieneKids(_prTT)){
-    var puedeKids=!!_currentColor.kids;
-    getTallasNinos(_prTT).forEach(function(t){
-      var dis=puedeKids?'':'disabled style="background:#f5f5f0;color:#bbb"';
-      html+='<td style="background:#FDF6E6"><input class="tt-inp tt-inp-nino" type="number" min="0" value="0" placeholder="0" data-ninos="1" data-talla="N:'+t+'" oninput="nvTTCalc('+idx+',\'N:'+t+'\',this.value)" '+dis+'></td>';
-    });
-  }
-  html+='<td style="font-weight:700;color:#185FA5" id="nv-tt-tot-'+idx+'">0</td></tr>';
+  html+='<td style="font-weight:700;color:#185FA5" id="nv-tt-tot-ad-'+idx+'">'+_nvTotalAdultoTT(fila)+'</td>';
+  html+='<td>'+(idx>0?'<button onclick="nvTTRemoveFila('+idx+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:14px;padding:0 4px">✕</button>':'')+'</td>';
+  html+='</tr>';
   return html;
 }
+function nvTTRenderFilaNino(fila,idx){
+  var _prTT=nvGetPrendaSeleccionada();
+  var _pCols=getColoresPrenda(_prTT);
+  var _currentColor=_pCols.find(function(c){return c.nombre===(fila.color||'Negro');})||{};
+  var puedeKids=!!_currentColor.kids;
+  var html='<tr id="nv-tt-fila-ni-'+idx+'">'
+    +_nvColorCeldaTT(fila,idx,'ni');
+  getTallasNinos(_prTT).forEach(function(t){
+    var key='N:'+t;
+    var val=(fila.tallas&&fila.tallas[key])?fila.tallas[key]:0;
+    var dis=puedeKids?'':'disabled style="background:#f5f5f0;color:#bbb"';
+    html+='<td style="background:#FDF6E6"><input class="tt-inp tt-inp-nino" type="number" min="0" value="'+val+'" placeholder="0" data-ninos="1" data-talla="'+key+'" oninput="nvTTCalc('+idx+',\''+key+'\',this.value)" '+dis+'></td>';
+  });
+  html+='<td style="font-weight:700;color:#185FA5" id="nv-tt-tot-ni-'+idx+'">'+_nvTotalNinoTT(fila)+'</td></tr>';
+  return html;
+}
+// Shim para código legacy que aún llama nvTTRenderFila (solo devuelve adulto)
+function nvTTRenderFila(fila,idx,colorOpts){return nvTTRenderFilaAdulto(fila,idx);}
 
 var _nvTTCount=1;
 function nvTTAddFila(){
-  var tbody=document.getElementById('nv-tt-tbody');
-  if(!tbody)return;
+  var tbA=document.getElementById('nv-tt-tbody-adulto');
+  var tbN=document.getElementById('nv-tt-tbody-nino');
+  if(!tbA)return;
   var idx=_nvTTCount++;
   var colores=getColoresPrenda(nvGetPrendaSeleccionada());
-  var fila={color:colores[idx%colores.length].nombre,hex:colores[idx%colores.length].hex,tallas:{}};
-  tbody.insertAdjacentHTML('beforeend',nvTTRenderFila(fila,idx));
+  var col=colores[idx%colores.length];
+  var fila={color:col.nombre,hex:col.hex,borde:col.borde||false,kids:!!col.kids,tallas:{}};
+  tbA.insertAdjacentHTML('beforeend',nvTTRenderFilaAdulto(fila,idx));
+  if(tbN)tbN.insertAdjacentHTML('beforeend',nvTTRenderFilaNino(fila,idx));
 }
 function nvTTRemoveFila(idx){
-  var fila=document.getElementById('nv-tt-fila-'+idx);
-  if(fila)fila.remove();
+  var fA=document.getElementById('nv-tt-fila-ad-'+idx);
+  var fN=document.getElementById('nv-tt-fila-ni-'+idx);
+  if(fA)fA.remove();
+  if(fN)fN.remove();
   nvTTActualizarResumen();
 }
-function nvTTOpenPicker(idx){
-  document.querySelectorAll('.tt-color-dropdown.open').forEach(function(d){
-    if(d.id!=='nv-tt-drop-'+idx)d.classList.remove('open');
-  });
-  var drop=document.getElementById('nv-tt-drop-'+idx);
-  var btn=document.getElementById('nv-tt-picker-'+idx);
+function nvTTOpenPicker(idx,suf){
+  suf=suf||'ad';
+  document.querySelectorAll('.tt-color-dropdown.open').forEach(function(d){d.classList.remove('open');});
+  var drop=document.getElementById('nv-tt-drop-'+idx+'-'+suf);
+  var btn=document.getElementById('nv-tt-picker-'+idx+'-'+suf);
   if(drop&&btn){
     var r=btn.getBoundingClientRect();
     drop.style.left=r.left+'px';
@@ -7532,28 +7571,31 @@ function nvTTOpenPicker(idx){
 function nvTTSelColor(idx,colorIdx){
   var c=getColoresPrenda(nvGetPrendaSeleccionada())[colorIdx];
   if(!c)return;
-  var dot=document.getElementById('nv-tt-dot-'+idx);
-  var lbl=document.getElementById('nv-tt-lbl-'+idx);
-  var cod=document.getElementById('nv-tt-cod-'+idx);
-  var kidsSpan=document.getElementById('nv-tt-kids-'+idx);
-  if(dot)dot.style.cssText='background:'+c.hex+';'+(c.borde?'border:1.5px solid #ccc;':'')+'width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0';
-  if(lbl)lbl.textContent=c.nombre;
-  if(cod)cod.textContent=c.cod||'';
-  if(kidsSpan)kidsSpan.innerHTML=c.kids?'<span class="kids-badge-sm" style="margin-left:3px">KIDS</span>':'';
-  // Habilitar/deshabilitar inputs de talla niño según si el color tiene KIDS
-  var fila=document.getElementById('nv-tt-fila-'+idx);
-  if(fila){
-    fila.querySelectorAll('.tt-inp-nino').forEach(function(inp){
+  var dotStyle='background:'+c.hex+';'+(c.borde?'border:1.5px solid #ccc;':'')+'width:18px;height:18px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0';
+  var kbHTML=c.kids?'<span class="kids-badge-sm" style="margin-left:3px">KIDS</span>':'';
+  // Actualizar en los 2 sets (adulto + niño)
+  ['ad','ni'].forEach(function(suf){
+    var dot=document.getElementById('nv-tt-dot-'+idx+'-'+suf);
+    var lbl=document.getElementById('nv-tt-lbl-'+idx+'-'+suf);
+    var cod=document.getElementById('nv-tt-cod-'+idx+'-'+suf);
+    var kidsSpan=document.getElementById('nv-tt-kids-'+idx+'-'+suf);
+    if(dot)dot.style.cssText=dotStyle;
+    if(lbl)lbl.textContent=c.nombre;
+    if(cod)cod.textContent=c.cod||'';
+    if(kidsSpan)kidsSpan.innerHTML=kbHTML;
+  });
+  // Habilitar/deshabilitar inputs niño en la fila niño
+  var filaN=document.getElementById('nv-tt-fila-ni-'+idx);
+  if(filaN){
+    filaN.querySelectorAll('.tt-inp-nino').forEach(function(inp){
       if(c.kids){inp.disabled=false;inp.style.background='';inp.style.color='';}
       else{inp.disabled=true;inp.value=0;inp.style.background='#f5f5f0';inp.style.color='#bbb';
-        // Recalcular total al limpiar
         var t=inp.getAttribute('data-talla');
         if(t)nvTTCalc(idx,t,0);
       }
     });
   }
-  var drop=document.getElementById('nv-tt-drop-'+idx);
-  if(drop)drop.classList.remove('open');
+  document.querySelectorAll('.tt-color-dropdown.open').forEach(function(d){d.classList.remove('open');});
   // Guardar en dato local
   _nvTTFilas=_nvTTFilas||{};
   _nvTTFilas[idx]={color:c.nombre,hex:c.hex,borde:c.borde||false,cod:c.cod||'',kids:c.kids||false};
@@ -7576,67 +7618,106 @@ function nvTTColorChange(idx,sel){
   if(dot)dot.style.cssText='background:'+hex+';'+borde+'width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.15);margin-right:4px;vertical-align:middle;flex-shrink:0';
 }
 function nvTTCalc(idx,talla,val){
-  var total=0;
-  var fila=document.getElementById('nv-tt-fila-'+idx);
-  if(fila)fila.querySelectorAll('.tt-inp').forEach(function(i){total+=parseInt(i.value)||0;});
-  var totEl=document.getElementById('nv-tt-tot-'+idx);
-  if(totEl)totEl.textContent=total;
+  // Sumar adulto (inputs de la fila adulto, excluidos .tt-inp-nino)
+  var fA=document.getElementById('nv-tt-fila-ad-'+idx);
+  var totAd=0;
+  if(fA)fA.querySelectorAll('.tt-inp').forEach(function(i){if(!i.classList.contains('tt-inp-nino'))totAd+=parseInt(i.value)||0;});
+  var totAdEl=document.getElementById('nv-tt-tot-ad-'+idx);
+  if(totAdEl)totAdEl.textContent=totAd;
+  // Sumar niño (inputs .tt-inp-nino de fila niño)
+  var fN=document.getElementById('nv-tt-fila-ni-'+idx);
+  var totNi=0;
+  if(fN)fN.querySelectorAll('.tt-inp-nino').forEach(function(i){totNi+=parseInt(i.value)||0;});
+  var totNiEl=document.getElementById('nv-tt-tot-ni-'+idx);
+  if(totNiEl)totNiEl.textContent=totNi;
   nvTTActualizarResumen();
 }
 function nvTTActualizarResumen(){
-  var tbody=document.getElementById('nv-tt-tbody');
-  if(!tbody)return;
+  var tbA=document.getElementById('nv-tt-tbody-adulto');
+  var tbN=document.getElementById('nv-tt-tbody-nino');
+  if(!tbA)return;
   var prendaAct=nvGetPrendaSeleccionada();
   var _adul=getTallasAdulto(prendaAct);
-  var totalUds=0;var lineas=[];
-  tbody.querySelectorAll('tr').forEach(function(fila){
+  var totalUds=0;
+  var porIdx={}; // {idx:{color, parts:[]}}
+  // Adulto
+  tbA.querySelectorAll('tr').forEach(function(fila){
+    var id=fila.id||'';var m=id.match(/nv-tt-fila-ad-(\d+)/);if(!m)return;
+    var idx=m[1];
     var lbl=fila.querySelector('[id^="nv-tt-lbl-"]');
-    if(!lbl)return;
-    var color=lbl.textContent||'';
-    var parts=[];
+    var color=lbl?lbl.textContent:'';
+    if(!porIdx[idx])porIdx[idx]={color:color,parts:[]};
     var inps=fila.querySelectorAll('.tt-inp');
     var adultoIdx=0;
     inps.forEach(function(inp){
+      if(inp.classList.contains('tt-inp-nino'))return;
       var v=parseInt(inp.value)||0;
-      var tKey;
-      if(inp.classList.contains('tt-inp-nino')){tKey=(inp.getAttribute('data-talla')||'').replace(/^N:/,'');}
-      else{tKey=_adul[adultoIdx]||'';adultoIdx++;}
-      if(tKey && v>0){parts.push(tKey+'×'+v);totalUds+=v;}
+      var tKey=_adul[adultoIdx]||'';adultoIdx++;
+      if(tKey && v>0){porIdx[idx].parts.push(tKey+'×'+v);totalUds+=v;}
     });
-    if(parts.length)lineas.push('<strong>'+color+'</strong>: '+parts.join(' '));
   });
+  // Niño
+  if(tbN)tbN.querySelectorAll('tr').forEach(function(fila){
+    var id=fila.id||'';var m=id.match(/nv-tt-fila-ni-(\d+)/);if(!m)return;
+    var idx=m[1];
+    if(!porIdx[idx]){
+      var lbl=fila.querySelector('[id^="nv-tt-lbl-"]');
+      porIdx[idx]={color:lbl?lbl.textContent:'',parts:[]};
+    }
+    fila.querySelectorAll('.tt-inp-nino').forEach(function(inp){
+      var v=parseInt(inp.value)||0;
+      var tKey=(inp.getAttribute('data-talla')||'').replace(/^N:/,'');
+      if(tKey && v>0){porIdx[idx].parts.push(tKey+'a×'+v);totalUds+=v;}
+    });
+  });
+  var lineas=Object.keys(porIdx).filter(function(k){return porIdx[k].parts.length;})
+    .map(function(k){return'<strong>'+porIdx[k].color+'</strong>: '+porIdx[k].parts.join(' ');});
   var res=document.getElementById('nv-tt-resumen');
   if(res)res.innerHTML=totalUds?'<strong>Total: '+totalUds+' uds</strong><br>'+lineas.join('<br>'):'Sin tallas introducidas';
 }
 function nvTTGetDatos(){
-  var tbody=document.getElementById('nv-tt-tbody');
-  if(!tbody)return null;
+  var tbA=document.getElementById('nv-tt-tbody-adulto');
+  if(!tbA)return null;
+  var tbN=document.getElementById('nv-tt-tbody-nino');
   var prendaAct=nvGetPrendaSeleccionada();
   var _adul=getTallasAdulto(prendaAct);
-  var datos=[];
-  tbody.querySelectorAll('tr').forEach(function(fila,rowIdx){
+  var _gCols=getColoresPrenda(prendaAct);
+  var porIdx={}; // {idx: {color, hex, borde, kids, tallas}}
+  // Adulto
+  tbA.querySelectorAll('tr').forEach(function(fila){
+    var m=(fila.id||'').match(/nv-tt-fila-ad-(\d+)/);if(!m)return;
+    var idx=m[1];
     var lbl=fila.querySelector('[id^="nv-tt-lbl-"]');
-    if(!lbl)return;
-    var colorNombre=lbl.textContent||'Negro';
-    var _gCols=getColoresPrenda(prendaAct);
+    var colorNombre=lbl?lbl.textContent:'Negro';
     var cDef=_gCols.find(function(c){return c.nombre===colorNombre;})||{hex:'#888',borde:false};
     var tallas={};
-    // Recorrer todos los inputs de talla de la fila
     var inps=fila.querySelectorAll('.tt-inp');
     var adultoIdx=0;
     inps.forEach(function(inp){
+      if(inp.classList.contains('tt-inp-nino'))return;
       var v=parseInt(inp.value)||0;
-      var tKey;
-      if(inp.classList.contains('tt-inp-nino')){
-        tKey=inp.getAttribute('data-talla')||'';
-      }else{
-        tKey=_adul[adultoIdx]||'';
-        adultoIdx++;
-      }
+      var tKey=_adul[adultoIdx]||'';adultoIdx++;
       if(tKey && v>0)tallas[tKey]=v;
     });
-    if(Object.keys(tallas).length)datos.push({color:colorNombre,hex:cDef.hex,borde:cDef.borde||false,kids:!!cDef.kids,tallas:tallas});
+    porIdx[idx]={color:colorNombre,hex:cDef.hex,borde:cDef.borde||false,kids:!!cDef.kids,tallas:tallas};
   });
+  // Niño (acumula en la misma fila por idx)
+  if(tbN)tbN.querySelectorAll('tr').forEach(function(fila){
+    var m=(fila.id||'').match(/nv-tt-fila-ni-(\d+)/);if(!m)return;
+    var idx=m[1];
+    if(!porIdx[idx]){
+      var lbl=fila.querySelector('[id^="nv-tt-lbl-"]');
+      var colorNombre=lbl?lbl.textContent:'Negro';
+      var cDef=_gCols.find(function(c){return c.nombre===colorNombre;})||{hex:'#888',borde:false};
+      porIdx[idx]={color:colorNombre,hex:cDef.hex,borde:cDef.borde||false,kids:!!cDef.kids,tallas:{}};
+    }
+    fila.querySelectorAll('.tt-inp-nino').forEach(function(inp){
+      var v=parseInt(inp.value)||0;
+      var tKey=inp.getAttribute('data-talla')||'';
+      if(tKey && v>0)porIdx[idx].tallas[tKey]=v;
+    });
+  });
+  var datos=Object.keys(porIdx).map(function(k){return porIdx[k];}).filter(function(d){return Object.keys(d.tallas).length;});
   return datos.length?datos:null;
 }
 

@@ -473,6 +473,20 @@ function init() {
     COLORES=getColores();
     // Si ya tiene datos guardados, usarlos como base
     if(_pedido.tallas_colores && _pedido.tallas_colores.length) {
+      // Comprobar si hay cantidades reales (>0) → ya se enviaron tallas reales
+      var _yaEnviado=_pedido.tallas_colores.some(function(f){
+        return f.tallas && Object.values(f.tallas).some(function(v){return (parseInt(v)||0)>0;});
+      });
+      if(_yaEnviado){
+        var _waMsg=encodeURIComponent('Hola, necesito modificar las tallas del pedido '+pedidoId);
+        show('<div class="card ok-screen">'
+          +'<div class="ok-ico" style="color:#BA7517">⚠️</div>'
+          +'<div class="ok-title">Tallas ya enviadas</div>'
+          +'<div class="ok-sub">Las tallas de este pedido <strong>'+pedidoId+'</strong> ya fueron enviadas y están siendo procesadas.<br><br>Si necesitas modificarlas, contacta con nosotros por WhatsApp y te ayudamos.<br><br>'
+          +'<a href="https://wa.me/34622305934?text='+_waMsg+'" target="_blank" style="display:inline-block;margin-top:12px;background:#25D366;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">💬 Contactar por WhatsApp</a>'
+          +'<br><br><span style="color:#aaa;font-size:11px">Print & Copy · 923 018 034</span></div></div>');
+        return;
+      }
       _filas = JSON.parse(JSON.stringify(_pedido.tallas_colores));
       // Retro-infierir flag kids para filas antiguas sin el campo
       _filas.forEach(function(f){

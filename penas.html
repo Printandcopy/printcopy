@@ -483,6 +483,20 @@ function init() {
     var _m=(_pedido.descripcion||'').match(/[×x](\d+)/i);
     _cantPedido=_m?parseInt(_m[1]):0;
     if(_pedido.tallas_colores && _pedido.tallas_colores.length) {
+      // Detectar si ya se enviaron datos reales (alguna persona con nombre)
+      var _yaEnviado=_pedido.tallas_colores.some(function(f){
+        return f.nombre && String(f.nombre).trim().length>0;
+      });
+      if(_yaEnviado){
+        var _waMsg=encodeURIComponent('Hola, necesito modificar los datos del pedido '+pedidoId);
+        show('<div class="card ok-screen">'
+          +'<div class="ok-ico" style="color:#BA7517">⚠️</div>'
+          +'<div class="ok-title">Datos ya enviados</div>'
+          +'<div class="ok-sub">Los datos de este pedido <strong>'+pedidoId+'</strong> ya fueron enviados y están siendo procesados.<br><br>Si necesitas modificar algún nombre, número, color o talla, contacta con nosotros por WhatsApp y te ayudamos.<br><br>'
+          +'<a href="https://wa.me/34622305934?text='+_waMsg+'" target="_blank" style="display:inline-block;margin-top:12px;background:#25D366;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">💬 Contactar por WhatsApp</a>'
+          +'<br><br><span style="color:#aaa;font-size:11px">Print & Copy · 923 018 034</span></div></div>');
+        return;
+      }
       _filas = JSON.parse(JSON.stringify(_pedido.tallas_colores));
       // Forzar la prenda detectada del pedido sobre los datos guardados
       _filas.forEach(function(f){f.prenda=_prendaDetectada;});
