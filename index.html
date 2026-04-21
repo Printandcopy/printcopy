@@ -2135,10 +2135,9 @@ function startClock(){
   tick();setInterval(tick,1000);
 }
 function showScreen(id,el){
-  // Defensa: bloquear analytics si no es gerente
-  if(id==='analytics' && typeof _esGerente!=='undefined' && !_esGerente){
-    alert('Acceso restringido. Solo disponible para Gerente.');
-    return;
+  // Analytics: pedir clave Gerente si no está desbloqueado en esta sesión
+  if(id==='analytics' && !_analyticsUnlocked){
+    if(!pedirClaveAnalytics())return;
   }
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
@@ -2198,8 +2197,7 @@ function renderIdentidadBtn(){
   var btn=document.getElementById('btn-identidad');
   var lbl=document.getElementById('btn-identidad-label');
   if(!btn||!lbl)return;
-  if(_esGerente){lbl.textContent='Gerente 👑';btn.style.background='#FFF8EC';btn.style.borderColor='#FAC775';btn.style.color='#854F0B';}
-  else if(_pcYo==='all'){lbl.textContent='Todos 👥';btn.style.background='#F1EFE8';btn.style.borderColor='#D3D1C7';btn.style.color='#444';}
+  if(_pcYo==='all'){lbl.textContent='Todos 👥';btn.style.background='#F1EFE8';btn.style.borderColor='#D3D1C7';btn.style.color='#444';}
   else if(_pcYo){lbl.textContent=_pcYo;btn.style.background='#E6F1FB';btn.style.borderColor='#B5D4F4';btn.style.color='#0C447C';}
   else{lbl.textContent='Elige identidad…';btn.style.background='#FCEBEB';btn.style.borderColor='#F09595';btn.style.color='#A32D2D';}
 }
@@ -4212,7 +4210,7 @@ function resetForm(){
   document.querySelectorAll('input[name="pago"]').forEach(function(r){r.checked=false;});
   document.querySelectorAll('.radio-opt').forEach(function(o){o.classList.remove('sel');});
   document.querySelector('input[name="fecha-tipo"][value="aprox"]').checked=true;
-  document.getElementById('f-operario').value=(_pcYo && _pcYo!=='gerente' && _pcYo!=='all')?_pcYo:'Marilia';
+  document.getElementById('f-operario').value=(_pcYo && _pcYo!=='all')?_pcYo:'Marilia';
   document.getElementById('f-pendiente').textContent='—';
   document.getElementById('cond-display').style.display='none';
   document.getElementById('cond-pago-info').style.display='none';
@@ -5337,9 +5335,9 @@ function toggleBandejaCard(card,id){
 function cogerPedido(id){
   var p=pedidos.find(function(x){return x.id===id;});
   if(!p)return;
-  // Usar identidad de sesión. Si es "gerente"/"all" o no hay, pedir identidad antes de coger
+  // Usar identidad de sesión. Si es "Todos" o no hay, pedir identidad antes de coger
   var operario=_pcYo;
-  if(!operario || operario==='gerente' || operario==='all'){
+  if(!operario || operario==='all'){
     alert('Para coger un pedido, elige antes un operario en el botón de identidad.');
     openModalIdentidad();
     return;
@@ -5497,7 +5495,7 @@ function nuevaVenta(modo){
   document.getElementById('nv-ftipo').value='aprox';
   _nvFechaAutoCalc=null;
   if(typeof nvSetTipoBadge==='function')nvSetTipoBadge('aprox');
-  document.getElementById('nv-operario').value=(_pcYo && _pcYo!=='gerente' && _pcYo!=='all')?_pcYo:'Marilia';
+  document.getElementById('nv-operario').value=(_pcYo && _pcYo!=='all')?_pcYo:'Marilia';
   document.getElementById('nv-notas').value='';
   document.getElementById('nv-dto').value='0';
   document.getElementById('nv-validez').value='15';
@@ -8387,16 +8385,37 @@ function cargarHistorialPrevias(pedidoId){
 
 // ── IDENTIDAD PC ──
 // Cada apertura de la app pide identidad. No persiste entre sesiones.
-// Valores posibles de _pcYo: 'gerente' | 'all' | nombre de operario | null
-// Flag adicional 'es_gerente' se activa solo tras validar clave GERENTE_PASS
+// Valores posibles de _pcYo: 'all' | nombre de operario | null
 var _pcYo=null;
-var _esGerente=false;
-var _gerenteFallos=0;
+// Desbloqueo Analytics por sesión: true tras meter clave correctamente
+var _analyticsUnlocked=false;
+var _analyticsFallos=0;
+
+// Pide la clave de Gerente para desbloquear Analytics. Devuelve true si correcta.
+function pedirClaveAnalytics(){
+  if(_analyticsFallos>=3){
+    alert('Demasiados intentos fallidos. Recarga la app para volver a intentarlo.');
+    return false;
+  }
+  var clave=prompt('Introduce la clave de Gerente para acceder a Analytics:');
+  if(clave===null)return false; // canceló
+  if(clave!==GERENTE_PASS){
+    _analyticsFallos++;
+    if(_analyticsFallos>=3){
+      alert('Demasiados intentos fallidos. Recarga la app para volver a intentarlo.');
+    } else {
+      alert('Clave incorrecta. Intentos: '+_analyticsFallos+'/3');
+    }
+    return false;
+  }
+  _analyticsUnlocked=true;
+  _analyticsFallos=0;
+  return true;
+}
 
 function openModalIdentidad(){
-  // 5 opciones: Gerente / Todos / 5 operarios
+  // Identidades operativas: Todos + 5 operarios (sin Gerente — Analytics pide clave al entrar)
   var opts=[
-    '<button class="pc-yo-opt" onclick="setIdentidadPC(\'gerente\')" style="padding:14px;border:1.5px solid #FAC775;border-radius:8px;background:#FFF8EC;font-size:14px;font-weight:600;cursor:pointer;color:#854F0B">👑 Gerente (requiere clave)</button>',
     '<button class="pc-yo-opt" onclick="setIdentidadPC(\'all\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#f5f5f0;font-size:14px;font-weight:600;cursor:pointer">👥 Todos (ver todo el negocio)</button>'
   ].concat(OPERARIOS.map(function(op){
     return'<button class="pc-yo-opt" onclick="setIdentidadPC(\''+op+'\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;font-size:14px;font-weight:600;cursor:pointer">'+op+'</button>';
@@ -8418,55 +8437,29 @@ function openModalIdentidad(){
   }
 }
 function setIdentidadPC(valor){
-  // Rama Gerente: pedir clave
-  if(valor==='gerente'){
-    var clave=prompt('Introduce la clave de Gerente:');
-    if(clave===null)return; // canceló
-    if(clave!==GERENTE_PASS){
-      _gerenteFallos++;
-      if(_gerenteFallos>=3){
-        alert('Demasiados intentos fallidos. Vuelve a intentarlo más tarde.');
-        _gerenteFallos=0;
-        var m0=document.getElementById('modal-identidad-pc');if(m0)m0.style.display='none';
-        return;
-      }
-      alert('Clave incorrecta. Intentos: '+_gerenteFallos+'/3');
-      return;
-    }
-    // Clave correcta
-    _gerenteFallos=0;
-    _esGerente=true;
-  } else {
-    // Cualquier otro valor degrada a no-gerente
-    _esGerente=false;
-  }
   _pcYo=valor;
-  // Aplicar al filtro por defecto según rol
-  var filtroDefault;
-  if(valor==='gerente'||valor==='all'){filtroDefault='all';}
-  else{filtroDefault=valor;}
-  _filtroOperario=filtroDefault;
+  // Filtro por defecto: 'Todos' muestra all, un operario se filtra a sí mismo
+  _filtroOperario=(valor==='all')?'all':valor;
   // Cerrar modal y refrescar UI
   var modal=document.getElementById('modal-identidad-pc');
   if(modal)modal.style.display='none';
   renderOpFilterSelect();
-  actualizarVisibilidadAnalytics();
   renderIdentidadBtn();
   renderTaller();
 }
-// Oculta o muestra la pestaña Analytics según sea Gerente
+// Analytics siempre visible. El guard está en showScreen (pide clave al entrar).
 function actualizarVisibilidadAnalytics(){
   var btns=document.querySelectorAll('.nav-tab');
   btns.forEach(function(b){
     var onclickStr=b.getAttribute('onclick')||'';
     if(onclickStr.indexOf("'analytics'")>=0){
-      b.style.display=_esGerente?'':'none';
+      b.style.display='';
     }
   });
 }
 // Inicializar filtro operario según identidad elegida
 function initFiltroOperario(){
-  if(_pcYo==='gerente'||_pcYo==='all'){_filtroOperario='all';}
+  if(_pcYo==='all'){_filtroOperario='all';}
   else if(_pcYo){_filtroOperario=_pcYo;}
   else{_filtroOperario='all';}
   renderOpFilterSelect();
