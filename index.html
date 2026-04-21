@@ -6927,20 +6927,36 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
   var clienteId=clienteObj?clienteObj.id:null;
   var senalTotal=senal||0;
   var pagoEst=senalTotal>=totalGlobal?'pagado':senalTotal>0?'senal':'pendiente';
-  var proms=lins.map(function(lin){
+  // Reparto proporcional de la señal con cuadre exacto
+  // Cada línea: senalTotal * (subtotal_linea / total_global), redondeado a 2 decimales
+  // La última línea absorbe el residuo para que la suma = senalTotal exacto
+  var repartoSenal=[];
+  var acumulado=0;
+  lins.forEach(function(lin,idx){
+    var sub=parseFloat(lin.subtotal)||0;
+    var parte;
+    if(idx===lins.length-1){
+      parte=cV2R2(senalTotal-acumulado);
+    }else{
+      var proporcion=totalGlobal>0?(sub/totalGlobal):(1/lins.length);
+      parte=cV2R2(senalTotal*proporcion);
+      acumulado+=parte;
+    }
+    repartoSenal.push(parte);
+  });
+  var proms=lins.map(function(lin,idx){
     return new Promise(function(res){
       var sec=lin.seccion||'XR';
       sb.from('contadores').select('valor').eq('seccion',sec).single().then(function(r){
         var nv=(r.data?r.data.valor:0)+1;
         sb.from('contadores').upsert([{seccion:sec,valor:nv}],{onConflict:'seccion'}).then(function(){
           var numPed=sec+'-'+String(nv).padStart(4,'0');
-          var proporcion=totalGlobal>0?((parseFloat(lin.subtotal)||0)/totalGlobal):1;
           var ped={id:numPed,cliente_id:clienteId,cliente_nombre:pres.cliente_nombre,
             cliente_tel:pres.cliente_telefono,cliente_email:pres.cliente_email||'',
             seccion:sec,operario:'Sistema',fecha_creacion:new Date().toISOString(),
             fecha_entrega:fecha,fecha_tipo:'aprox',descripcion:lin.descripcion,
             notas:'Auto desde '+pres.numero+(metodo?' | '+metodo:''),
-            total:parseFloat(lin.subtotal)||0,senal:cV2R2(senalTotal*proporcion),
+            total:parseFloat(lin.subtotal)||0,senal:repartoSenal[idx],
             pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:0};
           sb.from('pedidos').insert([ped]).then(function(ri){
             if(ri&&ri.error){
