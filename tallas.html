@@ -35,7 +35,8 @@
   .inp-talla { width: 46px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px 2px; font-size: 14px; font-weight: 700; }
   .inp-talla:focus { outline: none; border-color: #185FA5; }
   .row-total { font-weight: 700; color: #185FA5; }
-  .add-color-btn { width: 100%; margin-top: 10px; padding: 8px; border: 1.5px dashed #b5d4f4; border-radius: 8px; background: none; font-size: 12px; color: #185FA5; cursor: pointer; }
+  .add-color-btn { width: 100%; margin-top: 12px; padding: 11px; border: 1.5px dashed #185FA5; border-radius: 8px; background: #E6F1FB; font-size: 13px; color: #185FA5; cursor: pointer; font-weight: 600; }
+  .add-color-btn:hover { background: #D3E4F5; }
   .del-btn { background: none; border: none; color: #ddd; cursor: pointer; font-size: 16px; padding: 0 4px; }
   .del-btn:hover { color: #A32D2D; }
 
@@ -425,10 +426,6 @@ function apiPatch(path, data) {
 
 function init() {
   if(!pedidoId){show('<div class="error">❌ Enlace inválido.</div>');return;}
-  if(new URLSearchParams(window.location.search).get('enviado')==='1'){
-    show('<div class="card ok-screen"><div class="ok-ico">✅</div><div class="ok-title">Ya enviado</div><div class="ok-sub">Las tallas de este pedido ya fueron enviadas.<br><br>Ya puedes cerrar esta página.<br><br><span style="color:#aaa">Print & Copy · 923 018 034</span></div></div>');
-    return;
-  }
   api('pedidos?id=eq.'+pedidoId+'&select=id,cliente_nombre,descripcion,tallas_colores,ropa_ok').then(function(r){
     if(!r||!r.length){show('<div class="error">❌ Pedido no encontrado.</div>');return;}
     _pedido = r[0];
@@ -577,7 +574,7 @@ function render() {
   var _tNin=tieneKids(_prendaDetectada)?getTallasNinos(_prendaDetectada):[];
   html += '<div class="card">'
     +'<h2>📏 Tallas por color</h2>'
-    +'<div class="sub">Pulsa el color para cambiarlo. Introduce la cantidad de cada talla.'+(_tNin.length?' <span style="color:#1D9E75;font-weight:600">Los colores marcados KIDS incluyen tallas niño.</span>':'')+'</div>'
+    +'<div class="sub">Puedes añadir <strong>varios colores y tallas</strong> de adulto y niño con el botón ➕ de abajo. Pulsa el color del círculo para cambiarlo.'+(_tNin.length?' <span style="color:#1D9E75;font-weight:600">Los colores marcados KIDS están disponibles también en tallas niño.</span>':'')+'</div>'
     // TABLA ADULTO
     +'<div class="tallas-seccion">'
     +'<div class="tallas-seccion-head"><span class="pill-adulto">Adulto</span></div>'
@@ -839,7 +836,6 @@ function enviar() {
       +'<div class="ok-title">¡Recibido!</div>'
       +'<div class="ok-sub">Hemos recibido tu selección de tallas y colores para el pedido <strong>'+pedidoId+'</strong>.<br><br>Nos ponemos en marcha. Te avisaremos cuando esté listo.<br><br>Ya puedes cerrar esta página.<br><br><span style="color:#aaa">Print & Copy · 923 018 034</span></div>'
       +'</div>');
-    history.replaceState(null,'','?p='+pedidoId+'&enviado=1');
   }).catch(function(){
     if(btn){btn.disabled=false;btn.textContent='✅ Confirmar y enviar';}
     alert('Error al enviar. Llámanos al 923 018 034');

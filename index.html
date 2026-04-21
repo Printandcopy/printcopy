@@ -2575,14 +2575,18 @@ function verPedido(id){
     } else {
       html+=renderTablaTallas(p);
     }
-    // Botón Reabrir tallas (solo si hay datos enviados y ropa aún no pedida)
-    if(tallasCompletas(p) && !p.ropaOk && p.clienteTel){
-      html+='<div style="background:#FFF8EC;border:1px solid #FAC775;border-radius:7px;padding:10px 12px;margin-bottom:10px">'
-        +'<div style="font-size:11px;color:#854F0B;line-height:1.45;margin-bottom:8px">🔄 <strong>Reabrir formulario</strong> para que el cliente edite. Borra los datos actuales y le reenvía el WhatsApp con el link.</div>'
-        +'<button onclick="reabrirTallasCliente(\''+p.id+'\')" style="width:100%;padding:9px;background:#BA7517;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">🔄 Reabrir tallas y reenviar WA</button>'
+    // Botón Reabrir tallas — siempre disponible si hay datos enviados (el operario decide)
+    if(tallasCompletas(p) && p.clienteTel){
+      var _bgCaja=p.ropaOk?'background:#FCEBEB;border:1px solid #F09595':'background:#FFF8EC;border:1px solid #FAC775';
+      var _colTxt=p.ropaOk?'#501313':'#854F0B';
+      var _avisoExtra=p.ropaOk
+        ? '<div style="font-size:10.5px;color:#A32D2D;margin-top:6px;padding:6px 8px;background:#FCDFDF;border-radius:4px;line-height:1.4">⚠️ <strong>La ropa ya está pedida al proveedor.</strong> Si reabres, el cliente podrá editar, pero los cambios pueden implicar devolución o pedido adicional. Valora antes de pulsar.</div>'
+        : '';
+      html+='<div style="'+_bgCaja+';border-radius:7px;padding:10px 12px;margin-bottom:10px">'
+        +'<div style="font-size:11px;color:'+_colTxt+';line-height:1.45;margin-bottom:8px">🔄 <strong>Reabrir formulario</strong> para que el cliente edite. Borra los datos actuales y le reenvía el WhatsApp con el link.</div>'
+        +'<button onclick="reabrirTallasCliente(\''+p.id+'\')" style="width:100%;padding:9px;background:'+(p.ropaOk?'#A32D2D':'#BA7517')+';color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">🔄 Reabrir tallas y reenviar WA</button>'
+        +_avisoExtra
         +'</div>';
-    } else if(tallasCompletas(p) && p.ropaOk){
-      html+='<div style="background:#FCEBEB;border:1px solid #F09595;border-radius:7px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#501313;line-height:1.45">🔒 <strong>Ropa ya pedida al proveedor.</strong> Los cambios a partir de aquí los gestiona el operario manualmente (no hay botón de reapertura automática).</div>';
     }
   }
 
@@ -8288,7 +8292,6 @@ function reenviarWAPrevia(pedidoId){
 // Reabrir formulario de tallas para que el cliente edite. Resetea BD y reenvía WA inmediato.
 function reabrirTallasCliente(pedidoId){
   var p=pedidos.find(function(x){return x.id===pedidoId;});if(!p)return;
-  if(p.ropaOk){alert('No se puede reabrir: la ropa ya está pedida al proveedor. Gestiona los cambios manualmente.');return;}
   if(!p.clienteTel){alert('El pedido no tiene teléfono de cliente registrado.');return;}
   // 1) Resetear en BD: limpiar tallas, contador de recordatorios y flag de notificación
   sb.from('pedidos').update({
