@@ -41,6 +41,8 @@
   .color-opt:hover { border-color: #185FA5; }
   .kids-badge-sm{display:inline-block;background:#1D9E75;color:#fff;font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;letter-spacing:.3px;line-height:1.3}
   .kids-error{background:#FCEBEB;color:#501313;border:1px solid #E24B4A;border-radius:6px;padding:10px 12px;font-size:12.5px;margin:8px 0;font-weight:500}
+  .kids-info-banner{display:flex;gap:10px;align-items:flex-start;background:#EAF3DE;color:#173404;border:0.5px solid #97C459;border-radius:8px;padding:10px 12px;margin-bottom:12px}
+  .kids-dot-inline{display:inline-block;background:#1D9E75;color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.3px;flex-shrink:0;margin-top:1px}
 
   .resumen { background: #E6F1FB; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; color: #185FA5; line-height: 1.7; }
   .total-uds { font-size: 20px; font-weight: 800; }
@@ -516,6 +518,17 @@ function render() {
     html += renderFila(f,i);
   });
   html += '</div>';
+
+  // Banner informativo cuando el modelo tiene versión KIDS
+  var _pdaPed = window._prendaPedido || (_filas[0]&&_filas[0].prenda);
+  if(_pdaPed && tieneKids(_pdaPed)){
+    var _btxt = '<div class="kids-info-banner">'
+      +'<span class="kids-dot-inline">KIDS</span>'
+      +'<div style="font-size:12px;line-height:1.45"><strong>Este modelo está disponible también en tallas niño.</strong><br><span style="color:#2A5C1C">Al elegir un color marcado con el distintivo KIDS, en el desplegable de talla aparecerá el grupo <em>Niño</em>.</span></div>'
+      +'</div>';
+    // Insertar el banner JUSTO ANTES del listado de personas
+    html = html.replace('<div id="filas-container">', _btxt + '<div id="filas-container">');
+  }
 
   html += '<button class="btn-add" onclick="addFila()">+ Añadir otra persona</button>';
   html += '<div class="resumen" id="resumen">'+calcResumen()+'</div>';

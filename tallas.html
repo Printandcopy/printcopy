@@ -39,6 +39,23 @@
   .del-btn { background: none; border: none; color: #ddd; cursor: pointer; font-size: 16px; padding: 0 4px; }
   .del-btn:hover { color: #A32D2D; }
 
+  /* Layout apilado adulto/niño + hint de scroll (KIDS) */
+  .tallas-seccion { margin-top: 4px; }
+  .tallas-seccion-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .pill-adulto { background: #E6F1FB; color: #0C447C; font-size: 10.5px; padding: 2px 8px; border-radius: 99px; font-weight: 600; letter-spacing: .3px; }
+  .pill-nino   { background: #FAEEDA; color: #633806; font-size: 10.5px; padding: 2px 8px; border-radius: 99px; font-weight: 600; letter-spacing: .3px; }
+  .scroll-wrap { position: relative; overflow: hidden; border-radius: 6px; border: 0.5px solid #E5E5DC; background: #fff; }
+  .scroll-inner { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+  .tabla-tallas { width: 100%; border-collapse: collapse; font-size: 12px; min-width: max-content; }
+  .tabla-tallas th { background: #2C2C2A; color: #fff; font-weight: 500; font-size: 10.5px; padding: 6px 4px; white-space: nowrap; text-align: center; border: 0; }
+  .tabla-tallas td { border: 0.5px solid #E5E5DC; padding: 4px 3px; text-align: center; background: #fff; }
+  .tabla-tallas .th-nino-head { background: #BA7517 !important; }
+  .td-col-sticky { text-align: left; padding-left: 8px; position: sticky; left: 0; background: #fff; z-index: 1; min-width: 96px; white-space: nowrap; box-shadow: 2px 0 3px -2px rgba(0,0,0,.1); }
+  .scroll-hint { position: absolute; right: 0; top: 0; bottom: 0; width: 30px; pointer-events: none; display: flex; align-items: center; justify-content: center; background: linear-gradient(to left, rgba(255,255,255,.95), rgba(255,255,255,0)); animation: pulseHint 1.6s ease-in-out infinite; z-index: 2; }
+  .scroll-hint span { color: #185FA5; font-size: 18px; font-weight: 600; text-shadow: 0 0 2px rgba(255,255,255,.9); }
+  @keyframes pulseHint { 0%,100% { opacity: .55; transform: translateX(0);} 50% { opacity: 1; transform: translateX(-3px);} }
+  .scroll-msg { font-size: 10.5px; color: #888; text-align: center; margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+
   /* Resumen */
   .resumen { background: #EFF6FF; border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; color: #185FA5; line-height: 1.7; }
   .total-uds { font-size: 20px; font-weight: 800; }
@@ -542,14 +559,40 @@ function render() {
   html += '<div class="card">'
     +'<h2>📏 Tallas por color</h2>'
     +'<div class="sub">Pulsa el color para cambiarlo. Introduce la cantidad de cada talla.'+(_tNin.length?' <span style="color:#1D9E75;font-weight:600">Los colores marcados KIDS incluyen tallas niño.</span>':'')+'</div>'
-    +'<div class="tabla-wrap"><table>'
-    +'<thead><tr><th>Color</th>'
+    // TABLA ADULTO
+    +'<div class="tallas-seccion">'
+    +'<div class="tallas-seccion-head"><span class="pill-adulto">Adulto</span></div>'
+    +'<div class="scroll-wrap" id="scroll-wrap-adulto">'
+    +'<div class="scroll-inner" id="scroll-inner-adulto">'
+    +'<table class="tabla-tallas">'
+    +'<thead><tr><th class="th-color">Color</th>'
     +_tAdul.map(function(t){return'<th>'+t+'</th>';}).join('')
-    +_tNin.map(function(t){return'<th style="background:#FDF6E6;color:#633806">'+t+(/^\d+$/.test(t)?'a':'')+'</th>';}).join('')
-    +'<th>Total</th><th></th></tr></thead>'
-    +'<tbody id="tbl-body">'
-    +_filas.map(function(f,i){return renderFila(f,i);}).join('')
-    +'</tbody></table></div>'
+    +'<th class="th-total">Total</th><th class="th-del"></th></tr></thead>'
+    +'<tbody id="tbl-body-adulto">'
+    +_filas.map(function(f,i){return renderFilaAdulto(f,i);}).join('')
+    +'</tbody></table>'
+    +'</div>'
+    +'<div class="scroll-hint"><span>›</span></div>'
+    +'</div>'
+    +'<div class="scroll-msg" id="scroll-msg-adulto">← desliza para ver todas las tallas →</div>'
+    +'</div>'
+    // TABLA NIÑO (solo si el modelo tiene KIDS)
+    +(_tNin.length?('<div class="tallas-seccion" style="margin-top:14px">'
+      +'<div class="tallas-seccion-head"><span class="pill-nino">Niño</span></div>'
+      +'<div class="scroll-wrap" id="scroll-wrap-nino">'
+      +'<div class="scroll-inner" id="scroll-inner-nino">'
+      +'<table class="tabla-tallas">'
+      +'<thead><tr><th class="th-color">Color</th>'
+      +_tNin.map(function(t){return'<th class="th-nino-head">'+t+(/^\d+$/.test(t)?'a':'')+'</th>';}).join('')
+      +'<th class="th-total">Total</th></tr></thead>'
+      +'<tbody id="tbl-body-nino">'
+      +_filas.map(function(f,i){return renderFilaNino(f,i);}).join('')
+      +'</tbody></table>'
+      +'</div>'
+      +'<div class="scroll-hint"><span>›</span></div>'
+      +'</div>'
+      +'<div class="scroll-msg" id="scroll-msg-nino">← desliza para ver todas las tallas →</div>'
+      +'</div>'):'')
     +'<button class="add-color-btn" onclick="addFila()">+ Añadir otro color</button>'
     +'</div>';
 
@@ -565,33 +608,55 @@ function render() {
   renderColorGrid();
 }
 
-function renderFila(f, i) {
-  var borde = f.borde ? 'border:1px solid #ccc;' : '';
-  var totalFila = Object.values(f.tallas||{}).reduce(function(s,v){return s+(parseInt(v)||0);},0);
-  var _colsFila=getColores();
-  var _cDef=_colsFila.find(function(c){return c.nombre===f.color;})||{};
+function _colorCelda(f,i){
+  var borde=f.borde?'border:1px solid #ccc;':'';
+  var _cDef=getColores().find(function(c){return c.nombre===f.color;})||{};
   var esKids=!!_cDef.kids;
   var kbBtn=esKids?'<span class="kids-badge-sm" style="margin-left:5px">KIDS</span>':'';
-  var _tAdul=getTallasAdulto(_prendaDetectada);
-  var _tNin=tieneKids(_prendaDetectada)?getTallasNinos(_prendaDetectada):[];
-  var html = '<tr id="fila-'+i+'">'
-    +'<td><div class="td-color" onclick="abrirColorModal('+i+')" style="cursor:pointer">'
-    +'<span class="mini-dot" id="dot-'+i+'" style="background:'+f.hex+';'+borde+'"></span>'
-    +'<span id="color-lbl-'+i+'">'+f.color+'</span>'
-    +'<span id="kids-'+i+'">'+kbBtn+'</span>'
+  return '<td class="td-col-sticky"><div class="td-color" onclick="abrirColorModal('+i+')" style="cursor:pointer">'
+    +'<span class="mini-dot" id="dot-'+i+'-'+arguments[2]+'" style="background:'+f.hex+';'+borde+'"></span>'
+    +'<span id="color-lbl-'+i+'-'+arguments[2]+'">'+f.color+'</span>'
+    +'<span id="kids-'+i+'-'+arguments[2]+'">'+kbBtn+'</span>'
     +'<span style="font-size:10px;color:#aaa;margin-left:2px">▼</span>'
     +'</div></td>';
+}
+function _totalAdulto(f){
+  var _ad=getTallasAdulto(_prendaDetectada);
+  var s=0;_ad.forEach(function(t){s+=parseInt((f.tallas||{})[t])||0;});
+  return s;
+}
+function _totalNino(f){
+  var s=0;
+  Object.keys(f.tallas||{}).forEach(function(k){if(k.indexOf('N:')===0)s+=parseInt(f.tallas[k])||0;});
+  return s;
+}
+function renderFilaAdulto(f, i) {
+  var _cDef=getColores().find(function(c){return c.nombre===f.color;})||{};
+  var esKids=!!_cDef.kids;
+  var _tAdul=getTallasAdulto(_prendaDetectada);
+  var html = '<tr id="fila-ad-'+i+'">'
+    +_colorCelda(f,i,'ad');
   _tAdul.forEach(function(t) {
     html += '<td><input class="inp-talla" type="number" min="0" value="'+(f.tallas&&f.tallas[t]?f.tallas[t]:'')+'" placeholder="0" oninput="onInput('+i+',\''+t+'\',this.value)"></td>';
   });
+  html += '<td class="row-total" id="tot-ad-'+i+'">'+_totalAdulto(f)+'</td>';
+  html += '<td><button class="del-btn" onclick="delFila('+i+')" title="Quitar">✕</button></td>';
+  html += '</tr>';
+  return html;
+}
+function renderFilaNino(f, i) {
+  var _cDef=getColores().find(function(c){return c.nombre===f.color;})||{};
+  var esKids=!!_cDef.kids;
+  var _tNin=getTallasNinos(_prendaDetectada);
+  var html = '<tr id="fila-ni-'+i+'">'
+    +_colorCelda(f,i,'ni');
   _tNin.forEach(function(t){
     var key='N:'+t;
     var dis=esKids?'':'disabled';
     var bg=esKids?'background:#FDF6E6':'background:#f5f5f0;color:#bbb';
     html += '<td style="background:#FDF6E6"><input class="inp-talla inp-talla-nino" data-nino="1" data-talla="'+key+'" type="number" min="0" value="'+(f.tallas&&f.tallas[key]?f.tallas[key]:'')+'" placeholder="0" oninput="onInput('+i+',\''+key+'\',this.value)" '+dis+' style="'+bg+'"></td>';
   });
-  html += '<td class="row-total" id="tot-'+i+'">'+totalFila+'</td>';
-  html += '<td><button class="del-btn" onclick="delFila('+i+')" title="Quitar">✕</button></td>';
+  html += '<td class="row-total" id="tot-ni-'+i+'">'+_totalNino(f)+'</td>';
   html += '</tr>';
   return html;
 }
@@ -600,10 +665,11 @@ function onInput(idx, talla, val) {
   if(!_filas[idx]) return;
   if(!_filas[idx].tallas) _filas[idx].tallas = {};
   _filas[idx].tallas[talla] = parseInt(val)||0;
-  // Actualizar total fila
-  var total = Object.values(_filas[idx].tallas).reduce(function(s,v){return s+(parseInt(v)||0);},0);
-  var totEl = document.getElementById('tot-'+idx);
-  if(totEl) totEl.textContent = total;
+  // Actualizar total adulto y niño por separado
+  var totAd = document.getElementById('tot-ad-'+idx);
+  var totNi = document.getElementById('tot-ni-'+idx);
+  if(totAd) totAd.textContent = _totalAdulto(_filas[idx]);
+  if(totNi) totNi.textContent = _totalNino(_filas[idx]);
   // Actualizar resumen
   var res = document.getElementById('resumen');
   if(res) res.innerHTML = calcResumen();
@@ -629,22 +695,24 @@ function addFila() {
   var idx = _filas.length;
   var _cols=getColores();var col=_cols[idx%_cols.length];
   _filas.push({color:col.nombre, hex:col.hex, borde:col.borde||false, kids:!!col.kids, tallas:{}});
-  var tbody = document.getElementById('tbl-body');
-  if(tbody) {
-    var tr = document.createElement('tr');
-    tr.outerHTML; // dummy
-    tbody.insertAdjacentHTML('beforeend', renderFila(_filas[idx], idx));
-  }
+  var tbAd = document.getElementById('tbl-body-adulto');
+  var tbNi = document.getElementById('tbl-body-nino');
+  if(tbAd) tbAd.insertAdjacentHTML('beforeend', renderFilaAdulto(_filas[idx], idx));
+  if(tbNi) tbNi.insertAdjacentHTML('beforeend', renderFilaNino(_filas[idx], idx));
+  setupScrollHints();
 }
 
 function delFila(idx) {
   if(_filas.length <= 1) {alert('Necesitas al menos un color');return;}
   _filas.splice(idx, 1);
-  // Re-render la tabla completa
-  var tbody = document.getElementById('tbl-body');
-  if(tbody) tbody.innerHTML = _filas.map(function(f,i){return renderFila(f,i);}).join('');
+  // Re-render los dos tbodies
+  var tbAd = document.getElementById('tbl-body-adulto');
+  var tbNi = document.getElementById('tbl-body-nino');
+  if(tbAd) tbAd.innerHTML = _filas.map(function(f,i){return renderFilaAdulto(f,i);}).join('');
+  if(tbNi) tbNi.innerHTML = _filas.map(function(f,i){return renderFilaNino(f,i);}).join('');
   var res = document.getElementById('resumen');
   if(res) res.innerHTML = calcResumen();
+  setupScrollHints();
 }
 
 // Modal colores
@@ -677,24 +745,26 @@ function selColor(colorIdx) {
     _filas[idx].hex2 = c.hex2||null;
     _filas[idx].borde = c.borde||false;
     _filas[idx].kids = !!c.kids;
-    // Actualizar fila visual
-    var dot = document.getElementById('dot-'+idx);
-    var lbl = document.getElementById('color-lbl-'+idx);
-    var kb  = document.getElementById('kids-'+idx);
     var bg = c.hex2 ? 'background:linear-gradient(135deg,'+c.hex+' 50%,'+c.hex2+' 50%)' : 'background:'+c.hex;
-    if(dot) dot.style.cssText = bg+';'+(c.borde?'border:1px solid #ccc;':'')+'width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0';
-    if(lbl) lbl.textContent = c.nombre;
-    if(kb)  kb.innerHTML = c.kids?'<span class="kids-badge-sm" style="margin-left:5px">KIDS</span>':'';
-    // Habilitar/deshabilitar inputs de tallas niño en esta fila
-    var fila = document.getElementById('fila-'+idx);
-    if(fila){
-      fila.querySelectorAll('.inp-talla-nino').forEach(function(inp){
+    var kbHTML = c.kids?'<span class="kids-badge-sm" style="margin-left:5px">KIDS</span>':'';
+    // Actualizar en las 2 filas (adulto + niño) si existen
+    ['ad','ni'].forEach(function(suf){
+      var dot = document.getElementById('dot-'+idx+'-'+suf);
+      var lbl = document.getElementById('color-lbl-'+idx+'-'+suf);
+      var kb  = document.getElementById('kids-'+idx+'-'+suf);
+      if(dot) dot.style.cssText = bg+';'+(c.borde?'border:1px solid #ccc;':'')+'width:12px;height:12px;border-radius:50%;border:1px solid rgba(0,0,0,.15);flex-shrink:0';
+      if(lbl) lbl.textContent = c.nombre;
+      if(kb)  kb.innerHTML = kbHTML;
+    });
+    // Habilitar/deshabilitar inputs niño en la fila niño
+    var filaNi = document.getElementById('fila-ni-'+idx);
+    if(filaNi){
+      filaNi.querySelectorAll('.inp-talla-nino').forEach(function(inp){
         if(c.kids){
           inp.disabled=false;
           inp.style.background='#FDF6E6';
           inp.style.color='';
         }else{
-          // limpiar y deshabilitar
           inp.disabled=true;
           inp.value='';
           inp.style.background='#f5f5f0';
@@ -703,13 +773,14 @@ function selColor(colorIdx) {
           if(t && _filas[idx].tallas && _filas[idx].tallas[t]){delete _filas[idx].tallas[t];}
         }
       });
-      // Recalcular total de la fila
-      var total = Object.values(_filas[idx].tallas||{}).reduce(function(s,v){return s+(parseInt(v)||0);},0);
-      var totEl = document.getElementById('tot-'+idx);
-      if(totEl) totEl.textContent = total;
-      var res = document.getElementById('resumen');
-      if(res) res.innerHTML = calcResumen();
     }
+    // Recalcular totales por sección
+    var totAd = document.getElementById('tot-ad-'+idx);
+    var totNi = document.getElementById('tot-ni-'+idx);
+    if(totAd) totAd.textContent = _totalAdulto(_filas[idx]);
+    if(totNi) totNi.textContent = _totalNino(_filas[idx]);
+    var res = document.getElementById('resumen');
+    if(res) res.innerHTML = calcResumen();
   }
   document.getElementById('color-modal').classList.remove('open');
 }
@@ -756,7 +827,30 @@ function enviar() {
   });
 }
 
-function show(html){ document.getElementById('main-content').innerHTML = html; }
+function show(html){ document.getElementById('main-content').innerHTML = html; setTimeout(setupScrollHints,60); }
+
+function setupScrollHints(){
+  ['adulto','nino'].forEach(function(s){
+    var inner=document.getElementById('scroll-inner-'+s);
+    var wrap=document.getElementById('scroll-wrap-'+s);
+    var msg=document.getElementById('scroll-msg-'+s);
+    if(!inner||!wrap)return;
+    function check(){
+      var hayDesborde=inner.scrollWidth>inner.clientWidth+2;
+      var enInicio=inner.scrollLeft<5;
+      var hint=wrap.querySelector('.scroll-hint');
+      if(hint)hint.style.display=(hayDesborde&&enInicio)?'flex':'none';
+      if(msg)msg.style.display=hayDesborde?'flex':'none';
+    }
+    // evitar duplicar listeners
+    if(!inner._scHintBound){
+      inner.addEventListener('scroll',check);
+      window.addEventListener('resize',check);
+      inner._scHintBound=true;
+    }
+    check();
+  });
+}
 
 init();
 </script>
