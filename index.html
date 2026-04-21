@@ -2135,8 +2135,8 @@ function startClock(){
   tick();setInterval(tick,1000);
 }
 function showScreen(id,el){
-  // Analytics: pedir clave Gerente si no está desbloqueado en esta sesión
-  if(id==='analytics' && !_analyticsUnlocked){
+  // Analytics: pedir clave Gerente CADA VEZ que se accede (sin cache de sesión)
+  if(id==='analytics'){
     if(!pedirClaveAnalytics())return;
   }
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
@@ -8387,11 +8387,11 @@ function cargarHistorialPrevias(pedidoId){
 // Cada apertura de la app pide identidad. No persiste entre sesiones.
 // Valores posibles de _pcYo: 'all' | nombre de operario | null
 var _pcYo=null;
-// Desbloqueo Analytics por sesión: true tras meter clave correctamente
-var _analyticsUnlocked=false;
+// Analytics pide la clave en CADA entrada (sin persistencia dentro de la sesión).
+// Contador de fallos consecutivos: tras 3 fallos seguidos se bloquea hasta recargar.
 var _analyticsFallos=0;
 
-// Pide la clave de Gerente para desbloquear Analytics. Devuelve true si correcta.
+// Pide la clave de Gerente para acceder a Analytics. Devuelve true si correcta.
 function pedirClaveAnalytics(){
   if(_analyticsFallos>=3){
     alert('Demasiados intentos fallidos. Recarga la app para volver a intentarlo.');
@@ -8408,8 +8408,7 @@ function pedirClaveAnalytics(){
     }
     return false;
   }
-  _analyticsUnlocked=true;
-  _analyticsFallos=0;
+  _analyticsFallos=0; // resetea contador en cada acceso exitoso
   return true;
 }
 
