@@ -871,6 +871,11 @@ textarea{resize:vertical;min-height:64px}
   <div id="analytics-kpis-avanzados" style="margin-top:12px;display:none"></div>
   <!-- BLOQUE D: Radiografía -->
   <div class="card" id="analytics-radiografia" style="margin-top:12px;display:none"></div>
+  <!-- PENDIENTES DE RECOGER con importe (solo visible dentro de Analytics) -->
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">📦 Pendientes de recoger (con importe)</div>
+    <div id="analytics-pdterecoger"></div>
+  </div>
 </div>
 
 <!-- CALCULADORA V2 -->
@@ -3142,8 +3147,32 @@ function renderSemana(){
     html+='<div class="dia-col" style="'+bgStyle+'"><div class="dia-header'+(esHoy?' hoy':'')+'"><div class="dn">'+dn+'</div><div class="dd">'+dia.getDate()+'/'+(dia.getMonth()+1)+'</div></div><div class="dia-cards">'+(peds.length?peds.map(function(p){return'<div class="dia-mini dm-'+p.seccion+(p.fechaTipo==='fija'?' dm-fija':'')+'" onclick="verPedido(\''+p.id+'\')"><div style="font-weight:700;font-family:monospace;font-size:10px">'+p.id+'</div><div>'+p.clienteNombre.split(' ')[0]+'</div></div>';}).join(''):'<div style="font-size:11px;color:#ddd;text-align:center;padding:6px">—</div>')+'</div></div>';
   });
   html+='</div>';
-  var vencidos=list.filter(function(p){return p.fechaEntrega&&new Date(p.fechaEntrega+'T00:00:00')<hoy&&p.fase<6;});
+  // Vencidos: fecha pasada Y aún en producción (fase 0-4). Fase 5 (Terminado) va a su propio bloque.
+  var vencidos=list.filter(function(p){return p.fechaEntrega&&new Date(p.fechaEntrega+'T00:00:00')<hoy&&p.fase<5;});
   if(vencidos.length)html+='<div class="sin-fecha"><div class="sin-fecha-title" style="color:#A32D2D">⚠️ Vencidos ('+vencidos.length+')</div>'+vencidos.map(miniCard).join('')+'</div>';
+  // Pendientes de recoger: fase 5 (Terminado). Se muestra sin importe (el importe va en Analytics).
+  var pdteRecoger=list.filter(function(p){return p.fase===5;});
+  if(pdteRecoger.length){
+    // Ordenar por días esperando (más antiguos primero)
+    pdteRecoger.sort(function(a,b){
+      var fa=a.fechaEntrega||a.fechaCreacion;var fb=b.fechaEntrega||b.fechaCreacion;
+      return new Date(fa)-new Date(fb);
+    });
+    html+='<div class="sin-fecha" style="border-color:#FAC775;background:#FFFBF2"><div class="sin-fecha-title" style="color:#854F0B">📦 Pendientes de recoger ('+pdteRecoger.length+')</div>'
+      +pdteRecoger.map(function(p){
+        var fRef=p.fechaEntrega?new Date(p.fechaEntrega+'T00:00:00'):new Date(p.fechaCreacion);
+        var dias=Math.floor((hoy-fRef)/(1000*3600*24));
+        var diasTxt=dias<=0?'hoy':(dias===1?'1 día':dias+' días');
+        var colDias=dias<=2?'#666':(dias<=7?'#BA7517':'#A32D2D');
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f5e8c8;font-size:12px;cursor:pointer" onclick="verPedido(\''+p.id+'\')">'
+          +'<span style="font-family:monospace;font-weight:700">'+p.id+'</span>'
+          +'<span class="badge sec-'+p.seccion+'">'+p.seccion+'</span>'
+          +'<span>'+p.clienteNombre.split(' ')[0]+'</span>'
+          +'<span style="color:'+colDias+';font-weight:600">esperando '+diasTxt+'</span>'
+          +'</div>';
+      }).join('')
+      +'</div>';
+  }
   if(sinFecha.length)html+='<div class="sin-fecha"><div class="sin-fecha-title">Sin fecha ('+sinFecha.length+')</div>'+sinFecha.map(miniCard).join('')+'</div>';
   document.getElementById('taller-list').innerHTML=html;
 }
@@ -3923,6 +3952,40 @@ function renderAnalytics(){
     '</div>';
   }).join('');
   document.getElementById('analytics-operarios').innerHTML=opHtml||'<div style="color:#aaa;font-size:13px">Sin datos</div>';
+
+  // Pendientes de recoger con importe pendiente de cobro (vista solo gerencia)
+  var hoyPR=new Date();hoyPR.setHours(0,0,0,0);
+  var pdte=pedidos.filter(function(p){return p.fase===5;});
+  pdte.sort(function(a,b){
+    var fa=a.fechaEntrega||a.fechaCreacion;var fb=b.fechaEntrega||b.fechaCreacion;
+    return new Date(fa)-new Date(fb);
+  });
+  var totalPdteCobro=pdte.reduce(function(s,p){return s+Math.max(0,p.total-(p.senal||0));},0);
+  var pdteHtml='';
+  if(!pdte.length){
+    pdteHtml='<div style="color:#aaa;font-size:13px">No hay pedidos pendientes de recoger</div>';
+  } else {
+    pdteHtml='<div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap">'
+      +'<div class="stat-card"><div class="sv">'+pdte.length+'</div><div class="sl">Pedidos pdte</div></div>'
+      +'<div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPdteCobro.toFixed(0)+'€</div><div class="sl">Pdte cobrar</div></div>'
+      +'</div>'
+      +'<div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Detalle</div>'
+      +pdte.map(function(p){
+        var fRef=p.fechaEntrega?new Date(p.fechaEntrega+'T00:00:00'):new Date(p.fechaCreacion);
+        var dias=Math.floor((hoyPR-fRef)/(1000*3600*24));
+        var diasTxt=dias<=0?'hoy':(dias===1?'1 día':dias+' días');
+        var colDias=dias<=2?'#666':(dias<=7?'#BA7517':'#A32D2D');
+        var pend=Math.max(0,p.total-(p.senal||0));
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid #f0f0f0;font-size:12.5px;cursor:pointer" onclick="verPedido(\''+p.id+'\')">'
+          +'<span style="font-family:monospace;font-weight:700;min-width:80px">'+p.id+'</span>'
+          +'<span class="badge sec-'+p.seccion+'">'+p.seccion+'</span>'
+          +'<span style="flex:1">'+p.clienteNombre+'</span>'
+          +'<span style="color:'+colDias+';font-weight:600;min-width:90px;text-align:right">'+diasTxt+'</span>'
+          +'<span style="font-weight:700;color:'+(pend>0?'#A32D2D':'#3B6D11')+';min-width:70px;text-align:right">'+pend.toFixed(2)+'€</span>'
+          +'</div>';
+      }).join('');
+  }
+  document.getElementById('analytics-pdterecoger').innerHTML=pdteHtml;
 
   // KPIs adicionales bloque C
   renderKPIsAvanzados(pedsFiltrados);
