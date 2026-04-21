@@ -20,6 +20,24 @@ header h1{font-size:16px;font-weight:500;white-space:nowrap}
 .nav-tab.active,.nav-tab:hover{background:#333;color:#fff}
 .user-badge-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1.5px solid #F09595;background:#FCEBEB;color:#A32D2D;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
 .user-badge-btn:hover{filter:brightness(0.95);transform:translateY(-1px)}
+/* SISTEMA ESTAMPACIONES */
+.estamp-toggles{display:flex;flex-wrap:wrap;gap:6px}
+.estamp-toggle{display:flex;flex-direction:column;align-items:center;padding:6px 8px;border:1.5px solid #ddd;border-radius:8px;background:#fafaf7;cursor:pointer;min-width:60px;transition:all .15s;font-family:inherit;color:#666}
+.estamp-toggle:hover{background:#fff;border-color:#888;transform:translateY(-1px)}
+.estamp-toggle.active{background:#EAF3DE;border-color:#5B9F1F;color:#3B6D11;box-shadow:0 0 0 2px rgba(91,159,31,.15) inset}
+.estamp-fila{background:#fff;border:0.5px solid #e0e0dc;border-radius:6px;padding:8px 10px;margin-bottom:6px}
+.estamp-fila-cabecera{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.estamp-pos-badge{display:flex;align-items:center;gap:4px;background:#EAF3DE;color:#3B6D11;padding:2px 8px 2px 4px;border-radius:12px;font-size:12px;font-weight:600}
+.estamp-del{border:none;background:none;color:#999;font-size:18px;line-height:1;cursor:pointer;margin-left:auto;padding:0 4px;border-radius:4px}
+.estamp-del:hover{color:#A32D2D;background:#FCEBEB}
+.estamp-fila-body{display:flex;gap:8px;flex-wrap:wrap}
+.estamp-campo{display:flex;flex-direction:column;gap:2px;flex:1;min-width:90px}
+.estamp-campo.estamp-flex2{flex:2;min-width:180px}
+.estamp-campo label{font-size:10px;color:#888;font-weight:500;margin:0}
+.estamp-campo input,.estamp-campo select{padding:4px 6px;font-size:12px;border:0.5px solid #ccc;border-radius:4px;background:#fff}
+.estamp-detalle{display:flex;flex-wrap:wrap;gap:8px}
+.estamp-chip{display:flex;align-items:center;gap:6px;background:#f5f5f0;border:0.5px solid #ddd;border-radius:6px;padding:4px 8px 4px 4px}
+.estamp-chip-text{font-size:12px;line-height:1.2}
 .screen{display:none;padding:16px 20px;max-width:1400px;margin:0 auto}
 .screen.active{display:block}
 .card{background:#fff;border-radius:10px;border:0.5px solid #ddd;padding:14px 18px;margin-bottom:12px}
@@ -1108,6 +1126,16 @@ textarea{resize:vertical;min-height:64px}
           </div>
           <!-- Tabla tallas nuevo pedido -->
           <div id="nv-tallas-wrap" style="display:none;margin-top:10px"></div>
+          <!-- Estampaciones visuales (posiciones) - solo textil -->
+          <div id="nv-estamp-wrap" style="display:none;margin-top:10px">
+            <div style="background:#fafaf7;border:0.5px solid #e5e7eb;border-radius:8px;padding:10px 14px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                <span style="font-size:16px">🎨</span>
+                <span style="font-size:13px;font-weight:700;color:#444">Posiciones de estampación/bordado</span>
+              </div>
+              <div id="nv-estamp-selector"></div>
+            </div>
+          </div>
           <!-- Resultado -->
           <div id="nv-result" class="nv-rc" style="display:none">
             <table>
@@ -1649,6 +1677,105 @@ var PRENDA_MODELO = {
   'Polar New Artic 6414':'artic',
   'Sudadera Montblanc 6421':'montblanc','Sudadera Ulan 6439':'ulan',
 };
+
+// ─── SISTEMA DE ESTAMPACIONES TEXTIL ───
+// Solo aplica a prendas textiles. El resto de productos no tiene estampaciones configurables.
+// Tipo de prenda textil → determina qué posiciones están disponibles
+var PRENDA_TIPO_TEXTIL = {
+  'Camiseta Beagle 6554':'camiseta','Camiseta Jamaica 6627':'camiseta','Camiseta Bahrain 0407':'camiseta',
+  'Polo Star 6638':'camiseta',
+  'Peto Pregón 1500':'camiseta',
+  'Sudadera Clásica 1070':'sudadera_capucha','Sudadera Urban 1067':'sudadera_capucha',
+  'Sudadera Montblanc 6421':'sudadera_capucha','Sudadera Ulan 6439':'sudadera_capucha',
+  'Softshell Antártida 6432':'softshell','Softshell Nebraska 6436':'softshell',
+  'Polar New Artic 6414':'softshell',
+};
+// Posiciones válidas por tipo de prenda textil
+var POSICIONES_PRENDA = {
+  camiseta: ['pecho','espalda','manga-izq','manga-dcha'],
+  sudadera_capucha: ['pecho','espalda','manga-izq','manga-dcha','capucha','bolsillo','manga-puno'],
+  sudadera: ['pecho','espalda','manga-izq','manga-dcha','manga-puno'],
+  softshell: ['pecho','espalda','manga-izq','manga-dcha','manga-puno','hombro'],
+};
+// Etiquetas visibles por posición
+var POSICION_LABEL = {
+  'pecho':'Pecho','espalda':'Espalda','manga-izq':'Manga izq','manga-dcha':'Manga dcha',
+  'capucha':'Capucha','bolsillo':'Bolsillo delantero','manga-puno':'Manga (puño)',
+  'hombro':'Hombro','otra':'Otra posición'
+};
+// Determina si una prenda tiene sistema de estampaciones (solo textil)
+function prendaTieneEstampaciones(nombrePrenda){
+  return !!PRENDA_TIPO_TEXTIL[nombrePrenda];
+}
+// Posiciones disponibles para una prenda textil + siempre "otra" al final
+function getPosicionesPrenda(nombrePrenda){
+  var tipo=PRENDA_TIPO_TEXTIL[nombrePrenda];
+  if(!tipo)return [];
+  return (POSICIONES_PRENDA[tipo]||[]).concat(['otra']);
+}
+
+// ─── SISTEMA DE ESTAMPACIONES ───
+// Tipo de prenda → determina qué posiciones de estampación están disponibles
+// camiseta: camisetas, polos, petos
+// sudadera_capucha: sudaderas con capucha (Clásica, Urban, Montblanc)
+// sudadera: sudaderas sin capucha
+// softshell: softshells, parkas, polares, chalecos (suelen admitir pecho bordado + espalda)
+// delantal: delantales y casacas con pechera
+// gorra: gorras
+// bolsa: totebags, mochilas
+// camisa: camisas con manga larga/corta
+// pantalon: pantalones (solo pierna y bolsillo trasero)
+// accesorio: pañuelos, otros (solo "otra")
+var PRENDA_TIPO = {
+  'Camiseta Beagle 6554':'camiseta','Camiseta Jamaica 6627':'camiseta','Camiseta Bahrain 0407':'camiseta',
+  'Polo Star 6638':'camiseta',
+  'Sudadera Clásica 1070':'sudadera_capucha','Sudadera Urban 1067':'sudadera_capucha',
+  'Sudadera Montblanc 6421':'sudadera_capucha','Sudadera Ulan 6439':'sudadera_capucha',
+  'Softshell Antártida 6432':'softshell','Softshell Nebraska 6436':'softshell',
+  'Polar New Artic 6414':'softshell',
+  'Chaleco Thunder':'softshell',
+  'Parka Traffic':'softshell',
+  'Buzo Kevin':'softshell',
+  'Peto Pregón 1500':'camiseta',
+  'Pantalón Thunder':'pantalon','Pantalón Vademécum 9097':'pantalon',
+  'Delantal Mini 9124':'delantal','Delantal Classic 9123':'delantal','Delantal Benoit 9125':'delantal',
+  'Casaca Panacea 9098':'delantal','Casulla Arzak 9091':'delantal','Bata Vaccine 9094':'delantal',
+  'Camisa Aifos 5503':'camisa','Camisa Aifos L/S 5504':'camisa',
+  'Gorra Eris 7019':'gorra',
+  'Totebag Hill 7601':'bolsa','Mochila Hamelin 7114':'bolsa',
+  'Pañuelo Festero 9003':'accesorio',
+};
+// Posiciones válidas por tipo de prenda
+var POSICIONES_PRENDA = {
+  camiseta: ['pecho','espalda','manga-izq','manga-dcha'],
+  sudadera_capucha: ['pecho','espalda','manga-izq','manga-dcha','capucha','bolsillo','manga-puno'],
+  sudadera: ['pecho','espalda','manga-izq','manga-dcha','manga-puno'],
+  softshell: ['pecho','espalda','manga-izq','manga-dcha','manga-puno','hombro'],
+  camisa: ['pecho','espalda','manga-izq','manga-dcha','manga-puno'],
+  delantal: ['pechera','bolsillo'],
+  gorra: ['frontal','lateral-izq','lateral-dcha','trasera'],
+  bolsa: ['frontal','trasera'],
+  pantalon: ['muslo-izq','muslo-dcha','bolsillo-trasero'],
+  accesorio: [],
+};
+// Etiquetas visibles por posición
+var POSICION_LABEL = {
+  'pecho':'Pecho','espalda':'Espalda','manga-izq':'Manga izq','manga-dcha':'Manga dcha',
+  'capucha':'Capucha','bolsillo':'Bolsillo delantero','manga-puno':'Manga (puño)',
+  'hombro':'Hombro','pechera':'Pechera','frontal':'Frontal','trasera':'Trasera',
+  'lateral-izq':'Lateral izq','lateral-dcha':'Lateral dcha',
+  'muslo-izq':'Muslo izq','muslo-dcha':'Muslo dcha','bolsillo-trasero':'Bolsillo trasero',
+  'completa':'Completa','otra':'Otra posición'
+};
+// Determina tipo de prenda (con fallback a camiseta si no está mapeada)
+function getTipoPrenda(nombrePrenda){
+  return PRENDA_TIPO[nombrePrenda] || 'camiseta';
+}
+// Posiciones disponibles para una prenda + siempre "otra" al final
+function getPosicionesPrenda(nombrePrenda){
+  var tipo=getTipoPrenda(nombrePrenda);
+  return (POSICIONES_PRENDA[tipo]||[]).concat(['otra']);
+}
 var PRENDA_REF = {
   'Camiseta Beagle 6554':'CA6554',
   'Sudadera Clásica 1070':'SU1070',
@@ -2131,8 +2258,8 @@ function cargarDatos(){
 }
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',credito:c.credito===true,creado:c.creado};}
-function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,metodoPago:p.metodo_pago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,_recTallasNum:p.recordatorio_tallas_num||0,_tallasNotificado:p.tallas_notificado||false};}
-function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,metodo_pago:p.metodoPago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null,tipo_personalizacion:p.tipoPersonalizacion||null};}
+function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,metodoPago:p.metodo_pago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,estampaciones:p.estampaciones||[],_recTallasNum:p.recordatorio_tallas_num||0,_tallasNotificado:p.tallas_notificado||false};}
+function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,metodo_pago:p.metodoPago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null,tipo_personalizacion:p.tipoPersonalizacion||null,estampaciones:p.estampaciones||[]};}
 
 function startClock(){
   document.getElementById('clock-wrap').style.display='block';
@@ -2208,6 +2335,138 @@ function renderIdentidadBtn(){
 }
 function selectSec(el){document.querySelectorAll('.sec-btn').forEach(function(b){b.classList.remove('selected');});el.classList.add('selected');selectedSec=el.dataset.sec;}
 function updatePayRadio(){document.querySelectorAll('.radio-opt').forEach(function(o){o.classList.remove('sel');});var c=document.querySelector('input[name="pago"]:checked');if(c)c.closest('.radio-opt').classList.add('sel');}
+
+// ═════════════════════ SISTEMA DE ESTAMPACIONES TEXTIL ═════════════════════
+// Estado en memoria: array de {posicion,tamano,descripcion,color,[posicionLibre]}
+// Renderiza el selector en un contenedor dado. onChange se llama tras cada modificación.
+function renderEstampaciones(containerId, prenda, estampaciones, onChange){
+  var cont=document.getElementById(containerId);
+  if(!cont)return;
+  if(!prendaTieneEstampaciones(prenda)){
+    cont.innerHTML='<div style="font-size:12px;color:#aaa;font-style:italic">El selector de estampaciones solo aplica a prendas textiles.</div>';
+    cont._estampaciones=[];cont._onChange=onChange;cont._prenda=prenda;
+    return;
+  }
+  var posibles=getPosicionesPrenda(prenda);
+  var posNoOtra=posibles.filter(function(p){return p!=='otra';});
+  var activas={};estampaciones.forEach(function(e){if(e.posicion!=='otra')activas[e.posicion]=true;});
+  var togglesHtml=posNoOtra.map(function(pos){
+    var act=activas[pos]?'active':'';
+    return '<button type="button" class="estamp-toggle '+act+'" onclick="toggleEstampacion(\''+containerId+'\',\''+pos+'\')">'
+      +pictogramaPosicion(pos,34)
+      +'<div style="font-size:10px;margin-top:2px;line-height:1.1">'+POSICION_LABEL[pos]+'</div>'
+      +'</button>';
+  }).join('');
+  var filas=estampaciones.map(function(e,idx){return filaEstampacion(containerId, e, idx);}).join('');
+  cont.innerHTML=''
+    +'<div style="font-size:11px;color:#666;margin-bottom:6px;font-weight:500">Pulsa las posiciones donde va estampación o bordado:</div>'
+    +'<div class="estamp-toggles">'+togglesHtml+'</div>'
+    +(filas?'<div class="estamp-filas" style="margin-top:10px">'+filas+'</div>':'')
+    +'<button type="button" class="btn btn-secondary btn-sm" style="margin-top:8px;font-size:12px" onclick="addEstampacionOtra(\''+containerId+'\')">+ Añadir otra posición (libre)</button>';
+  cont._estampaciones=estampaciones;
+  cont._onChange=onChange;
+  cont._prenda=prenda;
+}
+function filaEstampacion(containerId, e, idx){
+  var tamOpts=['pequeña','mediana','grande'].map(function(t){
+    return '<option value="'+t+'"'+(e.tamano===t?' selected':'')+'>'+t.charAt(0).toUpperCase()+t.slice(1)+'</option>';
+  }).join('');
+  var esOtra=e.posicion==='otra';
+  var posLabel=esOtra?'':(POSICION_LABEL[e.posicion]||e.posicion);
+  var header=esOtra
+    ?'<input type="text" placeholder="Describe la posición (ej: capucha trasera)" value="'+(e.posicionLibre||'').replace(/"/g,'&quot;')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'posicionLibre\',this.value)" style="flex:1;padding:5px 8px;font-size:12px;border:0.5px solid #ccc;border-radius:4px">'
+    :'<span class="estamp-pos-badge">'+pictogramaPosicion(e.posicion,22)+'<span>'+posLabel+'</span></span>';
+  return '<div class="estamp-fila" data-idx="'+idx+'">'
+    +'<div class="estamp-fila-cabecera">'+header
+      +'<button type="button" class="estamp-del" onclick="removeEstampacion(\''+containerId+'\','+idx+')" title="Quitar">×</button>'
+    +'</div>'
+    +'<div class="estamp-fila-body">'
+      +'<div class="estamp-campo"><label>Tamaño</label><select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'tamano\',this.value)">'+tamOpts+'</select></div>'
+      +'<div class="estamp-campo estamp-flex2"><label>¿Qué va?</label><input type="text" placeholder="Logo, nombre+dorsal, texto…" value="'+(e.descripcion||'').replace(/"/g,'&quot;')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'descripcion\',this.value)"></div>'
+      +'<div class="estamp-campo"><label>Color</label><input type="text" placeholder="blanco…" value="'+(e.color||'').replace(/"/g,'&quot;')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)"></div>'
+    +'</div>'
+  +'</div>';
+}
+function toggleEstampacion(containerId, posicion){
+  var cont=document.getElementById(containerId);if(!cont)return;
+  var est=cont._estampaciones||[];
+  var existe=est.findIndex(function(e){return e.posicion===posicion;});
+  if(existe>=0){est.splice(existe,1);}
+  else{est.push({posicion:posicion,tamano:'mediana',descripcion:'',color:''});}
+  renderEstampaciones(containerId, cont._prenda, est, cont._onChange);
+  if(cont._onChange)cont._onChange(est);
+}
+function addEstampacionOtra(containerId){
+  var cont=document.getElementById(containerId);if(!cont)return;
+  var est=cont._estampaciones||[];
+  est.push({posicion:'otra',posicionLibre:'',tamano:'mediana',descripcion:'',color:''});
+  renderEstampaciones(containerId, cont._prenda, est, cont._onChange);
+  if(cont._onChange)cont._onChange(est);
+}
+function updateEstampacion(containerId, idx, campo, valor){
+  var cont=document.getElementById(containerId);if(!cont)return;
+  var est=cont._estampaciones||[];
+  if(!est[idx])return;
+  est[idx][campo]=valor;
+  cont._estampaciones=est;
+  if(cont._onChange)cont._onChange(est);
+}
+function removeEstampacion(containerId, idx){
+  var cont=document.getElementById(containerId);if(!cont)return;
+  var est=cont._estampaciones||[];
+  est.splice(idx,1);
+  renderEstampaciones(containerId, cont._prenda, est, cont._onChange);
+  if(cont._onChange)cont._onChange(est);
+}
+// Pictograma SVG compacto por posición, sobre silueta de camiseta genérica
+function pictogramaPosicion(pos, size){
+  size=size||36;
+  var shirt='<path d="M10 10 L6 12 L6 18 L10 17 L10 34 L30 34 L30 17 L34 18 L34 12 L30 10 L25 8 Q20 12 15 8 Z" fill="#f4f4f0" stroke="#999" stroke-width="0.7"/>';
+  var gr='#84CC4B', grS='#5B9F1F';
+  var mark='';
+  var extra='';
+  if(pos==='pecho')            mark='<rect x="17" y="15" width="6" height="5" fill="'+gr+'" stroke="'+grS+'" stroke-width="0.6"/>';
+  else if(pos==='espalda')     mark='<rect x="14" y="16" width="12" height="10" fill="'+gr+'" stroke="'+grS+'" stroke-width="0.6"/>';
+  else if(pos==='manga-izq')   mark='<rect x="6.5" y="13" width="4" height="4" fill="'+gr+'" stroke="'+grS+'" stroke-width="0.6"/>';
+  else if(pos==='manga-dcha')  mark='<rect x="29.5" y="13" width="4" height="4" fill="'+gr+'" stroke="'+grS+'" stroke-width="0.6"/>';
+  else if(pos==='capucha')     {extra='<path d="M14 6 Q20 2 26 6 L26 10 Q20 13 14 10 Z" fill="#e8e8e4" stroke="#999" stroke-width="0.7"/>';mark='<rect x="17" y="4" width="6" height="3" fill="'+gr+'" stroke="'+grS+'" stroke-width="0.6"/>';}
+  else if(pos==='bolsillo')    mark='<rect x="15" y="22" width="10" height="6" fill="'+gr+'" stroke="'+grS+'" stroke-width="0.6"/>';
+  else if(pos==='manga-puno')  mark='<rect x="6.5" y="15.5" width="4" height="2" fill="'+gr+'" stroke="'+grS+'" stroke-width="0.6"/><rect x="29.5" y="15.5" width="4" height="2" fill="'+gr+'" stroke="'+grS+'" stroke-width="0.6"/>';
+  else if(pos==='hombro')      mark='<rect x="10" y="9.5" width="5" height="3" fill="'+gr+'" stroke="'+grS+'" stroke-width="0.6"/><rect x="25" y="9.5" width="5" height="3" fill="'+gr+'" stroke="'+grS+'" stroke-width="0.6"/>';
+  else if(pos==='otra')        return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="14" fill="#FFF8EC" stroke="#FAC775" stroke-width="1.2"/><text x="20" y="25" text-anchor="middle" font-size="14" fill="#854F0B" font-weight="bold">?</text></svg>';
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">'+shirt+extra+mark+'</svg>';
+}
+// Vista para el operario en el detalle del pedido
+function renderEstampacionesDetalle(estampaciones, prenda){
+  if(!estampaciones||!estampaciones.length){
+    return '<div style="font-size:12px;color:#aaa;font-style:italic">Sin estampaciones definidas</div>';
+  }
+  var chips=estampaciones.map(function(e){
+    var lbl=e.posicion==='otra'?(e.posicionLibre||'Otra'):(POSICION_LABEL[e.posicion]||e.posicion);
+    var desc=e.descripcion?' · <b>'+e.descripcion+'</b>':'';
+    var col=e.color?' · tinta '+e.color:'';
+    var tam=e.tamano?' ('+e.tamano+')':'';
+    return '<div class="estamp-chip">'+pictogramaPosicion(e.posicion,28)+'<div class="estamp-chip-text"><div style="font-weight:600">'+lbl+tam+'</div><div style="font-size:11px;color:#555">'+(e.descripcion||'')+(e.color?' · '+e.color:'')+'</div></div></div>';
+  }).join('');
+  return '<div class="estamp-detalle">'+chips+'</div>';
+}
+// Estado estampaciones del formulario nv-
+var _nvEstampaciones=[];
+// Muestra/oculta y renderiza selector según prenda seleccionada en nv-tx-prenda
+function nvRefrescarEstampaciones(){
+  var sel=document.getElementById('nv-tx-prenda');
+  var wrap=document.getElementById('nv-estamp-wrap');
+  if(!sel||!wrap)return;
+  var prenda=sel.value||'';
+  if(!prendaTieneEstampaciones(prenda)){
+    wrap.style.display='none';
+    _nvEstampaciones=[];
+    return;
+  }
+  wrap.style.display='block';
+  renderEstampaciones('nv-estamp-selector', prenda, _nvEstampaciones, function(est){_nvEstampaciones=est;});
+}
+
 function calcPendiente(){
   var t=parseFloat(document.getElementById('f-total').value)||0;
   var s=parseFloat(document.getElementById('f-senal').value)||0;
@@ -2626,6 +2885,13 @@ function verPedido(id){
         +'<div style="font-size:11px;color:'+_colTxt+';line-height:1.45;margin-bottom:8px">🔄 <strong>Reabrir formulario</strong> para que el cliente edite. Borra los datos actuales y le reenvía el WhatsApp con el link.</div>'
         +'<button onclick="reabrirTallasCliente(\''+p.id+'\')" style="width:100%;padding:9px;background:'+(p.ropaOk?'#A32D2D':'#BA7517')+';color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">🔄 Reabrir tallas y reenviar WA</button>'
         +_avisoExtra
+        +'</div>';
+    }
+    // BLOQUE ESTAMPACIONES (posiciones + contenido + color) — vista para operario
+    if(p.estampaciones && p.estampaciones.length){
+      html+='<div style="background:#fafaf7;border:0.5px solid #e0e0dc;border-radius:7px;padding:10px 12px;margin-bottom:10px">'
+        +'<div style="font-size:11px;font-weight:700;color:#444;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px">🎨 Estampaciones / bordados</div>'
+        +renderEstampacionesDetalle(p.estampaciones, p.descripcion)
         +'</div>';
     }
   }
@@ -4303,6 +4569,24 @@ function _generarFichaHTML(p){
   }else{
     html+='<div style="color:#aaa;padding:12px;border:1px dashed #ddd;border-radius:6px;text-align:center;margin-bottom:16px">Sin datos de tallas</div>';
   }
+  // ESTAMPACIONES para producción (visual + descriptivo)
+  if(p.estampaciones && p.estampaciones.length){
+    html+='<div style="margin-top:14px;margin-bottom:14px;border:1px solid #5B9F1F;border-radius:6px;padding:10px 12px;background:#FAFEF4">';
+    html+='<div style="font-size:11px;font-weight:700;color:#3B6D11;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🎨 Estampaciones / Bordados</div>';
+    html+='<table style="width:100%;font-size:12px;border-collapse:collapse">';
+    html+='<tr style="background:#EAF3DE"><th style="padding:4px 6px;text-align:left;border:0.5px solid #c5d9aa;width:42px"></th><th style="padding:4px 6px;text-align:left;border:0.5px solid #c5d9aa">Posición</th><th style="padding:4px 6px;text-align:center;border:0.5px solid #c5d9aa">Tamaño</th><th style="padding:4px 6px;text-align:left;border:0.5px solid #c5d9aa">Qué va</th><th style="padding:4px 6px;text-align:left;border:0.5px solid #c5d9aa">Color tinta</th></tr>';
+    p.estampaciones.forEach(function(e){
+      var lbl=e.posicion==='otra'?(e.posicionLibre||'Otra'):(POSICION_LABEL[e.posicion]||e.posicion);
+      html+='<tr>'
+        +'<td style="padding:4px 6px;border:0.5px solid #e0e0dc;text-align:center;background:#fff">'+pictogramaPosicion(e.posicion,32)+'</td>'
+        +'<td style="padding:4px 6px;border:0.5px solid #e0e0dc;font-weight:600">'+lbl+'</td>'
+        +'<td style="padding:4px 6px;border:0.5px solid #e0e0dc;text-align:center">'+(e.tamano||'-')+'</td>'
+        +'<td style="padding:4px 6px;border:0.5px solid #e0e0dc">'+(e.descripcion||'<span style=\"color:#aaa\">-</span>')+'</td>'
+        +'<td style="padding:4px 6px;border:0.5px solid #e0e0dc">'+(e.color||'<span style=\"color:#aaa\">-</span>')+'</td>'
+        +'</tr>';
+    });
+    html+='</table></div>';
+  }
   // PREVIA — cargar imagen desde Supabase Storage
   var previaUrl=null;
   if(p.tallasColores){
@@ -5610,6 +5894,8 @@ function nuevaVenta(modo){
   document.getElementById('nv-textil-wrap').style.display='none';
   document.getElementById('nv-tallas-wrap').style.display='none';
   document.getElementById('nv-tipo-tallas-wrap').style.display='none';
+  var _estw0=document.getElementById('nv-estamp-wrap');if(_estw0)_estw0.style.display='none';
+  _nvEstampaciones=[];
   document.getElementById('nv-result').style.display='none';
   // nv-upsell removed
   document.getElementById('nv-btn-add').style.display='none';
@@ -5917,6 +6203,8 @@ function nvCatChange(){
   document.getElementById('nv-textil-wrap').style.display='none';
   document.getElementById('nv-tallas-wrap').style.display='none';
   document.getElementById('nv-tipo-tallas-wrap').style.display='none';
+  var _estw1=document.getElementById('nv-estamp-wrap');if(_estw1)_estw1.style.display='none';
+  _nvEstampaciones=[];
   document.getElementById('nv-result').style.display='none';
   // nv-upsell removed
   document.getElementById('nv-btn-add').style.display='none';
@@ -5937,6 +6225,19 @@ function nvCatChange(){
       tallasWrap.style.display='block';
       tallasWrap.innerHTML=nvRenderTablaTallas();
     }
+    // Enganchar selector de estampaciones al cambio de prenda
+    var selPrenda=document.getElementById('nv-tx-prenda');
+    if(selPrenda){
+      var prevOnchange=selPrenda.onchange;
+      selPrenda.onchange=function(ev){
+        if(typeof prevOnchange==='function')prevOnchange.call(selPrenda,ev);
+        try{if(typeof nvCalc==='function')nvCalc();}catch(e){}
+        _nvEstampaciones=[]; // resetear al cambiar prenda
+        nvRefrescarEstampaciones();
+      };
+    }
+    // Render inicial del selector de estampaciones (con prenda por defecto seleccionada)
+    nvRefrescarEstampaciones();
   }else if(prod.fields&&prod.fields.length){
     prod.fields.forEach(function(f,i){
       if(f.type==='select'){
@@ -6764,6 +7065,8 @@ function nvCrearPedido(){
                 var _tDatos=_nvTipoTallas==='individual'?nvIndGetDatos():nvTTGetDatos();
                 ped.tallas_colores=_tDatos;
                 ped.tipo_personalizacion=_nvTipoTallas==='individual'?'individual':'iguales';
+                // Estampaciones: posiciones visuales + descripción para el operario
+                ped.estampaciones=(_nvEstampaciones&&_nvEstampaciones.length)?JSON.parse(JSON.stringify(_nvEstampaciones)):[];
               }
               var _esVacia=false;
               if(sec==='TX'&&ped.tallas_colores&&ped.tallas_colores.length){
