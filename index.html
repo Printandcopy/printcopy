@@ -18,6 +18,8 @@ header h1{font-size:16px;font-weight:500;white-space:nowrap}
 .nav-tabs{display:flex;gap:3px}
 .nav-tab{padding:5px 12px;border-radius:6px;border:none;background:transparent;color:#ccc;cursor:pointer;font-size:13px;font-weight:500}
 .nav-tab.active,.nav-tab:hover{background:#333;color:#fff}
+.user-badge-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;border:1.5px solid #F09595;background:#FCEBEB;color:#A32D2D;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s}
+.user-badge-btn:hover{filter:brightness(0.95);transform:translateY(-1px)}
 .screen{display:none;padding:16px 20px;max-width:1400px;margin:0 auto}
 .screen.active{display:block}
 .card{background:#fff;border-radius:10px;border:0.5px solid #ddd;padding:14px 18px;margin-bottom:12px}
@@ -471,7 +473,7 @@ textarea{resize:vertical;min-height:64px}
     <span id="logo-txt" style="display:none;font-size:17px;font-weight:800;color:#fff">Print &amp; Copy</span>
   </div>
   <div style="display:flex;align-items:center;gap:12px">
-    <div class="user-badge">👤 <select id="current-user" onchange="setCurrentUser(this.value)"><option value="Marilia">Marilia</option><option value="Álvaro">Álvaro</option><option value="Charo">Charo</option><option value="Raúl">Raúl</option><option value="Bea">Bea</option></select></div>
+    <button id="btn-identidad" class="user-badge-btn" onclick="openModalIdentidad()" title="Cambiar identidad">👤 <span id="btn-identidad-label">Elige identidad…</span></button>
     <span id="conn-status" style="font-size:11px;color:#aaa"><span class="conn-dot" id="conn-dot"></span>Conectando...</span>
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="showScreen('mostrador',this)">🏪 Mostrador</button>
@@ -674,7 +676,6 @@ textarea{resize:vertical;min-height:64px}
       <select class="sort-select" id="op-filter" onchange="setFiltroOperario(this.value)">
         <option value="all">Todos</option>
       </select>
-      <button id="pc-yo-btn" onclick="openModalIdentidad()" title="Cambiar quién soy yo" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:11px;padding:2px 4px" ></button>
       <button class="btn btn-secondary btn-sm" onclick="cargarDatos()">↻ Actualizar</button>
     </div>
   </div>
@@ -1404,7 +1405,7 @@ var FASES=['Nuevo','Atendido','Previas env.','Previas OK','Producción','Termina
 var SECS={TX:'Textil',PL:'Plotter',UV:'Impresión UV',SUB:'Sublimación',NEON:'Neones',XR:'Xerox'};
 var OPERARIOS=['Marilia','Álvaro','Charo','Raúl','Bea'];
 // Clave de acceso al rol Gerente. Cambiable en cualquier momento editando este valor.
-var GERENTE_PASS='PrintCopy2026';
+var GERENTE_PASS='secreto';
 var SECTORES={particular:'Particular',hosteleria:'Hostelería',comercio:'Comercio',eventos:'Eventos y fiestas',empresa:'Empresas / Industria',inmobiliaria:'Inmobiliaria',educacion:'Educación',salud:'Salud y bienestar',servicios:'Servicios profesionales',asociaciones:'Asociaciones y clubs',admin_publica:'Administración pública'};
 var SECTOR_COLORS={particular:'#f1efe8|#5f5e5a',hosteleria:'#fef3e8|#7a4a1a',comercio:'#e8f0fe|#1a3a7a',eventos:'#f3e8fe|#4a1a7a',empresa:'#e8fef8|#1a5a4a',inmobiliaria:'#fce8e8|#7a1a1a',educacion:'#E6F1FB|#185FA5',salud:'#e8fce8|#1a5a1a',servicios:'#EEEDFE|#534AB7',asociaciones:'#FAEEDA|#BA7517',admin_publica:'#f5f5f5|#444'};
 
@@ -2176,7 +2177,6 @@ function setView(v,el){
 var _filtroOperario=null; // null | 'all' | 'Marilia' | ...
 function setFiltroOperario(v){
   _filtroOperario=v;
-  try{localStorage.setItem('pc_operario_filtro',v);}catch(e){}
   renderTaller();
 }
 // Aplica filtro de operario a una lista de pedidos
@@ -2192,14 +2192,16 @@ function renderOpFilterSelect(){
     return'<option value="'+op+'"'+(op===actual?' selected':'')+'>'+op+'</option>';
   }).join('');
   if(actual==='all')sel.value='all';
-  // Actualizar el texto del botón discreto según el rol/identidad
-  var btn=document.getElementById('pc-yo-btn');
-  if(btn){
-    if(_esGerente){btn.textContent='👑 Gerente ✎';btn.style.display='inline-block';}
-    else if(_pcYo==='all'){btn.textContent='👥 Todos ✎';btn.style.display='inline-block';}
-    else if(_pcYo){btn.textContent='¿No eres '+_pcYo+'? ✎';btn.style.display='inline-block';}
-    else{btn.style.display='none';}
-  }
+}
+// Actualiza el botón grande de identidad en la barra principal
+function renderIdentidadBtn(){
+  var btn=document.getElementById('btn-identidad');
+  var lbl=document.getElementById('btn-identidad-label');
+  if(!btn||!lbl)return;
+  if(_esGerente){lbl.textContent='Gerente 👑';btn.style.background='#FFF8EC';btn.style.borderColor='#FAC775';btn.style.color='#854F0B';}
+  else if(_pcYo==='all'){lbl.textContent='Todos 👥';btn.style.background='#F1EFE8';btn.style.borderColor='#D3D1C7';btn.style.color='#444';}
+  else if(_pcYo){lbl.textContent=_pcYo;btn.style.background='#E6F1FB';btn.style.borderColor='#B5D4F4';btn.style.color='#0C447C';}
+  else{lbl.textContent='Elige identidad…';btn.style.background='#FCEBEB';btn.style.borderColor='#F09595';btn.style.color='#A32D2D';}
 }
 function selectSec(el){document.querySelectorAll('.sec-btn').forEach(function(b){b.classList.remove('selected');});el.classList.add('selected');selectedSec=el.dataset.sec;}
 function updatePayRadio(){document.querySelectorAll('.radio-opt').forEach(function(o){o.classList.remove('sel');});var c=document.querySelector('input[name="pago"]:checked');if(c)c.closest('.radio-opt').classList.add('sel');}
@@ -4210,7 +4212,7 @@ function resetForm(){
   document.querySelectorAll('input[name="pago"]').forEach(function(r){r.checked=false;});
   document.querySelectorAll('.radio-opt').forEach(function(o){o.classList.remove('sel');});
   document.querySelector('input[name="fecha-tipo"][value="aprox"]').checked=true;
-  document.getElementById('f-operario').value='Marilia';
+  document.getElementById('f-operario').value=(_pcYo && _pcYo!=='gerente' && _pcYo!=='all')?_pcYo:'Marilia';
   document.getElementById('f-pendiente').textContent='—';
   document.getElementById('cond-display').style.display='none';
   document.getElementById('cond-pago-info').style.display='none';
@@ -5335,7 +5337,13 @@ function toggleBandejaCard(card,id){
 function cogerPedido(id){
   var p=pedidos.find(function(x){return x.id===id;});
   if(!p)return;
-  var operario=document.getElementById('current-user').value||'Marilia';
+  // Usar identidad de sesión. Si es "gerente"/"all" o no hay, pedir identidad antes de coger
+  var operario=_pcYo;
+  if(!operario || operario==='gerente' || operario==='all'){
+    alert('Para coger un pedido, elige antes un operario en el botón de identidad.');
+    openModalIdentidad();
+    return;
+  }
   if(!confirm('¿Coger pedido '+id+' y asignarlo a '+operario+'?'))return;
   p.fase=1;
   p.operario=operario;
@@ -5489,7 +5497,7 @@ function nuevaVenta(modo){
   document.getElementById('nv-ftipo').value='aprox';
   _nvFechaAutoCalc=null;
   if(typeof nvSetTipoBadge==='function')nvSetTipoBadge('aprox');
-  document.getElementById('nv-operario').value='Marilia';
+  document.getElementById('nv-operario').value=(_pcYo && _pcYo!=='gerente' && _pcYo!=='all')?_pcYo:'Marilia';
   document.getElementById('nv-notas').value='';
   document.getElementById('nv-dto').value='0';
   document.getElementById('nv-validez').value='15';
@@ -8378,24 +8386,18 @@ function cargarHistorialPrevias(pedidoId){
 }
 
 // ── IDENTIDAD PC ──
-// Cada PC/navegador guarda quién lo usa habitualmente en localStorage.pc_yo
-// Valores posibles: 'gerente' | 'all' | nombre de operario
+// Cada apertura de la app pide identidad. No persiste entre sesiones.
+// Valores posibles de _pcYo: 'gerente' | 'all' | nombre de operario | null
 // Flag adicional 'es_gerente' se activa solo tras validar clave GERENTE_PASS
 var _pcYo=null;
 var _esGerente=false;
 var _gerenteFallos=0;
-try{
-  _pcYo=localStorage.getItem('pc_yo');
-  _esGerente=(localStorage.getItem('es_gerente')==='1');
-}catch(e){}
-// Seguridad defensiva: si dice ser gerente pero no tiene flag validado, lo degradamos
-if(_pcYo==='gerente' && !_esGerente){_pcYo=null;}
 
 function openModalIdentidad(){
   // 5 opciones: Gerente / Todos / 5 operarios
   var opts=[
     '<button class="pc-yo-opt" onclick="setIdentidadPC(\'gerente\')" style="padding:14px;border:1.5px solid #FAC775;border-radius:8px;background:#FFF8EC;font-size:14px;font-weight:600;cursor:pointer;color:#854F0B">👑 Gerente (requiere clave)</button>',
-    '<button class="pc-yo-opt" onclick="setIdentidadPC(\'all\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#f5f5f0;font-size:14px;font-weight:600;cursor:pointer">👥 Todos</button>'
+    '<button class="pc-yo-opt" onclick="setIdentidadPC(\'all\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#f5f5f0;font-size:14px;font-weight:600;cursor:pointer">👥 Todos (ver todo el negocio)</button>'
   ].concat(OPERARIOS.map(function(op){
     return'<button class="pc-yo-opt" onclick="setIdentidadPC(\''+op+'\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;font-size:14px;font-weight:600;cursor:pointer">'+op+'</button>';
   })).join('');
@@ -8404,9 +8406,9 @@ function openModalIdentidad(){
     modal=document.createElement('div');
     modal.id='modal-identidad-pc';
     modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:99999';
-    modal.innerHTML='<div style="background:#fff;border-radius:12px;padding:24px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.25)">'
+    modal.innerHTML='<div style="background:#fff;border-radius:12px;padding:24px;max-width:360px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.25)">'
       +'<h2 style="margin:0 0 6px 0;font-size:18px">¿Quién eres?</h2>'
-      +'<p style="margin:0 0 16px 0;font-size:13px;color:#666">Esta opción se guarda en este navegador y no la preguntaremos más. Si cambias de puesto, puedes cambiarla desde el filtro.</p>'
+      +'<p style="margin:0 0 16px 0;font-size:13px;color:#666">Elige tu identidad para esta sesión. Se preguntará de nuevo la próxima vez que abras la app.</p>'
       +'<div id="pc-yo-options" style="display:flex;flex-direction:column;gap:8px">'+opts+'</div>'
       +'</div>';
     document.body.appendChild(modal);
@@ -8434,25 +8436,22 @@ function setIdentidadPC(valor){
     // Clave correcta
     _gerenteFallos=0;
     _esGerente=true;
-    try{localStorage.setItem('es_gerente','1');}catch(e){}
   } else {
     // Cualquier otro valor degrada a no-gerente
     _esGerente=false;
-    try{localStorage.removeItem('es_gerente');}catch(e){}
   }
   _pcYo=valor;
-  try{localStorage.setItem('pc_yo',valor);}catch(e){}
-  // Aplicar al filtro por defecto
+  // Aplicar al filtro por defecto según rol
   var filtroDefault;
   if(valor==='gerente'||valor==='all'){filtroDefault='all';}
   else{filtroDefault=valor;}
   _filtroOperario=filtroDefault;
-  try{localStorage.setItem('pc_operario_filtro',filtroDefault);}catch(e){}
   // Cerrar modal y refrescar UI
   var modal=document.getElementById('modal-identidad-pc');
   if(modal)modal.style.display='none';
   renderOpFilterSelect();
   actualizarVisibilidadAnalytics();
+  renderIdentidadBtn();
   renderTaller();
 }
 // Oculta o muestra la pestaña Analytics según sea Gerente
@@ -8465,12 +8464,9 @@ function actualizarVisibilidadAnalytics(){
     }
   });
 }
-// Inicializar filtro operario desde localStorage
+// Inicializar filtro operario según identidad elegida
 function initFiltroOperario(){
-  var guardado=null;
-  try{guardado=localStorage.getItem('pc_operario_filtro');}catch(e){}
-  if(guardado){_filtroOperario=guardado;}
-  else if(_pcYo==='gerente'||_pcYo==='all'){_filtroOperario='all';}
+  if(_pcYo==='gerente'||_pcYo==='all'){_filtroOperario='all';}
   else if(_pcYo){_filtroOperario=_pcYo;}
   else{_filtroOperario='all';}
   renderOpFilterSelect();
@@ -8483,10 +8479,11 @@ cargarDatos();
 cargarPresupuestos();
 // Arrancar siempre en Mostrador
 showScreen('mostrador',document.querySelector('.nav-tab'));
-// Inicializar filtro operario + abrir modal identidad si nunca se ha elegido
+// Identidad: no persiste, siempre pedir al abrir
 initFiltroOperario();
 actualizarVisibilidadAnalytics();
-if(!_pcYo){setTimeout(openModalIdentidad,300);}
+renderIdentidadBtn();
+setTimeout(openModalIdentidad,300);
 // Recordatorios automáticos presupuestos cada 4h
 setInterval(checkRecordatoriosPresupuestos,4*60*60*1000);
 // Recordatorio pago: presupuestos aceptados sin pago (transferencia o tienda)
