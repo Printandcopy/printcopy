@@ -2055,7 +2055,7 @@ function cargarDatos(){
   });
 }
 
-function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',creado:c.creado};}
+function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',credito:c.credito===true,creado:c.creado};}
 function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,metodoPago:p.metodo_pago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,_recTallasNum:p.recordatorio_tallas_num||0,_tallasNotificado:p.tallas_notificado||false};}
 function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,metodo_pago:p.metodoPago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null,tipo_personalizacion:p.tipoPersonalizacion||null};}
 
@@ -2144,7 +2144,8 @@ function fillClient(id){
   // Mostrar condiciones y nivel
   document.getElementById('cond-text').textContent=cond;
   document.getElementById('cond-display').style.display='block';
-  document.getElementById('cond-pago-info').innerHTML=nivelBadgeHTML(nivel)+'&nbsp;<span style="color:#534AB7;font-size:12px">'+cond+'</span>';
+  var creditoInfo=c.credito?'<span style="background:#FAEEDA;color:#7a4a1a;border:1px solid #FAC775;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-left:6px">💳 CRÉDITO · pedido sin señal</span>':'';
+  document.getElementById('cond-pago-info').innerHTML=nivelBadgeHTML(nivel)+'&nbsp;<span style="color:#534AB7;font-size:12px">'+cond+'</span>'+creditoInfo;
   document.getElementById('cond-pago-info').style.display='block';
   // Selector de pago
   document.getElementById('f-pago-tipo').value=pago;
@@ -2223,6 +2224,15 @@ function finalizarGuardar(cliente){
   var notas=document.getElementById('f-notas').value.trim();
   var presId=window._presupuestoId||null;
   var carritoItems=window._carritoData&&window._carritoData.length?window._carritoData:null;
+  // CRÉDITO: si el cliente tiene crédito activo → pedido sin señal, 'a cobrar' fin de mes
+  var esCredito=cliente&&cliente.credito===true;
+  if(esCredito){
+    pagoTipo='pendiente';
+    // Anular el valor del input de señal
+    var senalInp=document.getElementById('f-senal');
+    if(senalInp)senalInp.value=0;
+  }
+  var metodoPagoPed=esCredito?'credito':'efectivo';
 
   if(carritoItems&&carritoItems.length>0){
     var totalSenal=parseFloat(document.getElementById('f-senal').value)||0;
@@ -2264,7 +2274,7 @@ function finalizarGuardar(cliente){
             _nvTipoPersonalizacion='iguales';
           }
         }
-var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:item.desc,notas:notas,total:item.total,senal:senalItem,pago:pagoTipo,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:presId,tallasColores:_nvTallas,tipoPersonalizacion:_nvTipoPersonalizacion};
+var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:item.desc,notas:notas,total:item.total,senal:senalItem,pago:pagoTipo,metodoPago:metodoPagoPed,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:presId,tallasColores:_nvTallas,tipoPersonalizacion:_nvTipoPersonalizacion};
         return sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){
           if(r.error){alert('Error: '+r.error.message);return;}
           pedidos.unshift(pedido);
@@ -2300,7 +2310,7 @@ var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:te
     // Pedido único normal
     var sec=selectedSec;
     var total=parseFloat(document.getElementById('f-total').value)||0;
-    var senal=parseFloat(document.getElementById('f-senal').value)||0;
+    var senal=esCredito?0:(parseFloat(document.getElementById('f-senal').value)||0);
     var desc=document.getElementById('f-desc').value.trim();
     sb.from('contadores').select('valor').eq('seccion',sec).single().then(function(r){
       var numVal=(r.data?r.data.valor:0)+1;
@@ -2308,7 +2318,7 @@ var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:te
     }).then(function(numVal){
       var numPedido=sec+'-'+String(numVal).padStart(4,'0');
       var _nvTallas2=sec==='TX'?nvTTGetDatos():null;
-var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:desc,notas:notas,total:total,senal:senal,pago:pagoTipo,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:null,tallasColores:_nvTallas2};
+var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:desc,notas:notas,total:total,senal:senal,pago:pagoTipo,metodoPago:metodoPagoPed,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:null,tallasColores:_nvTallas2};
       sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){
         if(r.error){alert('Error: '+r.error.message);return;}
         pedidos.unshift(pedido);mostrarResguardo(pedido);
@@ -3135,6 +3145,7 @@ function tarjetaTaller(p){
   var pendPill=pend>0.01?'<span class="pendiente-pill">'+pend.toFixed(0)+'€ pdte</span>':''; 
   var previaBadge=p.previaEstado==="rechazada"?'<span class="badge" style="background:#FCEBEB;color:#A32D2D;border:0.5px solid #f7c1c1">✏️ Cambios</span>':p.previaEstado==="enviada"?'<span class="badge" style="background:#E6F1FB;color:#185FA5;border:0.5px solid #B5D4F4">👁️ Previa env.</span>':p.previaEstado==="aceptada"?'<span class="badge" style="background:#EAF3DE;color:#3B6D11;border:0.5px solid #C0DD97">✅ OK</span>':''; 
   var extBadge=p.externalizado?'<span class="badge" style="background:#534AB7;color:#fff;font-size:10px">🔄 '+p.externalizado+'</span>':''; 
+  var creditoBadge=p.metodoPago==='credito'?'<span class="badge" style="background:#FAEEDA;color:#7a4a1a;border:0.5px solid #FAC775">💳 Crédito</span>':'';
   var checksHTML="";
   if(p.seccion==="TX"){
     checksHTML=renderSemaforoTaller(p);
@@ -3143,7 +3154,7 @@ function tarjetaTaller(p){
   var cambiosHTML=p.previaEstado==="rechazada"&&p.previaCambios?'<div class="tc-cambios">"'+ p.previaCambios +'"</div>':''; 
   var accionesHTML=accionesTallerBtn(p);
   return '<div class="taller-card '+urgente+listoClass+'" onclick="verPedido(\''+ p.id +'\')">'
-    +'<div class="tc-header"><div class="tc-left"><div class="tc-id">'+p.id+'</div><div class="tc-meta"><span class="badge sec-'+p.seccion+'">'+SECS[p.seccion]+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span>'+previaBadge+extBadge+'</div><div class="tc-op">👤 '+p.operario+'</div></div>'
+    +'<div class="tc-header"><div class="tc-left"><div class="tc-id">'+p.id+'</div><div class="tc-meta"><span class="badge sec-'+p.seccion+'">'+SECS[p.seccion]+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span>'+previaBadge+extBadge+creditoBadge+'</div><div class="tc-op">👤 '+p.operario+'</div></div>'
     +'<div class="tc-right">'+entregaTxt+pendPill+'</div></div>'
     +'<div class="tc-body"><div class="tc-cliente">'+p.clienteNombre+'</div><div class="tc-desc">'+p.descripcion+'</div>'+(p.notas?'<div class="tc-notas">'+p.notas+'</div>':'')+cambiosHTML+checksHTML
     +'<textarea id="nota-taller-'+p.id+'" class="nota-operario" rows="2" placeholder="Anotaciones del operario..." onclick="event.stopPropagation()" onblur="guardarAnotacion(\''+ p.id +'\',this.value)">'+( p.anotacion||"")+'</textarea>'+accionesHTML+'</div></div>';
@@ -3166,11 +3177,21 @@ function renderClientes(q){
     var sectorBadge='';
     if(c.sector&&SECTORES[c.sector]){var sc=SECTOR_COLORS[c.sector]||'#f1efe8|#5f5e5a';var scParts=sc.split('|');sectorBadge='<span style="background:'+scParts[0]+';color:'+scParts[1]+';padding:2px 7px;border-radius:20px;font-size:11px;font-weight:600;margin-left:6px">'+SECTORES[c.sector]+'</span>';}
     var nivelBtn=nivelBadgeHTML(nivel);
-    // Botones manuales solo para Restringido y Premium
+    var creditoBadge=c.credito?'<span style="background:#FAEEDA;color:#7a4a1a;border:1px solid #FAC775;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-left:6px">💳 Crédito</span>':'';
+    // Suma de pendiente a cobrar si tiene crédito activo
+    var pendCredito='';
+    if(c.credito){
+      var pend=pedidos.filter(function(p){return(p.clienteId===c.id||p.clienteTel===c.telefono)&&p.metodoPago==='credito'&&p.fase<6;}).reduce(function(s,p){return s+(p.total-(p.senal||0));},0);
+      if(pend>0.01)pendCredito='<span style="background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;margin-left:6px">'+pend.toFixed(0)+'€ a cobrar</span>';
+    }
+    // Botones manuales
     var manualBtns='';
     if(nivel!=='premium')manualBtns+='<button class="btn btn-secondary btn-sm" title="Marcar como Premium" onclick="setNivelManual('+c.id+',\'premium\')">🟣 Premium</button>';
     if(nivel==='premium')manualBtns+='<button class="btn btn-secondary btn-sm" onclick="setNivelManual('+c.id+',\'auto\')">↺ Auto</button>';
-    return'<div class="cliente-card"><div style="flex:1"><div style="font-weight:500;font-size:14px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">'+c.nombre+sectorBadge+nivelBtn+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+(c.telefono||'')+' '+(c.email?'· '+c.email:'')+'</div><div style="font-size:12px;color:#534AB7;margin-top:2px">'+(c.condiciones||COND_STD)+'</div></div><div style="display:flex;align-items:center;gap:5px;flex-shrink:0">'+manualBtns+'<span style="font-size:12px;color:#888">'+nped+' ped.</span><button class="btn btn-secondary btn-sm" onclick="editarCliente('+c.id+')">✏️ Editar</button><button class="btn btn-secondary btn-sm" onclick="verPedidosCliente('+c.id+')">Ver pedidos</button><button class="btn btn-secondary btn-sm" style="color:#A32D2D" onclick="event.stopPropagation();eliminarCliente('+c.id+')">🗑</button></div></div>';
+    // Botón toggle Crédito
+    if(c.credito)manualBtns+='<button class="btn btn-secondary btn-sm" style="background:#FAEEDA;color:#7a4a1a;border-color:#FAC775" onclick="toggleCredito('+c.id+')">💳 Crédito ✓</button>';
+    else manualBtns+='<button class="btn btn-secondary btn-sm" title="Activar crédito fin de mes" onclick="toggleCredito('+c.id+')">💳 Crédito</button>';
+    return'<div class="cliente-card"><div style="flex:1"><div style="font-weight:500;font-size:14px;display:flex;align-items:center;flex-wrap:wrap;gap:6px">'+c.nombre+sectorBadge+nivelBtn+creditoBadge+pendCredito+'</div><div style="font-size:12px;color:#888;margin-top:2px">'+(c.telefono||'')+' '+(c.email?'· '+c.email:'')+'</div><div style="font-size:12px;color:#534AB7;margin-top:2px">'+(c.condiciones||COND_STD)+'</div></div><div style="display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">'+manualBtns+'<span style="font-size:12px;color:#888">'+nped+' ped.</span><button class="btn btn-secondary btn-sm" onclick="editarCliente('+c.id+')">✏️ Editar</button><button class="btn btn-secondary btn-sm" onclick="verPedidosCliente('+c.id+')">Ver pedidos</button><button class="btn btn-secondary btn-sm" style="color:#A32D2D" onclick="event.stopPropagation();eliminarCliente('+c.id+')">🗑</button></div></div>';
   }).join('');
 }
 
@@ -3844,6 +3865,17 @@ function setNivelManual(id,nivel){
   if(nivel==='auto')delete c.nivel;else c.nivel=nivel;
   // Solo guardamos en local hasta que Supabase tenga la columna nivel
   renderClientes(document.getElementById('search-clientes').value);
+}
+function toggleCredito(id){
+  var c=clientes.find(function(x){return x.id===id;});if(!c)return;
+  var nuevo=!c.credito;
+  if(nuevo&&!confirm('Activar crédito para '+c.nombre+'?\n\nSus pedidos se crearán sin señal y quedarán "a cobrar" a fin de mes.')){return;}
+  if(!nuevo&&!confirm('Quitar crédito a '+c.nombre+'?\n\nSus próximos pedidos volverán a requerir señal.')){return;}
+  c.credito=nuevo;
+  sb.from('clientes').update({credito:nuevo}).eq('id',id).then(function(r){
+    if(r&&r.error){alert('Error al actualizar crédito: '+r.error.message);c.credito=!nuevo;return;}
+    renderClientes(document.getElementById('search-clientes').value);
+  });
 }
 
 function verPedidosCliente(id){var c=clientes.find(function(x){return x.id===id;}),peds=pedidos.filter(function(p){return p.clienteId===id;}).sort(function(a,b){return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);});document.getElementById('mc-title').textContent='Pedidos de '+c.nombre;document.getElementById('mc-body').innerHTML=peds.length?peds.map(function(p){var pend=p.total-(p.senal||0);return'<div style="padding:7px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px;cursor:pointer" onclick="closeModal(\'modal-cliente\');verPedido(\''+p.id+'\')"><div style="display:flex;justify-content:space-between"><span style="font-family:monospace;font-weight:700">'+p.id+'</span><span class="fase-badge fase-'+p.fase+'">'+FASES[p.fase]+'</span></div><div style="color:#666;margin-top:3px">'+p.descripcion+'</div><div style="font-size:12px;margin-top:2px">Total: '+p.total.toFixed(2)+'€ · <span style="color:'+(pend>0?'#A32D2D':'#3B6D11')+';font-weight:600">Pendiente: '+pend.toFixed(2)+'€</span></div><div style="color:#aaa;font-size:11px;margin-top:2px">'+formatDateTime(p.fechaCreacion)+' · '+p.operario+'</div></div>';}).join(''):'<p style="color:#aaa;font-size:13px">Sin pedidos</p>';document.getElementById('modal-cliente').classList.add('open');}
