@@ -2575,6 +2575,15 @@ function verPedido(id){
     } else {
       html+=renderTablaTallas(p);
     }
+    // Botón Reabrir tallas (solo si hay datos enviados y ropa aún no pedida)
+    if(tallasCompletas(p) && !p.ropaOk && p.clienteTel){
+      html+='<div style="background:#FFF8EC;border:1px solid #FAC775;border-radius:7px;padding:10px 12px;margin-bottom:10px">'
+        +'<div style="font-size:11px;color:#854F0B;line-height:1.45;margin-bottom:8px">🔄 <strong>Reabrir formulario</strong> para que el cliente edite. Borra los datos actuales y le reenvía el WhatsApp con el link.</div>'
+        +'<button onclick="reabrirTallasCliente(\''+p.id+'\')" style="width:100%;padding:9px;background:#BA7517;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">🔄 Reabrir tallas y reenviar WA</button>'
+        +'</div>';
+    } else if(tallasCompletas(p) && p.ropaOk){
+      html+='<div style="background:#FCEBEB;border:1px solid #F09595;border-radius:7px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#501313;line-height:1.45">🔒 <strong>Ropa ya pedida al proveedor.</strong> Los cambios a partir de aquí los gestiona el operario manualmente (no hay botón de reapertura automática).</div>';
+    }
   }
 
   // BLOQUE PREVIAS
@@ -8274,6 +8283,42 @@ function reenviarWAPrevia(pedidoId){
   var p=pedidos.find(function(x){return x.id===pedidoId;});if(!p)return;
   sb.from('pedido_previas').select('*').eq('pedido_id',pedidoId).order('version',{ascending:false}).limit(1).then(function(r){
     if(r.data&&r.data[0]){enviarWAPrevia(pedidoId,r.data[0].imagen_url,r.data[0].version,p);alert('WA reenviado a '+p.clienteNombre);}
+  });
+}
+// Reabrir formulario de tallas para que el cliente edite. Resetea BD y reenvía WA inmediato.
+function reabrirTallasCliente(pedidoId){
+  var p=pedidos.find(function(x){return x.id===pedidoId;});if(!p)return;
+  if(p.ropaOk){alert('No se puede reabrir: la ropa ya está pedida al proveedor. Gestiona los cambios manualmente.');return;}
+  if(!p.clienteTel){alert('El pedido no tiene teléfono de cliente registrado.');return;}
+  // 1) Resetear en BD: limpiar tallas, contador de recordatorios y flag de notificación
+  sb.from('pedidos').update({
+    tallas_colores:null,
+    recordatorio_tallas_num:0,
+    tallas_notificado:false
+  }).eq('id',pedidoId).then(function(ur){
+    if(ur.error){alert('Error al resetear: '+ur.error.message);return;}
+    // 2) Actualizar memoria local
+    p.tallasColores=null;
+    p._recTallasNum=0;
+    p._tallasNotificado=false;
+    // 3) WA inmediato al cliente con el link
+    var telAuto=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+    if(telAuto.length===9&&!telAuto.startsWith('34'))telAuto='34'+telAuto;
+    var nomAuto=p.clienteNombre.split(' ')[0];
+    var linkAuto=p.tipoPersonalizacion==='individual'
+      ?'https://printcopy.vercel.app/penas.html?p='+p.id
+      :'https://printcopy.vercel.app/tallas.html?p='+p.id;
+    var msg='Hola '+nomAuto+' 👋\n\nHemos reabierto el formulario de tu pedido *'+p.id+'* como habíamos hablado.\n\nYa puedes rellenar'+(p.tipoPersonalizacion==='individual'?' los datos de cada persona':' las tallas')+' aquí:\n'+linkAuto+'\n\nCualquier duda, respóndenos por aquí.\n\nPrint & Copy · 923 018 034';
+    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telAuto,mensaje:msg,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){
+      if(d.success){
+        alert('✅ Formulario reabierto y WA reenviado a '+p.clienteNombre);
+        if(_pedidoModal&&_pedidoModal.id===pedidoId)verPedido(pedidoId); // refrescar modal
+      } else {
+        alert('⚠️ Datos reseteados pero el WA falló: '+(d.error||'desconocido')+'\nAvisa al cliente manualmente.');
+      }
+    }).catch(function(e){
+      alert('⚠️ Datos reseteados pero el WA falló. Avisa al cliente manualmente.');
+    });
   });
 }
 function cargarHistorialPrevias(pedidoId){

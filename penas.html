@@ -438,7 +438,7 @@ function init() {
     show('<div class="card ok-screen"><div class="ok-ico">✅</div><div class="ok-title">Ya enviado</div><div class="ok-sub">Los datos de este pedido ya fueron enviados.<br><br>Ya puedes cerrar esta página.<br><br><span style="color:#aaa">Print & Copy · 923 018 034</span></div></div>');
     return;
   }
-  api('pedidos?id=eq.'+pedidoId+'&select=id,cliente_nombre,descripcion,tallas_colores').then(function(r){
+  api('pedidos?id=eq.'+pedidoId+'&select=id,cliente_nombre,descripcion,tallas_colores,ropa_ok').then(function(r){
     if(!r||!r.length){show('<div class="error">Pedido no encontrado.</div>');return;}
     _pedido = r[0];
     // Detectar prenda del pedido desde la descripción
@@ -489,10 +489,15 @@ function init() {
       });
       if(_yaEnviado){
         var _waMsg=encodeURIComponent('Hola, necesito modificar los datos del pedido '+pedidoId);
+        var _ropaPedida=_pedido.ropa_ok===true;
+        var _titulo=_ropaPedida?'Tu ropa ya está pedida':'Datos ya enviados';
+        var _texto=_ropaPedida
+          ? ('Para este pedido <strong>'+pedidoId+'</strong> ya hemos realizado el pedido de ropa al proveedor.<br><br>Si necesitas cambiar algún nombre, número, color o talla, escríbenos por WhatsApp y vemos qué podemos hacer.')
+          : ('Ya hemos recibido los datos del pedido <strong>'+pedidoId+'</strong>.<br><br>Si necesitas cambiar algún nombre, número, color o talla, estamos a tiempo. Escríbenos por WhatsApp y te ayudamos.');
         show('<div class="card ok-screen">'
           +'<div class="ok-ico" style="color:#BA7517">⚠️</div>'
-          +'<div class="ok-title">Datos ya enviados</div>'
-          +'<div class="ok-sub">Los datos de este pedido <strong>'+pedidoId+'</strong> ya fueron enviados y están siendo procesados.<br><br>Si necesitas modificar algún nombre, número, color o talla, contacta con nosotros por WhatsApp y te ayudamos.<br><br>'
+          +'<div class="ok-title">'+_titulo+'</div>'
+          +'<div class="ok-sub">'+_texto+'<br><br>'
           +'<a href="https://wa.me/34622305934?text='+_waMsg+'" target="_blank" style="display:inline-block;margin-top:12px;background:#25D366;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">💬 Contactar por WhatsApp</a>'
           +'<br><br><span style="color:#aaa;font-size:11px">Print & Copy · 923 018 034</span></div></div>');
         return;
