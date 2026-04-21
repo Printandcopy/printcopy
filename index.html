@@ -7660,8 +7660,6 @@ function nvSelTipoTallas(tipo){
 function nvRenderTablaIndividual(){
   var prendaSel=nvGetPrendaSeleccionada();
   var colores=getColoresPrenda(prendaSel);
-  var prendas=['Camiseta Beagle 6554','Sudadera Clásica 1070','Sudadera Urban 1067','Polo Star 6638','Peto Pregón 1500'];
-  var prendaOpts=prendas.map(function(pr){return'<option value="'+pr+'">'+pr+'</option>';}).join('');
   var tallaOpts=buildTallaOpts(prendaSel, true);
   _nvIndCount=1;
   var defCod=(colores.find(function(c){return c.nombre==='Negro';})||colores[0]||{}).cod||'02';
@@ -7687,7 +7685,6 @@ function nvRenderTablaIndividual(){
     +'<div style="overflow-x:auto"><table class="tt-table" id="nv-ind-table" style="font-size:12px">'
     +'<thead><tr>'
     +'<th style="width:30px;text-align:center">#</th>'
-    +'<th style="min-width:90px;text-align:left">Prenda</th>'
     +'<th style="min-width:100px;text-align:left">Color</th>'
     +'<th style="width:60px;text-align:center">Talla</th>'
     +'<th style="min-width:120px;text-align:left">Nombre</th>'
@@ -7695,7 +7692,7 @@ function nvRenderTablaIndividual(){
     +'<th style="width:30px"></th>'
     +'</tr></thead>'
     +'<tbody id="nv-ind-tbody">'
-    +nvIndRenderFila(0,prendaOpts,tallaOpts,nvGetPrendaSeleccionada())
+    +nvIndRenderFila(0,null,tallaOpts,nvGetPrendaSeleccionada())
     +'</tbody></table></div>'
     +'<button class="tt-add-btn" onclick="nvIndAddFila()">+ Añadir persona</button>'
     +'<div id="nv-ind-resumen" class="tt-resumen">0 personas</div>'
@@ -7703,15 +7700,13 @@ function nvRenderTablaIndividual(){
   return html;
 }
 function nvIndRenderFila(idx,prendaOpts,tallaOpts,prendaDef){
-  if(!prendaOpts)prendaOpts=['Camiseta Beagle 6554','Sudadera Clásica 1070','Sudadera Urban 1067','Polo Star 6638','Peto Pregón 1500'].map(function(pr){return'<option value="'+pr+'">'+pr+'</option>';}).join('');
   var prendaParaTallas=prendaDef||'Camiseta Beagle 6554';
   if(!tallaOpts)tallaOpts=buildTallaOpts(prendaParaTallas, true);
   var colores=getColoresPrenda(prendaParaTallas);
   var defColor=colores[0]||{nombre:'Negro',hex:'#1a1a1a'};
   var defKids=defColor.kids?'<span class="kids-badge-sm" style="margin-left:3px">KIDS</span>':'';
   return'<tr id="nv-ind-fila-'+idx+'">'
-    +'<td style="text-align:center;color:#aaa;font-size:11px">'+(idx+1)+'</td>'
-    +'<td><select class="nv-ind-prenda" style="width:100%;font-size:12px;padding:4px;border:1px solid #ddd;border-radius:4px" onchange="nvIndCambioPrenda('+idx+',this.value)">'+prendaOpts+'</select></td>'
+    +'<td style="text-align:center;color:#aaa;font-size:11px">'+(idx+1)+'<input type="hidden" class="nv-ind-prenda" value="'+prendaParaTallas+'"></td>'
     +'<td><div class="tt-color-picker" id="nv-ind-picker-'+idx+'">'
     +'<div class="tt-color-btn" onclick="nvIndOpenPicker('+idx+')">'
     +'<span class="dot" id="nv-ind-dot-'+idx+'" style="background:'+defColor.hex+'"></span>'
