@@ -1403,6 +1403,8 @@ var COND_STD='50% al encargar · 50% al recoger';
 var FASES=['Nuevo','Atendido','Previas env.','Previas OK','Producción','Terminado','Cobrado','Recogido'];
 var SECS={TX:'Textil',PL:'Plotter',UV:'Impresión UV',SUB:'Sublimación',NEON:'Neones',XR:'Xerox'};
 var OPERARIOS=['Marilia','Álvaro','Charo','Raúl','Bea'];
+// Clave de acceso al rol Gerente. Cambiable en cualquier momento editando este valor.
+var GERENTE_PASS='secreto';
 var SECTORES={particular:'Particular',hosteleria:'Hostelería',comercio:'Comercio',eventos:'Eventos y fiestas',empresa:'Empresas / Industria',inmobiliaria:'Inmobiliaria',educacion:'Educación',salud:'Salud y bienestar',servicios:'Servicios profesionales',asociaciones:'Asociaciones y clubs',admin_publica:'Administración pública'};
 var SECTOR_COLORS={particular:'#f1efe8|#5f5e5a',hosteleria:'#fef3e8|#7a4a1a',comercio:'#e8f0fe|#1a3a7a',eventos:'#f3e8fe|#4a1a7a',empresa:'#e8fef8|#1a5a4a',inmobiliaria:'#fce8e8|#7a1a1a',educacion:'#E6F1FB|#185FA5',salud:'#e8fce8|#1a5a1a',servicios:'#EEEDFE|#534AB7',asociaciones:'#FAEEDA|#BA7517',admin_publica:'#f5f5f5|#444'};
 
@@ -2132,6 +2134,11 @@ function startClock(){
   tick();setInterval(tick,1000);
 }
 function showScreen(id,el){
+  // Defensa: bloquear analytics si no es gerente
+  if(id==='analytics' && typeof _esGerente!=='undefined' && !_esGerente){
+    alert('Acceso restringido. Solo disponible para Gerente.');
+    return;
+  }
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   document.querySelectorAll('.nav-tab').forEach(function(t){t.classList.remove('active');});
   document.getElementById('screen-'+id).classList.add('active');
@@ -2185,11 +2192,12 @@ function renderOpFilterSelect(){
     return'<option value="'+op+'"'+(op===actual?' selected':'')+'>'+op+'</option>';
   }).join('');
   if(actual==='all')sel.value='all';
-  // Actualizar el texto del botón discreto "No soy X"
+  // Actualizar el texto del botón discreto según el rol/identidad
   var btn=document.getElementById('pc-yo-btn');
   if(btn){
-    if(_pcYo && _pcYo!=='all'){btn.textContent='¿No eres '+_pcYo+'? ✎';btn.style.display='inline-block';}
-    else if(_pcYo==='all'){btn.textContent='Gerente ✎';btn.style.display='inline-block';}
+    if(_esGerente){btn.textContent='👑 Gerente ✎';btn.style.display='inline-block';}
+    else if(_pcYo==='all'){btn.textContent='👥 Todos ✎';btn.style.display='inline-block';}
+    else if(_pcYo){btn.textContent='¿No eres '+_pcYo+'? ✎';btn.style.display='inline-block';}
     else{btn.style.display='none';}
   }
 }
@@ -8371,15 +8379,26 @@ function cargarHistorialPrevias(pedidoId){
 
 // ── IDENTIDAD PC ──
 // Cada PC/navegador guarda quién lo usa habitualmente en localStorage.pc_yo
-// El select Operario se inicializa con ese valor como filtro por defecto.
-// Si es "Todos" (gerente) o un operario, el select persiste entre sesiones.
+// Valores posibles: 'gerente' | 'all' | nombre de operario
+// Flag adicional 'es_gerente' se activa solo tras validar clave GERENTE_PASS
 var _pcYo=null;
-try{_pcYo=localStorage.getItem('pc_yo');}catch(e){}
+var _esGerente=false;
+var _gerenteFallos=0;
+try{
+  _pcYo=localStorage.getItem('pc_yo');
+  _esGerente=(localStorage.getItem('es_gerente')==='1');
+}catch(e){}
+// Seguridad defensiva: si dice ser gerente pero no tiene flag validado, lo degradamos
+if(_pcYo==='gerente' && !_esGerente){_pcYo=null;}
+
 function openModalIdentidad(){
-  var opts=['<button class="pc-yo-opt" data-v="all" onclick="setIdentidadPC(\'all\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#f5f5f0;font-size:14px;font-weight:600;cursor:pointer">👥 Todos (Gerente)</button>']
-    .concat(OPERARIOS.map(function(op){
-      return'<button class="pc-yo-opt" data-v="'+op+'" onclick="setIdentidadPC(\''+op+'\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;font-size:14px;font-weight:600;cursor:pointer">'+op+'</button>';
-    })).join('');
+  // 5 opciones: Gerente / Todos / 5 operarios
+  var opts=[
+    '<button class="pc-yo-opt" onclick="setIdentidadPC(\'gerente\')" style="padding:14px;border:1.5px solid #FAC775;border-radius:8px;background:#FFF8EC;font-size:14px;font-weight:600;cursor:pointer;color:#854F0B">👑 Gerente (requiere clave)</button>',
+    '<button class="pc-yo-opt" onclick="setIdentidadPC(\'all\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#f5f5f0;font-size:14px;font-weight:600;cursor:pointer">👥 Todos</button>'
+  ].concat(OPERARIOS.map(function(op){
+    return'<button class="pc-yo-opt" onclick="setIdentidadPC(\''+op+'\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;font-size:14px;font-weight:600;cursor:pointer">'+op+'</button>';
+  })).join('');
   var modal=document.getElementById('modal-identidad-pc');
   if(!modal){
     modal=document.createElement('div');
@@ -8397,25 +8416,61 @@ function openModalIdentidad(){
   }
 }
 function setIdentidadPC(valor){
+  // Rama Gerente: pedir clave
+  if(valor==='gerente'){
+    var clave=prompt('Introduce la clave de Gerente:');
+    if(clave===null)return; // canceló
+    if(clave!==GERENTE_PASS){
+      _gerenteFallos++;
+      if(_gerenteFallos>=3){
+        alert('Demasiados intentos fallidos. Vuelve a intentarlo más tarde.');
+        _gerenteFallos=0;
+        var m0=document.getElementById('modal-identidad-pc');if(m0)m0.style.display='none';
+        return;
+      }
+      alert('Clave incorrecta. Intentos: '+_gerenteFallos+'/3');
+      return;
+    }
+    // Clave correcta
+    _gerenteFallos=0;
+    _esGerente=true;
+    try{localStorage.setItem('es_gerente','1');}catch(e){}
+  } else {
+    // Cualquier otro valor degrada a no-gerente
+    _esGerente=false;
+    try{localStorage.removeItem('es_gerente');}catch(e){}
+  }
   _pcYo=valor;
   try{localStorage.setItem('pc_yo',valor);}catch(e){}
-  // Aplicar al filtro: si nunca se había elegido filtro, tomar este como default
-  var filtroGuardado=null;
-  try{filtroGuardado=localStorage.getItem('pc_operario_filtro');}catch(e){}
-  if(!filtroGuardado){
-    _filtroOperario=valor;
-    try{localStorage.setItem('pc_operario_filtro',valor);}catch(e){}
-  }
+  // Aplicar al filtro por defecto
+  var filtroDefault;
+  if(valor==='gerente'||valor==='all'){filtroDefault='all';}
+  else{filtroDefault=valor;}
+  _filtroOperario=filtroDefault;
+  try{localStorage.setItem('pc_operario_filtro',filtroDefault);}catch(e){}
+  // Cerrar modal y refrescar UI
   var modal=document.getElementById('modal-identidad-pc');
   if(modal)modal.style.display='none';
   renderOpFilterSelect();
+  actualizarVisibilidadAnalytics();
   renderTaller();
+}
+// Oculta o muestra la pestaña Analytics según sea Gerente
+function actualizarVisibilidadAnalytics(){
+  var btns=document.querySelectorAll('.nav-tab');
+  btns.forEach(function(b){
+    var onclickStr=b.getAttribute('onclick')||'';
+    if(onclickStr.indexOf("'analytics'")>=0){
+      b.style.display=_esGerente?'':'none';
+    }
+  });
 }
 // Inicializar filtro operario desde localStorage
 function initFiltroOperario(){
   var guardado=null;
   try{guardado=localStorage.getItem('pc_operario_filtro');}catch(e){}
   if(guardado){_filtroOperario=guardado;}
+  else if(_pcYo==='gerente'||_pcYo==='all'){_filtroOperario='all';}
   else if(_pcYo){_filtroOperario=_pcYo;}
   else{_filtroOperario='all';}
   renderOpFilterSelect();
@@ -8430,6 +8485,7 @@ cargarPresupuestos();
 showScreen('mostrador',document.querySelector('.nav-tab'));
 // Inicializar filtro operario + abrir modal identidad si nunca se ha elegido
 initFiltroOperario();
+actualizarVisibilidadAnalytics();
 if(!_pcYo){setTimeout(openModalIdentidad,300);}
 // Recordatorios automáticos presupuestos cada 4h
 setInterval(checkRecordatoriosPresupuestos,4*60*60*1000);
