@@ -264,9 +264,7 @@ textarea{resize:vertical;min-height:64px}
 .mes-cell.otro-mes{background:#fafaf8}
 .mes-day-num{font-size:11px;font-weight:500;color:#444;margin-bottom:3px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%}
 .mes-day-num.hoy{background:#E6F1FB;color:#185FA5;font-weight:700}
-.operario-selector{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
-.op-btn{padding:6px 14px;border-radius:20px;border:1.5px solid #ddd;background:#fff;font-size:13px;font-weight:500;cursor:pointer}
-.op-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+
 .resguardo{background:#fff;border:1px solid #ddd;border-radius:8px;padding:18px;font-size:13px}
 .rh{text-align:center;margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:10px}
 .rh h2{font-size:17px;font-weight:700}
@@ -664,15 +662,19 @@ textarea{resize:vertical;min-height:64px}
       <button class="view-tab active" onclick="setView('lista',this)">Lista</button>
       <button class="view-tab" onclick="setView('semana',this)">Semana</button>
       <button class="view-tab" onclick="setView('mes',this)">Mes</button>
-      <button class="view-tab" onclick="setView('operario',this)">Por operario</button>
     </div>
-    <div style="display:flex;gap:6px;align-items:center">
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
       <span style="font-size:12px;color:#aaa">Sección:</span>
       <select class="sort-select" id="sec-global" onchange="renderTaller()">
         <option value="all">Todas</option><option value="TX">TX Textil</option><option value="PL">PL Plotter</option>
         <option value="UV">UV Impresión UV</option><option value="SUB">SUB Sublimación</option>
         <option value="NEON">NEON Neones</option><option value="XR">XR Xerox</option>
       </select>
+      <span style="font-size:12px;color:#aaa;margin-left:6px">Operario:</span>
+      <select class="sort-select" id="op-filter" onchange="setFiltroOperario(this.value)">
+        <option value="all">Todos</option>
+      </select>
+      <button id="pc-yo-btn" onclick="openModalIdentidad()" title="Cambiar quién soy yo" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:11px;padding:2px 4px" ></button>
       <button class="btn btn-secondary btn-sm" onclick="cargarDatos()">↻ Actualizar</button>
     </div>
   </div>
@@ -725,7 +727,6 @@ textarea{resize:vertical;min-height:64px}
       <button class="filter-btn" data-f="sfase" data-v="3" onclick="setFilter(this)">Listos</button>
     </div>
   </div>
-  <div id="operario-selector-wrap" style="display:none"><div class="operario-selector" id="operario-btns"></div></div>
   <div id="taller-list"></div>
 </div>
 
@@ -2059,7 +2060,7 @@ function pagoLabel(val){
 }
 var selectedSec=null,currentClientId=null,_pendingClient=null,_pedidoModal=null;
 var activeFilters={fase:'all',entrega:'all',pago:'all',sfase:'all'};
-var currentView='lista',currentOperario='Marilia',mesOffset=0;
+var currentView='lista',mesOffset=0;
 var pedidos=[],clientes=[];
 var _tallasYaNotificadas={};
 
@@ -2162,9 +2163,35 @@ function setView(v,el){
   document.querySelectorAll('.view-tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');
   document.getElementById('filtros-lista').style.display=v==='lista'?'block':'none';
   document.getElementById('filtros-semana').style.display=v==='semana'?'block':'none';
-  document.getElementById('operario-selector-wrap').style.display=v==='operario'?'block':'none';
-  if(v==='operario')renderOperarioSelector();
   renderTaller();
+}
+// Filtro global por operario (persistente en localStorage)
+var _filtroOperario=null; // null | 'all' | 'Marilia' | ...
+function setFiltroOperario(v){
+  _filtroOperario=v;
+  try{localStorage.setItem('pc_operario_filtro',v);}catch(e){}
+  renderTaller();
+}
+// Aplica filtro de operario a una lista de pedidos
+function applyOpFilter(list){
+  if(!_filtroOperario||_filtroOperario==='all')return list;
+  return list.filter(function(p){return p.operario===_filtroOperario;});
+}
+// Rellena el <select id="op-filter"> con operarios + restaura la última selección
+function renderOpFilterSelect(){
+  var sel=document.getElementById('op-filter');if(!sel)return;
+  var actual=_filtroOperario||'all';
+  sel.innerHTML='<option value="all">Todos</option>'+OPERARIOS.map(function(op){
+    return'<option value="'+op+'"'+(op===actual?' selected':'')+'>'+op+'</option>';
+  }).join('');
+  if(actual==='all')sel.value='all';
+  // Actualizar el texto del botón discreto "No soy X"
+  var btn=document.getElementById('pc-yo-btn');
+  if(btn){
+    if(_pcYo && _pcYo!=='all'){btn.textContent='¿No eres '+_pcYo+'? ✎';btn.style.display='inline-block';}
+    else if(_pcYo==='all'){btn.textContent='Gerente ✎';btn.style.display='inline-block';}
+    else{btn.style.display='none';}
+  }
 }
 function selectSec(el){document.querySelectorAll('.sec-btn').forEach(function(b){b.classList.remove('selected');});el.classList.add('selected');selectedSec=el.dataset.sec;}
 function updatePayRadio(){document.querySelectorAll('.radio-opt').forEach(function(o){o.classList.remove('sel');});var c=document.querySelector('input[name="pago"]:checked');if(c)c.closest('.radio-opt').classList.add('sel');}
@@ -3066,7 +3093,7 @@ function llamarCliente(){
 }
 function setFilter(el){var f=el.dataset.f,v=el.dataset.v;activeFilters[f]=v;document.querySelectorAll('.filter-btn[data-f="'+f+'"]').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderTaller();}
 function getSecGlobal(){return document.getElementById('sec-global').value||'all';}
-function applySecFilter(list){var s=getSecGlobal();var filtered=list.filter(function(p){return p.fase>=1;});return s==='all'?filtered:filtered.filter(function(p){return p.seccion===s;});}
+function applySecFilter(list){var s=getSecGlobal();var filtered=list.filter(function(p){return p.fase>=1;});if(s!=='all')filtered=filtered.filter(function(p){return p.seccion===s;});return applyOpFilter(filtered);}
 function pasaFiltroEntrega(p){
   var v=activeFilters.entrega;if(v==='all')return true;if(!p.fechaEntrega)return false;
   var hoy=new Date();hoy.setHours(0,0,0,0);var fe=new Date(p.fechaEntrega+'T00:00:00');
@@ -3077,15 +3104,12 @@ function pasaFiltroEntrega(p){
   if(v==='vencido')return fe<hoy&&p.fase<6;
   return true;
 }
-function renderTaller(){renderStats();if(currentView==='lista')renderLista();else if(currentView==='semana')renderSemana();else if(currentView==='mes')renderMes();else renderOperario();}
+function renderTaller(){renderStats();if(currentView==='lista')renderLista();else if(currentView==='semana')renderSemana();else if(currentView==='mes')renderMes();}
 function renderStats(){var all=applySecFilter(pedidos),activos=all.filter(function(p){return p.fase<5;}),totalPend=all.reduce(function(s,p){return s+(p.total-(p.senal||0));},0),urgentes=activos.filter(function(p){return p.fechaTipo==='fija';}).length,listos=all.filter(function(p){return p.fase===5||p.fase===6;}).length;var txActivos=activos.filter(function(p){return p.seccion==='TX';});var sinTallas=txActivos.filter(function(p){return !tallasCompletas(p);}).length;var sinPrevia=txActivos.filter(function(p){return tallasCompletas(p)&&p.previaEstado!=='aceptada';}).length;var enProd=txActivos.filter(function(p){return tallasCompletas(p)&&p.previaEstado==='aceptada';}).length;document.getElementById('taller-stats').innerHTML='<div class="stat-card"><div class="sv">'+activos.length+'</div><div class="sl">Activos</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+listos+'</div><div class="sl">Para recoger</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPend.toFixed(0)+'€</div><div class="sl">Pdte cobro</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+urgentes+'</div><div class="sl">Fijas</div></div>'+(txActivos.length?'<div class="stat-card"><div class="sv" style="color:#A32D2D">'+sinTallas+'</div><div class="sl">Sin tallas</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+sinPrevia+'</div><div class="sl">Sin previa</div></div><div class="stat-card"><div class="sv" style="color:#3B6D11">'+enProd+'</div><div class="sl">En producción</div></div>':'');}
 function renderLista(){var list=applySecFilter(pedidos);var secSel=document.getElementById('seccion-select');var secFiltro=secSel?secSel.value:'all';if(secFiltro!=='all')list=list.filter(function(p){return p.seccion===secFiltro;});if(activeFilters.fase!=='all')list=list.filter(function(p){return String(p.fase)===activeFilters.fase;});list=list.filter(function(p){return pasaFiltroEntrega(p);});if(activeFilters.pago==='pendiente')list=list.filter(function(p){return(p.total-(p.senal||0))>0;});if(activeFilters.pago==='pagado')list=list.filter(function(p){return(p.total-(p.senal||0))<=0;});var sort=document.getElementById('sort-select').value||'entrega';list.sort(function(a,b){if(sort==='entrega')return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;if(sort==='creacion')return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);if(sort==='seccion')return a.seccion>b.seccion?1:-1;if(sort==='pendiente')return(b.total-(b.senal||0))-(a.total-(a.senal||0));return 0;});document.getElementById('taller-list').innerHTML=list.length?list.map(tarjetaTaller).join(''):'<div class="empty-state">No hay pedidos con estos filtros</div>';}
 function renderSemana(){var sfase=activeFilters.sfase;var list=applySecFilter(pedidos).filter(function(p){return sfase==='activos'?p.fase<6:sfase==='3'?p.fase===3:true;});var hoy=new Date();hoy.setHours(0,0,0,0);var dias=[];for(var i=0;i<7;i++){var d=new Date(hoy);d.setDate(d.getDate()+i);dias.push(d);}var sinFecha=list.filter(function(p){return!p.fechaEntrega&&p.fase<6;});var html='<div class="semana-grid">';dias.forEach(function(dia){var key=dia.toISOString().split('T')[0],esHoy=dia.getTime()===hoy.getTime(),peds=list.filter(function(p){return p.fechaEntrega===key;}),dn=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dia.getDay()];html+='<div class="dia-col"><div class="dia-header'+(esHoy?' hoy':'')+'"><div class="dn">'+dn+'</div><div class="dd">'+dia.getDate()+'/'+(dia.getMonth()+1)+'</div></div><div class="dia-cards">'+(peds.length?peds.map(function(p){return'<div class="dia-mini dm-'+p.seccion+(p.fechaTipo==='fija'?' dm-fija':'')+'" onclick="verPedido(\''+p.id+'\')"><div style="font-weight:700;font-family:monospace;font-size:10px">'+p.id+'</div><div>'+p.clienteNombre.split(' ')[0]+'</div></div>';}).join(''):'<div style="font-size:11px;color:#ddd;text-align:center;padding:6px">—</div>')+'</div></div>';});html+='</div>';var vencidos=list.filter(function(p){return p.fechaEntrega&&new Date(p.fechaEntrega+'T00:00:00')<hoy&&p.fase<6;});if(vencidos.length)html+='<div class="sin-fecha"><div class="sin-fecha-title" style="color:#A32D2D">⚠️ Vencidos ('+vencidos.length+')</div>'+vencidos.map(miniCard).join('')+'</div>';if(sinFecha.length)html+='<div class="sin-fecha"><div class="sin-fecha-title">Sin fecha ('+sinFecha.length+')</div>'+sinFecha.map(miniCard).join('')+'</div>';document.getElementById('taller-list').innerHTML=html;}
 function renderMes(){var hoy=new Date();hoy.setHours(0,0,0,0);var ref=new Date(hoy.getFullYear(),hoy.getMonth()+mesOffset,1),año=ref.getFullYear(),mes=ref.getMonth(),primerDia=new Date(año,mes,1),ultimoDia=new Date(año,mes+1,0),nombreMes=primerDia.toLocaleDateString('es-ES',{month:'long',year:'numeric'}),startDow=(primerDia.getDay()+6)%7,totalCeldas=startDow+ultimoDia.getDate(),semanas=Math.ceil(totalCeldas/7),list=applySecFilter(pedidos);var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><button class="btn btn-secondary btn-sm" onclick="mesOffset--;renderTaller()">← Anterior</button><span style="font-size:14px;font-weight:600;text-transform:capitalize">'+nombreMes+'</span><button class="btn btn-secondary btn-sm" onclick="mesOffset++;renderTaller()">Siguiente →</button></div><div class="mes-grid">'+['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(function(d){return'<div style="background:#f5f5f0;text-align:center;padding:5px 2px;font-size:11px;font-weight:600;color:#888">'+d+'</div>';}).join('');for(var s=0;s<semanas;s++){for(var dow=0;dow<7;dow++){var cellIdx=s*7+dow,diaNum=cellIdx-startDow+1;if(diaNum<1||diaNum>ultimoDia.getDate()){html+='<div class="mes-cell otro-mes"></div>';continue;}var fechaKey=año+'-'+String(mes+1).padStart(2,'0')+'-'+String(diaNum).padStart(2,'0'),esHoy2=new Date(año,mes,diaNum).getTime()===hoy.getTime(),peds=list.filter(function(p){return p.fechaEntrega===fechaKey;});html+='<div class="mes-cell"><div class="mes-day-num'+(esHoy2?' hoy':'')+'">'+diaNum+'</div>'+peds.slice(0,3).map(function(p){return'<div class="dia-mini dm-'+p.seccion+(p.fechaTipo==='fija'?' dm-fija':'')+'" onclick="verPedido(\''+p.id+'\')" title="'+p.clienteNombre+'"><span style="font-size:10px;font-weight:700;font-family:monospace">'+p.id+'</span> <span style="font-size:10px;opacity:.8">'+p.clienteNombre.split(' ')[0]+'</span></div>';}).join('')+(peds.length>3?'<div style="font-size:10px;color:#aaa">+'+(peds.length-3)+' más</div>':'')+'</div>';}}html+='</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><div class="stat-card"><div class="sv">'+list.filter(function(p){return p.fechaEntrega&&p.fechaEntrega.startsWith(año+'-'+String(mes+1).padStart(2,'0'));}).length+'</div><div class="sl">Entregas este mes</div></div></div>';document.getElementById('taller-list').innerHTML=html;}
 function miniCard(p){var pend=p.total-(p.senal||0);return'<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f5f5f5;font-size:12px;cursor:pointer" onclick="verPedido(\''+p.id+'\')"><span style="font-family:monospace;font-weight:700">'+p.id+'</span><span class="badge sec-'+p.seccion+'">'+p.seccion+'</span><span>'+p.clienteNombre.split(' ')[0]+'</span><span class="fase-badge fase-'+p.fase+'" style="font-size:10px">'+FASES[p.fase]+'</span>'+(pend>0?'<span class="pendiente-pill">'+pend.toFixed(0)+'€</span>':'')+'</div>';}
-function renderOperarioSelector(){document.getElementById('operario-btns').innerHTML=OPERARIOS.map(function(op){return'<button class="op-btn'+(op===currentOperario?' active':'')+'" onclick="selectOperario(\''+op+'\',this)">'+op+'</button>';}).join('');}
-function selectOperario(op,el){currentOperario=op;document.querySelectorAll('.op-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');renderOperario();}
-function renderOperario(){var list=applySecFilter(pedidos).filter(function(p){return p.operario===currentOperario&&p.fase<6;});list.sort(function(a,b){return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;});document.getElementById('taller-list').innerHTML=list.length?'<div style="font-size:13px;color:#666;margin-bottom:10px">Pedidos activos de <strong>'+currentOperario+'</strong>: '+list.length+'</div>'+list.map(tarjetaTaller).join(''):'<div class="empty-state">No hay pedidos activos para '+currentOperario+'</div>';}
 function buildMiniCalendario(fechaEntrega, fechaTipo){
   var hoy = new Date(); hoy.setHours(0,0,0,0);
   var fe = fechaEntrega ? new Date(fechaEntrega + "T00:00:00") : null;
@@ -8345,6 +8369,58 @@ function cargarHistorialPrevias(pedidoId){
   });
 }
 
+// ── IDENTIDAD PC ──
+// Cada PC/navegador guarda quién lo usa habitualmente en localStorage.pc_yo
+// El select Operario se inicializa con ese valor como filtro por defecto.
+// Si es "Todos" (gerente) o un operario, el select persiste entre sesiones.
+var _pcYo=null;
+try{_pcYo=localStorage.getItem('pc_yo');}catch(e){}
+function openModalIdentidad(){
+  var opts=['<button class="pc-yo-opt" data-v="all" onclick="setIdentidadPC(\'all\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#f5f5f0;font-size:14px;font-weight:600;cursor:pointer">👥 Todos (Gerente)</button>']
+    .concat(OPERARIOS.map(function(op){
+      return'<button class="pc-yo-opt" data-v="'+op+'" onclick="setIdentidadPC(\''+op+'\')" style="padding:14px;border:1.5px solid #e5e7eb;border-radius:8px;background:#fff;font-size:14px;font-weight:600;cursor:pointer">'+op+'</button>';
+    })).join('');
+  var modal=document.getElementById('modal-identidad-pc');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='modal-identidad-pc';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:99999';
+    modal.innerHTML='<div style="background:#fff;border-radius:12px;padding:24px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.25)">'
+      +'<h2 style="margin:0 0 6px 0;font-size:18px">¿Quién eres?</h2>'
+      +'<p style="margin:0 0 16px 0;font-size:13px;color:#666">Esta opción se guarda en este navegador y no la preguntaremos más. Si cambias de puesto, puedes cambiarla desde el filtro.</p>'
+      +'<div id="pc-yo-options" style="display:flex;flex-direction:column;gap:8px">'+opts+'</div>'
+      +'</div>';
+    document.body.appendChild(modal);
+  } else {
+    document.getElementById('pc-yo-options').innerHTML=opts;
+    modal.style.display='flex';
+  }
+}
+function setIdentidadPC(valor){
+  _pcYo=valor;
+  try{localStorage.setItem('pc_yo',valor);}catch(e){}
+  // Aplicar al filtro: si nunca se había elegido filtro, tomar este como default
+  var filtroGuardado=null;
+  try{filtroGuardado=localStorage.getItem('pc_operario_filtro');}catch(e){}
+  if(!filtroGuardado){
+    _filtroOperario=valor;
+    try{localStorage.setItem('pc_operario_filtro',valor);}catch(e){}
+  }
+  var modal=document.getElementById('modal-identidad-pc');
+  if(modal)modal.style.display='none';
+  renderOpFilterSelect();
+  renderTaller();
+}
+// Inicializar filtro operario desde localStorage
+function initFiltroOperario(){
+  var guardado=null;
+  try{guardado=localStorage.getItem('pc_operario_filtro');}catch(e){}
+  if(guardado){_filtroOperario=guardado;}
+  else if(_pcYo){_filtroOperario=_pcYo;}
+  else{_filtroOperario='all';}
+  renderOpFilterSelect();
+}
+
 // ── INIT ──
 startClock();
 testConnection();
@@ -8352,6 +8428,9 @@ cargarDatos();
 cargarPresupuestos();
 // Arrancar siempre en Mostrador
 showScreen('mostrador',document.querySelector('.nav-tab'));
+// Inicializar filtro operario + abrir modal identidad si nunca se ha elegido
+initFiltroOperario();
+if(!_pcYo){setTimeout(openModalIdentidad,300);}
 // Recordatorios automáticos presupuestos cada 4h
 setInterval(checkRecordatoriosPresupuestos,4*60*60*1000);
 // Recordatorio pago: presupuestos aceptados sin pago (transferencia o tienda)
