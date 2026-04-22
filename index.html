@@ -8518,6 +8518,15 @@ function nvSelTipoTallas(tipo){
   var btnIn=document.getElementById('nv-tipo-individual');
   if(btnIg){btnIg.style.border=tipo==='iguales'?'2px solid #185FA5':'2px solid #e5e7eb';btnIg.style.background=tipo==='iguales'?'#E6F1FB':'#fff';}
   if(btnIn){btnIn.style.border=tipo==='individual'?'2px solid #185FA5':'2px solid #e5e7eb';btnIn.style.background=tipo==='individual'?'#E6F1FB':'#fff';}
+  // Re-render estampaciones porque cambia el comportamiento (individual fuerza DTF sin link)
+  var estCont=document.getElementById('nv-estamp-selector');
+  if(estCont && estCont._prenda){
+    if(tipo==='individual'){
+      // Forzar tecnica DTF en todas las estampaciones existentes
+      (_nvEstampaciones||[]).forEach(function(e){e.tecnica='dtf';e.color='todo-color';delete e._tecnicaExpandida;});
+    }
+    renderEstampaciones('nv-estamp-selector', estCont._prenda, _nvEstampaciones||[], estCont._onChange);
+  }
   var wrap=document.getElementById('nv-tallas-wrap');
   if(!wrap)return;
   if(tipo==='iguales'){
