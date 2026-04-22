@@ -2327,7 +2327,7 @@ function renderEstampaciones(containerId, prenda, estampaciones, onChange){
   }
   var filas=estampaciones.map(function(e,idx){return filaEstampacion(containerId, prenda, e, idx);}).join('');
   cont.innerHTML=''
-    +'<div style="font-size:11px;color:#666;margin-bottom:8px;line-height:1.4">Añade una estampación por cada diseño que va en la prenda. El pictograma muestra cómo quedará.</div>'
+    +'<div style="font-size:11px;color:#666;margin-bottom:6px;line-height:1.4">Añade una estampación por cada diseño. <strong>1ª incluida en el precio</strong> · Extras: peq. +2€/ud · med. +3,50€/ud · gde./completa +4,50€/ud</div>'
     +(filas?'<div class="estamp-filas">'+filas+'</div>':'<div style="font-size:12px;color:#aaa;padding:8px;text-align:center;font-style:italic">Aún no hay estampaciones definidas</div>')
     +'<button type="button" class="estamp-add-btn" onclick="addEstampacion(\''+containerId+'\')">+ Añadir estampación</button>';
   cont._estampaciones=estampaciones;
@@ -2357,6 +2357,44 @@ function filaEstampacion(containerId, prenda, e, idx){
   var otraHTML=esOtra
     ? '<div class="estamp-campo estamp-flex2" style="margin-top:4px"><label>Describe la posición</label><input type="text" placeholder="Ej: capucha trasera, interior bolsillo…" value="'+(e.posicionLibre||'').replace(/"/g,'&quot;')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'posicionLibre\',this.value)"></div>'
     : '';
+  // "¿Qué va?" desplegable con opciones comunes + otro texto libre
+  var tipoContOpts=['logo','nombre','numero','bandera','texto','otro'];
+  var tipoLabels={'logo':'Logo','nombre':'Nombre','numero':'Número','bandera':'Bandera','texto':'Texto','otro':'Otro (texto libre)'};
+  var tipoActual=e.tipoContenido||'logo';
+  var tipoOpts=tipoContOpts.map(function(t){
+    return '<option value="'+t+'"'+(tipoActual===t?' selected':'')+'>'+tipoLabels[t]+'</option>';
+  }).join('');
+  // Texto libre solo si es 'otro' O si hay texto extra que el dependiente quiere añadir
+  var descPlaceholder=tipoActual==='texto'?'Escribe el texto a estampar':(tipoActual==='otro'?'Describe qué va estampado':'Detalle opcional (ej: con escudo, en cursiva…)');
+  // Color tinta: regla según modo tallas
+  // - Modo 'iguales' → puede ser 1 tinta (lista corta) o todo color
+  // - Modo 'individual' → siempre todo color (los nombres/dorsales exigen color)
+  var esIndividual=(typeof _nvTipoTallas!=='undefined' && _nvTipoTallas==='individual');
+  var colorActual=e.color||(esIndividual?'todo-color':'blanco');
+  var colorHTML;
+  if(esIndividual){
+    // Individual: forzamos "Todo color" sin opción
+    colorHTML='<div class="estamp-campo"><label>Color tinta</label>'
+      +'<input type="text" value="Todo color" disabled style="background:#f5f5f0;color:#888;cursor:not-allowed" title="Obligatorio en pedidos personalizados">'
+      +'</div>';
+    if(e.color!=='todo-color'){
+      // Forzar valor en modelo
+      e.color='todo-color';
+    }
+  } else {
+    // Iguales: select con opciones comunes + libre
+    var coloresStd=['blanco','negro','rojo','amarillo','azul','verde','naranja','rosa','plata','oro','todo-color','libre'];
+    var coloresLabels={'blanco':'Blanco','negro':'Negro','rojo':'Rojo','amarillo':'Amarillo','azul':'Azul','verde':'Verde','naranja':'Naranja','rosa':'Rosa','plata':'Plata','oro':'Oro','todo-color':'Todo color (policromía)','libre':'Otro color…'};
+    var esLibreColor=(coloresStd.indexOf(colorActual)<0) || e._colorLibre;
+    var colorSelVal=esLibreColor?'libre':colorActual;
+    var colorOpts=coloresStd.map(function(c){
+      return '<option value="'+c+'"'+(colorSelVal===c?' selected':'')+'>'+coloresLabels[c]+'</option>';
+    }).join('');
+    colorHTML='<div class="estamp-campo"><label>Color tinta</label>'
+      +'<select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)">'+colorOpts+'</select>'
+      +(esLibreColor?'<input type="text" placeholder="Especifica color…" value="'+(esLibreColor&&colorActual!=='libre'?(e.color||'').replace(/"/g,'&quot;'):'')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)" style="margin-top:4px">':'')
+      +'</div>';
+  }
   return '<div class="estamp-fila" data-idx="'+idx+'">'
     +'<div class="estamp-fila-grid">'
       +'<div class="estamp-preview">'+pictogramaEstampacion(e, 110)+'</div>'
@@ -2372,8 +2410,9 @@ function filaEstampacion(containerId, prenda, e, idx){
         +'</div>'
         +otraHTML
         +'<div class="estamp-fila-body" style="margin-top:4px">'
-          +'<div class="estamp-campo estamp-flex2"><label>¿Qué va estampado?</label><input type="text" placeholder="Logo, nombre+dorsal, texto…" value="'+(e.descripcion||'').replace(/"/g,'&quot;')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'descripcion\',this.value)"></div>'
-          +'<div class="estamp-campo"><label>Color tinta</label><input type="text" placeholder="blanco, negro…" value="'+(e.color||'').replace(/"/g,'&quot;')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)"></div>'
+          +'<div class="estamp-campo"><label>¿Qué va?</label><select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'tipoContenido\',this.value)">'+tipoOpts+'</select></div>'
+          +'<div class="estamp-campo estamp-flex2"><label>Detalle</label><input type="text" placeholder="'+descPlaceholder+'" value="'+(e.descripcion||'').replace(/"/g,'&quot;')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'descripcion\',this.value)"></div>'
+          +colorHTML
         +'</div>'
       +'</div>'
     +'</div>'
@@ -2383,13 +2422,15 @@ function filaEstampacion(containerId, prenda, e, idx){
 function addEstampacion(containerId){
   var cont=document.getElementById(containerId);if(!cont)return;
   var est=cont._estampaciones||[];
-  // Defaults inteligentes: primera estampación en delantera mediana centro
+  var esIndividual=(typeof _nvTipoTallas!=='undefined' && _nvTipoTallas==='individual');
+  var colorDef=esIndividual?'todo-color':'blanco';
+  // Defaults inteligentes: primera Delantera mediana centro; siguiente Trasera grande centro
   var nueva;
   var yaDelantera=est.some(function(e){return e.zona==='delantera';});
   if(!yaDelantera){
-    nueva={zona:'delantera',tamano:'mediana',posicion:'centro',descripcion:'',color:''};
+    nueva={zona:'delantera',tamano:'mediana',posicion:'centro',tipoContenido:'logo',descripcion:'',color:colorDef};
   } else {
-    nueva={zona:'trasera',tamano:'grande',posicion:'centro',descripcion:'',color:''};
+    nueva={zona:'trasera',tamano:'grande',posicion:'centro',tipoContenido:'logo',descripcion:'',color:colorDef};
   }
   est.push(nueva);
   renderEstampaciones(containerId, cont._prenda, est, cont._onChange);
@@ -2400,7 +2441,16 @@ function updateEstampacion(containerId, idx, campo, valor){
   var cont=document.getElementById(containerId);if(!cont)return;
   var est=cont._estampaciones||[];
   if(!est[idx])return;
-  est[idx][campo]=valor;
+  // Color: si eligió "libre" en el select, marcar flag y dejar input suelto para valor real
+  if(campo==='color' && valor==='libre'){
+    est[idx]._colorLibre=true;
+    est[idx].color='';
+  } else if(campo==='color'){
+    est[idx]._colorLibre=false;
+    est[idx].color=valor;
+  } else {
+    est[idx][campo]=valor;
+  }
   // Si cambió la zona, ajustar tamaños válidos
   if(campo==='zona'){
     var tamanosVal=getTamanosZona(valor);
@@ -2440,18 +2490,25 @@ function pictogramaEstampacion(e, size){
     return '<path d="M28 22 L18 26 L18 38 L28 36 L28 88 L72 88 L72 36 L82 38 L82 26 L72 22 L62 18 Q50 26 38 18 Z" fill="#fafaf7" stroke="#888" stroke-width="1"/>';
   }
   function siluetaMangaCorta(ladoIzq){
-    // Manga corta = rectángulo trapezoidal ancho y bajo
+    // Manga corta: forma trapezoidal anatómica (más ancha arriba cerca del hombro, más estrecha abajo)
     var d=ladoIzq
-      ? 'M10 20 L38 18 L38 52 L10 50 Z'
-      : 'M62 18 L90 20 L90 50 L62 52 Z';
-    return '<path d="'+d+'" fill="#fafaf7" stroke="#888" stroke-width="1"/>';
+      ? 'M15 18 Q42 12 48 16 L48 52 Q42 56 15 50 L12 46 L14 22 Z'
+      : 'M85 18 Q58 12 52 16 L52 52 Q58 56 85 50 L88 46 L86 22 Z';
+    var pliegues=ladoIzq
+      ? '<path d="M18 30 Q22 31 26 30" fill="none" stroke="#bbb" stroke-width="0.5"/><path d="M18 38 Q22 39 26 38" fill="none" stroke="#bbb" stroke-width="0.5"/>'
+      : '<path d="M82 30 Q78 31 74 30" fill="none" stroke="#bbb" stroke-width="0.5"/><path d="M82 38 Q78 39 74 38" fill="none" stroke="#bbb" stroke-width="0.5"/>';
+    return '<path d="'+d+'" fill="#fafaf7" stroke="#888" stroke-width="1"/>'+pliegues;
   }
   function siluetaMangaLarga(ladoIzq){
-    // Manga larga = rectángulo más largo
+    // Manga larga: trapezoidal que se estrecha hacia el puño
     var d=ladoIzq
-      ? 'M10 20 L38 18 L38 86 L10 88 Z'
-      : 'M62 18 L90 20 L90 88 L62 86 Z';
-    return '<path d="'+d+'" fill="#fafaf7" stroke="#888" stroke-width="1"/>';
+      ? 'M15 18 Q42 12 48 16 L48 84 L42 88 L22 86 L12 82 L14 22 Z'
+      : 'M85 18 Q58 12 52 16 L52 84 L58 88 L78 86 L88 82 L86 22 Z';
+    // Puño marcado con línea
+    var puno=ladoIzq
+      ? '<path d="M18 80 L46 82" fill="none" stroke="#888" stroke-width="0.8"/>'
+      : '<path d="M82 80 L54 82" fill="none" stroke="#888" stroke-width="0.8"/>';
+    return '<path d="'+d+'" fill="#fafaf7" stroke="#888" stroke-width="1"/>'+puno;
   }
   function siluetaCapucha(){
     return '<path d="M28 22 L18 28 L18 40 L28 38 L28 88 L72 88 L72 38 L82 40 L82 28 L72 22 L62 14 Q50 6 38 14 Z" fill="#fafaf7" stroke="#888" stroke-width="1"/>'
@@ -2482,11 +2539,11 @@ function pictogramaEstampacion(e, size){
       }
       return {x:cx-dims.w/2, y:cy-dims.h/2, w:dims.w, h:dims.h};
     }
-    // Mangas: rectángulo centrado en el área de manga
-    if(zona==='manga-corta-izq') return {x:18, y:32, w:12, h:8};
-    if(zona==='manga-corta-dcha') return {x:70, y:32, w:12, h:8};
-    if(zona==='manga-larga-izq') return {x:18, y:48, w:12, h:10};
-    if(zona==='manga-larga-dcha') return {x:70, y:48, w:12, h:10};
+    // Mangas: rectángulo centrado en el área útil de cada manga
+    if(zona==='manga-corta-izq') return {x:22, y:28, w:20, h:12};
+    if(zona==='manga-corta-dcha') return {x:58, y:28, w:20, h:12};
+    if(zona==='manga-larga-izq') return {x:22, y:42, w:20, h:14};
+    if(zona==='manga-larga-dcha') return {x:58, y:42, w:20, h:14};
     if(zona==='capucha') return {x:42, y:8, w:16, h:8};
     if(zona==='otra') return {x:40, y:42, w:20, h:16};
     return {x:40, y:42, w:20, h:16};
@@ -2547,7 +2604,10 @@ function nvRefrescarEstampaciones(){
     return;
   }
   wrap.style.display='block';
-  renderEstampaciones('nv-estamp-selector', prenda, _nvEstampaciones, function(est){_nvEstampaciones=est;});
+  renderEstampaciones('nv-estamp-selector', prenda, _nvEstampaciones, function(est){
+    _nvEstampaciones=est;
+    try{if(typeof nvCalc==='function')nvCalc();}catch(e){}
+  });
 }
 
 
@@ -4810,7 +4870,7 @@ pegatinas:{name:"Pegatinas troqueladas",sinIva:true,plazo:3,specs:"Adhesivo 170g
 textil:{name:"Textil",sinIva:false,plazo:4,specs:"Estampación en DTF",fields:[],extrasDef:[],prendaHTML:'<optgroup label="── Moda / Casual ──"><option value="CAMISETA BEAGLE 6554">Camiseta Beagle 6554</option><option value="CAMISETA JAMAICA 6627">Camiseta Jamaica 6627</option><option value="CAMISETA BAHRAIN 0407">Camiseta Bahrain 0407</option><option value="SUDADERA CLÁSICA 1070">Sudadera Clásica 1070</option><option value="SUDADERA URBAN 1067">Sudadera Urban 1067</option><option value="SUDADERA MONTBLANC 6421">Sudadera Montblanc 6421</option><option value="SUDADERA ULAN 6439">Sudadera Ulan 6439</option><option value="POLO STAR 6638">Polo Star 6638</option><option value="TOTEBAG HILL 7601">Totebag Hill 7601</option></optgroup><optgroup label="── Abrigos / Softshell ──"><option value="SOFTSHELL ANTÁRTIDA 6432">Softshell Antártida 6432</option><option value="SOFTSHELL NEBRASKA 6436">Softshell Nebraska 6436</option><option value="POLAR NEW ARTIC 6414">Polar New Artic 6414</option></optgroup><optgroup label="── Especial Trabajo ──"><option value="CHALECO THUNDER">Chaleco Thunder</option><option value="PANTALON THUNDER">Pantalón Thunder</option><option value="PARKA TRAFFIC">Parka Traffic</option><option value="BUZO KEVIN">Buzo Kevin</option></optgroup><optgroup label="── Especial Fiestas ──"><option value="PETO PREGÓN 1500">Peto Pregón 1500</option><option value="MOCHILA HAMELIN 7114">Mochila Hamelin 7114</option><option value="PAÑUELO FESTERO 9003">Pañuelo Festero 9003</option><option value="GORRA ERIS 7019">Gorra Eris 7019</option></optgroup><optgroup label="── Especial Hostelería ──"><option value="DELANTAL MINI 9124">Delantal Mini 9124</option><option value="DELANTAL CLASSIC 9123">Delantal Classic 9123</option><option value="DELANTAL BENOIT 9125">Delantal Benoit 9125</option><option value="CAMISA AIFOS 5504">Camisa Aifos 5504</option></optgroup><optgroup label="── Especial Limpieza ──"><option value="CASACA PANACEA 9098">Casaca Panacea 9098</option><option value="CASULLA ARZAK 9091">Casulla Arzak 9091</option><option value="PANTALÓN VADEMÉCUM 9097">Pantalón Vademécum 9097</option><option value="BATA VACCINE 9094">Bata Vaccine 9094</option></optgroup>',
 prendas:{"CAMISETA BEAGLE 6554":[[1,1,17.95],[2,5,14.95],[6,10,13.95],[11,20,12.95],[21,9999,10.95]],"CAMISETA JAMAICA 6627":[[1,1,17.95],[2,5,14.95],[6,10,13.95],[11,20,12.95],[21,9999,10.95]],"CAMISETA BAHRAIN 0407":[[1,1,17.95],[2,5,14.95],[6,10,13.95],[11,20,12.95],[21,9999,10.95]],"SUDADERA CLÁSICA 1070":[[1,1,24.95],[2,5,22.95],[6,10,21.95],[11,20,20.95],[21,9999,18.95]],"SUDADERA URBAN 1067":[[1,1,27.95],[2,5,25.95],[6,10,24.95],[11,20,23.95],[21,9999,21.95]],"POLO STAR 6638":[[1,1,20.95],[2,5,18.95],[6,10,17.95],[11,20,16.95],[21,9999,14.95]],"TOTEBAG HILL 7601":[[1,1,17.95],[2,5,13.95],[6,10,12.95],[11,20,10.95],[21,9999,9.95]],"CHALECO THUNDER":[[1,1,29.95],[2,5,26.95],[6,10,25.95],[11,20,24.50],[21,9999,22.95]],"PANTALON THUNDER":[[1,1,25.95],[2,5,22.95],[6,10,21.95],[11,20,20.95],[21,9999,18.95]],"PARKA TRAFFIC":[[1,1,54.90],[2,5,51.90],[6,10,48.90],[11,20,45.90],[21,9999,42.90]],"BUZO KEVIN":[[1,1,31.95],[2,5,27.95],[6,10,26.95],[11,20,25.95],[21,9999,23.95]],"PETO PREGÓN 1500":[[1,1,25.00],[2,5,23.00],[6,10,22.00],[11,20,20.95],[21,9999,19.95]],"MOCHILA HAMELIN 7114":[[1,1,15.95],[2,5,11.95],[6,10,10.95],[11,20,9.95],[21,9999,7.95]],"PAÑUELO FESTERO 9003":[[1,1,13.50],[2,5,10.50],[6,10,9.50],[11,20,8.50],[21,9999,6.50]],"GORRA ERIS 7019":[[1,1,13.95],[2,5,9.95],[6,10,7.95],[11,20,6.50],[21,9999,4.95]],"DELANTAL MINI 9124":[[1,1,17.95],[2,5,14.95],[6,10,13.95],[11,20,12.95],[21,9999,10.95]],"DELANTAL CLASSIC 9123":[[1,1,18.95],[2,5,15.95],[6,10,14.95],[11,20,13.95],[21,9999,11.95]],"DELANTAL BENOIT 9125":[[1,1,19.95],[2,5,16.95],[6,10,15.95],[11,20,14.95],[21,9999,12.95]],"CAMISA AIFOS 5503":[[1,1,24.95],[2,5,21.95],[6,10,20.95],[11,20,19.95],[21,9999,17.95]],"CAMISA AIFOS L/S 5504":[[1,1,24.95],[2,5,21.95],[6,10,20.95],[11,20,19.95],[21,9999,17.95]],"CASACA PANACEA 9098":[[1,1,23.95],[2,5,21.95],[6,10,20.95],[11,20,19.95],[21,9999,17.95]],"CASULLA ARZAK 9091":[[1,1,20.95],[2,5,18.95],[6,10,17.95],[11,20,16.95],[21,9999,14.95]],"PANTALÓN VADEMÉCUM 9097":[[1,1,23.95],[2,5,21.95],[6,10,20.95],[11,20,19.95],[21,9999,17.95]],"BATA VACCINE 9094":[[1,1,26.95],[2,5,24.95],[6,10,23.95],[11,20,22.95],[21,9999,20.95]],"SOFTSHELL ANTÁRTIDA 6432":[[1,1,37.95],[2,5,34.95],[6,10,32.95],[11,20,31.50],[21,9999,29.95]],"SOFTSHELL NEBRASKA 6436":[[1,1,37.95],[2,5,34.95],[6,10,32.95],[11,20,31.50],[21,9999,29.95]],"POLAR NEW ARTIC 6414":[[1,1,27.95],[2,5,25.95],[6,10,24.95],[11,20,23.95],[21,9999,21.95]],"SUDADERA MONTBLANC 6421":[[1,1,27.95],[2,5,25.95],[6,10,24.95],[11,20,23.95],[21,9999,21.95]],"SUDADERA ULAN 6439":[[1,1,27.95],[2,5,25.95],[6,10,24.95],[11,20,23.95],[21,9999,21.95]]},
 extraEst:{pequena:2.00,mediana:3.50,grande:4.50},customBuild:true,
-buildCustom:function(){return'<div class="form-grid"><div class="field"><label>Prenda</label><select id="cf-prenda" onchange="cV2calc()">'+this.prendaHTML+'</select></div><div class="field"><label>Cantidad (uds)</label><input type="number" id="cf-qty" min="1" placeholder="mín. 1" oninput="cV2calc()"></div></div><div id="cf-manga-wrap" style="margin-top:8px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;background:#fef9e7;border:1px solid #f0e0a0;border-radius:6px"><input type="checkbox" id="cf-manga-larga" onchange="cV2calc()" style="width:18px;height:18px;cursor:pointer"><span style="font-size:13px;font-weight:600;color:#7a5a00">Manga larga (+1€/ud)</span></label></div><div style="margin-top:10px;padding:10px 14px;background:#f9f9f7;border-radius:8px;border:0.5px solid #eee"><div style="font-size:11px;font-weight:600;color:#999;text-transform:uppercase;margin-bottom:6px">Estampaciones</div><div style="font-size:11px;color:#888;margin-bottom:8px">1ª incluida · Extras: peq. +2€ | med. +3,50€ | gde. +4,50€</div><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:12px;min-width:120px;color:#666;font-weight:600">1ª estampación</span><select id="cf-est1" onchange="cV2calc()" style="flex:1"><option value="grande">Grande (incluida)</option><option value="mediana">Mediana (incluida)</option><option value="pequena">Pequeña (incluida)</option></select></div><div id="extra-est-wrap"></div><button type="button" onclick="cV2addEst()" style="margin-top:6px;background:#185FA5;color:white;border:none;border-radius:5px;padding:6px 12px;font-size:12px;cursor:pointer">+ Añadir estampación</button></div><div id="field-warn"></div>';},
+buildCustom:function(){return'<div class="form-grid"><div class="field"><label>Prenda</label><select id="cf-prenda" onchange="cV2calc()">'+this.prendaHTML+'</select></div><div class="field"><label>Cantidad (uds)</label><input type="number" id="cf-qty" min="1" placeholder="mín. 1" oninput="cV2calc()"></div></div><div id="cf-manga-wrap" style="margin-top:8px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 12px;background:#fef9e7;border:1px solid #f0e0a0;border-radius:6px"><input type="checkbox" id="cf-manga-larga" onchange="cV2calc()" style="width:18px;height:18px;cursor:pointer"><span style="font-size:13px;font-weight:600;color:#7a5a00">Manga larga (+1€/ud)</span></label></div><div id="field-warn"></div>';},
 calc:function(){var q=parseInt((document.getElementById('cf-qty')||{}).value)||0;if(q<1)return{error:'Mínimo 1 ud'};var prenda=(document.getElementById('cf-prenda')||{}).value,rangos=this.prendas[prenda];if(!rangos)return{error:'Selecciona una prenda'};var pu=rangos[rangos.length-1][2];var tierIdx=rangos.length-1;for(var i=0;i<rangos.length;i++){if(q>=rangos[i][0]&&q<=rangos[i][1]){pu=rangos[i][2];tierIdx=i;break;}}var mangaLarga=(document.getElementById('cf-manga-larga')||{}).checked;if(mangaLarga)pu+=1;var extraTotal=0,er=[];if(mangaLarga)er.push({label:'Manga larga',val:'+1,00€/u',amount:cV2R2(1*q)});document.querySelectorAll('.est-extra-sel').forEach(function(s){var v=s.value;if(v!=='none'){var p2={pequena:2,mediana:3.50,grande:4.50}[v]||0;extraTotal+=p2;er.push({label:s.closest('div').querySelector('span').textContent+' ('+v+')',val:cV2Fmt(p2)+'/u',amount:cV2R2(p2*q)});}});var tiers=[1,2,6,11,21];var tierQty=tiers[tierIdx]||1;return{base:cV2R2(pu*q),qty:q,pu:cV2R2(pu+extraTotal),puBase:pu,extraRows:er,tiers:tiers,tierQty:tierQty,prendaActual:prenda,rangos:rangos,mangaLarga:mangaLarga};}
 },
 // ══════════════════════════════════════════════════════════════
@@ -6429,10 +6489,15 @@ function nvCalc(){
     for(var i=0;i<rangos.length;i++){if(q>=rangos[i][0]&&q<=rangos[i][1]){pu=rangos[i][2];break;}}
     var mangaLarga=(document.getElementById('nv-tx-manga-larga')||{}).checked;
     if(mangaLarga)pu+=1;
+    // Nueva fuente de precio: array _nvEstampaciones del selector visual
+    // 1ª estampación incluida, extras: pequeña +2€ · mediana +3,50€ · grande/completa +4,50€
     var extraTotal=0;
-    document.querySelectorAll('#nv-textil-wrap .est-extra-sel').forEach(function(s){
-      var v=s.value;if(v!=='none'){extraTotal+={pequena:2,mediana:3.50,grande:4.50}[v]||0;}
-    });
+    if(_nvEstampaciones && _nvEstampaciones.length>1){
+      for(var ie=1;ie<_nvEstampaciones.length;ie++){
+        var tam=_nvEstampaciones[ie].tamano;
+        extraTotal += {pequena:2, mediana:3.50, grande:4.50, completa:4.50}[tam] || 0;
+      }
+    }
     res={base:cV2R2(pu*q),qty:q,pu:cV2R2(pu+extraTotal)};
     vals.prenda=prenda; vals.qty=q; vals.mangaLarga=mangaLarga;
     unidades=1; // Textil ya tiene cantidad interna
