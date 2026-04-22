@@ -6839,7 +6839,21 @@ function nvAddLinea(){
   var _qty=_nvRes.qty||1;
   // Estampaciones: snapshot por línea para que al añadir otra prenda no se mezclen
   var _estampSnapshot=(_nvEstampaciones && _nvEstampaciones.length)?JSON.parse(JSON.stringify(_nvEstampaciones)):[];
-  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,totalSi:_totalSi,puCi:_puCi,puSi:_puSi,qty:_qty,unidades:unidades,cat:_nvRes.cat,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0,estampaciones:_estampSnapshot});
+  // TALLAS y TIPO: snapshot por línea (fix crítico — antes se leían del DOM al crear pedido,
+  // por lo que 2+ prendas textiles en el carrito compartían las tallas de la última)
+  var _tallasSnapshot=null;
+  var _tipoSnapshot=null;
+  var _prendaSnapshot=null;
+  if((CAT_TO_SEC[_nvRes.cat]||'')==='TX'){
+    try{
+      _tallasSnapshot=_nvTipoTallas==='individual'?nvIndGetDatos():nvTTGetDatos();
+      _tipoSnapshot=_nvTipoTallas==='individual'?'individual':'iguales';
+      _prendaSnapshot=(_nvRes.vals&&_nvRes.vals.prenda)||null;
+      // Deep copy para desacoplar del DOM
+      if(_tallasSnapshot)_tallasSnapshot=JSON.parse(JSON.stringify(_tallasSnapshot));
+    }catch(e){console.warn('snapshot tallas fallo:',e);}
+  }
+  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,totalSi:_totalSi,puCi:_puCi,puSi:_puSi,qty:_qty,unidades:unidades,cat:_nvRes.cat,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0,estampaciones:_estampSnapshot,tallasColores:_tallasSnapshot,tipoPersonalizacion:_tipoSnapshot,prenda:_prendaSnapshot});
   nvRenderLineas();
   nvActualizarFecha();
   nvShowCross(_nvRes.cat);
@@ -6851,8 +6865,10 @@ function nvAddLinea(){
   document.getElementById('nv-unidades-wrap').style.display='none';
   document.getElementById('nv-extras-wrap').style.display='none';
   document.getElementById('nv-textil-wrap').style.display='none';
-  document.getElementById('nv-tallas-wrap').style.display='none';
+  // Vaciar contenido tallas + ocultar (si no, al siguiente textil arrastraba tabla anterior)
+  var _tw=document.getElementById('nv-tallas-wrap');if(_tw){_tw.innerHTML='';_tw.style.display='none';}
   document.getElementById('nv-tipo-tallas-wrap').style.display='none';
+  _nvTipoTallas='iguales'; // reset tipo personalización
   // Resetear estampaciones y ocultar su wrap
   var _estw2=document.getElementById('nv-estamp-wrap');if(_estw2)_estw2.style.display='none';
   _nvEstampaciones=[];
@@ -6892,8 +6908,37 @@ function nvRenderLineas(){
     var qtyVal=l.qty&&l.qty>1?l.qty:(l.unidades&&l.unidades>1?l.unidades:1);
     var qtyLabel=qtyVal+' '+(qtyVal>1?'uds':'ud')+(puCi?' × '+puCi:'');
     var rowPu=puCi?'<tr class="nv-rs-data"><td>Precio unitario</td><td class="nv-rs-r nv-rs-si">'+puSi+'</td><td class="nv-rs-r nv-rs-ci">'+puCi+'</td><td></td></tr>':'';
+    // Indicadores para líneas textil: mini resumen de tallas + estampaciones guardadas en ESTA línea
+    var infoTextil='';
+    if(l.sec==='TX'){
+      // Tallas
+      var tallasTxt='';
+      if(l.tallasColores && l.tallasColores.length){
+        if(l.tipoPersonalizacion==='individual'){
+          var personas=l.tallasColores.filter(function(d){return d.nombre&&d.nombre.trim();}).length;
+          tallasTxt=personas>0?('👥 '+personas+' pers.'):'⚠ Sin personas';
+        } else {
+          var sumaT=l.tallasColores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0);
+          tallasTxt=sumaT>0?('📏 '+sumaT+' tallas'):'⚠ Sin tallas';
+        }
+      } else {
+        tallasTxt='⚠ Sin tallas';
+      }
+      // Estampaciones
+      var estampTxt='';
+      if(l.estampaciones && l.estampaciones.length){
+        estampTxt='🎨 '+l.estampaciones.length+' estamp.';
+      } else {
+        estampTxt='⚠ Sin estampaciones';
+      }
+      var pendiente=(tallasTxt.indexOf('⚠')>=0 || estampTxt.indexOf('⚠')>=0);
+      var bgCol=pendiente?'#FFF8EC':'#F0F7F0';
+      var txtCol=pendiente?'#854F0B':'#2e7d32';
+      infoTextil='<tr class="nv-rs-data"><td colspan="4" style="padding:4px 10px"><div style="display:inline-flex;gap:8px;flex-wrap:wrap;background:'+bgCol+';padding:4px 8px;border-radius:4px;font-size:11px;color:'+txtCol+';font-weight:600">'+tallasTxt+' · '+estampTxt+'</div></td></tr>';
+    }
     return sep+
       '<tr class="nv-rs-prod"><td colspan="3"><span class="badge sec-'+l.sec+'">'+l.sec+'</span> '+l.desc+'</td><td class="nv-rs-del"><button class="linea-del" onclick="nvQuitarLinea('+i+')">✕</button></td></tr>'+
+      infoTextil+
       rowPu+
       '<tr class="nv-rs-data"><td>'+qtyLabel+'</td><td class="nv-rs-r nv-rs-si">'+si+'</td><td class="nv-rs-r nv-rs-ci">'+ci+'</td><td></td></tr>';
   }).join('');
@@ -7260,8 +7305,13 @@ function nvCrearPedido(){
     });
     
     function hacerPedidos(){
-      var proms=nvLineas.map(function(lin,idx){
-        return new Promise(function(res){
+      // Secuencial (no paralelo) para evitar colisión del contador cuando hay varias
+      // líneas de la misma sección (ej. 2 prendas textiles que darían mismo TX-XXXX)
+      var results=[];
+      var chain=Promise.resolve();
+      nvLineas.forEach(function(lin,idx){
+        chain=chain.then(function(){
+          return new Promise(function(res){
           var sec=lin.sec;
           sb.from('contadores').select('valor').eq('seccion',sec).single().then(function(r){
             var nv=(r.data?r.data.valor:0)+1;
@@ -7290,9 +7340,15 @@ function nvCrearPedido(){
               };
               // Añadir tallas y tipo personalización para pedidos textil
               if(sec==='TX'){
-                var _tDatos=_nvTipoTallas==='individual'?nvIndGetDatos():nvTTGetDatos();
-                ped.tallas_colores=_tDatos;
-                ped.tipo_personalizacion=_nvTipoTallas==='individual'?'individual':'iguales';
+                // CRÍTICO: leer tallas y tipo del snapshot de la línea (lin.*), NO del DOM.
+                // Si no hay snapshot (carrito antiguo), fallback al DOM.
+                if(lin.tallasColores!==undefined && lin.tallasColores!==null){
+                  ped.tallas_colores=lin.tallasColores;
+                } else {
+                  var _tDatos=_nvTipoTallas==='individual'?nvIndGetDatos():nvTTGetDatos();
+                  ped.tallas_colores=_tDatos;
+                }
+                ped.tipo_personalizacion=lin.tipoPersonalizacion||(_nvTipoTallas==='individual'?'individual':'iguales');
                 // Estampaciones guardadas con la línea (snapshot en nvAddLinea) — si varias prendas, cada una con las suyas
                 ped.estampaciones=(lin.estampaciones && lin.estampaciones.length)?JSON.parse(JSON.stringify(lin.estampaciones)):[];
               }
@@ -7304,14 +7360,15 @@ function nvCrearPedido(){
                 }catch(e){_esVacia=true;}
               }else if(sec==='TX'){_esVacia=true;}
               sb.from('pedidos').insert([ped]).then(function(ri){
-                if(ri.error){console.error('Error insert pedido:',ri.error.message);alert('Error al crear pedido: '+ri.error.message);res(null);}
-                else{res({num:numPed,sec:sec,tipoPers:ped.tipo_personalizacion,tallasVacia:_esVacia});}
-              }).catch(function(e){console.error('Insert catch:',e);res(null);});
+                if(ri.error){console.error('Error insert pedido:',ri.error.message);alert('Error al crear pedido: '+ri.error.message);results.push(null);res(null);}
+                else{var ok={num:numPed,sec:sec,tipoPers:ped.tipo_personalizacion,tallasVacia:_esVacia};results.push(ok);res(ok);}
+              }).catch(function(e){console.error('Insert catch:',e);results.push(null);res(null);});
             });
+          });
           });
         });
       });
-      Promise.all(proms).then(function(results){
+      chain.then(function(){
         var validos=results.filter(function(n){return n!=null;});
         if(!validos.length){return;}
         var numPedidos=validos.map(function(v){return v.num;});
