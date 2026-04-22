@@ -38,6 +38,10 @@ header h1{font-size:16px;font-weight:500;white-space:nowrap}
 .estamp-campo input:focus,.estamp-campo select:focus{border-color:#5B9F1F;outline:none;box-shadow:0 0 0 2px rgba(91,159,31,.15)}
 .estamp-add-btn{width:100%;padding:10px;border:1.5px dashed #84CC4B;border-radius:8px;background:#FAFEF4;color:#3B6D11;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
 .estamp-add-btn:hover{background:#EAF3DE;border-style:solid}
+.estamp-plantilla{display:flex;align-items:center;gap:8px;padding:10px;border:1.5px solid #B5D4F4;border-radius:8px;background:#F7FBFF;cursor:pointer;font-family:inherit;transition:all .15s;text-align:left}
+.estamp-plantilla:hover{background:#E6F1FB;border-color:#185FA5;transform:translateY(-1px);box-shadow:0 2px 6px rgba(24,95,165,.15)}
+.estamp-plantilla-pict{flex-shrink:0;background:#fff;border-radius:6px;padding:2px}
+.estamp-plantilla-text{font-size:12px;line-height:1.3;color:#0C447C}
 .estamp-detalle{display:flex;flex-wrap:wrap;gap:10px}
 .estamp-chip{display:flex;align-items:flex-start;gap:8px;background:#fff;border:0.5px solid #ddd;border-radius:8px;padding:6px 10px 6px 6px;min-width:200px}
 .estamp-chip-pict{flex-shrink:0;background:#fafaf7;border-radius:6px;padding:2px}
@@ -1112,6 +1116,16 @@ textarea{resize:vertical;min-height:64px}
           <div id="nv-extras-wrap" style="display:none;margin-top:10px"><label style="font-weight:600;margin-bottom:6px;display:block">Extras opcionales</label><div class="extras-grid" id="nv-extras"></div></div>
           <!-- Textil custom -->
           <div id="nv-textil-wrap" style="display:none;margin-top:10px"></div>
+          <!-- Estampaciones visuales (posiciones) - solo textil. ANTES de las tallas. -->
+          <div id="nv-estamp-wrap" style="display:none;margin-top:10px">
+            <div style="background:#fafaf7;border:0.5px solid #e5e7eb;border-radius:8px;padding:10px 14px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+                <span style="font-size:16px">🎨</span>
+                <span style="font-size:13px;font-weight:700;color:#444">Posiciones de estampación/bordado</span>
+              </div>
+              <div id="nv-estamp-selector"></div>
+            </div>
+          </div>
           <!-- Selector tipo tallas -->
           <div id="nv-tipo-tallas-wrap" style="display:none;margin-top:10px">
             <label style="font-weight:600;margin-bottom:8px;display:block;font-size:13px">Tipo de personalización</label>
@@ -1130,16 +1144,6 @@ textarea{resize:vertical;min-height:64px}
           </div>
           <!-- Tabla tallas nuevo pedido -->
           <div id="nv-tallas-wrap" style="display:none;margin-top:10px"></div>
-          <!-- Estampaciones visuales (posiciones) - solo textil -->
-          <div id="nv-estamp-wrap" style="display:none;margin-top:10px">
-            <div style="background:#fafaf7;border:0.5px solid #e5e7eb;border-radius:8px;padding:10px 14px">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-                <span style="font-size:16px">🎨</span>
-                <span style="font-size:13px;font-weight:700;color:#444">Posiciones de estampación/bordado</span>
-              </div>
-              <div id="nv-estamp-selector"></div>
-            </div>
-          </div>
           <!-- Resultado -->
           <div id="nv-result" class="nv-rc" style="display:none">
             <table>
@@ -2326,10 +2330,32 @@ function renderEstampaciones(containerId, prenda, estampaciones, onChange){
     return;
   }
   var filas=estampaciones.map(function(e,idx){return filaEstampacion(containerId, prenda, e, idx);}).join('');
+  var sinEstampaciones=estampaciones.length===0;
+  // Plantillas rápidas (solo cuando está vacío, son los 3 casos top del negocio)
+  var plantillasHTML=sinEstampaciones ? 
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:10px">'
+      +'<button type="button" class="estamp-plantilla" onclick="addEstampacion(\''+containerId+'\',\'delantera-grande\')">'
+        +'<div class="estamp-plantilla-pict">'+pictogramaEstampacion({zona:'delantera',tamano:'grande',posicion:'centro'},54)+'</div>'
+        +'<div class="estamp-plantilla-text"><strong>Delantera grande</strong><br><span style="color:#888">1 estampación</span></div>'
+      +'</button>'
+      +'<button type="button" class="estamp-plantilla" onclick="addEstampacion(\''+containerId+'\',\'trasera-grande\')">'
+        +'<div class="estamp-plantilla-pict">'+pictogramaEstampacion({zona:'trasera',tamano:'grande',posicion:'centro'},54)+'</div>'
+        +'<div class="estamp-plantilla-text"><strong>Trasera grande</strong><br><span style="color:#888">1 estampación</span></div>'
+      +'</button>'
+      +'<button type="button" class="estamp-plantilla" onclick="addEstampacion(\''+containerId+'\',\'pecho-dcha-trasera-grande\')">'
+        +'<div class="estamp-plantilla-pict" style="display:flex;gap:2px">'
+          +pictogramaEstampacion({zona:'delantera',tamano:'pequena',posicion:'dcha'},38)
+          +pictogramaEstampacion({zona:'trasera',tamano:'grande',posicion:'centro'},38)
+        +'</div>'
+        +'<div class="estamp-plantilla-text"><strong>Pecho + Trasera</strong><br><span style="color:#888">2 estampaciones</span></div>'
+      +'</button>'
+    +'</div>'
+    : '';
   cont.innerHTML=''
-    +'<div style="font-size:11px;color:#666;margin-bottom:6px;line-height:1.4">Añade una estampación por cada diseño. <strong>1ª incluida en el precio</strong> · Extras: peq. +2€/ud · med. +3,50€/ud · gde./completa +4,50€/ud</div>'
-    +(filas?'<div class="estamp-filas">'+filas+'</div>':'<div style="font-size:12px;color:#aaa;padding:8px;text-align:center;font-style:italic">Aún no hay estampaciones definidas</div>')
-    +'<button type="button" class="estamp-add-btn" onclick="addEstampacion(\''+containerId+'\')">+ Añadir estampación</button>';
+    +'<div style="font-size:11px;color:#666;margin-bottom:6px;line-height:1.4">Selecciona un caso frecuente o añade manualmente. <strong>1ª incluida en el precio</strong> · Extras: peq. +2€/ud · med. +3,50€/ud · gde./completa +4,50€/ud</div>'
+    +plantillasHTML
+    +(filas?'<div class="estamp-filas">'+filas+'</div>':'')
+    +'<button type="button" class="estamp-add-btn" onclick="addEstampacion(\''+containerId+'\')">+ '+(sinEstampaciones?'Empezar desde cero':'Añadir otra estampación')+'</button>';
   cont._estampaciones=estampaciones;
   cont._onChange=onChange;
   cont._prenda=prenda;
@@ -2357,43 +2383,58 @@ function filaEstampacion(containerId, prenda, e, idx){
   var otraHTML=esOtra
     ? '<div class="estamp-campo estamp-flex2" style="margin-top:4px"><label>Describe la posición</label><input type="text" placeholder="Ej: capucha trasera, interior bolsillo…" value="'+(e.posicionLibre||'').replace(/"/g,'&quot;')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'posicionLibre\',this.value)"></div>'
     : '';
-  // "¿Qué va?" desplegable con opciones comunes + otro texto libre
+  // "¿Qué va?" desplegable
   var tipoContOpts=['logo','nombre','numero','bandera','texto','otro'];
   var tipoLabels={'logo':'Logo','nombre':'Nombre','numero':'Número','bandera':'Bandera','texto':'Texto','otro':'Otro (texto libre)'};
   var tipoActual=e.tipoContenido||'logo';
   var tipoOpts=tipoContOpts.map(function(t){
     return '<option value="'+t+'"'+(tipoActual===t?' selected':'')+'>'+tipoLabels[t]+'</option>';
   }).join('');
-  // Texto libre solo si es 'otro' O si hay texto extra que el dependiente quiere añadir
   var descPlaceholder=tipoActual==='texto'?'Escribe el texto a estampar':(tipoActual==='otro'?'Describe qué va estampado':'Detalle opcional (ej: con escudo, en cursiva…)');
-  // Color tinta: regla según modo tallas
-  // - Modo 'iguales' → puede ser 1 tinta (lista corta) o todo color
-  // - Modo 'individual' → siempre todo color (los nombres/dorsales exigen color)
+
+  // === TÉCNICA (serigrafía 1 tinta vs DTF policromía) ===
+  // Reglas:
+  // - Modo 'individual' (nombres/dorsales): SIEMPRE DTF policromía, sin opción
+  // - Modo 'iguales':
+  //     Selector "Técnica": 1 tinta (serigrafía, más económico) / Todo color (DTF)
+  //     Si "1 tinta" → preguntar color concreto
+  //     Si "todo color" → NO preguntar color (la imagen ya trae los suyos)
   var esIndividual=(typeof _nvTipoTallas!=='undefined' && _nvTipoTallas==='individual');
-  var colorActual=e.color||(esIndividual?'todo-color':'blanco');
-  var colorHTML;
+  var tecnicaHTML='';
+  var colorHTML='';
   if(esIndividual){
-    // Individual: forzamos "Todo color" sin opción
-    colorHTML='<div class="estamp-campo"><label>Color tinta</label>'
-      +'<input type="text" value="Todo color" disabled style="background:#f5f5f0;color:#888;cursor:not-allowed" title="Obligatorio en pedidos personalizados">'
+    // Fijo DTF policromía
+    e.tecnica='dtf';
+    e.color='todo-color';
+    tecnicaHTML='<div class="estamp-campo"><label>Técnica</label>'
+      +'<input type="text" value="DTF · Todo color" disabled style="background:#f5f5f0;color:#555;cursor:not-allowed" title="Nombres y dorsales requieren impresión a todo color">'
       +'</div>';
-    if(e.color!=='todo-color'){
-      // Forzar valor en modelo
+  } else {
+    // Modo iguales: elegir técnica
+    var tecActual=e.tecnica||'1-tinta';
+    var tecOpts=[
+      '<option value="1-tinta"'+(tecActual==='1-tinta'?' selected':'')+'>Serigrafía (1 tinta)</option>',
+      '<option value="todo-color"'+(tecActual==='todo-color'?' selected':'')+'>DTF (todo color)</option>'
+    ].join('');
+    tecnicaHTML='<div class="estamp-campo"><label>Técnica</label><select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'tecnica\',this.value)">'+tecOpts+'</select></div>';
+    if(tecActual==='1-tinta'){
+      // Solo si 1 tinta: preguntar color
+      var coloresStd=['blanco','negro','rojo','amarillo','azul','verde','naranja','rosa','plata','oro','libre'];
+      var coloresLabels={'blanco':'Blanco','negro':'Negro','rojo':'Rojo','amarillo':'Amarillo','azul':'Azul','verde':'Verde','naranja':'Naranja','rosa':'Rosa','plata':'Plata','oro':'Oro','libre':'Otro color…'};
+      var colorActual=e.color||'blanco';
+      var esLibreColor=(coloresStd.indexOf(colorActual)<0) || e._colorLibre;
+      var colorSelVal=esLibreColor?'libre':colorActual;
+      var colorOpts=coloresStd.map(function(c){
+        return '<option value="'+c+'"'+(colorSelVal===c?' selected':'')+'>'+coloresLabels[c]+'</option>';
+      }).join('');
+      colorHTML='<div class="estamp-campo"><label>Color tinta</label>'
+        +'<select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)">'+colorOpts+'</select>'
+        +(esLibreColor?'<input type="text" placeholder="Especifica color…" value="'+((e.color||'') !== 'libre' ? (e.color||'').replace(/"/g,'&quot;') : '')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)" style="margin-top:4px">':'')
+        +'</div>';
+    } else {
+      // Todo color DTF: sin selector de color
       e.color='todo-color';
     }
-  } else {
-    // Iguales: select con opciones comunes + libre
-    var coloresStd=['blanco','negro','rojo','amarillo','azul','verde','naranja','rosa','plata','oro','todo-color','libre'];
-    var coloresLabels={'blanco':'Blanco','negro':'Negro','rojo':'Rojo','amarillo':'Amarillo','azul':'Azul','verde':'Verde','naranja':'Naranja','rosa':'Rosa','plata':'Plata','oro':'Oro','todo-color':'Todo color (policromía)','libre':'Otro color…'};
-    var esLibreColor=(coloresStd.indexOf(colorActual)<0) || e._colorLibre;
-    var colorSelVal=esLibreColor?'libre':colorActual;
-    var colorOpts=coloresStd.map(function(c){
-      return '<option value="'+c+'"'+(colorSelVal===c?' selected':'')+'>'+coloresLabels[c]+'</option>';
-    }).join('');
-    colorHTML='<div class="estamp-campo"><label>Color tinta</label>'
-      +'<select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)">'+colorOpts+'</select>'
-      +(esLibreColor?'<input type="text" placeholder="Especifica color…" value="'+(esLibreColor&&colorActual!=='libre'?(e.color||'').replace(/"/g,'&quot;'):'')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)" style="margin-top:4px">':'')
-      +'</div>';
   }
   return '<div class="estamp-fila" data-idx="'+idx+'">'
     +'<div class="estamp-fila-grid">'
@@ -2410,29 +2451,43 @@ function filaEstampacion(containerId, prenda, e, idx){
         +'</div>'
         +otraHTML
         +'<div class="estamp-fila-body" style="margin-top:4px">'
+          +tecnicaHTML
+          +colorHTML
+        +'</div>'
+        +'<div class="estamp-fila-body" style="margin-top:4px">'
           +'<div class="estamp-campo"><label>¿Qué va?</label><select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'tipoContenido\',this.value)">'+tipoOpts+'</select></div>'
           +'<div class="estamp-campo estamp-flex2"><label>Detalle</label><input type="text" placeholder="'+descPlaceholder+'" value="'+(e.descripcion||'').replace(/"/g,'&quot;')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'descripcion\',this.value)"></div>'
-          +colorHTML
         +'</div>'
       +'</div>'
     +'</div>'
   +'</div>';
 }
 
-function addEstampacion(containerId){
+function addEstampacion(containerId, plantilla){
   var cont=document.getElementById(containerId);if(!cont)return;
   var est=cont._estampaciones||[];
   var esIndividual=(typeof _nvTipoTallas!=='undefined' && _nvTipoTallas==='individual');
+  // En individual: siempre DTF todo-color. En iguales: por defecto 1 tinta blanca (serigrafía).
+  var tecDef=esIndividual?'dtf':'1-tinta';
   var colorDef=esIndividual?'todo-color':'blanco';
-  // Defaults inteligentes: primera Delantera mediana centro; siguiente Trasera grande centro
-  var nueva;
-  var yaDelantera=est.some(function(e){return e.zona==='delantera';});
-  if(!yaDelantera){
-    nueva={zona:'delantera',tamano:'mediana',posicion:'centro',tipoContenido:'logo',descripcion:'',color:colorDef};
+  // Plantillas pre-configuradas según casos más frecuentes del negocio
+  if(plantilla==='delantera-grande'){
+    est.push({zona:'delantera',tamano:'grande',posicion:'centro',tipoContenido:'logo',descripcion:'',tecnica:tecDef,color:colorDef});
+  } else if(plantilla==='trasera-grande'){
+    est.push({zona:'trasera',tamano:'grande',posicion:'centro',tipoContenido:'logo',descripcion:'',tecnica:tecDef,color:colorDef});
+  } else if(plantilla==='pecho-dcha-trasera-grande'){
+    // Combo: pecho pequeña derecha + trasera grande
+    est.push({zona:'delantera',tamano:'pequena',posicion:'dcha',tipoContenido:'logo',descripcion:'',tecnica:tecDef,color:colorDef});
+    est.push({zona:'trasera',tamano:'grande',posicion:'centro',tipoContenido:'logo',descripcion:'',tecnica:tecDef,color:colorDef});
   } else {
-    nueva={zona:'trasera',tamano:'grande',posicion:'centro',tipoContenido:'logo',descripcion:'',color:colorDef};
+    // Manual "+ Añadir" (fallback): primera delantera grande; siguiente trasera grande
+    var yaDelantera=est.some(function(e){return e.zona==='delantera';});
+    if(!yaDelantera){
+      est.push({zona:'delantera',tamano:'grande',posicion:'centro',tipoContenido:'logo',descripcion:'',tecnica:tecDef,color:colorDef});
+    } else {
+      est.push({zona:'trasera',tamano:'grande',posicion:'centro',tipoContenido:'logo',descripcion:'',tecnica:tecDef,color:colorDef});
+    }
   }
-  est.push(nueva);
   renderEstampaciones(containerId, cont._prenda, est, cont._onChange);
   if(cont._onChange)cont._onChange(est);
 }
@@ -2574,17 +2629,25 @@ function renderEstampacionesDetalle(estampaciones){
   if(!estampaciones||!estampaciones.length){
     return '<div style="font-size:12px;color:#aaa;font-style:italic">Sin estampaciones definidas</div>';
   }
+  var tipoContLabels={'logo':'Logo','nombre':'Nombre','numero':'Número','bandera':'Bandera','texto':'Texto','otro':'Otro'};
   var chips=estampaciones.map(function(e,i){
     var zonaLbl=e.zona==='otra'?(e.posicionLibre||'Otra'):(ZONA_LABEL[e.zona]||e.zona);
     var tam=TAMANO_LABEL[e.tamano]||e.tamano||'';
     var posTxt=e.posicion?(' · '+POSICION_LABEL[e.posicion]):'';
+    var tecnicaTxt='';
+    if(e.tecnica==='1-tinta')tecnicaTxt='<span style="background:#FFF8EC;color:#854F0B;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-right:4px">SERIGRAFÍA</span>';
+    else if(e.tecnica==='dtf'||e.color==='todo-color')tecnicaTxt='<span style="background:#F3E8FE;color:#4A1A7A;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-right:4px">DTF</span>';
+    var contenidoTxt=e.tipoContenido?(tipoContLabels[e.tipoContenido]||e.tipoContenido):'';
+    var colorTxt='';
+    if(e.color==='todo-color')colorTxt='todo color';
+    else if(e.color)colorTxt=e.color;
     return '<div class="estamp-chip">'
       +'<div class="estamp-chip-pict">'+pictogramaEstampacion(e,64)+'</div>'
       +'<div class="estamp-chip-text">'
         +'<div style="font-weight:700">'+zonaLbl+'</div>'
         +'<div style="font-size:11px;color:#555">'+tam+posTxt+'</div>'
-        +(e.descripcion?'<div style="font-size:11px;color:#333;margin-top:2px"><b>'+e.descripcion+'</b></div>':'')
-        +(e.color?'<div style="font-size:11px;color:#666">Tinta: '+e.color+'</div>':'')
+        +'<div style="margin-top:3px">'+tecnicaTxt+(colorTxt?'<span style="font-size:11px;color:#555">'+colorTxt+'</span>':'')+'</div>'
+        +(e.descripcion||contenidoTxt?'<div style="font-size:11px;color:#333;margin-top:3px"><b>'+contenidoTxt+(e.descripcion?': '+e.descripcion:'')+'</b></div>':'')
       +'</div>'
     +'</div>';
   }).join('');
@@ -6498,7 +6561,9 @@ function nvCalc(){
         extraTotal += {pequena:2, mediana:3.50, grande:4.50, completa:4.50}[tam] || 0;
       }
     }
-    res={base:cV2R2(pu*q),qty:q,pu:cV2R2(pu+extraTotal)};
+    // puFinal = precio unitario con extras. base = puFinal * q (total de línea, CON extras)
+    var puFinal=pu+extraTotal;
+    res={base:cV2R2(puFinal*q),qty:q,pu:cV2R2(puFinal)};
     vals.prenda=prenda; vals.qty=q; vals.mangaLarga=mangaLarga;
     unidades=1; // Textil ya tiene cantidad interna
   }else{
