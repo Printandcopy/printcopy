@@ -1126,26 +1126,8 @@ textarea{resize:vertical;min-height:64px}
               <div id="nv-estamp-selector"></div>
             </div>
           </div>
-          <!-- Selector tipo tallas -->
-          <div id="nv-tipo-tallas-wrap" style="display:none;margin-top:10px">
-            <label style="font-weight:600;margin-bottom:8px;display:block;font-size:13px">Tipo de personalización</label>
-            <div style="display:flex;gap:8px">
-              <div id="nv-tipo-iguales" class="nv-tipo-card nv-tipo-active" onclick="nvSelTipoTallas('iguales')" style="flex:1;padding:10px;border:2px solid #185FA5;border-radius:8px;text-align:center;cursor:pointer;background:#E6F1FB">
-                <div style="font-size:18px;margin-bottom:2px">👕</div>
-                <div style="font-size:12px;font-weight:600;color:#0C447C">Todas iguales</div>
-                <div style="font-size:10px;color:#185FA5">Mismo diseño, varias tallas</div>
-              </div>
-              <div id="nv-tipo-individual" class="nv-tipo-card" onclick="nvSelTipoTallas('individual')" style="flex:1;padding:10px;border:2px solid #e5e7eb;border-radius:8px;text-align:center;cursor:pointer;background:#fff">
-                <div style="font-size:18px;margin-bottom:2px">🏷</div>
-                <div style="font-size:12px;font-weight:600;color:#444">Personalización individual</div>
-                <div style="font-size:10px;color:#888">Nombre y número por persona</div>
-              </div>
-            </div>
-          </div>
-          <!-- Tabla tallas nuevo pedido -->
-          <div id="nv-tallas-wrap" style="display:none;margin-top:10px"></div>
-          <!-- Resultado -->
-          <div id="nv-result" class="nv-rc" style="display:none">
+          <!-- Resultado de precio (ANTES de tallas para que el dependiente confirme precio primero) -->
+          <div id="nv-result" class="nv-rc" style="display:none;margin-top:10px">
             <table>
               <tr class="nv-rc-prod"><td colspan="3" id="nv-rc-nombre">—</td></tr>
               <tr class="nv-rc-data">
@@ -1167,6 +1149,24 @@ textarea{resize:vertical;min-height:64px}
           </div>
           <!-- Tramos upselling -->
           <div id="nv-tramos" style="display:none;margin-top:8px"></div>
+          <!-- Selector tipo tallas -->
+          <div id="nv-tipo-tallas-wrap" style="display:none;margin-top:10px">
+            <label style="font-weight:600;margin-bottom:8px;display:block;font-size:13px">Tipo de personalización</label>
+            <div style="display:flex;gap:8px">
+              <div id="nv-tipo-iguales" class="nv-tipo-card nv-tipo-active" onclick="nvSelTipoTallas('iguales')" style="flex:1;padding:10px;border:2px solid #185FA5;border-radius:8px;text-align:center;cursor:pointer;background:#E6F1FB">
+                <div style="font-size:18px;margin-bottom:2px">👕</div>
+                <div style="font-size:12px;font-weight:600;color:#0C447C">Todas iguales</div>
+                <div style="font-size:10px;color:#185FA5">Mismo diseño, varias tallas</div>
+              </div>
+              <div id="nv-tipo-individual" class="nv-tipo-card" onclick="nvSelTipoTallas('individual')" style="flex:1;padding:10px;border:2px solid #e5e7eb;border-radius:8px;text-align:center;cursor:pointer;background:#fff">
+                <div style="font-size:18px;margin-bottom:2px">🏷</div>
+                <div style="font-size:12px;font-weight:600;color:#444">Personalización individual</div>
+                <div style="font-size:10px;color:#888">Nombre y número por persona</div>
+              </div>
+            </div>
+          </div>
+          <!-- Tabla tallas nuevo pedido -->
+          <div id="nv-tallas-wrap" style="display:none;margin-top:10px"></div>
           <div class="btn-row" style="margin-top:12px"><button class="btn btn-primary" id="nv-btn-add" onclick="nvAddLinea()" style="display:none">+ Añadir al presupuesto</button></div>
         </div>
         <!-- Línea manual -->
@@ -2352,7 +2352,7 @@ function renderEstampaciones(containerId, prenda, estampaciones, onChange){
     +'</div>'
     : '';
   cont.innerHTML=''
-    +'<div style="font-size:11px;color:#666;margin-bottom:6px;line-height:1.4">Selecciona un caso frecuente o añade manualmente. <strong>1ª incluida en el precio</strong> · Extras: peq. +2€/ud · med. +3,50€/ud · gde./completa +4,50€/ud</div>'
+    +'<div style="font-size:11px;color:#666;margin-bottom:6px;line-height:1.4">Selecciona un caso frecuente o añade manualmente. <strong>La más grande va incluida en el precio</strong> · Extras: peq. +2€/ud · med. +3,50€/ud · gde./completa +4,50€/ud</div>'
     +plantillasHTML
     +(filas?'<div class="estamp-filas">'+filas+'</div>':'')
     +'<button type="button" class="estamp-add-btn" onclick="addEstampacion(\''+containerId+'\')">+ '+(sinEstampaciones?'Empezar desde cero':'Añadir otra estampación')+'</button>';
@@ -6553,13 +6553,18 @@ function nvCalc(){
     var mangaLarga=(document.getElementById('nv-tx-manga-larga')||{}).checked;
     if(mangaLarga)pu+=1;
     // Nueva fuente de precio: array _nvEstampaciones del selector visual
-    // 1ª estampación incluida, extras: pequeña +2€ · mediana +3,50€ · grande/completa +4,50€
+    // Regla: la estampación MÁS GRANDE (más cara) va incluida.
+    // Las demás se cobran: pequeña +2€ · mediana +3,50€ · grande/completa +4,50€ por unidad
     var extraTotal=0;
-    if(_nvEstampaciones && _nvEstampaciones.length>1){
-      for(var ie=1;ie<_nvEstampaciones.length;ie++){
-        var tam=_nvEstampaciones[ie].tamano;
-        extraTotal += {pequena:2, mediana:3.50, grande:4.50, completa:4.50}[tam] || 0;
-      }
+    if(_nvEstampaciones && _nvEstampaciones.length>0){
+      var precioPorTam={pequena:2, mediana:3.50, grande:4.50, completa:4.50};
+      // Array con precios de todas las estampaciones
+      var preciosTodas=_nvEstampaciones.map(function(e){return precioPorTam[e.tamano]||0;});
+      // Suma total de todas
+      var sumaTodas=preciosTodas.reduce(function(a,b){return a+b;},0);
+      // Resta la mayor (la que va incluida)
+      var mayor=Math.max.apply(null, preciosTodas);
+      extraTotal = sumaTodas - mayor;
     }
     // puFinal = precio unitario con extras. base = puFinal * q (total de línea, CON extras)
     var puFinal=pu+extraTotal;
@@ -6832,7 +6837,9 @@ function nvAddLinea(){
   var _puCi=document.getElementById('nv-precio-unit')?parseFloat((document.getElementById('nv-precio-unit').textContent||'0').replace(',','.')):0;
   var _puSi=document.getElementById('nv-precio-unit-si')?parseFloat((document.getElementById('nv-precio-unit-si').textContent||'0').replace(',','.')):0;
   var _qty=_nvRes.qty||1;
-  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,totalSi:_totalSi,puCi:_puCi,puSi:_puSi,qty:_qty,unidades:unidades,cat:_nvRes.cat,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0});
+  // Estampaciones: snapshot por línea para que al añadir otra prenda no se mezclen
+  var _estampSnapshot=(_nvEstampaciones && _nvEstampaciones.length)?JSON.parse(JSON.stringify(_nvEstampaciones)):[];
+  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,totalSi:_totalSi,puCi:_puCi,puSi:_puSi,qty:_qty,unidades:unidades,cat:_nvRes.cat,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0,estampaciones:_estampSnapshot});
   nvRenderLineas();
   nvActualizarFecha();
   nvShowCross(_nvRes.cat);
@@ -6846,6 +6853,10 @@ function nvAddLinea(){
   document.getElementById('nv-textil-wrap').style.display='none';
   document.getElementById('nv-tallas-wrap').style.display='none';
   document.getElementById('nv-tipo-tallas-wrap').style.display='none';
+  // Resetear estampaciones y ocultar su wrap
+  var _estw2=document.getElementById('nv-estamp-wrap');if(_estw2)_estw2.style.display='none';
+  _nvEstampaciones=[];
+  window._nvLastPrenda=null;
   document.getElementById('nv-result').style.display='none';
   // nv-upsell removed
   document.getElementById('nv-btn-add').style.display='none';
@@ -7282,8 +7293,8 @@ function nvCrearPedido(){
                 var _tDatos=_nvTipoTallas==='individual'?nvIndGetDatos():nvTTGetDatos();
                 ped.tallas_colores=_tDatos;
                 ped.tipo_personalizacion=_nvTipoTallas==='individual'?'individual':'iguales';
-                // Estampaciones: posiciones visuales + descripción para el operario
-                ped.estampaciones=(_nvEstampaciones&&_nvEstampaciones.length)?JSON.parse(JSON.stringify(_nvEstampaciones)):[];
+                // Estampaciones guardadas con la línea (snapshot en nvAddLinea) — si varias prendas, cada una con las suyas
+                ped.estampaciones=(lin.estampaciones && lin.estampaciones.length)?JSON.parse(JSON.stringify(lin.estampaciones)):[];
               }
               var _esVacia=false;
               if(sec==='TX'&&ped.tallas_colores&&ped.tallas_colores.length){
