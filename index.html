@@ -3785,9 +3785,21 @@ function siguienteDiaLaborable(fecha){
 function tallasCompletas(p){
   var tc=p.tallasColores;
   if(!tc||!tc.length)return false;
-  if(p.tipoPersonalizacion==='individual')return tc.some(function(f){return f.nombre&&f.nombre.trim();});
+  // Extraer cantidad del pedido de la descripción (ej: "Camiseta Beagle ×5" → 5)
+  var qMatch=(p.descripcion||'').match(/×\s*(\d+)/);
+  var qTotal=qMatch?parseInt(qMatch[1]):0;
+  if(p.tipoPersonalizacion==='individual'){
+    var rellenas=tc.filter(function(f){return f.nombre&&f.nombre.trim();}).length;
+    if(rellenas===0)return false;
+    // Si conocemos la cantidad total, exigir que coincida
+    if(qTotal>0 && rellenas!==qTotal)return false;
+    return true;
+  }
   var sum=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
-  return sum>0;
+  if(sum===0)return false;
+  // Si conocemos la cantidad total, exigir que coincida
+  if(qTotal>0 && sum!==qTotal)return false;
+  return true;
 }
 function esListoProducir(p){
   if(p.seccion!=='TX')return false;
@@ -6817,6 +6829,42 @@ function nvActualizarFecha(){
 function nvAddLinea(){
   if(!_nvRes)return;
   var prod=P[_nvRes.cat];
+  var sec=CAT_TO_SEC[_nvRes.cat]||'';
+  // VALIDACIÓN PRE-AÑADIR: si es textil, asegurar que las tallas están completas
+  // (no como nvValidarTallas, que permitía 0 → se enviaba vacío al WA. Aquí sí validamos
+  // que si el operario PUSO datos, estén completos respecto a la cantidad)
+  if(sec==='TX'){
+    var _qCal=_nvRes.qty||parseInt((document.getElementById('nv-tx-qty')||{}).value)||0;
+    if(_qCal>0){
+      if(_nvTipoTallas==='individual'){
+        var _datos=nvIndGetDatos();
+        var _rellenas=_datos?_datos.filter(function(d){return d.nombre&&d.nombre.trim();}).length:0;
+        if(_rellenas>0 && _rellenas!==_qCal){
+          alert('⚠️ Personas incompletas\n\n'
+            +'· Cantidad pedida: '+_qCal+' uds\n'
+            +'· Personas con nombre: '+_rellenas+'\n\n'
+            +'O rellena los '+_qCal+' nombres o déjalos TODOS en blanco para enviar por WhatsApp al cliente.');
+          return;
+        }
+      } else {
+        // Modo iguales: sumar tallas
+        var _totalT=0;
+        var _tbody=document.querySelector('#nv-tallas-wrap');
+        if(_tbody){
+          _tbody.querySelectorAll('.tt-inp,input[type="number"]').forEach(function(inp){
+            _totalT+=parseInt(inp.value)||0;
+          });
+        }
+        if(_totalT>0 && _totalT!==_qCal){
+          alert('⚠️ Tallas incompletas\n\n'
+            +'· Cantidad pedida: '+_qCal+' uds\n'
+            +'· Tallas introducidas: '+_totalT+' uds\n\n'
+            +'O ajusta las tallas para que sumen '+_qCal+' o déjalas TODAS en 0 para enviar por WhatsApp al cliente.');
+          return;
+        }
+      }
+    }
+  }
   var desc=prod.name;
   var unidades=_nvRes.unidades||1;
   
@@ -6924,15 +6972,20 @@ function nvRenderLineas(){
     // Indicadores para líneas textil: mini resumen de tallas + estampaciones guardadas en ESTA línea
     var infoTextil='';
     if(l.sec==='TX'){
-      // Tallas
+      // Tallas — comparar con la cantidad de la línea para detectar incompletud
       var tallasTxt='';
+      var _qty=l.qty||l.unidades||0;
       if(l.tallasColores && l.tallasColores.length){
         if(l.tipoPersonalizacion==='individual'){
           var personas=l.tallasColores.filter(function(d){return d.nombre&&d.nombre.trim();}).length;
-          tallasTxt=personas>0?('👥 '+personas+' pers.'):'⚠ Sin personas';
+          if(personas===0)tallasTxt='⚠ Sin personas';
+          else if(_qty>0 && personas!==_qty)tallasTxt='⚠ '+personas+'/'+_qty+' pers.';
+          else tallasTxt='👥 '+personas+' pers.';
         } else {
           var sumaT=l.tallasColores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0);
-          tallasTxt=sumaT>0?('📏 '+sumaT+' tallas'):'⚠ Sin tallas';
+          if(sumaT===0)tallasTxt='⚠ Sin tallas';
+          else if(_qty>0 && sumaT!==_qty)tallasTxt='⚠ '+sumaT+'/'+_qty+' tallas';
+          else tallasTxt='📏 '+sumaT+' tallas';
         }
       } else {
         tallasTxt='⚠ Sin tallas';
