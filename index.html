@@ -2425,24 +2425,26 @@ function filaEstampacion(containerId, prenda, e, idx){
         '<option value="bordado"'+(tecActual==='bordado'?' selected':'')+'>Bordado</option>'
       ].join('');
       tecnicaHTML='<div class="estamp-campo"><label>Técnica</label><select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'tecnica\',this.value)">'+tecOpts+'</select></div>';
-      if(tecActual==='1-tinta' || tecActual==='bordado'){
-        // Serigrafía o Bordado: preguntar color de la tinta/hilo
+      if(tecActual==='1-tinta'){
+        // Solo Serigrafía pregunta color de tinta
         var coloresStd=['blanco','negro','rojo','amarillo','azul','verde','naranja','rosa','plata','oro','libre'];
         var coloresLabels={'blanco':'Blanco','negro':'Negro','rojo':'Rojo','amarillo':'Amarillo','azul':'Azul','verde':'Verde','naranja':'Naranja','rosa':'Rosa','plata':'Plata','oro':'Oro','libre':'Otro color…'};
         var colorActual=e.color||'blanco';
-        if(colorActual==='todo-color')colorActual='blanco'; // reset al cambiar de DTF
+        if(colorActual==='todo-color')colorActual='blanco';
         var esLibreColor=(coloresStd.indexOf(colorActual)<0) || e._colorLibre;
         var colorSelVal=esLibreColor?'libre':colorActual;
         var colorOpts=coloresStd.map(function(c){
           return '<option value="'+c+'"'+(colorSelVal===c?' selected':'')+'>'+coloresLabels[c]+'</option>';
         }).join('');
-        var colorLabel=tecActual==='bordado'?'Color hilo':'Color tinta';
-        colorHTML='<div class="estamp-campo"><label>'+colorLabel+'</label>'
+        colorHTML='<div class="estamp-campo"><label>Color tinta</label>'
           +'<select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)">'+colorOpts+'</select>'
           +(esLibreColor?'<input type="text" placeholder="Especifica color…" value="'+((e.color||'') !== 'libre' ? (e.color||'').replace(/"/g,'&quot;') : '')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)" style="margin-top:4px">':'')
           +'</div>';
+      } else if(tecActual==='bordado'){
+        // Bordado: no pedimos color aquí (se indica a mano al bordador)
+        e.color='';
       } else {
-        // DTF expandido: sin selector de color
+        // DTF: sin selector de color
         e.color='todo-color';
       }
     }
