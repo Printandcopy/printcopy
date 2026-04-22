@@ -2392,48 +2392,59 @@ function filaEstampacion(containerId, prenda, e, idx){
   }).join('');
   var descPlaceholder=tipoActual==='texto'?'Escribe el texto a estampar':(tipoActual==='otro'?'Describe qué va estampado':'Detalle opcional (ej: con escudo, en cursiva…)');
 
-  // === TÉCNICA (serigrafía 1 tinta vs DTF policromía) ===
-  // Reglas:
-  // - Modo 'individual' (nombres/dorsales): SIEMPRE DTF policromía, sin opción
-  // - Modo 'iguales':
-  //     Selector "Técnica": 1 tinta (serigrafía, más económico) / Todo color (DTF)
-  //     Si "1 tinta" → preguntar color concreto
-  //     Si "todo color" → NO preguntar color (la imagen ya trae los suyos)
+  // === TÉCNICA (DTF por defecto 98% · Serigrafía · Bordado) ===
+  // Flujo nuevo:
+  // - Default siempre DTF (sin color, imprime policromía)
+  // - Un link pequeño "Cambiar técnica" para expandir selector
+  // - Si Serigrafía (1 tinta) → aparece selector de color
+  // - Si Bordado → aparece selector de color hilo
+  // - Individual: forzado DTF (nombres/dorsales exigen policromía)
   var esIndividual=(typeof _nvTipoTallas!=='undefined' && _nvTipoTallas==='individual');
   var tecnicaHTML='';
   var colorHTML='';
+  // Asegurar valor por defecto
+  if(!e.tecnica)e.tecnica='dtf';
   if(esIndividual){
-    // Fijo DTF policromía
+    // Fijo DTF (forzado)
     e.tecnica='dtf';
     e.color='todo-color';
-    tecnicaHTML='<div class="estamp-campo"><label>Técnica</label>'
-      +'<input type="text" value="DTF · Todo color" disabled style="background:#f5f5f0;color:#555;cursor:not-allowed" title="Nombres y dorsales requieren impresión a todo color">'
-      +'</div>';
+    tecnicaHTML='<div style="font-size:11px;color:#666;font-style:italic;margin-top:4px">⚙️ <b>DTF · todo color</b> (forzado en personalizaciones individuales)</div>';
   } else {
-    // Modo iguales: elegir técnica
-    var tecActual=e.tecnica||'1-tinta';
-    var tecOpts=[
-      '<option value="1-tinta"'+(tecActual==='1-tinta'?' selected':'')+'>Serigrafía (1 tinta)</option>',
-      '<option value="todo-color"'+(tecActual==='todo-color'?' selected':'')+'>DTF (todo color)</option>'
-    ].join('');
-    tecnicaHTML='<div class="estamp-campo"><label>Técnica</label><select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'tecnica\',this.value)">'+tecOpts+'</select></div>';
-    if(tecActual==='1-tinta'){
-      // Solo si 1 tinta: preguntar color
-      var coloresStd=['blanco','negro','rojo','amarillo','azul','verde','naranja','rosa','plata','oro','libre'];
-      var coloresLabels={'blanco':'Blanco','negro':'Negro','rojo':'Rojo','amarillo':'Amarillo','azul':'Azul','verde':'Verde','naranja':'Naranja','rosa':'Rosa','plata':'Plata','oro':'Oro','libre':'Otro color…'};
-      var colorActual=e.color||'blanco';
-      var esLibreColor=(coloresStd.indexOf(colorActual)<0) || e._colorLibre;
-      var colorSelVal=esLibreColor?'libre':colorActual;
-      var colorOpts=coloresStd.map(function(c){
-        return '<option value="'+c+'"'+(colorSelVal===c?' selected':'')+'>'+coloresLabels[c]+'</option>';
-      }).join('');
-      colorHTML='<div class="estamp-campo"><label>Color tinta</label>'
-        +'<select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)">'+colorOpts+'</select>'
-        +(esLibreColor?'<input type="text" placeholder="Especifica color…" value="'+((e.color||'') !== 'libre' ? (e.color||'').replace(/"/g,'&quot;') : '')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)" style="margin-top:4px">':'')
-        +'</div>';
+    // Modo iguales: DTF por defecto. Link para cambiar.
+    var tecActual=e.tecnica||'dtf';
+    var tecLabel={'dtf':'DTF (todo color)','1-tinta':'Serigrafía 1 tinta','bordado':'Bordado'}[tecActual]||'DTF (todo color)';
+    var expandido=!!e._tecnicaExpandida || tecActual!=='dtf';
+    if(!expandido){
+      // Modo compacto: solo texto + link para cambiar
+      tecnicaHTML='<div style="font-size:11px;color:#555;margin-top:4px">⚙️ Técnica: <b>'+tecLabel+'</b> <a href="#" onclick="event.preventDefault();updateEstampacion(\''+containerId+'\','+idx+',\'_tecnicaExpandida\',true);" style="color:#185FA5;text-decoration:underline;margin-left:8px;font-size:11px">Cambiar</a></div>';
     } else {
-      // Todo color DTF: sin selector de color
-      e.color='todo-color';
+      // Modo expandido: selector visible
+      var tecOpts=[
+        '<option value="dtf"'+(tecActual==='dtf'?' selected':'')+'>DTF (todo color)</option>',
+        '<option value="1-tinta"'+(tecActual==='1-tinta'?' selected':'')+'>Serigrafía (1 tinta)</option>',
+        '<option value="bordado"'+(tecActual==='bordado'?' selected':'')+'>Bordado</option>'
+      ].join('');
+      tecnicaHTML='<div class="estamp-campo"><label>Técnica</label><select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'tecnica\',this.value)">'+tecOpts+'</select></div>';
+      if(tecActual==='1-tinta' || tecActual==='bordado'){
+        // Serigrafía o Bordado: preguntar color de la tinta/hilo
+        var coloresStd=['blanco','negro','rojo','amarillo','azul','verde','naranja','rosa','plata','oro','libre'];
+        var coloresLabels={'blanco':'Blanco','negro':'Negro','rojo':'Rojo','amarillo':'Amarillo','azul':'Azul','verde':'Verde','naranja':'Naranja','rosa':'Rosa','plata':'Plata','oro':'Oro','libre':'Otro color…'};
+        var colorActual=e.color||'blanco';
+        if(colorActual==='todo-color')colorActual='blanco'; // reset al cambiar de DTF
+        var esLibreColor=(coloresStd.indexOf(colorActual)<0) || e._colorLibre;
+        var colorSelVal=esLibreColor?'libre':colorActual;
+        var colorOpts=coloresStd.map(function(c){
+          return '<option value="'+c+'"'+(colorSelVal===c?' selected':'')+'>'+coloresLabels[c]+'</option>';
+        }).join('');
+        var colorLabel=tecActual==='bordado'?'Color hilo':'Color tinta';
+        colorHTML='<div class="estamp-campo"><label>'+colorLabel+'</label>'
+          +'<select onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)">'+colorOpts+'</select>'
+          +(esLibreColor?'<input type="text" placeholder="Especifica color…" value="'+((e.color||'') !== 'libre' ? (e.color||'').replace(/"/g,'&quot;') : '')+'" onchange="updateEstampacion(\''+containerId+'\','+idx+',\'color\',this.value)" style="margin-top:4px">':'')
+          +'</div>';
+      } else {
+        // DTF expandido: sin selector de color
+        e.color='todo-color';
+      }
     }
   }
   return '<div class="estamp-fila" data-idx="'+idx+'">'
@@ -2466,10 +2477,9 @@ function filaEstampacion(containerId, prenda, e, idx){
 function addEstampacion(containerId, plantilla){
   var cont=document.getElementById(containerId);if(!cont)return;
   var est=cont._estampaciones||[];
-  var esIndividual=(typeof _nvTipoTallas!=='undefined' && _nvTipoTallas==='individual');
-  // En individual: siempre DTF todo-color. En iguales: por defecto 1 tinta blanca (serigrafía).
-  var tecDef=esIndividual?'dtf':'1-tinta';
-  var colorDef=esIndividual?'todo-color':'blanco';
+  // Default siempre DTF todo-color (98% de los pedidos). Serigrafía/bordado se cambia después desde el link.
+  var tecDef='dtf';
+  var colorDef='todo-color';
   // Plantillas pre-configuradas según casos más frecuentes del negocio
   if(plantilla==='delantera-grande'){
     est.push({zona:'delantera',tamano:'grande',posicion:'centro',tipoContenido:'logo',descripcion:'',tecnica:tecDef,color:colorDef});
@@ -2636,6 +2646,7 @@ function renderEstampacionesDetalle(estampaciones){
     var posTxt=e.posicion?(' · '+POSICION_LABEL[e.posicion]):'';
     var tecnicaTxt='';
     if(e.tecnica==='1-tinta')tecnicaTxt='<span style="background:#FFF8EC;color:#854F0B;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-right:4px">SERIGRAFÍA</span>';
+    else if(e.tecnica==='bordado')tecnicaTxt='<span style="background:#E8F4EA;color:#1B5E20;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-right:4px">BORDADO</span>';
     else if(e.tecnica==='dtf'||e.color==='todo-color')tecnicaTxt='<span style="background:#F3E8FE;color:#4A1A7A;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:600;margin-right:4px">DTF</span>';
     var contenidoTxt=e.tipoContenido?(tipoContLabels[e.tipoContenido]||e.tipoContenido):'';
     var colorTxt='';
