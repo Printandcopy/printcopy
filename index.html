@@ -7242,9 +7242,9 @@ function nvGuardar(estado,canal){
           }
           closeModal('modal-venta');cargarPresupuestos();
           // Refrescar barra de avisos para que el nuevo presupuesto aparezca en
-          // 'Pendientes de cobro' sin necesidad de F5 (era bug: tras crear con
-          // transferencia no aparecía hasta refrescar manualmente)
-          if(typeof actualizarBarraAvisos==='function')actualizarBarraAvisos();
+          // 'Pendientes de cobro' sin necesidad de F5. cargarPresupuestos es async,
+          // por eso esperamos para que el nuevo presupuesto esté en memoria al refrescar
+          setTimeout(function(){if(typeof actualizarBarraAvisos==='function')actualizarBarraAvisos();},1500);
           if(estado==='enviado'){
             // Envío automático: email con HTML, WA con texto
             var presTemp={numero:numero,cliente_nombre:nombre,cliente_telefono:tel,cliente_email:email,
