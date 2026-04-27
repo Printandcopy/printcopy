@@ -1441,6 +1441,59 @@ textarea{resize:vertical;min-height:64px}
 <script>
 // ── SUPABASE ──
 var sb=supabase.createClient('https://ffiyprmbrznofoprvvik.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg');
+
+// ═══════════════════════════════════════════════════════════════════════
+// MODO PRUEBA — bloquea TODOS los WhatsApp para que Marilia pueda
+// probar sin enviar nada a clientes reales. Para activar/desactivar:
+// localStorage.setItem('_modoPrueba','true')   → bloqueado
+// localStorage.removeItem('_modoPrueba')       → producción normal
+// O cambiar MODO_PRUEBA_FORZADO abajo (true=bloqueado para todos)
+// ═══════════════════════════════════════════════════════════════════════
+var MODO_PRUEBA_FORZADO=true; // ⚠️ TRUE durante pruebas con Marilia, FALSE en producción real
+function modoPruebaActivo(){
+  if(MODO_PRUEBA_FORZADO)return true;
+  try{return localStorage.getItem('_modoPrueba')==='true';}catch(e){return false;}
+}
+// Interceptar fetch para URLs de WhatsApp
+var _originalFetch=window.fetch;
+window.fetch=function(url,opts){
+  if(modoPruebaActivo() && typeof url==='string' && url.indexOf('/api/whatsapp')>=0){
+    // Mostrar toast naranja para que el operario sepa que el WA NO se envió
+    try{
+      var body={};
+      try{body=JSON.parse((opts&&opts.body)||'{}');}catch(e){}
+      var preview=(body.mensaje||'').substring(0,80).replace(/\n/g,' ');
+      var t=document.createElement('div');
+      t.style.cssText='position:fixed;top:80px;right:20px;background:#FF9800;color:#fff;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:99999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:340px;border-left:5px solid #E65100';
+      t.innerHTML='🧪 <b>WA simulado</b> (modo prueba)<br>'
+        +'<span style="font-size:11px;opacity:.95;font-weight:400">A: '+(body.telefono||'?')+' · '+preview+(preview.length>=80?'…':'')+'</span>';
+      t.onclick=function(){t.remove();};
+      document.body.appendChild(t);
+      setTimeout(function(){if(t.parentNode)t.remove();},6000);
+      console.log('[MODO_PRUEBA] WA bloqueado:',body);
+    }catch(e){console.warn('[MODO_PRUEBA] error mostrando toast:',e);}
+    // Devolver Promise simulada de éxito (para que el código que espera respuesta no rompa)
+    return Promise.resolve({
+      ok:true,
+      status:200,
+      json:function(){return Promise.resolve({success:true,simulado:true});},
+      text:function(){return Promise.resolve('{"success":true,"simulado":true}');}
+    });
+  }
+  return _originalFetch.apply(this,arguments);
+};
+// Indicador visual permanente arriba si modo prueba activo
+if(modoPruebaActivo()){
+  setTimeout(function(){
+    var badge=document.createElement('div');
+    badge.id='modo-prueba-badge';
+    badge.style.cssText='position:fixed;top:0;left:50%;transform:translateX(-50%);background:#FF9800;color:#fff;padding:4px 14px;font-size:11px;font-weight:700;z-index:99998;border-bottom-left-radius:8px;border-bottom-right-radius:8px;letter-spacing:.5px;text-transform:uppercase';
+    badge.textContent='🧪 Modo prueba — WA bloqueado';
+    badge.title='Los WhatsApp NO se están enviando. Para reactivar pide a soporte cambiar MODO_PRUEBA_FORZADO=false';
+    document.body.appendChild(badge);
+  },500);
+}
+
 var COND_STD='50% al encargar · 50% al recoger';
 var FASES=['Nuevo','Atendido','Previas env.','Previas OK','Producción','Terminado','Cobrado','Recogido'];
 var SECS={TX:'Textil',PL:'Plotter',UV:'Impresión UV',SUB:'Sublimación',NEON:'Neones',XR:'Xerox'};
