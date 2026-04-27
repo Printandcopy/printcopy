@@ -7201,7 +7201,7 @@ function nvGuardar(estado,canal){
       if(r.error){alert('Error: '+r.error.message);return;}
       // Eliminar líneas antiguas y crear nuevas
       sb.from('presupuesto_lineas').delete().eq('presupuesto_id',presId).then(function(){
-        var lineasDB=nvLineas.map(function(l,i){return{presupuesto_id:presId,seccion:l.seccion||l.sec,descripcion:l.desc,cantidad:l.cantidad||l.unidades||1,precio_unitario:l.total/(l.cantidad||l.unidades||1),subtotal:l.total,plazo:l.plazo||3,orden:i};});
+        var lineasDB=nvLineas.map(function(l,i){return{presupuesto_id:presId,seccion:l.seccion||l.sec,descripcion:l.desc,cantidad:l.cantidad||l.unidades||1,precio_unitario:l.total/(l.cantidad||l.unidades||1),subtotal:l.total,plazo:l.plazo||3,orden:i,tallas_colores:l.tallasColores||null,tipo_personalizacion:l.tipoPersonalizacion||null,estampaciones:l.estampaciones||[],prenda:l.prenda||null};});
         sb.from('presupuesto_lineas').insert(lineasDB).then(function(){
           window._editandoPresupuestoId=null;
           closeModal('modal-venta');
@@ -7228,7 +7228,7 @@ function nvGuardar(estado,canal){
       sb.from('presupuestos').insert([data]).select().then(function(r2){
         if(r2.error){alert('Error: '+r2.error.message);return;}
         var presId=r2.data[0].id;
-        var lineasDB=nvLineas.map(function(l,i){return{presupuesto_id:presId,seccion:l.sec,descripcion:l.desc,cantidad:l.unidades||1,precio_unitario:l.total/(l.unidades||1),subtotal:l.total,plazo:l.plazo||3,orden:i};});
+        var lineasDB=nvLineas.map(function(l,i){return{presupuesto_id:presId,seccion:l.sec,descripcion:l.desc,cantidad:l.unidades||1,precio_unitario:l.total/(l.unidades||1),subtotal:l.total,plazo:l.plazo||3,orden:i,tallas_colores:l.tallasColores||null,tipo_personalizacion:l.tipoPersonalizacion||null,estampaciones:l.estampaciones||[],prenda:l.prenda||null};});
         sb.from('presupuesto_lineas').insert(lineasDB).then(function(rl){
           if(rl.error){console.error('Error insertando líneas:',rl.error);}
           // Si viene de una solicitud, marcarla como presupuestada
@@ -8192,7 +8192,24 @@ function cotConvertir(){
   if(!_cotActual)return;
   var lins=_cotActual.lineas||[];
   if(!lins.length){alert('Sin líneas. Cierra y vuelve a abrir el presupuesto.');return;}
-  nvLineas=lins.map(function(l){return{sec:l.seccion,desc:l.descripcion,total:parseFloat(l.subtotal)||0,unidades:l.cantidad||1,plazo:l.plazo||3};});
+  // BUG FIX: traspasar tallas, tipo personalización, estampaciones y prenda al convertir.
+  // Antes solo se traspasaba sec/desc/total/unidades → el pedido nuevo aparecía sin tallas
+  // y bloqueaba checks de Ropa/DTF en taller.
+  nvLineas=lins.map(function(l){return{
+    sec:l.seccion,
+    desc:l.descripcion,
+    total:parseFloat(l.subtotal)||0,
+    unidades:l.cantidad||1,
+    qty:l.cantidad||1,
+    plazo:l.plazo||3,
+    tallasColores:l.tallas_colores||null,
+    tipoPersonalizacion:l.tipo_personalizacion||null,
+    estampaciones:l.estampaciones||[],
+    prenda:l.prenda||null
+  };});
+  // Sincronizar estado global con la primera línea TX (si hay)
+  var primTX=nvLineas.find(function(l){return l.sec==='TX'&&l.tipoPersonalizacion;});
+  if(primTX)_nvTipoTallas=primTX.tipoPersonalizacion;
   document.getElementById('nv-nombre').value=_cotActual.cliente_nombre||'';
   document.getElementById('nv-tel').value=_cotActual.cliente_telefono||'';
   document.getElementById('nv-email').value=_cotActual.cliente_email||'';
