@@ -7239,6 +7239,10 @@ function nvGuardar(estado,canal){
             window._solIdParaPresupuesto=null;
           }
           closeModal('modal-venta');cargarPresupuestos();
+          // Refrescar barra de avisos para que el nuevo presupuesto aparezca en
+          // 'Pendientes de cobro' sin necesidad de F5 (era bug: tras crear con
+          // transferencia no aparecía hasta refrescar manualmente)
+          if(typeof actualizarBarraAvisos==='function')actualizarBarraAvisos();
           if(estado==='enviado'){
             // Envío automático: email con HTML, WA con texto
             var presTemp={numero:numero,cliente_nombre:nombre,cliente_telefono:tel,cliente_email:email,
@@ -7897,9 +7901,9 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
   var clienteId=clienteObj?clienteObj.id:null;
   var senalTotal=senal||0;
   var pagoEst=senalTotal>=totalGlobal?'pagado':senalTotal>0?'senal':'pendiente';
+  // Operario real: el que cobró (identidad activa _pcYo) o fallback Sistema
+  var operarioReal=(typeof _pcYo!=='undefined' && _pcYo && _pcYo!=='Todos')?_pcYo:'Sistema';
   // Reparto proporcional de la señal con cuadre exacto
-  // Cada línea: senalTotal * (subtotal_linea / total_global), redondeado a 2 decimales
-  // La última línea absorbe el residuo para que la suma = senalTotal exacto
   var repartoSenal=[];
   var acumulado=0;
   lins.forEach(function(lin,idx){
@@ -7914,41 +7918,58 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
     }
     repartoSenal.push(parte);
   });
-  var proms=lins.map(function(lin,idx){
-    return new Promise(function(res){
+  // SECUENCIAL (chain Promise.resolve+then) para evitar colisión de contador
+  // cuando el presupuesto tiene varias líneas TX
+  var nums=[];
+  var chain=Promise.resolve();
+  lins.forEach(function(lin,idx){
+    chain=chain.then(function(){
+      return new Promise(function(res){
       var sec=lin.seccion||'XR';
       sb.from('contadores').select('valor').eq('seccion',sec).single().then(function(r){
+        if(r.error){console.error('Error leyendo contador desde presupuesto:',r.error);alert('Error al generar número de pedido '+sec+'. Avisa a soporte.');nums.push(null);res(null);return;}
         var nv=(r.data?r.data.valor:0)+1;
-        sb.from('contadores').upsert([{seccion:sec,valor:nv}],{onConflict:'seccion'}).then(function(){
+        sb.from('contadores').upsert([{seccion:sec,valor:nv}],{onConflict:'seccion'}).then(function(ru){
+          if(ru&&ru.error){console.error('Error actualizando contador:',ru.error);alert('Error al reservar número de pedido '+sec+'. Avisa a soporte.');nums.push(null);res(null);return;}
           var numPed=sec+'-'+String(nv).padStart(4,'0');
           var ped={id:numPed,cliente_id:clienteId,cliente_nombre:pres.cliente_nombre,
             cliente_tel:pres.cliente_telefono,cliente_email:pres.cliente_email||'',
-            seccion:sec,operario:'Sistema',fecha_creacion:new Date().toISOString(),
+            seccion:sec,operario:operarioReal,fecha_creacion:new Date().toISOString(),
             fecha_entrega:fecha,fecha_tipo:'aprox',descripcion:lin.descripcion,
             notas:'Auto desde '+pres.numero+(metodo?' | '+metodo:''),
             total:parseFloat(lin.subtotal)||0,senal:repartoSenal[idx],
-            pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:0};
+            pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:0,
+            presupuesto_id:pres.id};
+          // Traspasar tallas, tipo personalización, estampaciones y prenda al pedido
+          // (FIX igual que cotConvertir — antes esto se perdía al cobrar señal)
+          if(sec==='TX'){
+            if(lin.tallas_colores)ped.tallas_colores=lin.tallas_colores;
+            if(lin.tipo_personalizacion)ped.tipo_personalizacion=lin.tipo_personalizacion;
+            ped.estampaciones=lin.estampaciones||[];
+          }
           sb.from('pedidos').insert([ped]).then(function(ri){
             if(ri&&ri.error){
               console.error('Error insert pedido:',ri.error.message);
               alert('Error al crear pedido: '+ri.error.message);
-              res(null);
-            }else{res(numPed);}
-          });
+              nums.push(null);res(null);
+            }else{nums.push(numPed);res(numPed);}
+          }).catch(function(e){console.error('Insert catch:',e);nums.push(null);res(null);});
         });
+      });
       });
     });
   });
-    Promise.all(proms).then(function(nums){
+  chain.then(function(){
+    var validos=nums.filter(function(n){return n!=null;});
     sb.from('presupuestos').update({convertido:true,senal_cobrada:senalTotal>0}).eq('id',pres.id).then(function(){
       cargarDatos();actualizarBarraAvisos();
       var t=document.createElement('div');
       t.style.cssText='position:fixed;bottom:20px;right:20px;background:#185FA5;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;max-width:300px;box-shadow:0 4px 12px rgba(0,0,0,.3)';
-      t.innerHTML='\uD83D\uDCE6 <b>'+pres.cliente_nombre+'</b> en taller<br><span style="font-size:11px;opacity:.85">'+nums.join(', ')+' desde '+pres.numero+'</span>';
+      t.innerHTML='\uD83D\uDCE6 <b>'+pres.cliente_nombre+'</b> en taller<br><span style="font-size:11px;opacity:.85">'+validos.join(', ')+' desde '+pres.numero+'</span>';
       t.onclick=function(){t.remove();};
       document.body.appendChild(t);
       setTimeout(function(){if(t.parentNode)t.remove();},12000);
-      if(callback)callback(nums);
+      if(callback)callback(validos);
     });
   });
 }
