@@ -2235,7 +2235,7 @@ function cargarDatos(){
 }
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',credito:c.credito===true,creado:c.creado};}
-function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,metodoPago:p.metodo_pago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,estampaciones:p.estampaciones||[],_recTallasNum:p.recordatorio_tallas_num||0,_tallasNotificado:p.tallas_notificado||false};}
+function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,metodoPago:p.metodo_pago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,previaAceptadaFecha:p.previa_aceptada_fecha||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,estampaciones:p.estampaciones||[],tallasRecibidasFecha:p.tallas_recibidas_fecha||null,_recTallasNum:p.recordatorio_tallas_num||0,_tallasNotificado:p.tallas_notificado||false};}
 function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,metodo_pago:p.metodoPago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null,tipo_personalizacion:p.tipoPersonalizacion||null,estampaciones:p.estampaciones||[]};}
 
 function startClock(){
@@ -3068,17 +3068,19 @@ function verPedido(id){
     var tieneTallas=tallasCompletas(p);
     html+='<div style="margin-bottom:10px;border-radius:7px;overflow:hidden;border:0.5px solid #e5e7eb">';
     html+='<div style="background:#f9f9f7;padding:8px 12px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px">Checklist producción</div>';
-    // Tallas
-    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+(tieneTallas?'sem-green':'sem-red')+'"></span><span class="sem-label">'+(tieneTallas?'Tallas recibidas':'Pdte tallas')+'</span></div>';
+    // Tallas (con fecha si la hay)
+    var tallasTs=p.tallasRecibidasFecha?'<span class="sem-ts">'+fmtCheckTs(p.tallasRecibidasFecha)+'</span>':'';
+    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+(tieneTallas?'sem-green':'sem-red')+'"></span><span class="sem-label" style="flex:1">'+(tieneTallas?'Tallas recibidas':'Pdte tallas')+'</span>'+tallasTs+'</div>';
     // Ropa
     html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0">';
     if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">Ropa pedida</span>';
     else html+='<input type="checkbox" style="margin:0;flex-shrink:0;width:16px;height:16px;cursor:pointer" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"><span class="sem-label" style="flex:1">Ropa pedida</span>'+(p.ropaOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.ropaOkFecha)+'</span>':'');
     html+='</div>';
-    // Previas
+    // Previas (con fecha si aceptada)
     var prevLbl=p.previaEstado==='aceptada'?'Previas OK':p.previaEstado==='rechazada'?'Previas: cambios':p.previaEstado==='enviada'?'Previas: esperando':'Pdte previas';
     var prevDot=p.previaEstado==='aceptada'?'sem-green':'sem-red';
-    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+prevDot+'"></span><span class="sem-label">'+prevLbl+'</span></div>';
+    var prevTs=p.previaEstado==='aceptada'&&p.previaAceptadaFecha?'<span class="sem-ts">'+fmtCheckTs(p.previaAceptadaFecha)+'</span>':'';
+    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+prevDot+'"></span><span class="sem-label" style="flex:1">'+prevLbl+'</span>'+prevTs+'</div>';
     // DTF
     html+='<div class="sem-item" style="padding:7px 12px">';
     if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">DTF pedido</span>';
@@ -7432,6 +7434,15 @@ function nvCrearPedido(){
                 ped.tipo_personalizacion=lin.tipoPersonalizacion||(_nvTipoTallas==='individual'?'individual':'iguales');
                 // Estampaciones guardadas con la línea (snapshot en nvAddLinea) — si varias prendas, cada una con las suyas
                 ped.estampaciones=(lin.estampaciones && lin.estampaciones.length)?JSON.parse(JSON.stringify(lin.estampaciones)):[];
+                // Marcar tallas como ya notificadas si vienen completas desde mostrador
+                // (evita el WA redundante 'recibidas las tallas' al cliente que ya las dio en persona)
+                var _yaNotif=false;
+                if(ped.tallas_colores && ped.tallas_colores.length){
+                  if(ped.tipo_personalizacion==='individual')_yaNotif=ped.tallas_colores.some(function(d){return d.nombre&&d.nombre.trim();});
+                  else _yaNotif=ped.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0)>0;
+                }
+                ped.tallas_notificado=_yaNotif;
+                if(_yaNotif)ped.tallas_recibidas_fecha=new Date().toISOString();
               }
               var _esVacia=false;
               if(sec==='TX'&&ped.tallas_colores&&ped.tallas_colores.length){
@@ -7946,6 +7957,16 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
             if(lin.tallas_colores)ped.tallas_colores=lin.tallas_colores;
             if(lin.tipo_personalizacion)ped.tipo_personalizacion=lin.tipo_personalizacion;
             ped.estampaciones=lin.estampaciones||[];
+            // Marcar tallas como ya notificadas si vienen completas → evita WA redundante
+            // 'recibidas las tallas' al cliente que ya las dio en mostrador
+            var _tcLin=ped.tallas_colores;
+            var _yaNotifP=false;
+            if(_tcLin && _tcLin.length){
+              if(ped.tipo_personalizacion==='individual')_yaNotifP=_tcLin.some(function(d){return d.nombre&&d.nombre.trim();});
+              else _yaNotifP=_tcLin.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0)>0;
+            }
+            ped.tallas_notificado=_yaNotifP;
+            if(_yaNotifP)ped.tallas_recibidas_fecha=new Date().toISOString();
           }
           sb.from('pedidos').insert([ped]).then(function(ri){
             if(ri&&ri.error){
@@ -7962,7 +7983,10 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
   chain.then(function(){
     var validos=nums.filter(function(n){return n!=null;});
     sb.from('presupuestos').update({convertido:true,senal_cobrada:senalTotal>0}).eq('id',pres.id).then(function(){
-      cargarDatos();actualizarBarraAvisos();
+      // cargarDatos es async — esperar antes de refrescar barra de avisos para que
+      // recoja el presupuesto ya marcado como convertido y desaparezca de pendientes
+      cargarDatos();
+      setTimeout(function(){if(typeof actualizarBarraAvisos==='function')actualizarBarraAvisos();},1200);
       var t=document.createElement('div');
       t.style.cssText='position:fixed;bottom:20px;right:20px;background:#185FA5;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;max-width:300px;box-shadow:0 4px 12px rgba(0,0,0,.3)';
       t.innerHTML='\uD83D\uDCE6 <b>'+pres.cliente_nombre+'</b> en taller<br><span style="font-size:11px;opacity:.85">'+validos.join(', ')+' desde '+pres.numero+'</span>';
@@ -9464,9 +9488,9 @@ setInterval(function(){
         else tieneDatos=tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0)>0;
         if(!tieneDatos)return;
         _tallasYaNotificadas[row.id]=true;
-        sb.from('pedidos').update({tallas_notificado:true}).eq('id',row.id).then(function(){
+        sb.from('pedidos').update({tallas_notificado:true,tallas_recibidas_fecha:new Date().toISOString()}).eq('id',row.id).then(function(){
           var p=pedidos.find(function(x){return x.id===row.id;});
-          if(p){p.tallasColores=tc;p._tallasNotificado=true;}
+          if(p){p.tallasColores=tc;p._tallasNotificado=true;p.tallasRecibidasFecha=new Date().toISOString();}
           var total=esInd?tc.filter(function(f){return f.nombre;}).length:tc.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);},0);
           var t=document.createElement('div');
           t.style.cssText='position:fixed;bottom:20px;right:20px;background:#185FA5;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px';
@@ -9498,6 +9522,12 @@ setInterval(function(){
         p.previaEstado=row.previa_estado;
         p.previaCambios=row.previa_cambios;
         hubocambio=true;
+        // Si es aceptada, persistir la fecha (para mostrar cronología en checklist)
+        if(row.previa_estado==='aceptada' && !p.previaAceptadaFecha){
+          var _fechaPrevia=new Date().toISOString();
+          p.previaAceptadaFecha=_fechaPrevia;
+          sb.from('pedidos').update({previa_aceptada_fecha:_fechaPrevia}).eq('id',p.id);
+        }
         // Notificación visual si el cliente respondió
         if(row.previa_estado==='aceptada'||row.previa_estado==='rechazada'){
           var msg=row.previa_estado==='aceptada'
