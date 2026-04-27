@@ -5793,6 +5793,10 @@ function cargarPresupuestos(){
 function enHorarioEnvio(){var h=parseInt(new Date().toLocaleString('es-ES',{timeZone:'Europe/Madrid',hour:'2-digit',hour12:false}));return h>=9&&h<21;}
 
 function checkRecordatoriosPresupuestos(){
+  if(typeof modoPruebaActivo==='function' && modoPruebaActivo()){
+    console.log('[MODO_PRUEBA] checkRecordatoriosPresupuestos bloqueado');
+    return;
+  }
   if(!enHorarioEnvio())return;
   var ahora=new Date();
   // 3 consultas separadas para cada recordatorio, filtrando en BD
@@ -5870,6 +5874,10 @@ function checkRecordatoriosPresupuestos(){
 
 // Recordatorio recogida: pedidos terminados (fase 5) que llevan 3+ días sin recoger
 function checkRecordatorioRecogida(){
+  if(typeof modoPruebaActivo==='function' && modoPruebaActivo()){
+    console.log('[MODO_PRUEBA] checkRecordatorioRecogida bloqueado');
+    return;
+  }
   if(!enHorarioEnvio())return;
   var ahora=new Date();
   sb.from('pedidos').select('id,cliente_nombre,cliente_tel,total,senal,fecha_entrega,fecha_creacion,recordatorio_recogida')
@@ -5896,6 +5904,12 @@ function checkRecordatorioRecogida(){
 
 // Recordatorios tallas: cada 2 días (2,4,6,8...) para pedidos TX sin tallas
 function checkRecordatoriosTallas(){
+  // DEFENSA EN PROFUNDIDAD: si modo prueba activo, NO enviar nada (aunque alguien
+  // tenga código viejo cacheado donde el interceptor de fetch no estuviera)
+  if(typeof modoPruebaActivo==='function' && modoPruebaActivo()){
+    console.log('[MODO_PRUEBA] checkRecordatoriosTallas bloqueado');
+    return;
+  }
   if(!enHorarioEnvio())return;
   var ahora=new Date();
   var fechaMinima='2026-04-12';
@@ -9395,6 +9409,10 @@ setTimeout(openModalIdentidad,300);
 setInterval(checkRecordatoriosPresupuestos,4*60*60*1000);
 // Recordatorio pago: presupuestos aceptados sin pago (transferencia o tienda)
 function checkRecordatorioPago(){
+  if(typeof modoPruebaActivo==='function' && modoPruebaActivo()){
+    console.log('[MODO_PRUEBA] checkRecordatorioPago bloqueado');
+    return;
+  }
   if(!enHorarioEnvio())return;
   var ahora=new Date();
   var aceptados=(presupuestos||[]).filter(function(p){
