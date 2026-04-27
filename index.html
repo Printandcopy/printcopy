@@ -9547,6 +9547,52 @@ setInterval(function(){
   });
 },15000);
 
+// Polling cada 20s para detectar presupuestos aceptados por el cliente
+// (cliente acepta desde landing externa → operario debe ver actualizada la barra
+// 'Pendientes de cobro' sin tener que refrescar manualmente la página)
+var _presupuestosYaDetectados={};
+setInterval(function(){
+  if(!presupuestos||!presupuestos.length)return;
+  // Solo presupuestos enviados pendientes de cobro/conversión
+  var enviados=presupuestos.filter(function(p){return p.estado==='enviado'&&!p.convertido;});
+  if(!enviados.length)return;
+  var ids=enviados.map(function(p){return p.id;});
+  sb.from('presupuestos').select('id,estado,metodo_pago,convertido').in('id',ids).then(function(r){
+    if(!r.data||!r.data.length)return;
+    var hubocambio=false;
+    r.data.forEach(function(row){
+      var p=presupuestos.find(function(x){return x.id===row.id;});
+      if(!p)return;
+      // Cambios relevantes: estado, método de pago o convertido
+      if(row.estado!==p.estado||row.metodo_pago!==p.metodo_pago||row.convertido!==p.convertido){
+        p.estado=row.estado;
+        p.metodo_pago=row.metodo_pago;
+        p.convertido=row.convertido;
+        hubocambio=true;
+        // Notificar SOLO la primera vez que detectamos aceptado (no en cada polling)
+        if(row.estado==='aceptado' && !_presupuestosYaDetectados[row.id]){
+          _presupuestosYaDetectados[row.id]=true;
+          var metodoTxt=row.metodo_pago==='transferencia'?'transferencia':row.metodo_pago==='efectivo'?'efectivo':row.metodo_pago||'sin método';
+          var msg='✅ '+(p.cliente_nombre||'Cliente')+' aceptó '+(p.numero||p.id)+' · '+metodoTxt;
+          if(typeof Notification!=='undefined' && Notification.permission==='granted'){
+            try{new Notification('Print & Copy',{body:msg,icon:'/logo.png'});}catch(e){}
+          }
+          var t=document.createElement('div');
+          t.style.cssText='position:fixed;bottom:20px;right:20px;background:#3B6D11;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);max-width:300px';
+          t.textContent=msg;
+          t.onclick=function(){t.remove();};
+          document.body.appendChild(t);
+          setTimeout(function(){if(t.parentNode)t.remove();},10000);
+        }
+      }
+    });
+    if(hubocambio){
+      if(typeof actualizarBarraAvisos==='function')actualizarBarraAvisos();
+      if(typeof cargarPresupuestos==='function')cargarPresupuestos();
+    }
+  });
+},20000);
+
 // ══════════════════════════════════════════════════════════════
 // PDF PRESUPUESTO
 // ══════════════════════════════════════════════════════════════
