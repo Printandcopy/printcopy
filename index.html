@@ -3169,29 +3169,40 @@ function verPedido(id){
     '</div>';
 
   var html='';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
-  html+='<div class="stat-card"><div class="sv" style="font-size:14px">'+p.clienteNombre+'</div><div class="sl">Cliente</div></div>';
-  html+='<div class="stat-card"><div class="sv" style="font-size:14px">'+p.operario+'</div><div class="sl">Atendido por</div></div>';
-  html+='<div class="stat-card"><div class="sv" style="font-size:12px">'+formatDateTime(p.fechaCreacion)+'</div><div class="sl">Fecha creaci&oacute;n</div></div>';
-  html+='<div class="stat-card" style="'+(esFija?'background:#FCEBEB;border:1px solid #F09595':'')+'">'
-    +entregaBadge
-    +'<div class="sv" style="font-size:14px;font-weight:700;color:'+(esFija?'#A32D2D':'#1a1a1a')+'">'+fechaTxt+'</div>'
-    +'<div class="sl">Entrega</div></div>';
+  // ── CLIENTE en una línea ──
+  var telCli=p.clienteTel||'';
+  html+='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;margin-bottom:10px;color:#1a1a1a">'
+    +'<span style="font-weight:600">'+p.clienteNombre+'</span>'
+    +(telCli?'<span style="color:#bbb">·</span><span style="color:#666">'+telCli+'</span>':'')
+    +'<span style="color:#bbb">·</span><span style="color:#666">Atiende: '+p.operario+'</span>'
+    +'</div>';
+
+  // ── TRABAJO + ENTREGA lado a lado ──
+  html+='<div style="background:#f9f9f7;border-radius:7px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:12px;justify-content:space-between">';
+  html+='<div style="min-width:0;flex:1">'
+    +'<div style="font-size:11px;font-weight:700;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Trabajo</div>'
+    +'<div style="font-size:14px;color:#1a1a1a;font-weight:600;line-height:1.4">'+p.descripcion+'</div>'
+    +'</div>';
+  html+='<div style="text-align:right;flex-shrink:0">'
+    +'<div style="font-size:11px;font-weight:700;color:'+(esFija?'#A32D2D':'#888')+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Entrega'+(esFija?' FIJA':' aprox.')+'</div>'
+    +'<div style="font-size:14px;font-weight:700;color:'+(esFija?'#A32D2D':'#1a1a1a')+';white-space:nowrap">'+fechaTxt+'</div>'
+    +'</div>';
   html+='</div>';
 
-  html+='<div style="background:#f9f9f7;border-radius:7px;padding:10px 12px;margin-bottom:10px">';
-  html+='<div style="font-size:11px;font-weight:700;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Trabajo</div>';
-  html+='<div style="font-size:13px;color:#1a1a1a;line-height:1.6">'+p.descripcion+'</div>';
   // Aviso destacado: prenda del cliente (si aplica)
   if(p.tipoPrendaCliente){
-    html+='<div style="background:#FFF8EC;border:1.5px solid #FAC775;border-radius:6px;padding:8px 12px;margin-top:8px;display:flex;align-items:center;gap:8px">'
+    html+='<div style="background:#FFF8EC;border:1.5px solid #FAC775;border-radius:6px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px">'
       +'<span style="font-size:18px">📦</span>'
       +'<div><div style="font-size:11px;font-weight:700;color:#854F0B;text-transform:uppercase;letter-spacing:.5px">Prenda del cliente</div>'
       +'<div style="font-size:13px;color:#1a1a1a;font-weight:600">'+p.tipoPrendaCliente+'</div></div>'
       +'</div>';
   }
-  if(p.notas)html+='<div style="font-size:12px;color:#666;margin-top:8px;padding-top:8px;border-top:0.5px solid #eee">'+p.notas+'</div>';
-  html+='</div>';
+  if(p.notas){
+    html+='<div style="background:#fafaf7;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#666;line-height:1.5">'
+      +'<span style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Notas del pedido</span>'
+      +p.notas
+      +'</div>';
+  }
 
   if(p.seccion==='TX'){
     var tieneTallas=tallasCompletas(p);
@@ -3252,9 +3263,44 @@ function verPedido(id){
     }
   }
 
+  // ══════════════════════════════════════════════════════════════
+  // BLOQUE "PARA PRODUCIR" — el corazón operativo del pedido
+  // Agrupa los gates que el operario necesita verificar para arrancar
+  // ══════════════════════════════════════════════════════════════
+  html+='<div style="border:2px solid #1D9E75;border-radius:10px;overflow:hidden;margin-bottom:12px">';
+  html+='<div style="background:#E1F5EE;padding:9px 14px;display:flex;align-items:center;justify-content:space-between">'
+    +'<span style="font-size:11px;font-weight:700;color:#085041;text-transform:uppercase;letter-spacing:.5px">🚦 Para producir</span>'
+    +'<span id="para-prod-badge-'+p.id+'" style="font-size:11px;color:#085041;background:#fff;padding:2px 9px;border-radius:99px;font-weight:600"></span>'
+    +'</div>';
+  html+='<div style="padding:12px;display:flex;flex-direction:column;gap:10px">';
+
+  // ── 📎 ARCHIVOS DEL CLIENTE (gate 1) ──
+  if(p.archivosToken){
+    html+='<div id="arc-gate-'+p.id+'">'
+      +'<div style="display:flex;align-items:flex-start;gap:10px;padding:11px;background:#FCEBEB;border-radius:8px;border:0.5px solid #F09595" id="arc-card-'+p.id+'">'
+        +'<div id="arc-ico-'+p.id+'" style="width:26px;height:26px;border-radius:50%;background:#A32D2D;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">!</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:12px;font-weight:700;color:#501313;margin-bottom:2px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+            +'<span>📎 Archivos del cliente</span>'
+            +'<span id="arc-cnt-'+p.id+'" style="font-size:10px;color:#791F1F;background:#fff;padding:1px 7px;border-radius:99px;font-weight:600">cargando…</span>'
+          +'</div>'
+          +'<div id="arc-status-'+p.id+'" style="font-size:11px;color:#791F1F;margin-bottom:8px">Cargando archivos...</div>'
+          +'<div id="arc-list-'+p.id+'" style="margin-bottom:8px"></div>'
+          +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
+            +'<button onclick="reenviarLinkArchivos(\''+p.id+'\')" style="background:#A32D2D;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">📲 Reenviar link</button>'
+            +'<button onclick="copiarLinkArchivos(\''+p.archivosToken+'\')" style="background:#fff;color:#791F1F;border:0.5px solid #F09595;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">📋 Copiar</button>'
+            +'<button onclick="document.getElementById(\'arc-file-op-'+p.id+'\').click()" style="background:#fff;color:#791F1F;border:0.5px solid #F09595;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">📤 Subir yo</button>'
+            +'<input type="file" id="arc-file-op-'+p.id+'" multiple style="display:none" onchange="subirArchivosOperario(this,\''+p.id+'\',\''+p.archivosToken+'\')">'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+      +'</div>';
+  }
+
+  // ── 🎨 PREVIAS (gate 2) ── (bloque original, se mantiene idéntico abajo)
   // BLOQUE PREVIAS
   var previaEstadoLabel={'enviada':'<span style="background:#E6F1FB;color:#185FA5;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">👁️ Enviada · esperando respuesta</span>','aceptada':'<span style="background:#EAF3DE;color:#3B6D11;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✅ Diseño aprobado</span>','rechazada':'<span style="background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✏️ Cambios solicitados</span>','guardada':'<span style="background:#F1EFE8;color:#5F5E5A;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">💾 Guardada sin enviar</span>'};
-  html+='<div style="border:1.5px solid #FAC775;border-radius:8px;overflow:hidden;margin-bottom:10px">';
+  html+='<div style="border:1.5px solid #FAC775;border-radius:8px;overflow:hidden">';
   html+='<div style="background:#FFF8EC;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="togglePreviaPanel(\''+p.id+'\')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px">🖼️</span><span style="font-size:12px;font-weight:700;color:#854F0B">Previas de diseño</span>'+(p.previaEstado?(previaEstadoLabel[p.previaEstado]||''):''  )+'</div><span id="previa-arrow-'+p.id+'" style="font-size:11px;color:#BA7517">▼</span></div>';
   html+='<div id="previa-panel-'+p.id+'" style="display:none;padding:12px">';
   if(p.previaEstado==='rechazada'&&p.previaCambios){html+='<div style="background:#FCEBEB;border-radius:6px;padding:10px 12px;margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Cambio solicitado por el cliente</div><div style="font-size:12px;color:#501313;line-height:1.5;font-style:italic">"'+p.previaCambios+'"</div></div>';}
@@ -3269,16 +3315,14 @@ function verPedido(id){
   html+='<div id="historial-previas-'+p.id+'"><button onclick="cargarHistorialPrevias(\''+p.id+'\' )" style="font-size:12px;color:#185FA5;background:none;border:none;cursor:pointer;padding:0">Ver historial completo →</button></div>';
   html+='</div></div>';
 
-  html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">';
-  html+='<div class="stat-card"><div class="sv" style="font-size:16px;font-weight:800">'+p.total.toFixed(2)+'&euro;</div><div class="sl">Total</div></div>';
-  html+='<div class="stat-card"><div class="sv" style="font-size:16px;font-weight:800;color:#3B6D11">'+(p.senal||0).toFixed(2)+'&euro;</div><div class="sl">Pagado</div></div>';
-  html+='<div class="stat-card"><div class="sv" style="font-size:16px;font-weight:800;color:'+(pend>0?'#A32D2D':'#3B6D11')+'">'+pend.toFixed(2)+'&euro;</div><div class="sl">Pendiente</div></div>';
-  html+='</div>';
-  html+='<div style="font-size:12px;color:#666;margin-bottom:4px">'+pagoStr+'</div>';
-  html+='<div style="font-size:12px;color:#534AB7;margin-bottom:14px">'+(p.condiciones||COND_STD)+'</div>';
+  html+='</div>'; // fin padding inner
+  html+='</div>'; // fin contenedor PARA PRODUCIR
 
-  html+='<div style="font-size:11px;font-weight:700;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Anotaciones operario</div>';
-  html+='<textarea id="modal-anotacion" class="nota-operario" rows="3" placeholder="Anotaciones del operario..." onblur="guardarAnotacion(\''+p.id+'\',this.value)">'+( p.anotacion||'')+'</textarea>';
+  // ── NOTAS INTERNAS DEL OPERARIO ──
+  html+='<div style="font-size:11px;font-weight:700;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Notas internas</div>';
+  html+='<textarea id="modal-anotacion" class="nota-operario" rows="2" placeholder="Anotaciones del operario..." onblur="guardarAnotacion(\''+p.id+'\',this.value)">'+( p.anotacion||'')+'</textarea>';
+
+  // ── CAMBIAR FASE ──
   html+='<div style="font-size:11px;font-weight:700;color:#888;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px">Cambiar fase</div>';
   html+='<div class="fase-stepper">'+FASES.map(function(f,i){
     return '<button class="fase-step '+(i<p.fase?'done':i===p.fase?'current':'')+'" onclick="setFaseModal(\''+p.id+'\','+i+')">'+f+'</button>';
@@ -3298,23 +3342,15 @@ function verPedido(id){
     +'</div></div>';
   html+=(p.externalizado?extInfo:extSelector);
 
-  // ── ARCHIVOS DEL CLIENTE ──
-  if(p.archivosToken){
-    var linkArc=urlSubidaArchivos(p.archivosToken);
-    html+='<div style="border:1.5px solid #4A8FD9;border-radius:8px;overflow:hidden;margin-top:10px">'
-      +'<div style="background:#E6F1FB;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">'
-      +'<span style="font-size:12px;font-weight:700;color:#185FA5">📎 Archivos del cliente</span>'
-      +'<span id="arc-cnt-'+p.id+'" style="font-size:11px;color:#185FA5;background:#fff;padding:2px 8px;border-radius:99px">cargando...</span>'
-      +'</div>'
-      +'<div id="arc-body-'+p.id+'" style="padding:10px 12px">'
-      +'<div style="font-size:11px;color:#888;text-align:center;padding:8px">Cargando archivos...</div>'
-      +'</div>'
-      +'<div style="padding:8px 12px;border-top:1px solid #e0eaf5;display:flex;gap:6px;flex-wrap:wrap">'
-      +'<button onclick="reenviarLinkArchivos(\''+p.id+'\')" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer">📲 Reenviar link al cliente</button>'
-      +'<button onclick="copiarLinkArchivos(\''+p.archivosToken+'\')" style="background:#fff;color:#185FA5;border:1px solid #185FA5;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer">📋 Copiar link</button>'
-      +'</div>'
-      +'</div>';
-  }
+  // ── COBRO en línea final (no estorba pero está disponible) ──
+  html+='<div style="margin-top:12px;padding:10px 12px;background:#fafaf7;border-radius:7px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px">'
+    +'<div style="color:#666">'
+      +'Total <strong style="color:#1a1a1a;font-weight:700">'+p.total.toFixed(2)+'€</strong>'
+      +' · Señal <strong style="color:#3B6D11;font-weight:700">'+(p.senal||0).toFixed(2)+'€</strong>'
+      +' · <span style="color:'+(pend>0?'#A32D2D':'#3B6D11')+';font-weight:700">'+(pend>0?'Pdte ':'')+pend.toFixed(2)+'€</span>'
+    +'</div>'
+    +'<div style="color:#888;font-size:11px">'+(p.condiciones||COND_STD)+(p.metodoPago?' · '+p.metodoPago:'')+'</div>'
+    +'</div>';
 
   document.getElementById('mp-body').innerHTML=html;
   document.getElementById('modal-pedido').classList.add('open');
@@ -3325,43 +3361,98 @@ function verPedido(id){
 }
 
 // Cargar lista de archivos del cliente para un pedido y renderizar en el modal
+// (Diseño nuevo: caja roja si 0 archivos, verde si hay alguno; actualiza badge "1 de N listo")
 function cargarArchivosPedido(pedidoId,token){
-  var bodyEl=document.getElementById('arc-body-'+pedidoId);
+  var listEl=document.getElementById('arc-list-'+pedidoId);
   var cntEl=document.getElementById('arc-cnt-'+pedidoId);
-  if(!bodyEl)return;
+  var statusEl=document.getElementById('arc-status-'+pedidoId);
+  var cardEl=document.getElementById('arc-card-'+pedidoId);
+  var icoEl=document.getElementById('arc-ico-'+pedidoId);
+  if(!listEl)return;
   fetch('/api/pedido-por-token?token='+encodeURIComponent(token))
     .then(function(r){return r.json();})
     .then(function(data){
       if(data.error){
-        bodyEl.innerHTML='<div style="font-size:11px;color:#A32D2D">Error: '+data.error+'</div>';
+        if(statusEl)statusEl.innerHTML='Error: '+data.error;
         if(cntEl)cntEl.textContent='—';
         return;
       }
       var arch=data.archivos||[];
-      if(cntEl)cntEl.textContent=arch.length+' archivo'+(arch.length===1?'':'s');
-      if(!arch.length){
-        bodyEl.innerHTML='<div style="font-size:11px;color:#888;text-align:center;padding:6px">El cliente aún no ha subido archivos</div>';
-        return;
+      // Actualizar badge contador
+      if(cntEl)cntEl.textContent=arch.length+' de 15';
+      // Cambiar aspecto rojo/verde según haya archivos
+      if(arch.length===0){
+        // Rojo - sin archivos
+        if(cardEl){cardEl.style.background='#FCEBEB';cardEl.style.borderColor='#F09595';}
+        if(icoEl){icoEl.style.background='#A32D2D';icoEl.textContent='!';}
+        if(statusEl){statusEl.style.color='#791F1F';statusEl.textContent='Sin archivos. No se puede arrancar producción.';}
+        listEl.innerHTML='';
+      }else{
+        // Verde - hay archivos
+        if(cardEl){cardEl.style.background='#EAF3DE';cardEl.style.borderColor='#97C459';}
+        if(icoEl){icoEl.style.background='#3B6D11';icoEl.innerHTML='&#10003;';}
+        if(statusEl){statusEl.style.color='#27500A';statusEl.textContent=arch.length+' archivo'+(arch.length===1?'':'s')+' recibido'+(arch.length===1?'':'s')+' del cliente.';}
+        listEl.innerHTML=arch.map(function(a){
+          var ext=(a.nombre_original||'').split('.').pop().toLowerCase();
+          var ico='📎';
+          if(a.mime_type&&a.mime_type.indexOf('image')===0)ico='🖼️';
+          else if(ext==='pdf')ico='📄';
+          else if(['ai','psd','eps'].indexOf(ext)>=0)ico='🎨';
+          var kb=a.tamano_bytes?(a.tamano_bytes>1024*1024?((a.tamano_bytes/(1024*1024)).toFixed(1)+' MB'):((a.tamano_bytes/1024).toFixed(0)+' KB')):'';
+          return '<div style="display:flex;align-items:center;gap:7px;padding:5px 8px;background:#fff;border-radius:6px;margin-bottom:4px;border:0.5px solid #d0e0c0">'
+            +'<span style="font-size:14px">'+ico+'</span>'
+            +'<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;color:#173404;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.nombre_original+'</div>'
+            +'<div style="font-size:10px;color:#3B6D11">'+kb+'</div></div>'
+            +'<button onclick="descargarArchivoPed(\''+a.storage_path.replace(/'/g,"\\'")+'\')" style="background:#3B6D11;color:#fff;border:none;border-radius:5px;padding:4px 8px;font-size:11px;font-weight:600;cursor:pointer">⬇</button>'
+            +'</div>';
+        }).join('');
       }
-      bodyEl.innerHTML=arch.map(function(a){
-        var ext=(a.nombre_original||'').split('.').pop().toLowerCase();
-        var ico='📎';
-        if(a.mime_type&&a.mime_type.indexOf('image')===0)ico='🖼️';
-        else if(ext==='pdf')ico='📄';
-        else if(['ai','psd','eps'].indexOf(ext)>=0)ico='🎨';
-        var kb=a.tamano_bytes?(a.tamano_bytes>1024*1024?((a.tamano_bytes/(1024*1024)).toFixed(1)+' MB'):((a.tamano_bytes/1024).toFixed(0)+' KB')):'';
-        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:0.5px solid #f0f0f0">'
-          +'<span style="font-size:18px">'+ico+'</span>'
-          +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.nombre_original+'</div>'
-          +'<div style="font-size:10px;color:#888">'+kb+'</div></div>'
-          +'<button onclick="descargarArchivoPed(\''+a.storage_path.replace(/'/g,"\\'")+'\')" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer">⬇</button>'
-          +'</div>';
-      }).join('');
     })
     .catch(function(e){
-      bodyEl.innerHTML='<div style="font-size:11px;color:#A32D2D">Error de red</div>';
+      if(statusEl)statusEl.textContent='Error de red al cargar archivos';
       if(cntEl)cntEl.textContent='—';
     });
+}
+
+// Operario sube archivo desde el panel del pedido (mismo backend que cliente)
+function subirArchivosOperario(input,pedidoId,token){
+  var files=input.files;
+  if(!files||!files.length)return;
+  var statusEl=document.getElementById('arc-status-'+pedidoId);
+  var pendientes=files.length;
+  var fallos=0;
+  Array.prototype.forEach.call(files,function(file){
+    if(file.size>100*1024*1024){
+      alert('"'+file.name+'" supera 100 MB. No se puede subir.');
+      pendientes--;fallos++;return;
+    }
+    if(statusEl)statusEl.textContent='Subiendo '+file.name+'...';
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var base64=e.target.result.split(',')[1];
+      fetch('/api/upload-archivo-cliente',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token:token,nombre_archivo:file.name,mime_type:file.type,contenido_base64:base64})
+      })
+        .then(function(r){return r.json();})
+        .then(function(data){
+          pendientes--;
+          if(data.error){alert('Error subiendo "'+file.name+'": '+data.error);fallos++;}
+          if(pendientes===0){
+            cargarArchivosPedido(pedidoId,token);
+            input.value='';
+            if(fallos===0)alert('✅ Archivos subidos correctamente');
+          }
+        })
+        .catch(function(err){
+          pendientes--;fallos++;
+          alert('Error red subiendo "'+file.name+'": '+err.message);
+          if(pendientes===0){cargarArchivosPedido(pedidoId,token);input.value='';}
+        });
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function descargarArchivoPed(path){
