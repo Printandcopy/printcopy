@@ -3214,19 +3214,8 @@ function verPedido(id){
     } else {
       html+=renderTablaTallas(p);
     }
-    // Botón Reabrir tallas — siempre disponible si hay datos enviados (el operario decide)
-    if(tallasCompletas(p) && p.clienteTel){
-      var _bgCaja=p.ropaOk?'background:#FCEBEB;border:1px solid #F09595':'background:#FFF8EC;border:1px solid #FAC775';
-      var _colTxt=p.ropaOk?'#501313':'#854F0B';
-      var _avisoExtra=p.ropaOk
-        ? '<div style="font-size:10.5px;color:#A32D2D;margin-top:6px;padding:6px 8px;background:#FCDFDF;border-radius:4px;line-height:1.4">⚠️ <strong>La ropa ya está pedida al proveedor.</strong> Si reabres, el cliente podrá editar, pero los cambios pueden implicar devolución o pedido adicional. Valora antes de pulsar.</div>'
-        : '';
-      html+='<div style="'+_bgCaja+';border-radius:7px;padding:10px 12px;margin-bottom:10px">'
-        +'<div style="font-size:11px;color:'+_colTxt+';line-height:1.45;margin-bottom:8px">🔄 <strong>Reabrir formulario</strong> para que el cliente edite. Borra los datos actuales y le reenvía el WhatsApp con el link.</div>'
-        +'<button onclick="reabrirTallasCliente(\''+p.id+'\')" style="width:100%;padding:9px;background:'+(p.ropaOk?'#A32D2D':'#BA7517')+';color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">🔄 Reabrir tallas y reenviar WA</button>'
-        +_avisoExtra
-        +'</div>';
-    }
+    // (Bloque amarillo "Reabrir formulario" eliminado: el botón está integrado en el gate Tallas de PARA PRODUCIR)
+
     // BLOQUE ESTAMPACIONES (posiciones + contenido + color) — vista para operario
     if(p.estampaciones && p.estampaciones.length){
       html+='<div style="background:#fafaf7;border:0.5px solid #e0e0dc;border-radius:7px;padding:10px 12px;margin-bottom:10px">'
@@ -3257,8 +3246,10 @@ function verPedido(id){
         msg:tieneTallas?'Tabla completa':'El cliente aún no ha rellenado la tabla',
         ts:p.tallasRecibidasFecha});
     }
-    // Gate 2: Ropa (omitido si prenda cliente, bloqueado si no hay tallas)
-    if(!esPrendaCli){
+    // Gate 2: Ropa al proveedor — N/A si la prenda la trae el cliente, bloqueado si no hay tallas
+    if(esPrendaCli){
+      gates.push({id:'ropa',label:'Ropa pedida al proveedor',estado:'no_aplica',msg:'El cliente trae su propia prenda',ts:null});
+    }else{
       gates.push({id:'ropa',label:'Ropa pedida al proveedor',
         estado:!tieneTallas?'bloqueado':(p.ropaOk?'ok':'pendiente'),
         msg:!tieneTallas?'Necesita tallas del cliente antes':(p.ropaOk?'Marcada por '+(p.operario||'operario'):'Marcar cuando esté pedida al proveedor'),
@@ -3310,7 +3301,21 @@ function verPedido(id){
         +'</div>';
       return;
     }
-    if(g.estado==='ok'||g.estado==='no_aplica'){
+    if(g.estado==='no_aplica'){
+      // Gris azulado: gate aplicable al sistema pero no a este pedido concreto
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 11px;background:#EEF2F7;border:0.5px solid #CCD7E5;border-radius:8px">'
+        +'<div style="width:24px;height:24px;border-radius:50%;background:#7C8DA5;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">i</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">'
+            +'<span style="font-size:12px;color:#3D4A5C">'+g.label+'</span>'
+            +'<span style="font-size:10px;color:#7C8DA5;font-weight:600">No aplica</span>'
+          +'</div>'
+          +'<div style="font-size:11px;color:#5C6878">'+g.msg+'</div>'
+        +'</div>'
+        +'</div>';
+      return;
+    }
+    if(g.estado==='ok'){
       // Verde
       html+='<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:#EAF3DE;border:0.5px solid #97C459;border-radius:8px">'
         +'<div style="width:24px;height:24px;border-radius:50%;background:#3B6D11;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">✓</div>'
@@ -3324,9 +3329,16 @@ function verPedido(id){
       if(g.id==='tallas'){
         html+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">';
         if(p.clienteTel){
-          html+='<button onclick="reabrirTallasCliente(\''+p.id+'\')" style="background:#fff;color:#BA7517;border:0.5px solid #FAC775;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🔄 Reabrir y reenviar</button>';
+          // Si ropa ya pedida al proveedor, botón rojo + aviso (cambios pueden implicar devolución)
+          var _btnReabColor=p.ropaOk?'#A32D2D':'#BA7517';
+          var _btnReabBorde=p.ropaOk?'#F09595':'#FAC775';
+          var _btnReabBg=p.ropaOk?'#FCEBEB':'#fff';
+          html+='<button onclick="reabrirTallasCliente(\''+p.id+'\')" style="background:'+_btnReabBg+';color:'+_btnReabColor+';border:0.5px solid '+_btnReabBorde+';padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🔄 Reabrir y reenviar</button>';
         }
         html+='</div>';
+        if(p.ropaOk){
+          html+='<div style="margin-top:6px;font-size:10.5px;color:#A32D2D;padding:6px 8px;background:#FCDFDF;border-radius:4px;line-height:1.4">⚠️ <strong>Ropa ya pedida al proveedor.</strong> Si reabres y el cliente cambia tallas, puede implicar devolución o pedido adicional.</div>';
+        }
       }else if(g.id==='ropa'){
         html+='<button onclick="toggleCheckModal(\''+p.id+'\',\'ropaOk\',false)" style="background:#fff;color:#A32D2D;border:0.5px solid #F09595;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">✕ Desmarcar</button>';
       }else if(g.id==='dtf'){
