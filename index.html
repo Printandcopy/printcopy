@@ -965,6 +965,16 @@ textarea{resize:vertical;min-height:64px}
           <optgroup label="── 🎁 Regalos personalizados ──">
             <option value="fotolienzo">Fotolienzo personalizado</option>
             <option value="carton_pluma">Cartón pluma personalizado</option>
+            <option value="cojin_pers">Cojín personalizado</option>
+            <option value="funda_movil">Funda móvil personalizada</option>
+            <option value="bote_pers">Bote personalizado</option>
+            <option value="pizarra_pers">Pizarra personalizada</option>
+            <option value="alfombrilla_pers">Alfombrilla personalizada</option>
+            <option value="puzzle_pers">Puzzle personalizado (A4/A3)</option>
+            <option value="lampara_spotify">Lámpara LED Spotify</option>
+            <option value="carta_fifa">Carta FIFA personalizada</option>
+            <option value="azulejo_pers">Azulejo personalizado 20×20</option>
+            <option value="metacrilato_19mm">Metacrilato personalizado 19mm</option>
           </optgroup>
         </select>
       </div>
@@ -1099,6 +1109,16 @@ textarea{resize:vertical;min-height:64px}
               <option value="imanes">Imanes troquelados</option>
               <option value="fotolienzo">🎁 Fotolienzo personalizado</option>
               <option value="carton_pluma">🎁 Cartón pluma personalizado</option>
+              <option value="cojin_pers">🎁 Cojín personalizado</option>
+              <option value="funda_movil">🎁 Funda móvil personalizada</option>
+              <option value="bote_pers">🎁 Bote personalizado</option>
+              <option value="pizarra_pers">🎁 Pizarra personalizada</option>
+              <option value="alfombrilla_pers">🎁 Alfombrilla personalizada</option>
+              <option value="puzzle_pers">🎁 Puzzle personalizado (A4/A3)</option>
+              <option value="lampara_spotify">🎁 Lámpara LED Spotify</option>
+              <option value="carta_fifa">🎁 Carta FIFA personalizada</option>
+              <option value="azulejo_pers">🎁 Azulejo personalizado 20×20</option>
+              <option value="metacrilato_19mm">🎁 Metacrilato personalizado 19mm</option>
             </select>
             <!-- Combobox con búsqueda -->
             <div id="nv-prod-box" style="position:relative">
@@ -5166,7 +5186,17 @@ impresion_uv:{name:"Impresión UV (sobre objeto)",sinIva:true,fields:[{id:'area'
 // REGALOS PERSONALIZADOS (con promo "2ª unidad al 50%")
 // ══════════════════════════════════════════════════════════════
 fotolienzo:{name:"Fotolienzo personalizado",sinIva:true,plazo:3,esRegalo:true,maxQtyAuto:11,fields:[{id:'tam',label:'Tamaño',type:'select',options:['30×40 cm','40×50 cm','50×50 cm','50×60 cm','50×70 cm']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precios:{"30×40 cm":24.71,"40×50 cm":28.84,"50×50 cm":32.98,"50×60 cm":37.11,"50×70 cm":41.24},notasLabel:"Notas del diseño (foto, retoque, encuadre...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var pBase=this.precios[v.tam];if(!pBase)return{error:'Selecciona tamaño'};var r=calcParImpar50(pBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}},
-carton_pluma:{name:"Cartón pluma personalizado",sinIva:true,plazo:3,esRegalo:true,maxQtyAuto:11,fields:[{id:'tam',label:'Tamaño',type:'select',options:['20×29 cm','29×42 cm','35×50 cm','50×70 cm']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precios:{"20×29 cm":12.31,"29×42 cm":16.45,"35×50 cm":24.71,"50×70 cm":37.11},notasLabel:"Notas del diseño (foto, retoque, encuadre...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var pBase=this.precios[v.tam];if(!pBase)return{error:'Selecciona tamaño'};var r=calcParImpar50(pBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}}
+carton_pluma:{name:"Cartón pluma personalizado",sinIva:true,plazo:3,esRegalo:true,maxQtyAuto:11,fields:[{id:'tam',label:'Tamaño',type:'select',options:['20×29 cm','29×42 cm','35×50 cm','50×70 cm']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precios:{"20×29 cm":12.31,"29×42 cm":16.45,"35×50 cm":24.71,"50×70 cm":37.11},notasLabel:"Notas del diseño (foto, retoque, encuadre...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var pBase=this.precios[v.tam];if(!pBase)return{error:'Selecciona tamaño'};var r=calcParImpar50(pBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}},
+cojin_pers:{name:"Cojín personalizado",sinIva:true,plazo:4,esRegalo:true,fields:[{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precioBase:20.62,notasLabel:"Notas del diseño (foto, texto, color...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var r=calcParImpar50(this.precioBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}},
+funda_movil:{name:"Funda móvil personalizada",sinIva:true,plazo:3,esRegalo:true,fields:[{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precioBase:14.83,notasLabel:"Modelo de móvil + notas del diseño (funda no incluida si el modelo no está en stock)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var r=calcParImpar50(this.precioBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50% · *Funda no incluida si modelo no en stock'};}},
+bote_pers:{name:"Bote personalizado",sinIva:true,plazo:4,esRegalo:true,fields:[{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precioBase:14.83,notasLabel:"Texto/nombre y notas del diseño",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var r=calcParImpar50(this.precioBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}},
+pizarra_pers:{name:"Pizarra personalizada",sinIva:true,plazo:4,esRegalo:true,fields:[{id:'tam',label:'Tamaño',type:'select',options:['15×15 cm','15×20 cm','20×20 cm','20×30 cm']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precios:{"15×15 cm":16.49,"15×20 cm":18.97,"20×20 cm":21.45,"20×30 cm":24.75},notasLabel:"Notas del diseño (foto, texto, encuadre...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var pBase=this.precios[v.tam];if(!pBase)return{error:'Selecciona tamaño'};var r=calcParImpar50(pBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}},
+alfombrilla_pers:{name:"Alfombrilla personalizada",sinIva:true,plazo:3,esRegalo:false,fields:[{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precioBase:12.36,notasLabel:"Notas del diseño (foto, texto...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};return{base:cV2R2(this.precioBase*q),qty:q,pu:this.precioBase};}},
+puzzle_pers:{name:"Puzzle personalizado",sinIva:true,plazo:4,esRegalo:true,fields:[{id:'tam',label:'Tamaño',type:'select',options:['A4','A3']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precios:{"A4":14.83,"A3":20.62},notasLabel:"Notas del diseño (foto, encuadre...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var pBase=this.precios[v.tam];if(!pBase)return{error:'Selecciona tamaño'};var r=calcParImpar50(pBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}},
+lampara_spotify:{name:"Lámpara LED Spotify",sinIva:true,plazo:5,esRegalo:true,fields:[{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precioBase:24.75,notasLabel:"Canción + carátula (link Spotify si lo tienes)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var r=calcParImpar50(this.precioBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}},
+carta_fifa:{name:"Carta FIFA personalizada",sinIva:true,plazo:4,esRegalo:true,fields:[{id:'tam',label:'Tamaño',type:'select',options:['Pequeño (14,5×9,5 cm)','Mediano (21×29 cm)','Grande (26×39 cm)']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precios:{"Pequeño (14,5×9,5 cm)":14.01,"Mediano (21×29 cm)":16.49,"Grande (26×39 cm)":20.62},notasLabel:"Foto + datos (nombre, posición, equipo, stats si aplica)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var pBase=this.precios[v.tam];if(!pBase)return{error:'Selecciona tamaño'};var r=calcParImpar50(pBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}},
+azulejo_pers:{name:"Azulejo personalizado 20×20",sinIva:true,plazo:4,esRegalo:false,fields:[{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precioBase:14.83,notasLabel:"Notas del diseño (foto, texto...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};return{base:cV2R2(this.precioBase*q),qty:q,pu:this.precioBase};}},
+metacrilato_19mm:{name:"Metacrilato personalizado 19mm",sinIva:true,plazo:5,esRegalo:false,fields:[{id:'tam',label:'Tamaño',type:'select',options:['10×10 cm','10×15 cm','15×20 cm','20×20 cm','20×30 cm','30×40 cm']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precios:{"10×10 cm":16.45,"10×15 cm":20.58,"15×20 cm":24.71,"20×20 cm":28.84,"20×30 cm":41.24,"30×40 cm":49.50},notasLabel:"Notas del diseño (foto, texto, encuadre...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var pBase=this.precios[v.tam];if(!pBase)return{error:'Selecciona tamaño'};return{base:cV2R2(pBase*q),qty:q,pu:pBase};}}
 };
 
 var CROSS={
@@ -5553,7 +5583,9 @@ var CAT_TO_SEC={
   cargador3en1:'SUB',bolsas_tela:'SUB',abanicos:'SUB',bidones:'SUB',
   bolsas_papel:'SUB',bolsas_papel_pers:'SUB',imanes:'SUB',impresion_uv:'UV',
   // Regalos personalizados -> SUB
-  fotolienzo:'SUB',carton_pluma:'SUB'
+  fotolienzo:'SUB',carton_pluma:'SUB',cojin_pers:'SUB',funda_movil:'SUB',bote_pers:'SUB',
+  pizarra_pers:'SUB',alfombrilla_pers:'SUB',puzzle_pers:'SUB',lampara_spotify:'SUB',
+  carta_fifa:'SUB',azulejo_pers:'SUB',metacrilato_19mm:'SUB'
 };
 
 function convertirEnPedido(){
@@ -6504,7 +6536,7 @@ var NV_PROD_CATS = {
   'textil':'Textil','rotulacion':'Gran Formato','placas':'Gran Formato','xbanner':'Gran Formato','rollup':'Gran Formato','banderas':'Gran Formato','neones':'Gran Formato',
   'tarjetas':'Impresión','tarjetas_troq':'Impresión','tarjetas_pvc':'Impresión','tarjetas_especiales':'Impresión','flyers':'Impresión','carteles':'Impresión','carpetas':'Impresión','sobres':'Impresión','talonarios':'Impresión','pegatinas':'Impresión','sellos':'Impresión','manteles':'Impresión','cartas':'Impresión','tarjetones':'Impresión','acreditaciones':'Impresión','lanyares':'Impresión',
   'chapas':'Merchandising','tazas':'Merchandising','vasos':'Merchandising','pulseras':'Merchandising','lanyares_merch':'Merchandising','mochilas':'Merchandising','panuelos_merch':'Merchandising','tarjeton_balsamo':'Merchandising','boligrafos':'Merchandising','mecheros':'Merchandising','cargador3en1':'Merchandising','bolsas_tela':'Merchandising','abanicos':'Merchandising','bidones':'Merchandising','bolsas_papel':'Merchandising','bolsas_papel_pers':'Merchandising','imanes':'Merchandising',
-  'fotolienzo':'Regalos personalizados','carton_pluma':'Regalos personalizados'
+  'fotolienzo':'Regalos personalizados','carton_pluma':'Regalos personalizados','cojin_pers':'Regalos personalizados','funda_movil':'Regalos personalizados','bote_pers':'Regalos personalizados','pizarra_pers':'Regalos personalizados','alfombrilla_pers':'Regalos personalizados','puzzle_pers':'Regalos personalizados','lampara_spotify':'Regalos personalizados','carta_fifa':'Regalos personalizados','azulejo_pers':'Regalos personalizados','metacrilato_19mm':'Regalos personalizados'
 };
 function nvProdGetItems(){
   var sel=document.getElementById('nv-cat');
@@ -6828,8 +6860,8 @@ function nvCalc(){
   if(!res||res.error){
     document.getElementById('nv-result').style.display='none';
     document.getElementById('nv-btn-add').style.display='none';
-    // REGALOS: si el error es por ≥12 uds, mostrar aviso visible con botón directo
-    if(prod && prod.esRegalo && res && res.error && res.error.indexOf('12+')===0){
+    // REGALOS / productos con tope: si el error es por ≥12 uds, mostrar aviso visible con botón directo
+    if(res && res.error && res.error.indexOf('12+')===0){
       var qReg=parseInt(vals.qty)||0;
       var avisoEl=document.getElementById('nv-aviso-regalo');
       if(!avisoEl){
@@ -7079,8 +7111,8 @@ function nvAddLinea(){
   if(!_nvRes)return;
   var prod=P[_nvRes.cat];
   var sec=CAT_TO_SEC[_nvRes.cat]||'';
-  // REGALOS: si es producto regalo y qty >= 12, redirigir a Solicitud de presupuesto
-  if(prod && prod.esRegalo){
+  // REGALOS / productos con tope 12: si qty >= 12, redirigir a Solicitud de presupuesto
+  if(prod && (prod.esRegalo || (prod.calc && _nvRes && _nvRes.error && (_nvRes.error+'').indexOf('12+')===0))){
     var qReg=parseInt(_nvRes.qty)||0;
     if(qReg>=12){
       var detalle=prod.name;
