@@ -5075,6 +5075,10 @@ var mostrarFormato=(mat==='PAPEL'||mat==='VINILO'||mat==='VINILO CON CORTE');
 var mostrarSoporte=(mat==='VINILO');
 if(fmtGrp)fmtGrp.style.display=mostrarFormato?'':'none';
 if(sopGrp)sopGrp.style.display=mostrarSoporte?'':'none';
+// En mostrador: si formato está oculto, hacer que material ocupe ancho completo
+if(pre==='nvf-' && fmtGrp && fmtGrp.parentElement){
+  fmtGrp.parentElement.style.gridTemplateColumns=mostrarFormato?'1fr 1fr':'1fr';
+}
 if(mostrarFormato){
 var esPers=(fmt==='Personalizado');
 if(anchoGrp)anchoGrp.style.display=esPers?'':'none';
@@ -6634,7 +6638,14 @@ function nvCatChange(){
     nvRefrescarEstampaciones();
     nvRefrescarPrendaClienteWrap();
   }else if(prod.fields&&prod.fields.length){
+    // Caso especial rotulación: agrupar ancho+alto en su propio sub-grid para que SIEMPRE
+    // queden juntos en la misma fila, aunque 'formato' esté oculto (FIGURAS FRESADAS, LONA)
+    var esRotul=(cat==='rotulacion');
     prod.fields.forEach(function(f,i){
+      // Abrir sub-grid de medidas justo antes de 'ancho' en rotulación
+      if(esRotul&&f.id==='ancho'){
+        html+='</div><div class="form-grid" id="nvf-medidas-wrap" style="margin-top:10px">';
+      }
       if(f.type==='select'){
         html+='<div class="field"><label>'+f.label+'</label><select id="nvf-'+f.id+'" onchange="nvFieldChange(\''+f.id+'\');nvCalc()">';
         if(f.options&&f.options.length){
@@ -6643,6 +6654,10 @@ function nvCatChange(){
         html+='</select></div>';
       }else if(f.type==='number'){
         html+='<div class="field"><label>'+f.label+'</label><input type="number" id="nvf-'+f.id+'" min="'+(f.min||1)+'" placeholder="mín. '+(f.min||1)+'" oninput="nvCalc()"></div>';
+      }
+      // Cerrar sub-grid de medidas justo después de 'alto' en rotulación
+      if(esRotul&&f.id==='alto'){
+        html+='</div><div class="form-grid w1" style="margin-top:10px">';
       }
     });
     html+='</div>';
