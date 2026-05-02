@@ -5079,6 +5079,14 @@ if(sopGrp)sopGrp.style.display=mostrarSoporte?'':'none';
 if(pre==='nvf-' && fmtGrp && fmtGrp.parentElement){
   fmtGrp.parentElement.style.gridTemplateColumns=mostrarFormato?'1fr 1fr':'1fr';
 }
+// FIX arrastre: al cambiar material, resetear formato a 'Personalizado' y vaciar ancho/alto
+// Así el operario siempre empieza desde un punto neutro y no hereda medidas del material anterior
+if(id==='mat'){
+  if(fmtEl)fmtEl.value='Personalizado';
+  if(anchoEl)anchoEl.value='';
+  if(altoEl)altoEl.value='';
+  fmt='Personalizado'; // actualizar variable local para el resto de la función
+}
 if(mostrarFormato){
 var esPers=(fmt==='Personalizado');
 if(anchoGrp)anchoGrp.style.display=esPers?'':'none';
