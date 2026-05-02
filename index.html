@@ -6676,13 +6676,17 @@ function nvCatChange(){
 
 function nvFieldChange(fieldId){
   var cat=_nvCat;var prod=P[cat];if(!prod||!prod.onFieldChange)return;
-  // Para productos como xbanner/rollup que cambian opciones dinámicamente
+  // Caso especial: xbanner/rollup que cambian opciones dinámicamente del select 'med'
   if(prod.medidas&&fieldId==='tipo'){
     var tipo=document.getElementById('nvf-tipo').value;
     var medSel=document.getElementById('nvf-med');
     if(medSel&&prod.medidas[tipo]){
       medSel.innerHTML=Object.keys(prod.medidas[tipo]).map(function(m){return '<option>'+m+'</option>';}).join('');
     }
+  }
+  // FIX bug pósters #1 (Marilia): invocar onFieldChange de rotulación, que detecta prefijo nvf- correctamente y rellena ancho/alto
+  if(cat==='rotulacion'){
+    prod.onFieldChange(fieldId);
   }
 }
 
