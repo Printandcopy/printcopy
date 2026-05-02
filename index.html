@@ -5058,12 +5058,15 @@ calc:function(v,ex){
 }},
 rotulacion:{name:"Rotulación (por m²)",sinIva:true,fields:[{id:'mat',label:'Material',type:'select',options:['PAPEL','LONA','VINILO','VINILO CON CORTE','FIGURAS FRESADAS']},{id:'formato',label:'Formato',type:'select',options:['A0 (84×119cm)','A1 (59×84cm)','A2 (42×59cm)','50×70cm','Personalizado']},{id:'ancho',label:'Ancho (cm)',type:'number',min:1},{id:'alto',label:'Alto (cm)',type:'number',min:1},{id:'soporte',label:'Soporte',type:'select',options:['Sin soporte','Foam 5mm (18€/m²)','Foam 10mm (22€/m²)','Foam 19mm (28€/m²)','Dibond 3mm (45€/m²)','Cartón pluma (12€/m²)','PVC Pluma (30€/m²)']}],extrasDef:[],formatosMedidas:{'A0 (84×119cm)':[84,119],'A1 (59×84cm)':[59,84],'A2 (42×59cm)':[42,59],'50×70cm':[50,70]},soportePrecios:{'Sin soporte':0,'Foam 5mm (18€/m²)':18,'Foam 10mm (22€/m²)':22,'Foam 19mm (28€/m²)':28,'Dibond 3mm (45€/m²)':45,'Cartón pluma (12€/m²)':12,'PVC Pluma (30€/m²)':30},matData:{"PAPEL":{t:[[0,99,30]],e:[0.50,0,1.00,0,0],plazo:2,specs:"Papel póster 170gr"},"LONA":{t:[[0,99,42.50]],e:[0.50,15,0.90,12,0],plazo:2,specs:"Lona Frontlit 550gr"},"VINILO":{t:[[0,99,72.50]],e:[0.50,12,0.95,10,0],plazo:3,specs:"Vinilo adhesivo",hasSoporte:true},"VINILO CON CORTE":{t:[[0,99,87]],e:[0.50,12,0.95,10,0],plazo:4,specs:"Vinilo con corte de plotter"},"NEONES":{t:[[0,0.10,1250],[0.10,0.15,1200],[0.15,0.20,1150],[0.20,0.25,1100],[0.25,0.30,1050],[0.30,0.35,1000],[0.35,0.40,950],[0.40,0.45,900],[0.45,0.50,850],[0.50,0.55,825],[0.55,0.60,800],[0.60,0.65,775],[0.65,0.70,750],[0.70,0.75,725],[0.75,0.80,700],[0.80,0.85,675],[0.85,0.90,650],[0.90,0.95,625],[0.95,1.00,600],[1.00,1.10,575],[1.10,1.15,550],[1.15,99,525]],e:[0.14,93,0.20,200,0],plazo:8,specs:"Neón LED flex"},"FIGURAS FRESADAS":{t:[[0,0.75,90],[0.75,99,80]],e:[0.50,30,1.00,25,20],plazo:4,specs:"PVC Pluma 10mm"}},
 onFieldChange:function(id){
-var mat=cV2gv('mat')||'PAPEL';
-var fmt=cV2gv('formato')||'A0 (84×119cm)';
-var anchoEl=document.getElementById('cf-ancho');
-var altoEl=document.getElementById('cf-alto');
-var fmtEl=document.getElementById('cf-formato');
-var sopEl=document.getElementById('cf-soporte');
+// Detectar prefijo: 'cf-' (calculadora) o 'nvf-' (mostrador). Antes solo funcionaba en cV2.
+var pre=document.getElementById('nvf-mat')?'nvf-':'cf-';
+var gv=function(k){var el=document.getElementById(pre+k);return el?el.value:'';};
+var mat=gv('mat')||'PAPEL';
+var fmt=gv('formato')||'A0 (84×119cm)';
+var anchoEl=document.getElementById(pre+'ancho');
+var altoEl=document.getElementById(pre+'alto');
+var fmtEl=document.getElementById(pre+'formato');
+var sopEl=document.getElementById(pre+'soporte');
 var anchoGrp=anchoEl?anchoEl.closest('.field'):null;
 var altoGrp=altoEl?altoEl.closest('.field'):null;
 var fmtGrp=fmtEl?fmtEl.closest('.field'):null;
@@ -5081,8 +5084,11 @@ else if(this.formatosMedidas[fmt]){
   // Rellenar SIEMPRE con las medidas del formato (sobrescribir si había algo)
   if(anchoEl)anchoEl.value=this.formatosMedidas[fmt][0];
   if(altoEl)altoEl.value=this.formatosMedidas[fmt][1];
-  // Forzar recálculo: setTimeout para que el DOM aplique value antes de leer
-  setTimeout(function(){if(typeof cV2calc==='function')cV2calc();},10);
+  // Forzar recálculo en la calculadora correcta según prefijo
+  setTimeout(function(){
+    if(pre==='nvf-' && typeof nvCalc==='function')nvCalc();
+    else if(typeof cV2calc==='function')cV2calc();
+  },10);
 }
 }else{
 if(anchoGrp)anchoGrp.style.display='';
