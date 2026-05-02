@@ -3166,7 +3166,7 @@ function verPedido(id){
     var tallasTs=p.tallasRecibidasFecha?'<span class="sem-ts">'+fmtCheckTs(p.tallasRecibidasFecha)+'</span>':'';
     html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+(tieneTallas?'sem-green':'sem-red')+'"></span><span class="sem-label" style="flex:1">'+(tieneTallas?'Tallas recibidas':'Pdte tallas')+'</span>'+tallasTs+'</div>';
     // Ropa (si la prenda la trae el cliente, no hay nada que pedir → omitir)
-    var esPrendaCli=!!p.tipoPrendaCliente;
+    var esPrendaCli=esPrendaCliente(p);
     if(!esPrendaCli){
       html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0">';
       if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">Ropa pedida</span>';
@@ -3881,6 +3881,16 @@ function siguienteDiaLaborable(fecha){
   while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
   return d;
 }
+// Detectar si un pedido es de "prenda del cliente" (la trae el cliente, no se pide a Roly).
+// Usa 2 criterios: campo tipoPrendaCliente lleno O la descripción contiene "PRENDA CLIENTE"/"PRENDA DEL CLIENTE".
+// Robusto frente a pedidos antiguos donde el operario no rellenó la descripción del tipo.
+function esPrendaCliente(p){
+  if(!p)return false;
+  if(p.tipoPrendaCliente && (p.tipoPrendaCliente+'').trim())return true;
+  var d=(p.descripcion||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  return d.indexOf('PRENDA CLIENTE')>=0 || d.indexOf('PRENDA DEL CLIENTE')>=0;
+}
+
 function tallasCompletas(p){
   var tc=p.tallasColores;
   if(!tc||!tc.length)return false;
@@ -3905,7 +3915,7 @@ function esListoProducir(p){
   var tieneTallas=tallasCompletas(p);
   if(!tieneTallas)return false;
   // Si la prenda la trae el cliente, no se exige "ropa pedida" (no hay nada que pedir)
-  var esPrendaCli=!!p.tipoPrendaCliente;
+  var esPrendaCli=esPrendaCliente(p);
   if(!esPrendaCli && !p.ropaOk)return false;
   if(!p.dtfOk)return false;
   var previaOk=p.previaEstado==='aceptada';
@@ -3928,7 +3938,7 @@ function renderSemaforoTaller(p){
   if(tieneTallas)items.push({dot:'sem-green',label:'Tallas recibidas',ts:''});
   else items.push({dot:'sem-red',label:'Pdte tallas',ts:''});
   // 2. Ropa pedida (solo activo si tallas OK; OMITIDA si prenda la trae el cliente)
-  var esPrendaCli=!!p.tipoPrendaCliente;
+  var esPrendaCli=esPrendaCliente(p);
   if(!esPrendaCli){
     if(!tieneTallas)items.push({dot:'sem-gray',label:'Ropa pedida',ts:'',blocked:true});
     else if(p.ropaOk)items.push({dot:'sem-green',label:'Ropa pedida',ts:p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):''});
@@ -3961,7 +3971,7 @@ function accionesTallerBtn(p){
   // TX: ropa/DTF manual cuando hay tallas
   if(p.seccion==='TX'&&p.fase>=1&&p.fase<4&&tallasCompletas(p)){
     // Botón "Ropa pedida" solo si la prenda es del catálogo (no la trae el cliente)
-    if(!p.ropaOk && !p.tipoPrendaCliente)btns.push('<button class="taller-btn taller-btn-ropa" '+stop+'toggleCheckModal(\''+p.id+'\',\'ropaOk\',true)">📦 Ropa pedida</button>');
+    if(!p.ropaOk && !esPrendaCliente(p))btns.push('<button class="taller-btn taller-btn-ropa" '+stop+'toggleCheckModal(\''+p.id+'\',\'ropaOk\',true)">📦 Ropa pedida</button>');
     if(!p.dtfOk)btns.push('<button class="taller-btn taller-btn-dtf" '+stop+'toggleCheckModal(\''+p.id+'\',\'dtfOk\',true)">🖨️ DTF pedido</button>');
   }
   // Terminado: cuando está en Producción (fase 4) y es TX o XR
