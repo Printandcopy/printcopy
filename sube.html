@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subir archivos · Print & Copy</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f0;color:#222;line-height:1.5;padding:0;min-height:100vh}
+.wrap{max-width:600px;margin:0 auto;padding:18px}
+.header{background:#000;color:#fff;padding:18px 22px;border-radius:14px;margin-bottom:16px;text-align:center}
+.header h1{font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.header .sub{font-size:12px;opacity:.85;margin-top:4px}
+.card{background:#fff;border-radius:14px;padding:20px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.card h2{font-size:15px;font-weight:700;margin-bottom:10px;color:#0F6E56}
+.info-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid #f0f0f0}
+.info-row:last-child{border-bottom:none}
+.info-row .label{color:#888}
+.info-row .val{font-weight:600;color:#222;text-align:right}
+.dropzone{border:3px dashed #d1d1d1;border-radius:14px;padding:36px 18px;text-align:center;cursor:pointer;transition:all .2s;background:#fafaf7}
+.dropzone:hover,.dropzone.drag{border-color:#0F6E56;background:#e8f5f0}
+.dropzone .icon{font-size:42px;margin-bottom:10px}
+.dropzone .title{font-size:15px;font-weight:700;color:#222;margin-bottom:6px}
+.dropzone .sub{font-size:12px;color:#666}
+.dropzone input{display:none}
+.req-box{background:#fff8e0;border:1px solid #f0d080;border-radius:10px;padding:12px 14px;margin-top:14px;font-size:12px;color:#5b4006;line-height:1.45}
+.req-box strong{color:#3d2c00}
+.archivo{display:flex;align-items:center;gap:10px;padding:10px;background:#f7f7f3;border-radius:10px;margin-bottom:8px}
+.archivo .ico{font-size:22px}
+.archivo .info{flex:1;min-width:0}
+.archivo .nombre{font-size:13px;font-weight:600;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.archivo .meta{font-size:11px;color:#888;margin-top:2px}
+.archivo .borrar{background:#fff;border:1px solid #d1d1d1;color:#A32D2D;padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600}
+.archivo .borrar:hover{background:#A32D2D;color:#fff;border-color:#A32D2D}
+.subiendo{padding:10px;background:#e0f2ff;border-radius:10px;margin-bottom:8px;font-size:13px;color:#1a5d99;display:flex;align-items:center;gap:10px}
+.subiendo .spinner{width:16px;height:16px;border:2px solid #cfe5ff;border-top-color:#1a5d99;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:24px;color:#aaa;font-size:13px}
+.error{background:#ffe8e6;border:1px solid #f0a0a0;color:#8a2222;padding:12px 14px;border-radius:10px;font-size:13px;margin-bottom:12px}
+.success{background:#e0f5dc;border:1px solid #80c070;color:#2a5a1a;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:8px}
+.cerrado{background:#f0f0f0;border:1px solid #d1d1d1;color:#666;padding:14px;border-radius:10px;font-size:13px;text-align:center}
+.footer{text-align:center;padding:18px;color:#888;font-size:11px}
+.footer a{color:#0F6E56;text-decoration:none;font-weight:600}
+@media(max-width:600px){.wrap{padding:10px}.card{padding:16px}.header h1{font-size:18px}.dropzone{padding:28px 14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>📎 Subir archivos</h1>
+    <div class="sub">Print & Copy · Salamanca</div>
+  </div>
+
+  <div id="estado-carga" class="card">
+    <div style="text-align:center;padding:20px">
+      <div style="font-size:32px;margin-bottom:10px">⏳</div>
+      <div>Cargando datos del pedido...</div>
+    </div>
+  </div>
+
+  <div id="contenido" style="display:none">
+
+    <div class="card" id="card-pedido">
+      <h2>📦 Tu pedido</h2>
+      <div id="pedido-info"></div>
+    </div>
+
+    <div class="card" id="card-zona-subida">
+      <h2>📤 Sube aquí tus archivos</h2>
+      <label class="dropzone" id="dropzone">
+        <div class="icon">📁</div>
+        <div class="title">Arrastra archivos o pulsa aquí</div>
+        <div class="sub">Imágenes, PDFs, documentos...</div>
+        <input type="file" id="file-input" multiple>
+      </label>
+      <div class="req-box">
+        <strong>📐 Formato preferido:</strong> PDF<br>
+        <strong>📷 También aceptamos:</strong> JPG, PNG, AI, PSD, TIFF<br>
+        <strong>📏 Calidad mínima recomendada:</strong> 300 dpi para impresión<br>
+        <strong>📦 Máximo:</strong> 100 MB por archivo · 15 archivos
+      </div>
+    </div>
+
+    <div class="card" id="card-archivos">
+      <h2>📂 Archivos enviados <span id="contador" style="color:#888;font-weight:400;font-size:13px"></span></h2>
+      <div id="lista-archivos"></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Print & Copy · Av. Portugal 62, Salamanca · <a href="https://wa.me/34622305934">WhatsApp 622 305 934</a>
+  </div>
+
+</div>
+
+<script>
+var token = new URLSearchParams(window.location.search).get('t');
+var pedidoData = null;
+var subiendo = 0;
+
+function $(id){return document.getElementById(id);}
+function fmtBytes(b){
+  if(b<1024)return b+' B';
+  if(b<1024*1024)return (b/1024).toFixed(1)+' KB';
+  return (b/(1024*1024)).toFixed(2)+' MB';
+}
+function iconoArchivo(mime,nombre){
+  var ext=(nombre||'').split('.').pop().toLowerCase();
+  if(mime&&mime.startsWith('image/'))return '🖼️';
+  if(ext==='pdf'||mime==='application/pdf')return '📄';
+  if(['ai','psd','eps'].includes(ext))return '🎨';
+  if(['doc','docx'].includes(ext))return '📝';
+  if(['xls','xlsx'].includes(ext))return '📊';
+  if(['zip','rar','7z'].includes(ext))return '🗜️';
+  return '📎';
+}
+function fmtFecha(s){
+  if(!s)return '';
+  var d=new Date(s);
+  return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+}
+
+function mostrarError(msg){
+  $('estado-carga').innerHTML='<div class="error">⚠️ '+msg+'</div>';
+}
+
+function cargarPedido(){
+  if(!token){mostrarError('Falta el código de acceso. Pide el enlace de nuevo a Print & Copy.');return;}
+  fetch('/api/pedido-por-token?token='+encodeURIComponent(token))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.error){mostrarError(data.error);return;}
+      pedidoData=data;
+      renderPedido();
+    })
+    .catch(function(e){mostrarError('No se pudo cargar el pedido. Comprueba tu conexión.');});
+}
+
+function renderPedido(){
+  $('estado-carga').style.display='none';
+  $('contenido').style.display='block';
+
+  // Info pedido
+  var p=pedidoData.pedido,c=pedidoData.cliente;
+  var html='';
+  html+='<div class="info-row"><span class="label">Nº pedido</span><span class="val">'+p.num_pedido+'</span></div>';
+  if(c)html+='<div class="info-row"><span class="label">Cliente</span><span class="val">'+c.nombre+'</span></div>';
+  if(p.fecha_entrega){
+    var fe=new Date(p.fecha_entrega).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+    html+='<div class="info-row"><span class="label">Entrega prevista</span><span class="val">'+fe+'</span></div>';
+  }
+  // Líneas resumidas
+  if(Array.isArray(p.lineas)&&p.lineas.length){
+    var resumen=p.lineas.map(function(l){return (l.qty||1)+'× '+(l.desc||'').substring(0,40);}).join(' · ');
+    html+='<div class="info-row"><span class="label">Productos</span><span class="val" style="font-size:11px;text-align:right;max-width:60%">'+resumen+'</span></div>';
+  }
+  $('pedido-info').innerHTML=html;
+
+  // Si pedido cerrado, ocultar zona subida
+  if(p.cerrado){
+    $('card-zona-subida').innerHTML='<div class="cerrado">🔒 Este pedido ya está completado. No se admiten más archivos.<br>Si necesitas algo, contacta con la tienda por WhatsApp.</div>';
+  }
+
+  renderArchivos();
+}
+
+function renderArchivos(){
+  var lista=pedidoData.archivos||[];
+  $('contador').textContent=lista.length?'('+lista.length+' / 15)':'';
+  if(!lista.length){
+    $('lista-archivos').innerHTML='<div class="empty">Aún no has subido ningún archivo</div>';
+    return;
+  }
+  var cerrado=pedidoData.pedido.cerrado;
+  $('lista-archivos').innerHTML=lista.map(function(a){
+    return '<div class="archivo">'
+      +'<div class="ico">'+iconoArchivo(a.mime_type,a.nombre_original)+'</div>'
+      +'<div class="info">'
+        +'<div class="nombre">'+a.nombre_original+'</div>'
+        +'<div class="meta">'+fmtBytes(a.tamano_bytes||0)+' · '+fmtFecha(a.subido_at)+'</div>'
+      +'</div>'
+      +(cerrado?'':'<button class="borrar" onclick="borrar(\''+a.id+'\')">Borrar</button>')
+    +'</div>';
+  }).join('');
+}
+
+function borrar(id){
+  if(!confirm('¿Borrar este archivo?'))return;
+  fetch('/api/borrar-archivo-cliente',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({archivo_id:id,token:token})
+  })
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.error){alert('Error: '+data.error);return;}
+      pedidoData.archivos=pedidoData.archivos.filter(function(a){return a.id!==id;});
+      renderArchivos();
+    });
+}
+
+function subirArchivo(file){
+  if(file.size > 100*1024*1024){
+    alert('El archivo "'+file.name+'" supera 100 MB. Contacta con la tienda para enviarlo por otro medio.');
+    return;
+  }
+  if(pedidoData.archivos.length+subiendo >= 15){
+    alert('Máximo 15 archivos. Borra alguno o contacta con la tienda.');
+    return;
+  }
+  subiendo++;
+  // Mostrar fila de "subiendo"
+  var subDiv=document.createElement('div');
+  subDiv.className='subiendo';
+  subDiv.innerHTML='<div class="spinner"></div><div>Subiendo <strong>'+file.name+'</strong>... ('+fmtBytes(file.size)+')</div>';
+  $('lista-archivos').insertBefore(subDiv,$('lista-archivos').firstChild);
+
+  // Leer como base64
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var base64=e.target.result.split(',')[1];
+    fetch('/api/upload-archivo-cliente',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        token:token,
+        nombre_archivo:file.name,
+        mime_type:file.type,
+        contenido_base64:base64
+      })
+    })
+      .then(function(r){return r.json();})
+      .then(function(data){
+        subiendo--;
+        subDiv.remove();
+        if(data.error){
+          alert('Error subiendo "'+file.name+'": '+data.error);
+          return;
+        }
+        pedidoData.archivos.unshift(data.archivo);
+        renderArchivos();
+      })
+      .catch(function(err){
+        subiendo--;
+        subDiv.remove();
+        alert('Error subiendo "'+file.name+'": '+err.message);
+      });
+  };
+  reader.onerror=function(){
+    subiendo--;
+    subDiv.remove();
+    alert('No se pudo leer el archivo "'+file.name+'"');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Drag & drop
+var dz=$('dropzone');
+var fileInput=$('file-input');
+dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',function(){dz.classList.remove('drag');});
+dz.addEventListener('drop',function(e){
+  e.preventDefault();dz.classList.remove('drag');
+  var files=e.dataTransfer.files;
+  for(var i=0;i<files.length;i++)subirArchivo(files[i]);
+});
+fileInput.addEventListener('change',function(e){
+  var files=e.target.files;
+  for(var i=0;i<files.length;i++)subirArchivo(files[i]);
+  e.target.value='';
+});
+
+// Soportar URL bonita /sube/TOKEN además de /sube.html?t=TOKEN
+if(!token){
+  var pathMatch=window.location.pathname.match(/\/sube\/([A-Za-z0-9]+)/);
+  if(pathMatch){
+    token=pathMatch[1];
+    history.replaceState(null,'','/sube.html?t='+token);
+  }
+}
+
+cargarPedido();
+</script>
+</body>
+</html>

@@ -2341,8 +2341,8 @@ function cargarDatos(){
 }
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',credito:c.credito===true,creado:c.creado};}
-function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,metodoPago:p.metodo_pago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,previaAceptadaFecha:p.previa_aceptada_fecha||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,estampaciones:p.estampaciones||[],tallasRecibidasFecha:p.tallas_recibidas_fecha||null,tipoPrendaCliente:p.tipo_prenda_cliente||null,_recTallasNum:p.recordatorio_tallas_num||0,_tallasNotificado:p.tallas_notificado||false};}
-function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,metodo_pago:p.metodoPago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null,tipo_personalizacion:p.tipoPersonalizacion||null,estampaciones:p.estampaciones||[]};}
+function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,metodoPago:p.metodo_pago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,previaAceptadaFecha:p.previa_aceptada_fecha||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,estampaciones:p.estampaciones||[],tallasRecibidasFecha:p.tallas_recibidas_fecha||null,tipoPrendaCliente:p.tipo_prenda_cliente||null,_recTallasNum:p.recordatorio_tallas_num||0,_tallasNotificado:p.tallas_notificado||false,archivosToken:p.archivos_token||null};}
+function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,metodo_pago:p.metodoPago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null,tipo_personalizacion:p.tipoPersonalizacion||null,estampaciones:p.estampaciones||[],archivos_token:p.archivosToken||null};}
 
 function startClock(){
   document.getElementById('clock-wrap').style.display='block';
@@ -3010,7 +3010,7 @@ function finalizarGuardar(cliente){
             _nvTipoPersonalizacion='iguales';
           }
         }
-var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:item.desc,notas:notas,total:item.total,senal:senalItem,pago:pagoTipo,metodoPago:metodoPagoPed,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:presId,tallasColores:_nvTallas,tipoPersonalizacion:_nvTipoPersonalizacion};
+var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:item.desc,notas:notas,total:item.total,senal:senalItem,pago:pagoTipo,metodoPago:metodoPagoPed,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:presId,tallasColores:_nvTallas,tipoPersonalizacion:_nvTipoPersonalizacion,archivosToken:generarTokenArchivos()};
         return sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){
           if(r.error){alert('Error: '+r.error.message);return;}
           pedidos.unshift(pedido);
@@ -3054,7 +3054,7 @@ var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:te
     }).then(function(numVal){
       var numPedido=sec+'-'+String(numVal).padStart(4,'0');
       var _nvTallas2=sec==='TX'?nvTTGetDatos():null;
-var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:desc,notas:notas,total:total,senal:senal,pago:pagoTipo,metodoPago:metodoPagoPed,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:null,tallasColores:_nvTallas2};
+var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:desc,notas:notas,total:total,senal:senal,pago:pagoTipo,metodoPago:metodoPagoPed,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:null,tallasColores:_nvTallas2,archivosToken:generarTokenArchivos()};
       sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){
         if(r.error){alert('Error: '+r.error.message);return;}
         pedidos.unshift(pedido);mostrarResguardo(pedido);
@@ -3298,10 +3298,99 @@ function verPedido(id){
     +'</div></div>';
   html+=(p.externalizado?extInfo:extSelector);
 
+  // ── ARCHIVOS DEL CLIENTE ──
+  if(p.archivosToken){
+    var linkArc=urlSubidaArchivos(p.archivosToken);
+    html+='<div style="border:1.5px solid #4A8FD9;border-radius:8px;overflow:hidden;margin-top:10px">'
+      +'<div style="background:#E6F1FB;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">'
+      +'<span style="font-size:12px;font-weight:700;color:#185FA5">📎 Archivos del cliente</span>'
+      +'<span id="arc-cnt-'+p.id+'" style="font-size:11px;color:#185FA5;background:#fff;padding:2px 8px;border-radius:99px">cargando...</span>'
+      +'</div>'
+      +'<div id="arc-body-'+p.id+'" style="padding:10px 12px">'
+      +'<div style="font-size:11px;color:#888;text-align:center;padding:8px">Cargando archivos...</div>'
+      +'</div>'
+      +'<div style="padding:8px 12px;border-top:1px solid #e0eaf5;display:flex;gap:6px;flex-wrap:wrap">'
+      +'<button onclick="reenviarLinkArchivos(\''+p.id+'\')" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer">📲 Reenviar link al cliente</button>'
+      +'<button onclick="copiarLinkArchivos(\''+p.archivosToken+'\')" style="background:#fff;color:#185FA5;border:1px solid #185FA5;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:700;cursor:pointer">📋 Copiar link</button>'
+      +'</div>'
+      +'</div>';
+  }
+
   document.getElementById('mp-body').innerHTML=html;
   document.getElementById('modal-pedido').classList.add('open');
   // Iniciar panel cerrado
   if(!p.externalizado){var eb=document.getElementById('ext-body-'+p.id);if(eb)eb.style.display='none';}
+  // Cargar archivos del cliente (asincrono)
+  if(p.archivosToken){cargarArchivosPedido(p.id,p.archivosToken);}
+}
+
+// Cargar lista de archivos del cliente para un pedido y renderizar en el modal
+function cargarArchivosPedido(pedidoId,token){
+  var bodyEl=document.getElementById('arc-body-'+pedidoId);
+  var cntEl=document.getElementById('arc-cnt-'+pedidoId);
+  if(!bodyEl)return;
+  fetch('/api/pedido-por-token?token='+encodeURIComponent(token))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.error){
+        bodyEl.innerHTML='<div style="font-size:11px;color:#A32D2D">Error: '+data.error+'</div>';
+        if(cntEl)cntEl.textContent='—';
+        return;
+      }
+      var arch=data.archivos||[];
+      if(cntEl)cntEl.textContent=arch.length+' archivo'+(arch.length===1?'':'s');
+      if(!arch.length){
+        bodyEl.innerHTML='<div style="font-size:11px;color:#888;text-align:center;padding:6px">El cliente aún no ha subido archivos</div>';
+        return;
+      }
+      bodyEl.innerHTML=arch.map(function(a){
+        var ext=(a.nombre_original||'').split('.').pop().toLowerCase();
+        var ico='📎';
+        if(a.mime_type&&a.mime_type.indexOf('image')===0)ico='🖼️';
+        else if(ext==='pdf')ico='📄';
+        else if(['ai','psd','eps'].indexOf(ext)>=0)ico='🎨';
+        var kb=a.tamano_bytes?(a.tamano_bytes>1024*1024?((a.tamano_bytes/(1024*1024)).toFixed(1)+' MB'):((a.tamano_bytes/1024).toFixed(0)+' KB')):'';
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-bottom:0.5px solid #f0f0f0">'
+          +'<span style="font-size:18px">'+ico+'</span>'
+          +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.nombre_original+'</div>'
+          +'<div style="font-size:10px;color:#888">'+kb+'</div></div>'
+          +'<button onclick="descargarArchivoPed(\''+a.storage_path.replace(/'/g,"\\'")+'\')" style="background:#185FA5;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer">⬇</button>'
+          +'</div>';
+      }).join('');
+    })
+    .catch(function(e){
+      bodyEl.innerHTML='<div style="font-size:11px;color:#A32D2D">Error de red</div>';
+      if(cntEl)cntEl.textContent='—';
+    });
+}
+
+function descargarArchivoPed(path){
+  fetch('/api/url-archivo?bucket=pedido-archivos&path='+encodeURIComponent(path))
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(data.url)window.open(data.url,'_blank');
+      else alert('Error: '+(data.error||'sin URL'));
+    });
+}
+
+function reenviarLinkArchivos(pedidoId){
+  var p=pedidos.find(function(x){return x.id===pedidoId;});
+  if(!p||!p.archivosToken){alert('Sin token de archivos');return;}
+  if(!p.clienteTel){alert('El pedido no tiene teléfono de cliente');return;}
+  if(!confirm('Reenviar el link de subida de archivos al cliente por WhatsApp?'))return;
+  var tel=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+  if(tel.length===9&&!tel.startsWith('34'))tel='34'+tel;
+  enviarWAArchivos(tel,p.clienteNombre,p.id,p.archivosToken);
+  alert('✅ Link reenviado por WhatsApp\n(si está en modo prueba, no se envía realmente)');
+}
+
+function copiarLinkArchivos(token){
+  var url=urlSubidaArchivos(token);
+  navigator.clipboard.writeText(url).then(function(){
+    alert('✅ Link copiado al portapapeles:\n'+url);
+  }).catch(function(){
+    prompt('Copia este link manualmente:',url);
+  });
 }
 function toggleExtPanel(panelId){
   var pid=panelId.replace('ext-panel-','');
@@ -4820,6 +4909,40 @@ function formatTel(input){
 }
 function formatDate(d){if(!d)return'';var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function formatDateTime(iso){if(!iso)return'';var d=new Date(iso);return d.toLocaleDateString('es-ES')+' '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
+
+// ══════════════════════════════════════════════════════════════
+// ARCHIVOS DEL CLIENTE — token, link público y mensaje WhatsApp
+// ══════════════════════════════════════════════════════════════
+function generarTokenArchivos(){
+  // 8 caracteres alfanuméricos seguros (sin 0/O/1/l confundibles)
+  var chars='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  var t='';
+  for(var i=0;i<8;i++)t+=chars[Math.floor(Math.random()*chars.length)];
+  return t;
+}
+function urlSubidaArchivos(token){
+  return 'https://printcopy.vercel.app/sube.html?t='+token;
+}
+function mensajeWAArchivos(nombreCliente,numPedido,token){
+  var saludo=nombreCliente?('Hola '+(nombreCliente.split(' ')[0])):'Hola';
+  return saludo+', soy de Print & Copy 👋\n\n'+
+    'Para tu pedido '+numPedido+' necesitamos las imágenes / archivos para personalizar.\n\n'+
+    '👉 Súbelos aquí: '+urlSubidaArchivos(token)+'\n\n'+
+    '📐 Formato preferido: PDF\n'+
+    '📷 También aceptamos: JPG, PNG, AI, PSD\n'+
+    '📏 Calidad mínima: 300 dpi\n\n'+
+    '¡Gracias!';
+}
+function enviarWAArchivos(tel,nombre,numPedido,token){
+  if(!tel||!token)return;
+  var msg=mensajeWAArchivos(nombre,numPedido,token);
+  // Pasa por el interceptor de modo prueba como cualquier otro WA
+  fetch('/api/whatsapp',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({telefono:tel,mensaje:msg})
+  }).catch(function(e){console.warn('Error WA archivos:',e);});
+}
 
 // ══════════════════════════════════════════════════════════════
 // RESGUARDO / TICKET
@@ -7786,7 +7909,8 @@ function nvCrearPedido(){
                 pago:pagoEstado,
                 metodo_pago:metodoPago,
                 condiciones:condicion,
-                fase:0
+                fase:0,
+                archivos_token:generarTokenArchivos()
               };
               // Añadir tallas y tipo personalización para pedidos textil
               if(sec==='TX'){
@@ -7825,7 +7949,7 @@ function nvCrearPedido(){
               if(ped.tipo_prenda_cliente && ped.tipo_personalizacion!=='individual')_esVacia=false;
               sb.from('pedidos').insert([ped]).then(function(ri){
                 if(ri.error){console.error('Error insert pedido:',ri.error.message);alert('Error al crear pedido: '+ri.error.message);results.push(null);res(null);}
-                else{var ok={num:numPed,sec:sec,tipoPers:ped.tipo_personalizacion,tallasVacia:_esVacia};results.push(ok);res(ok);}
+                else{var ok={num:numPed,sec:sec,tipoPers:ped.tipo_personalizacion,tallasVacia:_esVacia,archivosToken:ped.archivos_token};results.push(ok);res(ok);}
               }).catch(function(e){console.error('Insert catch:',e);results.push(null);res(null);});
             });
           });
@@ -7906,6 +8030,21 @@ function nvCrearPedido(){
           }
         }
         }catch(e){console.error('Error WA:',e);}
+        // WA con link de subida de archivos (uno por cada pedido, con delay para no apelotonar)
+        try{
+          if(tel){
+            var telA=tel.replace(/\s/g,'').replace(/^\+/,'');
+            if(telA.length===9&&!telA.startsWith('34'))telA='34'+telA;
+            setTimeout(function(){
+              validos.forEach(function(v,i){
+                if(!v.archivosToken)return;
+                setTimeout(function(){
+                  enviarWAArchivos(telA,nombre,v.num,v.archivosToken);
+                },i*1500); // espaciar entre pedidos
+              });
+            },5000); // 5s después del WA de confirmación
+          }
+        }catch(e){console.error('Error WA archivos:',e);}
         // Recargar datos y mostrar pedido
         cargarDatos().then(function(){
           cargarProveedores();
@@ -8322,7 +8461,8 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
             notas:'Auto desde '+pres.numero+(metodo?' | '+metodo:''),
             total:parseFloat(lin.subtotal)||0,senal:repartoSenal[idx],
             pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:0,
-            presupuesto_id:pres.id};
+            presupuesto_id:pres.id,
+            archivos_token:generarTokenArchivos()};
           // Traspasar tallas, tipo personalización, estampaciones y prenda al pedido
           // (FIX igual que cotConvertir — antes esto se perdía al cobrar señal)
           if(sec==='TX'){
