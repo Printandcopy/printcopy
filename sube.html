@@ -78,7 +78,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
         <strong>📐 Formato preferido:</strong> PDF<br>
         <strong>📷 También aceptamos:</strong> JPG, PNG, AI, PSD, TIFF<br>
         <strong>📏 Calidad mínima recomendada:</strong> 300 dpi para impresión<br>
-        <strong>📦 Máximo:</strong> 100 MB por archivo · 15 archivos
+        <strong>📦 Máximo:</strong> 50 MB por archivo · 15 archivos
       </div>
     </div>
 
@@ -201,8 +201,8 @@ function borrar(id){
 }
 
 function subirArchivo(file){
-  if(file.size > 100*1024*1024){
-    alert('El archivo "'+file.name+'" supera 100 MB. Contacta con la tienda para enviarlo por otro medio.');
+  if(file.size > 50*1024*1024){
+    alert('El archivo "'+file.name+'" supera 50 MB. Contacta con la tienda para enviarlo por otro medio.');
     return;
   }
   if(pedidoData.archivos.length+subiendo >= 15){

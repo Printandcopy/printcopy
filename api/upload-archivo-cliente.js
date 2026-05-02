@@ -5,7 +5,7 @@ const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg'
 );
 
-const MAX_BYTES = 100 * 1024 * 1024; // 100 MB
+const MAX_BYTES = 50 * 1024 * 1024; // 50 MB (limite global Supabase)
 const MAX_ARCHIVOS_POR_PEDIDO = 15;
 
 module.exports = async function handler(req, res) {
@@ -38,7 +38,7 @@ module.exports = async function handler(req, res) {
     // Validar tamaño
     const buf = Buffer.from(contenido_base64, 'base64');
     if (buf.length > MAX_BYTES) {
-      return res.status(413).json({ error: 'Archivo demasiado grande. Máximo 100 MB. Contacta con la tienda para ficheros mayores.' });
+      return res.status(413).json({ error: 'Archivo demasiado grande. Máximo 50 MB. Para ficheros mayores, contacta con la tienda.' });
     }
 
     // Validar cantidad

@@ -3422,8 +3422,8 @@ function subirArchivosOperario(input,pedidoId,token){
   var pendientes=files.length;
   var fallos=0;
   Array.prototype.forEach.call(files,function(file){
-    if(file.size>100*1024*1024){
-      alert('"'+file.name+'" supera 100 MB. No se puede subir.');
+    if(file.size>50*1024*1024){
+      alert('"'+file.name+'" supera 50 MB. No se puede subir.');
       pendientes--;fallos++;return;
     }
     if(statusEl)statusEl.textContent='Subiendo '+file.name+'...';
