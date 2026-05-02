@@ -3162,9 +3162,11 @@ function verPedido(id){
     var tieneTallas=tallasCompletas(p);
     html+='<div style="margin-bottom:10px;border-radius:7px;overflow:hidden;border:0.5px solid #e5e7eb">';
     html+='<div style="background:#f9f9f7;padding:8px 12px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px">Checklist producción</div>';
-    // Tallas (con fecha si la hay)
+    // Tallas (con fecha si la hay). Label cambia si es prenda cliente en modo iguales.
     var tallasTs=p.tallasRecibidasFecha?'<span class="sem-ts">'+fmtCheckTs(p.tallasRecibidasFecha)+'</span>':'';
-    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+(tieneTallas?'sem-green':'sem-red')+'"></span><span class="sem-label" style="flex:1">'+(tieneTallas?'Tallas recibidas':'Pdte tallas')+'</span>'+tallasTs+'</div>';
+    var esPrendaCliMI=esPrendaCliente(p) && p.tipoPersonalizacion!=='individual';
+    var lblTallas=esPrendaCliMI?'Tallas no aplican (prenda cliente)':(tieneTallas?'Tallas recibidas':'Pdte tallas');
+    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+(tieneTallas?'sem-green':'sem-red')+'"></span><span class="sem-label" style="flex:1">'+lblTallas+'</span>'+tallasTs+'</div>';
     // Ropa (si la prenda la trae el cliente, no hay nada que pedir → omitir)
     var esPrendaCli=esPrendaCliente(p);
     if(!esPrendaCli){
@@ -3892,6 +3894,11 @@ function esPrendaCliente(p){
 }
 
 function tallasCompletas(p){
+  // CASO ESPECIAL: prenda del cliente en modo "todas iguales" — no necesita tallas.
+  // El cliente trae las prendas físicas y la estampación es la misma en todas, por lo que
+  // las tallas son irrelevantes para producción. Solo se piden si es modo individual
+  // (cada prenda lleva nombre/dorsal distinto y hay que asignar qué va a cada uno).
+  if(esPrendaCliente(p) && p.tipoPersonalizacion!=='individual')return true;
   var tc=p.tallasColores;
   if(!tc||!tc.length)return false;
   // Extraer cantidad del pedido de la descripción (ej: "Camiseta Beagle ×5" → 5)
@@ -3934,8 +3941,10 @@ function renderSemaforoTaller(p){
   if(p.seccion!=='TX')return'';
   var tieneTallas=tallasCompletas(p);
   var items=[];
-  // 1. Tallas
-  if(tieneTallas)items.push({dot:'sem-green',label:'Tallas recibidas',ts:''});
+  // 1. Tallas — si es prenda cliente en modo iguales, mostrar como "no aplican"
+  var esPrendaCliMI=esPrendaCliente(p) && p.tipoPersonalizacion!=='individual';
+  if(esPrendaCliMI)items.push({dot:'sem-green',label:'Tallas no aplican',ts:''});
+  else if(tieneTallas)items.push({dot:'sem-green',label:'Tallas recibidas',ts:''});
   else items.push({dot:'sem-red',label:'Pdte tallas',ts:''});
   // 2. Ropa pedida (solo activo si tallas OK; OMITIDA si prenda la trae el cliente)
   var esPrendaCli=esPrendaCliente(p);
@@ -7605,6 +7614,9 @@ function nvCrearPedido(){
                   else{var _s=ped.tallas_colores.reduce(function(s,f){return s+Object.values(f.tallas||{}).reduce(function(a,x){return a+(parseInt(x)||0);},0);},0);_esVacia=_s===0;}
                 }catch(e){_esVacia=true;}
               }else if(sec==='TX'){_esVacia=true;}
+              // Caso especial: prenda del cliente en modo iguales — las tallas NO aplican,
+              // por lo que NO debe dispararse el WA al cliente pidiendo que rellene tallas.
+              if(ped.tipo_prenda_cliente && ped.tipo_personalizacion!=='individual')_esVacia=false;
               sb.from('pedidos').insert([ped]).then(function(ri){
                 if(ri.error){console.error('Error insert pedido:',ri.error.message);alert('Error al crear pedido: '+ri.error.message);results.push(null);res(null);}
                 else{var ok={num:numPed,sec:sec,tipoPers:ped.tipo_personalizacion,tallasVacia:_esVacia};results.push(ok);res(ok);}
