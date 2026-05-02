@@ -108,7 +108,7 @@ var SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 var TALLAS = ['XS','S','M','L','XL','XXL','3XL'];
 var PRENDA_REF = {
   'Camiseta Beagle 6554':'CA6554','Sudadera Clásica 1070':'SU1070','Sudadera Urban 1067':'SU1067',
-  'Polo Star 6638':'PO6638','Peto Pregón 1500':'CA6554','Totebag Hill 7601':'BO7601',
+  'Polo Star 6638':'PO6638','Polo Star Woman 6634':'PO6634','Peto Pregón 1500':'CA6554','Totebag Hill 7601':'BO7601',
   'Mochila Hamelin 7114':'BO7114','Pañuelo Festero 9003':'PN9003','Gorra Eris 7019':'GO7000',
   'Delantal Mini 9124':'DE9124','Delantal Classic 9123':'DE9123','Delantal Benoit 9125':'DE9125',
   'Camisa Aifos 5504':'CM5504','Casaca Panacea 9098':'CA9098','Casulla Arzak 9091':'DE9091',
@@ -123,6 +123,7 @@ var PRENDA_MEDIDAS = {
   'Sudadera Clásica 1070':{XS:'51×63',S:'54×66',M:'57×69',L:'60×72',XL:'63×75','2XL':'66×78','3XL':'69×81'},
   'Sudadera Urban 1067':{XS:'51×64',S:'54×66',M:'57×68',L:'60×70',XL:'63×72','2XL':'66×74','3XL':'69×76','4XL':'72×78'},
   'Polo Star 6638':{XS:'49×68',S:'51×70',M:'54×72',L:'57×74',XL:'60×76','2XL':'64×79','3XL':'67×82','4XL':'70×85'},
+  'Polo Star Woman 6634':{S:'42×61',M:'45×63',L:'48×65',XL:'51×67','2XL':'54×69','3XL':'57×70'},
   'Peto Pregón 1500':{S:'102',M:'105',L:'108',XL:'111',XXL:'114','3XL':'117'},
   'Totebag Hill 7601':{'Talla única':'37×41'},
   'Chaleco Thunder':{S:'57×69',M:'60×72',L:'63×75',XL:'66×78',XXL:'69×81','3XL':'72×84'},
@@ -167,6 +168,7 @@ var FICHAS_PDF = {
   'Sudadera Clásica 1070':'fichas/SU1070.pdf',
   'Sudadera Urban 1067':'fichas/SU1067.pdf',
   'Polo Star 6638':'fichas/PO6638.pdf',
+  'Polo Star Woman 6634':'fichas/PO6634.pdf',
   'Totebag Hill 7601':'fichas/BO7601.pdf',
   'Mochila Hamelin 7114':'fichas/BO7114.pdf',
   'Gorra Eris 7019':'fichas/GO7019.pdf',
@@ -248,6 +250,20 @@ var PRENDA_COLORES = {
     {cod:'5658',nombre:'Vde Bot./Gris',hex:'#1B5E20',hex2:'#9C9C9C',kids:true},{cod:'0258',nombre:'Negro/Gris',hex:'#1a1a1a',hex2:'#9C9C9C'}
   ],
   'Polo Star 6638':[
+    {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true,kids:true},{cod:'07',nombre:'Arena',hex:'#C8B88A'},{cod:'87',nombre:'Chocolate',hex:'#6B4226'},
+    {cod:'03',nombre:'Amarillo',hex:'#F5D300',kids:true},{cod:'266',nombre:'Naranja Clay',hex:'#D48B5A'},{cod:'31',nombre:'Naranja',hex:'#E87020'},
+    {cod:'60',nombre:'Rojo',hex:'#CC2222',kids:true},{cod:'262',nombre:'Rojo Crisantemo',hex:'#C74B5A'},{cod:'168',nombre:'Rojo Pálido',hex:'#C8888A'},
+    {cod:'169',nombre:'Rojo Baya',hex:'#9E2B2B'},{cod:'57',nombre:'Granate',hex:'#7B1F2E'},{cod:'78',nombre:'Rosetón',hex:'#E8608A',kids:true},
+    {cod:'48',nombre:'Rosa claro',hex:'#F5B8C4'},{cod:'71',nombre:'Púrpura',hex:'#7B2D8B'},{cod:'121',nombre:'Lila',hex:'#B09CC8'},
+    {cod:'261',nombre:'Azul Riviera',hex:'#4A6FA5'},{cod:'05',nombre:'Royal',hex:'#2651A0',kids:true},{cod:'10',nombre:'Celeste',hex:'#6AAED6',kids:true},
+    {cod:'12',nombre:'Turquesa',hex:'#00A6A6'},{cod:'86',nombre:'Azul Denim',hex:'#1E3A5F'},{cod:'55',nombre:'Azul Marino',hex:'#1B2A6B',kids:true},
+    {cod:'263',nombre:'Azul Zen',hex:'#6B8DAD'},{cod:'170',nombre:'Azul Tormenta',hex:'#4A6A8A'},{cod:'171',nombre:'Azul Calma',hex:'#7A9EA8'},
+    {cod:'164',nombre:'Menta Oscuro',hex:'#6B9E8A'},{cod:'98',nombre:'Verde Menta',hex:'#7DCBA4'},{cod:'264',nombre:'Verde Mist',hex:'#B5CCAA'},
+    {cod:'83',nombre:'Verde Grass',hex:'#3A7A3A'},{cod:'216',nombre:'Verde Tropical',hex:'#2E8B57',kids:true},{cod:'56',nombre:'Verde Botella',hex:'#1B5E20'},
+    {cod:'152',nombre:'Verde Aventura',hex:'#3D5E3A'},{cod:'58',nombre:'Gris Vigoré',hex:'#9C9C9C'},{cod:'46',nombre:'Plomo Oscuro',hex:'#4A4A4A'},
+    {cod:'02',nombre:'Negro',hex:'#1a1a1a',kids:true}
+  ],
+  'Polo Star Woman 6634':[
     {cod:'01',nombre:'Blanco',hex:'#FFFFFF',borde:true,kids:true},{cod:'07',nombre:'Arena',hex:'#C8B88A'},{cod:'87',nombre:'Chocolate',hex:'#6B4226'},
     {cod:'03',nombre:'Amarillo',hex:'#F5D300',kids:true},{cod:'266',nombre:'Naranja Clay',hex:'#D48B5A'},{cod:'31',nombre:'Naranja',hex:'#E87020'},
     {cod:'60',nombre:'Rojo',hex:'#CC2222',kids:true},{cod:'262',nombre:'Rojo Crisantemo',hex:'#C74B5A'},{cod:'168',nombre:'Rojo Pálido',hex:'#C8888A'},
@@ -462,6 +478,7 @@ function init() {
     else if(_dSA.indexOf('HILL')>=0||_dSA.indexOf('TOTEBAG')>=0) _prendaDetectada='Totebag Hill 7601';
     else if(_dSA.indexOf('URBAN')>=0||(_dSA.indexOf('SUDADERA')>=0&&_dSA.indexOf('CAPUCHA')>=0)) _prendaDetectada='Sudadera Urban 1067';
     else if(_dSA.indexOf('CLASICA')>=0||_dSA.indexOf('SUDADERA')>=0) _prendaDetectada='Sudadera Clásica 1070';
+    else if(_dSA.indexOf('STAR WOMAN')>=0||_dSA.indexOf('POLO 6634')>=0||_dSA.indexOf('PO6634')>=0) _prendaDetectada='Polo Star Woman 6634';
     else if(_dSA.indexOf('STAR')>=0||_dSA.indexOf('POLO')>=0) _prendaDetectada='Polo Star 6638';
     else if(_dSA.indexOf('PREGON')>=0||_dSA.indexOf('PETO')>=0) _prendaDetectada='Peto Pregón 1500';
     else if(_dSA.indexOf('BEAGLE')>=0||_dSA.indexOf('CAMISETA')>=0) _prendaDetectada='Camiseta Beagle 6554';
@@ -520,7 +537,7 @@ function render() {
   var _ref=PRENDA_REF[_prendaDetectada]||'CA6554';
   var _esquemas={
     'Camiseta Beagle 6554':'img/esquema_camiseta.png','Sudadera Clásica 1070':'img/esquema_sudaderas.png',
-    'Sudadera Urban 1067':'img/esquema_sudaderas_capucha.png','Polo Star 6638':'img/esquema_polos.png',
+    'Sudadera Urban 1067':'img/esquema_sudaderas_capucha.png','Polo Star 6638':'img/esquema_polos.png','Polo Star Woman 6634':'img/esquema_polos.png',
     'Chaleco Thunder':'img/esquema_chaleco_thunder.png','Pantalón Thunder':'img/esquema_pantalon_thunder.png',
     'Parka Traffic':'img/esquema_parka_traffic.png','Buzo Kevin':'img/esquema_buzo_kevin.png',
     'Peto Pregón 1500':'img/esquema_peto_fiestas.png','Totebag Hill 7601':'img/esquema_totebag.png',
