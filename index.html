@@ -3204,35 +3204,8 @@ function verPedido(id){
       +'</div>';
   }
 
-  if(p.seccion==='TX'){
-    var tieneTallas=tallasCompletas(p);
-    html+='<div style="margin-bottom:10px;border-radius:7px;overflow:hidden;border:0.5px solid #e5e7eb">';
-    html+='<div style="background:#f9f9f7;padding:8px 12px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px">Checklist producción</div>';
-    // Tallas (con fecha si la hay). Label cambia si es prenda cliente en modo iguales.
-    var tallasTs=p.tallasRecibidasFecha?'<span class="sem-ts">'+fmtCheckTs(p.tallasRecibidasFecha)+'</span>':'';
-    var esPrendaCliMI=esPrendaCliente(p) && p.tipoPersonalizacion!=='individual';
-    var lblTallas=esPrendaCliMI?'Tallas no aplican (prenda cliente)':(tieneTallas?'Tallas recibidas':'Pdte tallas');
-    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+(tieneTallas?'sem-green':'sem-red')+'"></span><span class="sem-label" style="flex:1">'+lblTallas+'</span>'+tallasTs+'</div>';
-    // Ropa (si la prenda la trae el cliente, no hay nada que pedir → omitir)
-    var esPrendaCli=esPrendaCliente(p);
-    if(!esPrendaCli){
-      html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0">';
-      if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">Ropa pedida</span>';
-      else html+='<input type="checkbox" style="margin:0;flex-shrink:0;width:16px;height:16px;cursor:pointer" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"><span class="sem-label" style="flex:1">Ropa pedida</span>'+(p.ropaOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.ropaOkFecha)+'</span>':'');
-      html+='</div>';
-    }
-    // Previas (con fecha si aceptada)
-    var prevLbl=p.previaEstado==='aceptada'?'Previas OK':p.previaEstado==='rechazada'?'Previas: cambios':p.previaEstado==='enviada'?'Previas: esperando':'Pdte previas';
-    var prevDot=p.previaEstado==='aceptada'?'sem-green':'sem-red';
-    var prevTs=p.previaEstado==='aceptada'&&p.previaAceptadaFecha?'<span class="sem-ts">'+fmtCheckTs(p.previaAceptadaFecha)+'</span>':'';
-    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+prevDot+'"></span><span class="sem-label" style="flex:1">'+prevLbl+'</span>'+prevTs+'</div>';
-    // DTF
-    html+='<div class="sem-item" style="padding:7px 12px">';
-    if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">DTF pedido</span>';
-    else html+='<input type="checkbox" style="margin:0;flex-shrink:0;width:16px;height:16px;cursor:pointer" '+(p.dtfOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'dtfOk\',this.checked)"><span class="sem-label" style="flex:1">DTF pedido</span>'+(p.dtfOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.dtfOkFecha)+'</span>':'');
-    html+='</div>';
-    html+='</div>';
-  }
+  // (Antiguo "Checklist producción" eliminado: gates ahora dentro del bloque PARA PRODUCIR)
+
 
   // TABLA TALLAS/PERSONALIZACIÓN en modal detalle
   if(p.seccion==='TX'){
@@ -3265,43 +3238,178 @@ function verPedido(id){
 
   // ══════════════════════════════════════════════════════════════
   // BLOQUE "PARA PRODUCIR" — el corazón operativo del pedido
-  // Agrupa los gates que el operario necesita verificar para arrancar
+  // Gates dinámicos según tipo de pedido y dependencias entre ellos
   // ══════════════════════════════════════════════════════════════
-  html+='<div style="border:2px solid #1D9E75;border-radius:10px;overflow:hidden;margin-bottom:12px">';
-  html+='<div style="background:#E1F5EE;padding:9px 14px;display:flex;align-items:center;justify-content:space-between">'
-    +'<span style="font-size:11px;font-weight:700;color:#085041;text-transform:uppercase;letter-spacing:.5px">🚦 Para producir</span>'
-    +'<span id="para-prod-badge-'+p.id+'" style="font-size:11px;color:#085041;background:#fff;padding:2px 9px;border-radius:99px;font-weight:600"></span>'
-    +'</div>';
-  html+='<div style="padding:12px;display:flex;flex-direction:column;gap:10px">';
-
-  // ── 📎 ARCHIVOS DEL CLIENTE (gate 1) ──
-  if(p.archivosToken){
-    html+='<div id="arc-gate-'+p.id+'">'
-      +'<div style="display:flex;align-items:flex-start;gap:10px;padding:11px;background:#FCEBEB;border-radius:8px;border:0.5px solid #F09595" id="arc-card-'+p.id+'">'
-        +'<div id="arc-ico-'+p.id+'" style="width:26px;height:26px;border-radius:50%;background:#A32D2D;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">!</div>'
-        +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:12px;font-weight:700;color:#501313;margin-bottom:2px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
-            +'<span>📎 Archivos del cliente</span>'
-            +'<span id="arc-cnt-'+p.id+'" style="font-size:10px;color:#791F1F;background:#fff;padding:1px 7px;border-radius:99px;font-weight:600">cargando…</span>'
-          +'</div>'
-          +'<div id="arc-status-'+p.id+'" style="font-size:11px;color:#791F1F;margin-bottom:8px">Cargando archivos...</div>'
-          +'<div id="arc-list-'+p.id+'" style="margin-bottom:8px"></div>'
-          +'<div style="display:flex;gap:5px;flex-wrap:wrap">'
-            +'<button onclick="reenviarLinkArchivos(\''+p.id+'\')" style="background:#A32D2D;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">📲 Reenviar link</button>'
-            +'<button onclick="copiarLinkArchivos(\''+p.archivosToken+'\')" style="background:#fff;color:#791F1F;border:0.5px solid #F09595;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">📋 Copiar</button>'
-            +'<button onclick="document.getElementById(\'arc-file-op-'+p.id+'\').click()" style="background:#fff;color:#791F1F;border:0.5px solid #F09595;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">📤 Subir yo</button>'
-            +'<input type="file" id="arc-file-op-'+p.id+'" multiple style="display:none" onchange="subirArchivosOperario(this,\''+p.id+'\',\''+p.archivosToken+'\')">'
-          +'</div>'
-        +'</div>'
-      +'</div>'
-      +'</div>';
+  var esTX=p.seccion==='TX';
+  var esPrendaCli=esPrendaCliente(p);
+  var esPrendaCliMI=esPrendaCli && p.tipoPersonalizacion!=='individual';
+  var tieneTallas=esTX?tallasCompletas(p):true;
+  var previaOK=p.previaEstado==='aceptada';
+  // Gates aplicables según pedido
+  var gates=[];
+  if(esTX){
+    // Gate 1: Tallas (si prenda cliente en modo iguales, no aplica)
+    if(esPrendaCliMI){
+      gates.push({id:'tallas',label:'Tallas',estado:'no_aplica',msg:'No aplican (prenda del cliente)',ts:null});
+    }else{
+      gates.push({id:'tallas',label:'Tallas y datos del cliente',
+        estado:tieneTallas?'ok':'pendiente',
+        msg:tieneTallas?'Tabla completa':'El cliente aún no ha rellenado la tabla',
+        ts:p.tallasRecibidasFecha});
+    }
+    // Gate 2: Ropa (omitido si prenda cliente, bloqueado si no hay tallas)
+    if(!esPrendaCli){
+      gates.push({id:'ropa',label:'Ropa pedida al proveedor',
+        estado:!tieneTallas?'bloqueado':(p.ropaOk?'ok':'pendiente'),
+        msg:!tieneTallas?'Necesita tallas del cliente antes':(p.ropaOk?'Marcada por '+(p.operario||'operario'):'Marcar cuando esté pedida al proveedor'),
+        ts:p.ropaOkFecha,bloqueadoPor:'tallas'});
+    }
+  }
+  // Gate 3: Archivos del cliente (siempre presente)
+  gates.push({id:'archivos',label:'Archivos del cliente',estado:'cargando',msg:'Cargando…',ts:null});
+  // Gate 4: Previas (bloqueado si no hay archivos — pero como archivos es async, lo marcamos como inicialmente "pendiente" o "ok" según estado actual; el script luego puede actualizar UI)
+  gates.push({id:'previas',label:'Previas de diseño',
+    estado:previaOK?'ok':'pendiente',
+    msg:previaOK?'Diseño aprobado por el cliente':(p.previaEstado==='enviada'?'Enviada al cliente, esperando respuesta':p.previaEstado==='rechazada'?'Cliente solicitó cambios':'Monta la previa con los archivos y envíasela'),
+    ts:previaOK?p.previaAceptadaFecha:null});
+  // Gate 5: DTF (solo textil, bloqueado si no hay tallas o previa no aprobada)
+  if(esTX){
+    var dtfBloqueado=!tieneTallas||!previaOK;
+    gates.push({id:'dtf',label:'DTF pedido',
+      estado:dtfBloqueado?'bloqueado':(p.dtfOk?'ok':'pendiente'),
+      msg:dtfBloqueado?(!tieneTallas&&!previaOK?'Necesita tallas + previa aprobada':!tieneTallas?'Necesita tallas del cliente antes':'Necesita previa aprobada por el cliente'):(p.dtfOk?'Marcado como pedido':'Marcar cuando se haya enviado'),
+      ts:p.dtfOkFecha,bloqueadoPor:dtfBloqueado?'tallas+previa':null});
   }
 
-  // ── 🎨 PREVIAS (gate 2) ── (bloque original, se mantiene idéntico abajo)
-  // BLOQUE PREVIAS
+  // Contar listos (los "no_aplica" cuentan como completados; los "cargando" no)
+  var totalGates=gates.length;
+  var gatesOK=gates.filter(function(g){return g.estado==='ok'||g.estado==='no_aplica';}).length;
+  var todoListo=gatesOK===totalGates;
+
+  // Cabecera del bloque (verde fuerte si todo listo)
+  var bordeColor=todoListo?'#3B6D11':'#1D9E75';
+  var fondoCab=todoListo?'#C0DD97':'#E1F5EE';
+  var colorCab=todoListo?'#173404':'#085041';
+  var labelCab=todoListo?'✓ Listo para producir':'🚦 Para producir';
+  html+='<div style="border:2px solid '+bordeColor+';border-radius:10px;overflow:hidden;margin-bottom:12px">';
+  html+='<div style="background:'+fondoCab+';padding:9px 14px;display:flex;align-items:center;justify-content:space-between">'
+    +'<span style="font-size:11px;font-weight:700;color:'+colorCab+';text-transform:uppercase;letter-spacing:.5px">'+labelCab+'</span>'
+    +'<span style="font-size:11px;color:'+colorCab+';background:#fff;padding:2px 9px;border-radius:99px;font-weight:600">'+gatesOK+' de '+totalGates+' listo</span>'
+    +'</div>';
+  html+='<div style="padding:12px;display:flex;flex-direction:column;gap:8px">';
+
+  // Renderizar cada gate
+  gates.forEach(function(g){
+    var tsStr=g.ts?fmtCheckTs(g.ts):'';
+    if(todoListo){
+      // Vista compacta cuando todo está listo
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#EAF3DE;border:0.5px solid #97C459;border-radius:7px">'
+        +'<div style="width:18px;height:18px;border-radius:50%;background:#3B6D11;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0">✓</div>'
+        +'<span style="font-size:12px;color:#173404;flex:1">'+g.label+'</span>'
+        +(tsStr?'<span style="font-size:10px;color:#27500A">'+tsStr+'</span>':'')
+        +'</div>';
+      return;
+    }
+    if(g.estado==='ok'||g.estado==='no_aplica'){
+      // Verde
+      html+='<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:#EAF3DE;border:0.5px solid #97C459;border-radius:8px">'
+        +'<div style="width:24px;height:24px;border-radius:50%;background:#3B6D11;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">✓</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px">'
+            +'<span style="font-size:12px;font-weight:700;color:#173404">'+g.label+'</span>'
+            +(tsStr?'<span style="font-size:10px;color:#27500A">'+tsStr+'</span>':'')
+          +'</div>'
+          +'<div style="font-size:11px;color:#27500A'+(g.id==='ropa'||g.id==='dtf'?';margin-bottom:6px':'')+'">'+g.msg+'</div>';
+      // Acciones secundarias para gates verdes
+      if(g.id==='tallas'){
+        html+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">';
+        if(p.clienteTel){
+          html+='<button onclick="reabrirTallasCliente(\''+p.id+'\')" style="background:#fff;color:#BA7517;border:0.5px solid #FAC775;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🔄 Reabrir y reenviar</button>';
+        }
+        html+='</div>';
+      }else if(g.id==='ropa'){
+        html+='<button onclick="toggleCheckModal(\''+p.id+'\',\'ropaOk\',false)" style="background:#fff;color:#A32D2D;border:0.5px solid #F09595;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">✕ Desmarcar</button>';
+      }else if(g.id==='dtf'){
+        html+='<button onclick="toggleCheckModal(\''+p.id+'\',\'dtfOk\',false)" style="background:#fff;color:#A32D2D;border:0.5px solid #F09595;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">✕ Desmarcar</button>';
+      }
+      html+='</div></div>';
+    }else if(g.estado==='bloqueado'){
+      // Gris
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#fafaf7;border:0.5px dashed #B4B2A9;border-radius:8px;opacity:.7">'
+        +'<div style="width:24px;height:24px;border-radius:50%;background:#B4B2A9;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">·</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">'
+            +'<span style="font-size:12px;color:#5F5E5A">'+g.label+'</span>'
+            +'<span style="font-size:10px;color:#888">Bloqueado</span>'
+          +'</div>'
+          +'<div style="font-size:11px;color:#888">'+g.msg+'</div>'
+        +'</div>'
+        +'</div>';
+    }else if(g.estado==='cargando'){
+      // Caja para Archivos del cliente (se rellena async por cargarArchivosPedido)
+      html+='<div id="arc-gate-'+p.id+'">'
+        +'<div style="display:flex;align-items:flex-start;gap:10px;padding:11px;background:#FCEBEB;border-radius:8px;border:0.5px solid #F09595" id="arc-card-'+p.id+'">'
+          +'<div id="arc-ico-'+p.id+'" style="width:24px;height:24px;border-radius:50%;background:#A32D2D;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">!</div>'
+          +'<div style="flex:1;min-width:0">'
+            +'<div style="font-size:12px;font-weight:700;color:#501313;margin-bottom:2px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+              +'<span>📎 Archivos del cliente</span>'
+              +'<span id="arc-cnt-'+p.id+'" style="font-size:10px;color:#791F1F;background:#fff;padding:1px 7px;border-radius:99px;font-weight:600">cargando…</span>'
+            +'</div>'
+            +'<div id="arc-status-'+p.id+'" style="font-size:11px;color:#791F1F;margin-bottom:6px">Cargando archivos...</div>'
+            +'<div id="arc-list-'+p.id+'" style="margin-bottom:6px"></div>';
+      if(p.archivosToken){
+        html+='<div style="display:flex;gap:5px;flex-wrap:wrap">'
+          +'<button onclick="reenviarLinkArchivos(\''+p.id+'\')" style="background:#A32D2D;color:#fff;border:none;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">📲 Reenviar link</button>'
+          +'<button onclick="copiarLinkArchivos(\''+p.archivosToken+'\')" style="background:#fff;color:#791F1F;border:0.5px solid #F09595;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">📋 Copiar</button>'
+          +'<button onclick="document.getElementById(\'arc-file-op-'+p.id+'\').click()" style="background:#fff;color:#791F1F;border:0.5px solid #F09595;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">📤 Subir yo</button>'
+          +'<input type="file" id="arc-file-op-'+p.id+'" multiple style="display:none" onchange="subirArchivosOperario(this,\''+p.id+'\',\''+p.archivosToken+'\')">'
+          +'</div>';
+      }else{
+        html+='<div style="font-size:11px;color:#888;font-style:italic">Pedido sin token de archivos (legacy)</div>';
+      }
+      html+='</div></div></div>';
+    }else{
+      // Pendiente (rojo) — gates desbloqueados pero no completados
+      html+='<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:#FCEBEB;border:0.5px solid #F09595;border-radius:8px">'
+        +'<div style="width:24px;height:24px;border-radius:50%;background:#A32D2D;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">!</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px">'
+            +'<span style="font-size:12px;font-weight:700;color:#501313">'+g.label+'</span>'
+            +'<span style="font-size:10px;color:#791F1F">Pendiente</span>'
+          +'</div>'
+          +'<div style="font-size:11px;color:#791F1F;margin-bottom:8px">'+g.msg+'</div>';
+      // Acciones rojas según gate
+      if(g.id==='tallas'){
+        html+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
+        if(p.clienteTel){
+          // Reusa la función reabrirTallasCliente que ya envía WA con el link
+          html+='<button onclick="reabrirTallasCliente(\''+p.id+'\')" style="background:#A32D2D;color:#fff;border:none;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">📲 Reenviar WA tallas</button>';
+        }
+        html+='</div>';
+      }else if(g.id==='ropa'){
+        html+='<button onclick="toggleCheckModal(\''+p.id+'\',\'ropaOk\',true)" style="background:#A32D2D;color:#fff;border:none;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">✓ Marcar como pedida</button>';
+      }else if(g.id==='dtf'){
+        html+='<button onclick="toggleCheckModal(\''+p.id+'\',\'dtfOk\',true)" style="background:#A32D2D;color:#fff;border:none;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">✓ Marcar como pedido</button>';
+      }else if(g.id==='previas'){
+        html+='<button onclick="togglePreviaPanel(\''+p.id+'\')" style="background:#A32D2D;color:#fff;border:none;padding:5px 11px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">'+(p.previaEstado==='rechazada'?'📎 Subir nueva versión':p.previaEstado==='enviada'?'📱 Reenviar WA o nueva versión':'📎 Subir previa')+'</button>';
+      }
+      html+='</div></div>';
+    }
+  });
+
+  // Si todo listo, botón "Pasar a producción"
+  if(todoListo && p.fase < 4){
+    html+='<button onclick="setFaseModal(\''+p.id+'\',4)" style="margin-top:6px;background:#3B6D11;color:#fff;border:none;padding:11px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;width:100%">🚀 Pasar a Producción</button>';
+  }
+
+  html+='</div>'; // fin padding inner
+  html+='</div>'; // fin contenedor PARA PRODUCIR
+
+  // ── PANEL PREVIAS (oculto, se abre con togglePreviaPanel) ──
+  // Mantiene toda la lógica original de subida/historial intacta
   var previaEstadoLabel={'enviada':'<span style="background:#E6F1FB;color:#185FA5;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">👁️ Enviada · esperando respuesta</span>','aceptada':'<span style="background:#EAF3DE;color:#3B6D11;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✅ Diseño aprobado</span>','rechazada':'<span style="background:#FCEBEB;color:#A32D2D;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">✏️ Cambios solicitados</span>','guardada':'<span style="background:#F1EFE8;color:#5F5E5A;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600">💾 Guardada sin enviar</span>'};
-  html+='<div style="border:1.5px solid #FAC775;border-radius:8px;overflow:hidden">';
-  html+='<div style="background:#FFF8EC;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="togglePreviaPanel(\''+p.id+'\')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px">🖼️</span><span style="font-size:12px;font-weight:700;color:#854F0B">Previas de diseño</span>'+(p.previaEstado?(previaEstadoLabel[p.previaEstado]||''):''  )+'</div><span id="previa-arrow-'+p.id+'" style="font-size:11px;color:#BA7517">▼</span></div>';
+  html+='<div style="border:1.5px solid #FAC775;border-radius:8px;overflow:hidden;margin-bottom:12px">';
+  html+='<div style="background:#FFF8EC;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="togglePreviaPanel(\''+p.id+'\')"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px">🖼️</span><span style="font-size:12px;font-weight:700;color:#854F0B">Panel previas (subir / historial)</span>'+(p.previaEstado?(previaEstadoLabel[p.previaEstado]||''):''  )+'</div><span id="previa-arrow-'+p.id+'" style="font-size:11px;color:#BA7517">▼</span></div>';
   html+='<div id="previa-panel-'+p.id+'" style="display:none;padding:12px">';
   if(p.previaEstado==='rechazada'&&p.previaCambios){html+='<div style="background:#FCEBEB;border-radius:6px;padding:10px 12px;margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Cambio solicitado por el cliente</div><div style="font-size:12px;color:#501313;line-height:1.5;font-style:italic">"'+p.previaCambios+'"</div></div>';}
   if(p.previaEstado!=='aceptada'){
@@ -3314,9 +3422,6 @@ function verPedido(id){
   html+='<div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Historial de versiones</div>';
   html+='<div id="historial-previas-'+p.id+'"><button onclick="cargarHistorialPrevias(\''+p.id+'\' )" style="font-size:12px;color:#185FA5;background:none;border:none;cursor:pointer;padding:0">Ver historial completo →</button></div>';
   html+='</div></div>';
-
-  html+='</div>'; // fin padding inner
-  html+='</div>'; // fin contenedor PARA PRODUCIR
 
   // ── NOTAS INTERNAS DEL OPERARIO ──
   html+='<div style="font-size:11px;font-weight:700;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Notas internas</div>';
