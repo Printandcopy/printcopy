@@ -962,6 +962,10 @@ textarea{resize:vertical;min-height:64px}
             <option value="bolsas_papel_pers">Bolsas de papel personalizadas</option>
             <option value="imanes">Imanes troquelados</option>
           </optgroup>
+          <optgroup label="── 🎁 Regalos personalizados ──">
+            <option value="fotolienzo">Fotolienzo personalizado</option>
+            <option value="carton_pluma">Cartón pluma personalizado</option>
+          </optgroup>
         </select>
       </div>
       <div class="card" id="c-opts-card" style="display:none"><div class="card-title" id="c-opts-title">Opciones</div><div id="c-opts-body"></div></div>
@@ -1093,6 +1097,8 @@ textarea{resize:vertical;min-height:64px}
               <option value="bolsas_papel">Bolsas de papel</option>
               <option value="bolsas_papel_pers">Bolsas papel personalizadas</option>
               <option value="imanes">Imanes troquelados</option>
+              <option value="fotolienzo">🎁 Fotolienzo personalizado</option>
+              <option value="carton_pluma">🎁 Cartón pluma personalizado</option>
             </select>
             <!-- Combobox con búsqueda -->
             <div id="nv-prod-box" style="position:relative">
@@ -5013,6 +5019,18 @@ function nextTiers(tiers,q,count){var res=[];for(var i=0;i<tiers.length;i++){if(
 function cV2gv(id){var el=document.getElementById('cf-'+id);return el?el.value:'';}
 function cV2setOpts(id,opts){var el=document.getElementById('cf-'+id);if(!el)return;el.innerHTML=opts.map(function(o){return'<option value="'+o+'">'+o+'</option>';}).join('');}
 
+// REGALOS PERSONALIZADOS — lógica par/impar 50% (1ª normal, 2ª 50%, 3ª normal, 4ª 50%...)
+// Uso: calcParImpar50(precioUnitarioSinIva, cantidad) → {base, pu}
+function calcParImpar50(pBase,q){
+  var base=0;
+  for(var i=1;i<=q;i++){
+    if(i%2===0)base+=pBase*0.5;
+    else base+=pBase;
+  }
+  base=cV2R2(base);
+  return{base:base,pu:cV2R2(base/q)};
+}
+
 var P={
 placas:{name:"Placas personalizadas",sinIva:true,plazo:3,fields:[{id:'mat',label:'Material',type:'select',options:['Metacrilato 5mm','Metacrilato 10mm','Alucobond','PVC 5mm']},{id:'tam',label:'Tamaño',type:'select',options:['A5','A4','A3']}],extrasDef:[{key:'diseno',label:'Diseño',price:12},{key:'montaje',label:'Montaje',price:38}],prices:{"Metacrilato 5mm":{"A5":29.90,"A4":39.90,"A3":54.90},"Metacrilato 10mm":{"A5":39.90,"A4":49.90,"A3":69.90},"Alucobond":{"A5":21.90,"A4":34.90,"A3":44.90},"PVC 5mm":{"A5":19.90,"A4":29.90,"A3":39.90}},calc:function(v){return{base:this.prices[v.mat][v.tam],qty:1};}},
 xbanner:{name:"X Banner / Fotocall",sinIva:true,plazo:3,specs:"Lona Frontlit 550gr",fields:[{id:'tipo',label:'Tipo',type:'select',options:['X Banner','Fotocall X Banner']},{id:'med',label:'Medida',type:'select',options:[]}],extrasDef:[{key:'diseno',label:'Diseño',price:12}],medidas:{"X Banner":{"60×160":49,"70×180":55,"80×200":59},"Fotocall X Banner":{"120×200":119,"240×200":159,"360×200":229}},onFieldChange:function(id){if(id==='tipo'){cV2setOpts('med',Object.keys(this.medidas[cV2gv('tipo')]||{}));}},calc:function(v){return{base:(this.medidas[v.tipo]||{})[v.med]||0,qty:1};}},
@@ -5143,7 +5161,12 @@ bidones:{name:"Bidones personalizados",sinIva:true,plazo:4,fields:[{id:'tipo',la
 bolsas_papel:{name:"Bolsas de papel (sin personalizar)",sinIva:true,plazo:3,fields:[{id:'modelo',label:'Modelo',type:'select',options:['Cention 22×23×9','Loiles 25×31×11','Nauska 32×40×12','Yeman blanca 22×23×9','Taurel blanca 25×31×11','Cynthia blanca 32×40×12','Collins troq. 22×27×11','Haspun troq. 26×36×12','Drimul troq. 30×36×18','Ragnar 11×36×10','Take away 30×29×18','Z-1209 horiz. 32×32×20','Tobin horiz. 41×32×15','Z-1204 horiz. 46×16×49']},{id:'qty',label:'Cantidad',type:'number',min:50}],extrasDef:[{key:'pack_pegatinas',label:'Pack 250 pegatinas 10×10cm',price:39}],modelPrices:{"Cention 22×23×9":0.25,"Loiles 25×31×11":0.28,"Nauska 32×40×12":0.32,"Yeman blanca 22×23×9":0.25,"Taurel blanca 25×31×11":0.28,"Cynthia blanca 32×40×12":0.32,"Collins troq. 22×27×11":0.18,"Haspun troq. 26×36×12":0.21,"Drimul troq. 30×36×18":0.26,"Ragnar 11×36×10":0.32,"Take away 30×29×18":0.33,"Z-1209 horiz. 32×32×20":0.38,"Tobin horiz. 41×32×15":0.32,"Z-1204 horiz. 46×16×49":0.72},calc:function(v){var q=parseInt(v.qty)||0;if(q<50)return{error:'Mínimo 50 uds'};var pu=this.modelPrices[v.modelo]||0;return{base:cV2R2(pu*q),qty:q,pu:pu};}},
 bolsas_papel_pers:{name:"Bolsas de papel personalizadas",sinIva:true,plazo:11,specs:"Impresión a dos caras",fields:[{id:'tipo',label:'Tipo',type:'select',options:['Vertical','Take Away','Horizontal']},{id:'color_bolsa',label:'Color bolsa',type:'select',options:['Blanco','Kraft']},{id:'tam',label:'Tamaño',type:'select',options:[]},{id:'colores',label:'Colores impresión',type:'select',options:['1 color','2 colores']},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[],tamanos:{"Vertical":['XS 18×8×23','S 24×9×31','M 32×11×39','L 42×16×48'],"Take Away":['S 27×16×31','M 32×20×31','L 35×23×25'],"Horizontal":['S 32×11×26','M 40×11×35','L 54×16×42']},coloresBolsa:{"Vertical":['Blanco','Kraft','Rojo','Negro','Plata','Oro'],"Take Away":['Blanco','Kraft'],"Horizontal":['Blanco','Kraft']},tiers:[100,250,500,1000],unitPrices:{"Vertical":{"XS 18×8×23":{"1 color":[0.89,0.59,0.43,0.35],"2 colores":[0.99,0.63,0.47,0.39]},"S 24×9×31":{"1 color":[0.99,0.67,0.49,0.41],"2 colores":[1.09,0.71,0.53,0.45]},"M 32×11×39":{"1 color":[1.19,0.75,0.57,0.49],"2 colores":[1.29,0.79,0.61,0.53]},"L 42×16×48":{"1 color":[1.29,0.91,0.67,0.65],"2 colores":[1.39,0.95,0.72,0.69]}},"Take Away":{"S 27×16×31":{"1 color":[1.06,0.71,0.56,0.50],"2 colores":[1.16,0.75,0.60,0.54]},"M 32×20×31":{"1 color":[1.14,0.99,0.61,0.55],"2 colores":[1.24,1.04,0.65,0.59]},"L 35×23×25":{"1 color":[1.35,0.97,0.76,0.67],"2 colores":[1.45,1.01,0.80,0.71]}},"Horizontal":{"S 32×11×26":{"1 color":[1.05,0.72,0.55,0.48],"2 colores":[1.15,0.76,0.59,0.52]},"M 40×11×35":{"1 color":[1.19,0.79,0.61,0.54],"2 colores":[1.29,0.85,0.65,0.58]},"L 54×16×42":{"1 color":[1.50,1.08,0.84,0.75],"2 colores":[1.60,1.12,0.88,0.79]}}},onFieldChange:function(id){if(id==='tipo'){cV2setOpts('tam',this.tamanos[cV2gv('tipo')]||[]);cV2setOpts('color_bolsa',this.coloresBolsa[cV2gv('tipo')]||['Blanco','Kraft']);}},calc:function(v){var q=parseInt(v.qty)||0;if(q<100)return{error:'Mínimo 100 uds'};var idx=floorIdx(this.tiers,q),precios=((this.unitPrices[v.tipo]||{})[v.tam]||{})[v.colores];if(!precios)return{error:'Selecciona tipo y tamaño'};var pu=precios[idx];return{base:cV2R2(pu*q),qty:q,pu:pu,tierQty:this.tiers[idx],tiers:this.tiers};}},
 imanes:{name:"Imanes troquelados",sinIva:true,plazo:4,specs:"Imán 300gr",fields:[{id:'pancho',label:'Ancho (cm)',type:'number',min:1},{id:'palto',label:'Alto (cm)',type:'number',min:1},{id:'qty',label:'Cantidad',type:'number',min:100}],extrasDef:[{key:'diseno',label:'Diseño',price:9}],imanTable:[[15,0.75,0.60,0.40,0.25,0.21],[30,0.77,0.62,0.43,0.26,0.23],[40,0.80,0.65,0.45,0.29,0.26],[50,0.85,0.68,0.48,0.31,0.29],[60,0.88,0.71,0.51,0.34,0.32],[70,0.94,0.74,0.54,0.37,0.34],[80,0.96,0.76,0.56,0.40,0.36],[90,0.99,0.79,0.58,0.42,0.39],[100,1.09,0.89,0.68,0.52,0.49]],imanTiers:[100,250,500,1000,2000],calc:function(v){var a=parseFloat(v.pancho)||0,b=parseFloat(v.palto)||0,q=parseInt(v.qty)||0;if(a<=0||b<=0)return{error:'Introduce ancho y alto'};var cm2=a*b;if(q<100)return{error:'Mínimo 100 uds'};if(cm2>100)return{error:'Máximo 100 cm²'};var fila=this.imanTable[this.imanTable.length-1];for(var i=0;i<this.imanTable.length;i++){if(cm2<=this.imanTable[i][0]){fila=this.imanTable[i];break;}}var col=0;for(var j=0;j<this.imanTiers.length;j++){if(q>=this.imanTiers[j])col=j;}return{base:cV2R2(fila[col+1]*q),qty:q,pu:fila[col+1],tierQty:this.imanTiers[col],tiers:this.imanTiers};}},
-impresion_uv:{name:"Impresión UV (sobre objeto)",sinIva:true,fields:[{id:'area',label:'Área impresión (cm²)',type:'select',options:['5 cm²','10 cm²','15 cm²','30 cm²','50 cm²','75 cm²','100 cm²','150 cm²','400 cm²']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],tiers:[1,50,100,250,500],unitPrices:{"5 cm²":[0.45,0.45,0.30,0.25,0.20],"10 cm²":[0.50,0.50,0.35,0.30,0.25],"15 cm²":[0.60,0.60,0.40,0.35,0.30],"30 cm²":[0.70,0.70,0.45,0.40,0.35],"50 cm²":[0.75,0.75,0.50,0.45,0.40],"75 cm²":[0.90,0.90,0.65,0.60,0.55],"100 cm²":[1.20,1.20,0.80,0.75,0.70],"150 cm²":[1.50,1.50,1.00,0.95,0.90],"400 cm²":[2.50,2.50,1.80,1.70,1.60]},calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};var idx=floorIdx(this.tiers,q),pu=this.unitPrices[v.area][idx];return{base:cV2R2(pu*q),qty:q,pu:pu,tierQty:this.tiers[idx],tiers:this.tiers};}}
+impresion_uv:{name:"Impresión UV (sobre objeto)",sinIva:true,fields:[{id:'area',label:'Área impresión (cm²)',type:'select',options:['5 cm²','10 cm²','15 cm²','30 cm²','50 cm²','75 cm²','100 cm²','150 cm²','400 cm²']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],tiers:[1,50,100,250,500],unitPrices:{"5 cm²":[0.45,0.45,0.30,0.25,0.20],"10 cm²":[0.50,0.50,0.35,0.30,0.25],"15 cm²":[0.60,0.60,0.40,0.35,0.30],"30 cm²":[0.70,0.70,0.45,0.40,0.35],"50 cm²":[0.75,0.75,0.50,0.45,0.40],"75 cm²":[0.90,0.90,0.65,0.60,0.55],"100 cm²":[1.20,1.20,0.80,0.75,0.70],"150 cm²":[1.50,1.50,1.00,0.95,0.90],"400 cm²":[2.50,2.50,1.80,1.70,1.60]},calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};var idx=floorIdx(this.tiers,q),pu=this.unitPrices[v.area][idx];return{base:cV2R2(pu*q),qty:q,pu:pu,tierQty:this.tiers[idx],tiers:this.tiers};}},
+// ══════════════════════════════════════════════════════════════
+// REGALOS PERSONALIZADOS (con promo "2ª unidad al 50%")
+// ══════════════════════════════════════════════════════════════
+fotolienzo:{name:"Fotolienzo personalizado",sinIva:true,plazo:3,esRegalo:true,maxQtyAuto:11,fields:[{id:'tam',label:'Tamaño',type:'select',options:['30×40 cm','40×50 cm','50×50 cm','50×60 cm','50×70 cm']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precios:{"30×40 cm":24.71,"40×50 cm":28.84,"50×50 cm":32.98,"50×60 cm":37.11,"50×70 cm":41.24},notasLabel:"Notas del diseño (foto, retoque, encuadre...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var pBase=this.precios[v.tam];if(!pBase)return{error:'Selecciona tamaño'};var r=calcParImpar50(pBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}},
+carton_pluma:{name:"Cartón pluma personalizado",sinIva:true,plazo:3,esRegalo:true,maxQtyAuto:11,fields:[{id:'tam',label:'Tamaño',type:'select',options:['20×29 cm','29×42 cm','35×50 cm','50×70 cm']},{id:'qty',label:'Cantidad',type:'number',min:1}],extrasDef:[],precios:{"20×29 cm":12.31,"29×42 cm":16.45,"35×50 cm":24.71,"50×70 cm":37.11},notasLabel:"Notas del diseño (foto, retoque, encuadre...)",calc:function(v){var q=parseInt(v.qty)||0;if(q<1)return{error:'Mínimo 1 ud'};if(q>11)return{error:'12+ uds requieren solicitud de presupuesto'};var pBase=this.precios[v.tam];if(!pBase)return{error:'Selecciona tamaño'};var r=calcParImpar50(pBase,q);return{base:r.base,qty:q,pu:r.pu,promoNote:'2ª unidad al 50%'};}}
 };
 
 var CROSS={
@@ -5528,7 +5551,9 @@ var CAT_TO_SEC={
   chapas:'SUB',tazas:'SUB',vasos:'SUB',pulseras:'SUB',lanyares_merch:'SUB',
   mochilas:'SUB',panuelos_merch:'SUB',tarjeton_balsamo:'SUB',boligrafos:'SUB',mecheros:'SUB',
   cargador3en1:'SUB',bolsas_tela:'SUB',abanicos:'SUB',bidones:'SUB',
-  bolsas_papel:'SUB',bolsas_papel_pers:'SUB',imanes:'SUB',impresion_uv:'UV'
+  bolsas_papel:'SUB',bolsas_papel_pers:'SUB',imanes:'SUB',impresion_uv:'UV',
+  // Regalos personalizados -> SUB
+  fotolienzo:'SUB',carton_pluma:'SUB'
 };
 
 function convertirEnPedido(){
@@ -6478,7 +6503,8 @@ function nvSelCliente(id){
 var NV_PROD_CATS = {
   'textil':'Textil','rotulacion':'Gran Formato','placas':'Gran Formato','xbanner':'Gran Formato','rollup':'Gran Formato','banderas':'Gran Formato','neones':'Gran Formato',
   'tarjetas':'Impresión','tarjetas_troq':'Impresión','tarjetas_pvc':'Impresión','tarjetas_especiales':'Impresión','flyers':'Impresión','carteles':'Impresión','carpetas':'Impresión','sobres':'Impresión','talonarios':'Impresión','pegatinas':'Impresión','sellos':'Impresión','manteles':'Impresión','cartas':'Impresión','tarjetones':'Impresión','acreditaciones':'Impresión','lanyares':'Impresión',
-  'chapas':'Merchandising','tazas':'Merchandising','vasos':'Merchandising','pulseras':'Merchandising','lanyares_merch':'Merchandising','mochilas':'Merchandising','panuelos_merch':'Merchandising','tarjeton_balsamo':'Merchandising','boligrafos':'Merchandising','mecheros':'Merchandising','cargador3en1':'Merchandising','bolsas_tela':'Merchandising','abanicos':'Merchandising','bidones':'Merchandising','bolsas_papel':'Merchandising','bolsas_papel_pers':'Merchandising','imanes':'Merchandising'
+  'chapas':'Merchandising','tazas':'Merchandising','vasos':'Merchandising','pulseras':'Merchandising','lanyares_merch':'Merchandising','mochilas':'Merchandising','panuelos_merch':'Merchandising','tarjeton_balsamo':'Merchandising','boligrafos':'Merchandising','mecheros':'Merchandising','cargador3en1':'Merchandising','bolsas_tela':'Merchandising','abanicos':'Merchandising','bidones':'Merchandising','bolsas_papel':'Merchandising','bolsas_papel_pers':'Merchandising','imanes':'Merchandising',
+  'fotolienzo':'Regalos personalizados','carton_pluma':'Regalos personalizados'
 };
 function nvProdGetItems(){
   var sel=document.getElementById('nv-cat');
@@ -6675,6 +6701,12 @@ function nvCatChange(){
       }
     });
     html+='</div>';
+    // REGALOS: añadir textarea "Notas del diseño" si el producto define notasLabel
+    if(prod.notasLabel){
+      html+='<div class="field" style="margin-top:10px"><label>'+prod.notasLabel+'</label>'+
+        '<textarea id="nvf-notas-diseno" rows="2" placeholder="Ej: Foto familia retoque B/N, marco 2cm..." '+
+        'style="width:100%;padding:8px;border:1px solid #d1d1d1;border-radius:6px;font-family:inherit;font-size:13px;resize:vertical"></textarea></div>';
+    }
     document.getElementById('nv-campos-dinamicos').innerHTML=html;
     // Trigger onFieldChange si existe
     if(prod.onFieldChange){
@@ -7023,6 +7055,38 @@ function nvAddLinea(){
   if(!_nvRes)return;
   var prod=P[_nvRes.cat];
   var sec=CAT_TO_SEC[_nvRes.cat]||'';
+  // REGALOS: si es producto regalo y qty >= 12, redirigir a Solicitud de presupuesto
+  if(prod && prod.esRegalo){
+    var qReg=parseInt(_nvRes.qty)||0;
+    if(qReg>=12){
+      var detalle=prod.name;
+      var tam=(_nvRes.vals&&(_nvRes.vals.tam||_nvRes.vals.tipo))||'';
+      if(tam)detalle+=' — '+tam;
+      detalle+=' — '+qReg+' uds';
+      var notasReg=(document.getElementById('nvf-notas-diseno')||{}).value||'';
+      if(notasReg)detalle+='\n\nNotas del diseño: '+notasReg;
+      if(!confirm('⚠️ Cantidad alta detectada\n\n'+qReg+' unidades de '+prod.name+' requieren presupuesto manual revisado por Raúl.\n\n¿Convertir a Solicitud de presupuesto?')){return;}
+      // Cerrar modal venta y abrir solicitud con datos prerellenados
+      closeModal('modal-venta');
+      nuevaSolicitud();
+      // Prerellenar campo "necesita" con el detalle del producto
+      setTimeout(function(){
+        var necEl=document.getElementById('sol-necesita');
+        if(necEl)necEl.value=detalle;
+        // Si hay cliente seleccionado en la venta, prerellenar también
+        if(window._nvCliente){
+          var c=window._nvCliente;
+          var nEl=document.getElementById('sol-nombre');
+          var tEl=document.getElementById('sol-tel');
+          var eEl=document.getElementById('sol-email');
+          if(nEl&&c.nombre)nEl.value=c.nombre;
+          if(tEl&&c.telefono)tEl.value=c.telefono;
+          if(eEl&&c.email)eEl.value=c.email;
+        }
+      },100);
+      return;
+    }
+  }
   // VALIDACIÓN PRE-AÑADIR: si es textil, asegurar que las tallas están completas
   // (no como nvValidarTallas, que permitía 0 → se enviaba vacío al WA. Aquí sí validamos
   // que si el operario PUSO datos, estén completos respecto a la cantidad)
@@ -7122,7 +7186,14 @@ function nvAddLinea(){
       if(_tallasSnapshot)_tallasSnapshot=JSON.parse(JSON.stringify(_tallasSnapshot));
     }catch(e){console.warn('snapshot tallas fallo:',e);}
   }
-  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:desc,total:_nvRes.totalFinal,totalSi:_totalSi,puCi:_puCi,puSi:_puSi,qty:_qty,unidades:unidades,cat:_nvRes.cat,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0,estampaciones:_estampSnapshot,tallasColores:_tallasSnapshot,tipoPersonalizacion:_tipoSnapshot,prenda:_prendaSnapshot,tipoPrendaCliente:_tipoPrendaClienteSnapshot});
+  // Capturar notas del diseño (productos regalo)
+  var _notasDisenoSnap='';
+  var _ndEl=document.getElementById('nvf-notas-diseno');
+  if(_ndEl)_notasDisenoSnap=(_ndEl.value||'').trim();
+  // Si hay notas, añadirlas a la descripción visible
+  var descFinal=desc;
+  if(_notasDisenoSnap)descFinal=desc+' · 📝 '+_notasDisenoSnap;
+  nvLineas.push({sec:CAT_TO_SEC[_nvRes.cat]||'XR',desc:descFinal,total:_nvRes.totalFinal,totalSi:_totalSi,puCi:_puCi,puSi:_puSi,qty:_qty,unidades:unidades,cat:_nvRes.cat,plazo:P[_nvRes.cat]&&P[_nvRes.cat].plazo||0,estampaciones:_estampSnapshot,tallasColores:_tallasSnapshot,tipoPersonalizacion:_tipoSnapshot,prenda:_prendaSnapshot,tipoPrendaCliente:_tipoPrendaClienteSnapshot,notasDiseno:_notasDisenoSnap});
   nvRenderLineas();
   nvActualizarFecha();
   nvShowCross(_nvRes.cat);
