@@ -17,14 +17,15 @@ module.exports = async function handler(req, res) {
   try {
     const { data: pedido, error } = await sb
       .from('pedidos')
-      .select('id, num_pedido, cliente_id, lineas, estado, fecha_creacion, fecha_entrega')
+      .select('id, cliente_id, descripcion, fase, fecha_creacion, fecha_entrega')
       .eq('archivos_token', token)
       .single();
 
     if (error || !pedido) return res.status(404).json({ error: 'Pedido no encontrado o token inválido' });
 
-    // Estado bloqueante: si pedido completado/recogido, no permitir subir
-    const cerrado = ['completado', 'recogido', 'cancelado'].includes((pedido.estado || '').toLowerCase());
+    // Estado bloqueante: si pedido en fase final (terminado/cobrado/recogido), no permitir subir
+    // Fases: 0=nuevo, 1=atendido, 2=previas env, 3=previas ok, 4=produccion, 5=terminado, 6=cobrado, 7=recogido
+    const cerrado = pedido.fase >= 5;
 
     // Cliente
     let cliente = null;
@@ -43,10 +44,9 @@ module.exports = async function handler(req, res) {
     res.status(200).json({
       pedido: {
         id: pedido.id,
-        num_pedido: pedido.num_pedido,
-        estado: pedido.estado,
+        num_pedido: pedido.id, // alias para sube.html
+        descripcion: pedido.descripcion,
         cerrado: cerrado,
-        lineas: pedido.lineas || [],
         fecha_entrega: pedido.fecha_entrega
       },
       cliente: cliente,

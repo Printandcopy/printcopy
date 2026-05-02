@@ -27,12 +27,12 @@ module.exports = async function handler(req, res) {
 
     const { data: ped } = await sb
       .from('pedidos')
-      .select('archivos_token, estado')
+      .select('archivos_token, fase')
       .eq('id', arch.pedido_id)
       .single();
     if (!ped || ped.archivos_token !== token) return res.status(403).json({ error: 'Token no válido para este archivo' });
 
-    const cerrado = ['completado', 'recogido', 'cancelado'].includes((ped.estado || '').toLowerCase());
+    const cerrado = ped.fase >= 5;
     if (cerrado) return res.status(403).json({ error: 'Pedido cerrado, no se puede modificar' });
 
     // Borrar del bucket

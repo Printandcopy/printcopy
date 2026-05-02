@@ -151,10 +151,9 @@ function renderPedido(){
     var fe=new Date(p.fecha_entrega).toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
     html+='<div class="info-row"><span class="label">Entrega prevista</span><span class="val">'+fe+'</span></div>';
   }
-  // Líneas resumidas
-  if(Array.isArray(p.lineas)&&p.lineas.length){
-    var resumen=p.lineas.map(function(l){return (l.qty||1)+'× '+(l.desc||'').substring(0,40);}).join(' · ');
-    html+='<div class="info-row"><span class="label">Productos</span><span class="val" style="font-size:11px;text-align:right;max-width:60%">'+resumen+'</span></div>';
+  // Líneas resumidas (campo descripcion del pedido)
+  if(p.descripcion){
+    html+='<div class="info-row"><span class="label">Producto</span><span class="val" style="font-size:11px;text-align:right;max-width:60%">'+p.descripcion.substring(0,80)+'</span></div>';
   }
   $('pedido-info').innerHTML=html;
 

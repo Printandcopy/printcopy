@@ -27,12 +27,12 @@ module.exports = async function handler(req, res) {
     // Validar pedido
     const { data: pedido, error: ePed } = await sb
       .from('pedidos')
-      .select('id, estado')
+      .select('id, fase')
       .eq('archivos_token', token)
       .single();
     if (ePed || !pedido) return res.status(404).json({ error: 'Pedido no encontrado' });
 
-    const cerrado = ['completado', 'recogido', 'cancelado'].includes((pedido.estado || '').toLowerCase());
+    const cerrado = pedido.fase >= 5;
     if (cerrado) return res.status(403).json({ error: 'Este pedido ya está cerrado, no se admiten más archivos' });
 
     // Validar tamaño
