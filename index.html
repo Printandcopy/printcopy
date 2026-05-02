@@ -2150,7 +2150,13 @@ function toggleProvPanel(){
   var open=panel.style.display==='block';
   panel.style.display=open?'none':'block';
   arrow.textContent=open?'▼ Desplegar':'▲ Cerrar';
-  if(!open)renderProvLista();
+  if(!open){
+    // Recargar siempre desde Supabase al abrir el panel
+    sb.from('proveedores').select('*').order('nombre').then(function(r){
+      PROVEEDORES=(r.data||[]).map(function(p){return p.nombre;});
+      renderProvLista();
+    });
+  }
 }
 function renderProvLista(){
   var lista=document.getElementById('prov-lista');
@@ -9542,6 +9548,7 @@ startClock();
 testConnection();
 cargarDatos();
 cargarPresupuestos();
+cargarProveedores();
 // Arrancar siempre en Mostrador
 showScreen('mostrador',document.querySelector('.nav-tab'));
 // Identidad: no persiste, siempre pedir al abrir
