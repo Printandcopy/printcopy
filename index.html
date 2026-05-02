@@ -6828,8 +6828,32 @@ function nvCalc(){
   if(!res||res.error){
     document.getElementById('nv-result').style.display='none';
     document.getElementById('nv-btn-add').style.display='none';
+    // REGALOS: si el error es por ≥12 uds, mostrar aviso visible con botón directo
+    if(prod && prod.esRegalo && res && res.error && res.error.indexOf('12+')===0){
+      var qReg=parseInt(vals.qty)||0;
+      var avisoEl=document.getElementById('nv-aviso-regalo');
+      if(!avisoEl){
+        avisoEl=document.createElement('div');
+        avisoEl.id='nv-aviso-regalo';
+        avisoEl.style.cssText='margin-top:10px;padding:14px;background:#fff4e0;border:2px solid #f0a830;border-radius:10px;color:#5b4006;font-size:13px;line-height:1.4';
+        var resEl=document.getElementById('nv-result');
+        if(resEl&&resEl.parentNode)resEl.parentNode.insertBefore(avisoEl,resEl);
+      }
+      avisoEl.innerHTML='<div style="font-weight:700;margin-bottom:6px">⚠️ Cantidad alta ('+qReg+' uds)</div>'+
+        '<div style="margin-bottom:10px">Para 12+ unidades el precio lo revisa Raúl manualmente. Genera una solicitud de presupuesto.</div>'+
+        '<button type="button" onclick="nvConvertirASolicitud()" style="background:#534AB7;color:#fff;border:none;padding:10px 16px;border-radius:8px;font-weight:700;cursor:pointer;font-size:13px">📝 Convertir a Solicitud de presupuesto</button>';
+      avisoEl.style.display='block';
+      // Guardar estado para que el botón sepa qué convertir
+      window._nvRegaloPendiente={cat:cat,vals:vals,qty:qReg,prodName:prod.name};
+    }else{
+      var av=document.getElementById('nv-aviso-regalo');
+      if(av)av.style.display='none';
+    }
     return;
   }
+  // Si el cálculo OK, ocultar aviso de regalo si estaba visible
+  var av2=document.getElementById('nv-aviso-regalo');
+  if(av2)av2.style.display='none';
   
   _nvRes=res;_nvRes.cat=cat;_nvRes.vals=vals;_nvRes.ex=ex;_nvRes.unidades=unidades;
   
@@ -7223,6 +7247,37 @@ function nvAddLinea(){
   if(document.getElementById('nv-tramos'))document.getElementById('nv-tramos').style.display='none';
   if(document.getElementById('nv-sug-panel'))document.getElementById('nv-sug-panel').style.display='none';
   _nvCat=null;_nvRes=null;window._nvCurCat=null;
+}
+
+// REGALOS: convertir el estado actual del mostrador a una Solicitud de presupuesto
+function nvConvertirASolicitud(){
+  var pend=window._nvRegaloPendiente;
+  if(!pend){alert('No hay datos de regalo para convertir.');return;}
+  // Construir descripción
+  var detalle=pend.prodName;
+  var tam=(pend.vals&&(pend.vals.tam||pend.vals.tipo))||'';
+  if(tam)detalle+=' — '+tam;
+  detalle+=' — '+pend.qty+' uds';
+  var notasReg=(document.getElementById('nvf-notas-diseno')||{}).value||'';
+  if(notasReg)detalle+='\n\nNotas del diseño: '+notasReg;
+  // Cerrar modal venta y abrir solicitud
+  closeModal('modal-venta');
+  nuevaSolicitud();
+  setTimeout(function(){
+    var necEl=document.getElementById('sol-necesita');
+    if(necEl)necEl.value=detalle;
+    // Si hay cliente seleccionado en la venta, prerellenar
+    if(window._nvCliente){
+      var c=window._nvCliente;
+      var nEl=document.getElementById('sol-nombre');
+      var tEl=document.getElementById('sol-tel');
+      var eEl=document.getElementById('sol-email');
+      if(nEl&&c.nombre)nEl.value=c.nombre;
+      if(tEl&&c.telefono)tEl.value=c.telefono;
+      if(eEl&&c.email)eEl.value=c.email;
+    }
+  },150);
+  window._nvRegaloPendiente=null;
 }
 
 function nvAddManual(){
