@@ -3165,11 +3165,14 @@ function verPedido(id){
     // Tallas (con fecha si la hay)
     var tallasTs=p.tallasRecibidasFecha?'<span class="sem-ts">'+fmtCheckTs(p.tallasRecibidasFecha)+'</span>':'';
     html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0"><span class="sem-dot '+(tieneTallas?'sem-green':'sem-red')+'"></span><span class="sem-label" style="flex:1">'+(tieneTallas?'Tallas recibidas':'Pdte tallas')+'</span>'+tallasTs+'</div>';
-    // Ropa
-    html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0">';
-    if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">Ropa pedida</span>';
-    else html+='<input type="checkbox" style="margin:0;flex-shrink:0;width:16px;height:16px;cursor:pointer" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"><span class="sem-label" style="flex:1">Ropa pedida</span>'+(p.ropaOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.ropaOkFecha)+'</span>':'');
-    html+='</div>';
+    // Ropa (si la prenda la trae el cliente, no hay nada que pedir → omitir)
+    var esPrendaCli=!!p.tipoPrendaCliente;
+    if(!esPrendaCli){
+      html+='<div class="sem-item" style="padding:7px 12px;border-bottom:0.5px solid #f0f0f0">';
+      if(!tieneTallas)html+='<span class="sem-dot sem-gray"></span><span class="sem-label sem-blocked">Ropa pedida</span>';
+      else html+='<input type="checkbox" style="margin:0;flex-shrink:0;width:16px;height:16px;cursor:pointer" '+(p.ropaOk?'checked':'')+' onchange="toggleCheckModal(\''+p.id+'\',\'ropaOk\',this.checked)"><span class="sem-label" style="flex:1">Ropa pedida</span>'+(p.ropaOkFecha?'<span class="sem-ts">'+fmtCheckTs(p.ropaOkFecha)+'</span>':'');
+      html+='</div>';
+    }
     // Previas (con fecha si aceptada)
     var prevLbl=p.previaEstado==='aceptada'?'Previas OK':p.previaEstado==='rechazada'?'Previas: cambios':p.previaEstado==='enviada'?'Previas: esperando':'Pdte previas';
     var prevDot=p.previaEstado==='aceptada'?'sem-green':'sem-red';
@@ -3900,13 +3903,19 @@ function tallasCompletas(p){
 function esListoProducir(p){
   if(p.seccion!=='TX')return false;
   var tieneTallas=tallasCompletas(p);
-  if(!tieneTallas||!p.ropaOk||!p.dtfOk)return false;
+  if(!tieneTallas)return false;
+  // Si la prenda la trae el cliente, no se exige "ropa pedida" (no hay nada que pedir)
+  var esPrendaCli=!!p.tipoPrendaCliente;
+  if(!esPrendaCli && !p.ropaOk)return false;
+  if(!p.dtfOk)return false;
   var previaOk=p.previaEstado==='aceptada';
   if(!previaOk)return false;
+  // Si es prenda cliente, la fecha de "ropaOk" no aplica → usar solo dtfOk como referencia
   var ropaF=p.ropaOkFecha?new Date(p.ropaOkFecha):null;
   var dtfF=p.dtfOkFecha?new Date(p.dtfOkFecha):null;
-  if(!ropaF||!dtfF)return false;
-  var ultimaFecha=ropaF>dtfF?ropaF:dtfF;
+  if(!dtfF)return false;
+  if(!esPrendaCli && !ropaF)return false;
+  var ultimaFecha=esPrendaCli?dtfF:(ropaF>dtfF?ropaF:dtfF);
   var listoDesde=siguienteDiaLaborable(ultimaFecha);
   var hoy=new Date();hoy.setHours(0,0,0,0);listoDesde.setHours(0,0,0,0);
   return hoy>=listoDesde;
@@ -3918,10 +3927,13 @@ function renderSemaforoTaller(p){
   // 1. Tallas
   if(tieneTallas)items.push({dot:'sem-green',label:'Tallas recibidas',ts:''});
   else items.push({dot:'sem-red',label:'Pdte tallas',ts:''});
-  // 2. Ropa pedida (solo activo si tallas OK)
-  if(!tieneTallas)items.push({dot:'sem-gray',label:'Ropa pedida',ts:'',blocked:true});
-  else if(p.ropaOk)items.push({dot:'sem-green',label:'Ropa pedida',ts:p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):''});
-  else items.push({dot:'sem-red',label:'Ropa pedida',ts:''});
+  // 2. Ropa pedida (solo activo si tallas OK; OMITIDA si prenda la trae el cliente)
+  var esPrendaCli=!!p.tipoPrendaCliente;
+  if(!esPrendaCli){
+    if(!tieneTallas)items.push({dot:'sem-gray',label:'Ropa pedida',ts:'',blocked:true});
+    else if(p.ropaOk)items.push({dot:'sem-green',label:'Ropa pedida',ts:p.ropaOkFecha?fmtCheckTs(p.ropaOkFecha):''});
+    else items.push({dot:'sem-red',label:'Ropa pedida',ts:''});
+  }
   // 3. Previas
   var previaOk=p.previaEstado==='aceptada';
   var previaEnv=p.previaEstado==='enviada';
@@ -3948,7 +3960,8 @@ function accionesTallerBtn(p){
   var stop='onclick="event.stopPropagation();';
   // TX: ropa/DTF manual cuando hay tallas
   if(p.seccion==='TX'&&p.fase>=1&&p.fase<4&&tallasCompletas(p)){
-    if(!p.ropaOk)btns.push('<button class="taller-btn taller-btn-ropa" '+stop+'toggleCheckModal(\''+p.id+'\',\'ropaOk\',true)">📦 Ropa pedida</button>');
+    // Botón "Ropa pedida" solo si la prenda es del catálogo (no la trae el cliente)
+    if(!p.ropaOk && !p.tipoPrendaCliente)btns.push('<button class="taller-btn taller-btn-ropa" '+stop+'toggleCheckModal(\''+p.id+'\',\'ropaOk\',true)">📦 Ropa pedida</button>');
     if(!p.dtfOk)btns.push('<button class="taller-btn taller-btn-dtf" '+stop+'toggleCheckModal(\''+p.id+'\',\'dtfOk\',true)">🖨️ DTF pedido</button>');
   }
   // Terminado: cuando está en Producción (fase 4) y es TX o XR
