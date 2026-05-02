@@ -3654,6 +3654,15 @@ function setFaseModal(id,fase){
   var faseAnterior=p.fase;
   var pendiente=(p.total||0)-(p.senal||0);
   
+  // Al pasar a Producción (4) — solo si avanzamos, no al retroceder. Ofrecer imprimir ficha
+  if(fase===4 && faseAnterior<4){
+    setTimeout(function(){
+      if(confirm('🚀 Pedido pasado a Producción\n\n¿Imprimir ficha de producción ahora para el productor?')){
+        generarFichaProduccion(id);
+      }
+    },300);
+  }
+  
   // Al pasar a Terminado (5) con pendiente, avisar
   if(fase===5 && pendiente>0.01){
     if(!confirm('Este pedido tiene '+pendiente.toFixed(2)+'€ pendientes de cobro.\n\n¿Marcar como Terminado de todos modos?\n\nRecuerda cobrar al entregar.')){
@@ -5233,7 +5242,7 @@ function imprimirPedido(id){
 function generarFichaProduccion(id){
   var p=pedidos.find(function(x){return x.id===id;});
   if(!p){alert('Pedido no encontrado');return;}
-  sb.from('pedidos').select('tallas_colores,tipo_personalizacion,previa_estado,ropa_ok,ropa_ok_fecha,dtf_ok,dtf_ok_fecha').eq('id',id).single().then(function(r){
+  sb.from('pedidos').select('tallas_colores,tipo_personalizacion,previa_estado,ropa_ok,ropa_ok_fecha,dtf_ok,dtf_ok_fecha,anotacion_operario,estampaciones,tipo_prenda_cliente').eq('id',id).single().then(function(r){
     if(r.data){
       p.tallasColores=r.data.tallas_colores;
       p.tipoPersonalizacion=r.data.tipo_personalizacion;
@@ -5242,12 +5251,20 @@ function generarFichaProduccion(id){
       p.ropaOkFecha=r.data.ropa_ok_fecha;
       p.dtfOk=r.data.dtf_ok;
       p.dtfOkFecha=r.data.dtf_ok_fecha;
+      p.anotacion=r.data.anotacion_operario||p.anotacion;
+      p.estampaciones=r.data.estampaciones||p.estampaciones;
+      p.tipoPrendaCliente=r.data.tipo_prenda_cliente||p.tipoPrendaCliente;
     }
     _generarFichaHTML(p);
   }).catch(function(){_generarFichaHTML(p);});
 }
 function _generarFichaHTML(p){
   var fechaEnt=p.fechaEntrega?new Date(p.fechaEntrega+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'}):'Sin fecha';
+  var esTX=p.seccion==='TX';
+  var esRot=p.seccion==='ROT';
+  var esPrendaCli=esPrendaCliente(p);
+  var qtyMatch=(p.descripcion||'').match(/×\s*(\d+)/);
+  var qty=qtyMatch?qtyMatch[1]:'';
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ficha '+p.id+'</title><style>'
     +'*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     +'body{font-family:Arial,sans-serif;padding:20px;font-size:14px;color:#1a1a1a}'
@@ -5256,8 +5273,11 @@ function _generarFichaHTML(p){
     +'.top .fecha{font-size:18px;margin-top:4px}'
     +'.top .fecha b{color:#1a1a1a}'
     +'.desc{font-size:14px;color:#555;margin-bottom:14px;text-align:center}'
-    +'.btn-print{display:block;margin:0 auto 16px;padding:10px 30px;background:#185FA5;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer}'
-    +'@media print{.btn-print{display:none}}'
+    +'.acciones{display:flex;justify-content:center;gap:8px;margin-bottom:16px}'
+    +'.btn{padding:10px 20px;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer}'
+    +'.btn-print{background:#185FA5}'
+    +'.btn-wa{background:#25D366}'
+    +'@media print{.acciones{display:none}}'
     +'table{width:100%;border-collapse:collapse;font-size:15px;margin-bottom:16px}'
     +'th{background:#1a1a1a!important;color:#fff!important;padding:8px 10px;text-align:center;font-weight:600;font-size:14px}'
     +'td{padding:7px 10px;border:0.5px solid #ddd;font-size:15px;text-align:center}'
@@ -5265,38 +5285,58 @@ function _generarFichaHTML(p){
     +'.cdot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid #ccc;vertical-align:middle;margin-right:5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     +'.previa{text-align:center;margin:16px 0;page-break-inside:avoid}'
     +'.previa img{max-width:100%;max-height:400px}'
+    +'.bloque{border:1.5px solid #ddd;border-radius:7px;padding:12px;margin-bottom:14px;page-break-inside:avoid}'
+    +'.bloque h3{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}'
+    +'.kv{display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #eee;font-size:13px}'
+    +'.kv:last-child{border-bottom:none}'
+    +'.kv b{color:#1a1a1a}'
+    +'.aviso{background:#FFF8EC;border:1.5px solid #FAC775;border-radius:6px;padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;gap:8px}'
+    +'.aviso b{color:#854F0B}'
+    +'.notas{background:#fafaf7;border:0.5px solid #e0e0dc;border-radius:6px;padding:10px 12px;margin-top:14px;font-size:12px;color:#444;line-height:1.5}'
+    +'.notas .lbl{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}'
     +'.footer{margin-top:20px;border-top:1px solid #ddd;padding-top:6px;font-size:10px;color:#aaa;text-align:center}'
     +'@media print{body{padding:10px}}'
     +'</style></head><body>';
+  // CABECERA
   html+='<div class="top"><h1>'+p.id+'</h1><div class="fecha">Entrega: <b>'+fechaEnt+'</b></div></div>';
-  html+='<div class="desc">'+p.clienteNombre+' · '+p.descripcion+'</div>';
-  html+='<button class="btn-print" onclick="window.print()">Imprimir</button>';
-  // TALLAS
-  if(p.tallasColores&&p.tallasColores.length){
-    if(p.tipoPersonalizacion==='individual'){
-      html+='<table><tr><th>#</th><th>Prenda</th><th>Color</th><th>Talla</th><th>Nombre</th><th>Nº</th></tr>';
-      p.tallasColores.forEach(function(f,i){
-        if(!f.nombre)return;
-        var _hex=f.hex||'#888';
-        html+='<tr><td>'+(i+1)+'</td><td>'+(f.prenda||'Camiseta')+'</td><td><span class="cdot" style="background:'+_hex+'"></span>'+(f.color||'')+'</td><td><b>'+(f.talla||'')+'</b></td><td style="font-size:16px"><b>'+(f.nombre||'')+'</b></td><td style="font-size:16px"><b>'+(f.numero||'')+'</b></td></tr>';
-      });
-      html+='</table>';
-    }else{
-      var tallas=['XS','S','M','L','XL','XXL','3XL'];
-      html+='<table><tr><th>Color</th>'+tallas.map(function(t){return'<th>'+t+'</th>';}).join('')+'<th>Total</th></tr>';
-      var granTotal=0;
-      p.tallasColores.forEach(function(f){
-        var rowTotal=tallas.reduce(function(s,t){return s+(parseInt((f.tallas||{})[t])||0);},0);
-        if(rowTotal===0)return;
-        granTotal+=rowTotal;
-        html+='<tr><td><span class="cdot" style="background:'+(f.hex||'#888')+'"></span>'+(f.color||'?')+'</td>'+tallas.map(function(t){var v=parseInt((f.tallas||{})[t])||0;return'<td>'+(v||'')+'</td>';}).join('')+'<td><b>'+rowTotal+'</b></td></tr>';
-      });
-      html+='<tr style="background:#eee;font-weight:700"><td>TOTAL</td>'+tallas.map(function(){return'<td></td>';}).join('')+'<td style="text-align:center">'+granTotal+'</td></tr></table>';
-    }
-  }else{
-    html+='<div style="color:#aaa;padding:12px;border:1px dashed #ddd;border-radius:6px;text-align:center;margin-bottom:16px">Sin datos de tallas</div>';
+  html+='<div class="desc"><b>'+p.clienteNombre+'</b> · '+p.descripcion+(qty?' · <b>'+qty+' uds</b>':'')+'</div>';
+  // ACCIONES (no se imprimen)
+  html+='<div class="acciones">';
+  html+='<button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>';
+  html+='<button class="btn btn-wa" onclick="enviarPorWA()">📱 Enviar por WhatsApp</button>';
+  html+='</div>';
+  // AVISO PRENDA DEL CLIENTE
+  if(esPrendaCli && p.tipoPrendaCliente){
+    html+='<div class="aviso">📦 <div><b>PRENDA DEL CLIENTE:</b> '+p.tipoPrendaCliente+'</div></div>';
   }
-  // ESTAMPACIONES para producción (visual + descriptivo)
+  // ── BLOQUE TALLAS (textil) ──
+  if(esTX){
+    if(p.tallasColores&&p.tallasColores.length){
+      if(p.tipoPersonalizacion==='individual'){
+        html+='<table><tr><th>#</th><th>Prenda</th><th>Color</th><th>Talla</th><th>Nombre</th><th>Nº</th></tr>';
+        p.tallasColores.forEach(function(f,i){
+          if(!f.nombre)return;
+          var _hex=f.hex||'#888';
+          html+='<tr><td>'+(i+1)+'</td><td>'+(f.prenda||'Camiseta')+'</td><td><span class="cdot" style="background:'+_hex+'"></span>'+(f.color||'')+'</td><td><b>'+(f.talla||'')+'</b></td><td style="font-size:16px"><b>'+(f.nombre||'')+'</b></td><td style="font-size:16px"><b>'+(f.numero||'')+'</b></td></tr>';
+        });
+        html+='</table>';
+      }else{
+        var tallas=['XS','S','M','L','XL','XXL','3XL'];
+        html+='<table><tr><th>Color</th>'+tallas.map(function(t){return'<th>'+t+'</th>';}).join('')+'<th>Total</th></tr>';
+        var granTotal=0;
+        p.tallasColores.forEach(function(f){
+          var rowTotal=tallas.reduce(function(s,t){return s+(parseInt((f.tallas||{})[t])||0);},0);
+          if(rowTotal===0)return;
+          granTotal+=rowTotal;
+          html+='<tr><td><span class="cdot" style="background:'+(f.hex||'#888')+'"></span>'+(f.color||'?')+'</td>'+tallas.map(function(t){var v=parseInt((f.tallas||{})[t])||0;return'<td>'+(v||'')+'</td>';}).join('')+'<td><b>'+rowTotal+'</b></td></tr>';
+        });
+        html+='<tr style="background:#eee;font-weight:700"><td>TOTAL</td>'+tallas.map(function(){return'<td></td>';}).join('')+'<td style="text-align:center">'+granTotal+'</td></tr></table>';
+      }
+    }else{
+      html+='<div style="color:#aaa;padding:12px;border:1px dashed #ddd;border-radius:6px;text-align:center;margin-bottom:16px">Sin datos de tallas</div>';
+    }
+  }
+  // ── ESTAMPACIONES (textil con estampaciones) ──
   if(p.estampaciones && p.estampaciones.length){
     html+='<div style="margin-top:14px;margin-bottom:14px;border:1px solid #5B9F1F;border-radius:6px;padding:10px 12px;background:#FAFEF4">';
     html+='<div style="font-size:11px;font-weight:700;color:#3B6D11;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🎨 Estampaciones / Bordados</div>';
@@ -5317,23 +5357,49 @@ function _generarFichaHTML(p){
     });
     html+='</table></div>';
   }
-  // PREVIA — cargar imagen desde Supabase Storage
-  var previaUrl=null;
-  if(p.tallasColores){
-    // Buscar previa en Storage bucket
-    var bucketUrl='https://ffiyprmbrznofoprvvik.supabase.co/storage/v1/object/public/previas/'+p.id+'/';
-    html+='<div class="previa" id="previa-section"></div>';
+  // ── BLOQUE NO-TEXTIL: regalos / rotulación / impresión / merchandising ──
+  // Mostrar resumen claro de lo que hay que producir
+  if(!esTX){
+    html+='<div class="bloque">';
+    html+='<h3>📋 Datos para producción</h3>';
+    html+='<div class="kv"><span>Producto</span><b>'+(p.descripcion||'-')+'</b></div>';
+    if(qty)html+='<div class="kv"><span>Cantidad</span><b>'+qty+' unidades</b></div>';
+    if(p.seccion)html+='<div class="kv"><span>Sección taller</span><b>'+(SECCIONES_LABEL?SECCIONES_LABEL[p.seccion]||p.seccion:p.seccion)+'</b></div>';
+    html+='</div>';
   }
-  html+='<div class="footer">Print & Copy · '+new Date().toLocaleDateString('es-ES')+'</div>';
+  // ── PREVIA APROBADA (universal — el productor necesita ver el arte final) ──
+  html+='<div class="previa" id="previa-section"></div>';
+  // ── NOTAS INTERNAS DEL OPERARIO (al final, importante para el productor) ──
+  if(p.anotacion && p.anotacion.trim()){
+    html+='<div class="notas"><span class="lbl">📝 Notas del operario</span>'+p.anotacion.replace(/\n/g,'<br>')+'</div>';
+  }
+  html+='<div class="footer">Print & Copy · '+new Date().toLocaleDateString('es-ES')+' · '+p.id+'</div>';
+  // SCRIPT: cargar previa + función enviar por WhatsApp
   html+='<script>';
   html+='var SUPA="https://ffiyprmbrznofoprvvik.supabase.co";';
   html+='var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmaXlwcm1icnpub2ZvcHJ2dmlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjU2OTYsImV4cCI6MjA5MDc0MTY5Nn0.DesBbR1Az0i-nokR8d7TiJS6zQu3dF-cBfVPlJpcoRg";';
-  html+='fetch(SUPA+"/rest/v1/pedido_previas?pedido_id=eq.'+p.id+'&order=version.desc&limit=1&select=imagen_url",{headers:{"apikey":KEY}})';
+  // Cargar previa aprobada (si existe)
+  html+='fetch(SUPA+"/rest/v1/pedido_previas?pedido_id=eq.'+p.id+'&order=version.desc&limit=1&select=imagen_url,estado",{headers:{"apikey":KEY}})';
   html+='.then(function(r){return r.json()})';
   html+='.then(function(d){var s=document.getElementById("previa-section");if(!s)return;';
-  html+='if(d&&d.length&&d[0].imagen_url){s.innerHTML="<div style=\\"font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;font-weight:700\\">Previa aprobada</div><img src=\\""+d[0].imagen_url+"\\">";}';
-  html+='else{s.innerHTML="<div style=\\"color:#aaa;font-size:12px\\">Sin previa</div>";}})';
+  html+='if(d&&d.length&&d[0].imagen_url){s.innerHTML="<div style=\\"font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;font-weight:700\\">'+(esTX?"Previa aprobada":"Arte aprobado")+'</div><img src=\\""+d[0].imagen_url+"\\">";}';
+  html+='else{s.innerHTML="<div style=\\"color:#aaa;font-size:12px;padding:14px;border:1px dashed #ddd;border-radius:6px\\">Sin previa aprobada</div>";}})';
   html+='.catch(function(){});';
+  // Función enviar por WhatsApp
+  html+='function enviarPorWA(){';
+  html+='var tel=prompt("Teléfono del destinatario (productor, externalización, etc.)\\n\\nFormato: 622305934 o 34622305934","");';
+  html+='if(!tel)return;';
+  html+='tel=tel.replace(/\\s/g,"").replace(/^\\+/,"");';
+  html+='if(tel.length===9&&!tel.startsWith("34"))tel="34"+tel;';
+  html+='var msg="Ficha de producción · '+p.id+'\\n\\n";';
+  html+='msg+="Cliente: '+p.clienteNombre.replace(/"/g,"")+'\\n";';
+  html+='msg+="Trabajo: '+(p.descripcion||"").replace(/"/g,"").replace(/\\n/g," ")+'\\n";';
+  html+='msg+="Entrega: '+fechaEnt+'\\n\\n";';
+  html+='msg+="Para ver la ficha completa con previa aprobada y datos de producción, abre el link:\\n";';
+  html+='msg+=window.location.href;';
+  html+='var url="https://wa.me/"+tel+"?text="+encodeURIComponent(msg);';
+  html+='window.open(url,"_blank");';
+  html+='}';
   html+='</'+'script></body></html>';
   var blob=new Blob([html],{type:'text/html'});
   var url=URL.createObjectURL(blob);
