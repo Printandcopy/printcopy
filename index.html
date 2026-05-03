@@ -3544,14 +3544,34 @@ function verPedido(id){
       html+='</div></div></div>';
     }else{
       // Pendiente (rojo) — gates desbloqueados pero no completados
-      html+='<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:#FCEBEB;border:0.5px solid #F09595;border-radius:8px">'
-        +'<div style="width:24px;height:24px;border-radius:50%;background:#A32D2D;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">!</div>'
+      // Para previas, mostrar sub-estado especifico (Sin enviar / Esperando / Cambios) en lugar de "Pendiente"
+      var _estadoLbl='Pendiente';
+      var _estadoBg='#A32D2D';
+      var _estadoBgFondo='#FCEBEB';
+      var _estadoBorde='#F09595';
+      var _estadoColor='#501313';
+      var _estadoColorTxt='#791F1F';
+      if(g.id==='previas'){
+        if(p.previaEstado==='enviada'){
+          _estadoLbl='Esperando cliente';
+          _estadoBg='#185FA5'; _estadoBgFondo='#E6F1FB'; _estadoBorde='#B5D4F4';
+          _estadoColor='#0C447C'; _estadoColorTxt='#185FA5';
+        }else if(p.previaEstado==='rechazada'){
+          _estadoLbl='Cambios solicitados';
+          _estadoBg='#BA7517'; _estadoBgFondo='#FFF8EC'; _estadoBorde='#FAC775';
+          _estadoColor='#854F0B'; _estadoColorTxt='#BA7517';
+        }else{
+          _estadoLbl='Sin enviar';
+        }
+      }
+      html+='<div style="display:flex;align-items:flex-start;gap:10px;padding:10px;background:'+_estadoBgFondo+';border:0.5px solid '+_estadoBorde+';border-radius:8px">'
+        +'<div style="width:24px;height:24px;border-radius:50%;background:'+_estadoBg+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0">!</div>'
         +'<div style="flex:1;min-width:0">'
           +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px">'
-            +'<span style="font-size:12px;font-weight:700;color:#501313">'+g.label+'</span>'
-            +'<span style="font-size:10px;color:#791F1F">Pendiente</span>'
+            +'<span style="font-size:12px;font-weight:700;color:'+_estadoColor+'">'+g.label+'</span>'
+            +'<span style="font-size:10px;color:'+_estadoColorTxt+';font-weight:600">'+_estadoLbl+'</span>'
           +'</div>'
-          +'<div style="font-size:11px;color:#791F1F;margin-bottom:8px">'+g.msg+'</div>';
+          +'<div style="font-size:11px;color:'+_estadoColorTxt+';margin-bottom:8px">'+g.msg+'</div>';
       // Acciones rojas según gate
       if(g.id==='tallas'){
         html+='<div style="display:flex;gap:5px;flex-wrap:wrap">';
