@@ -1423,7 +1423,7 @@ textarea{resize:vertical;min-height:64px}
     <div class="btn-row" style="margin-top:14px;flex-wrap:wrap">
       <button class="btn btn-secondary" onclick="closeModal('modal-pedido')">Cerrar</button>
       <button class="btn btn-primary" onclick="imprimirDesdePedido()">🖨️ Imprimir</button>
-      <button class="btn" style="background:#185FA5;color:white;border:none" onclick="if(_pedidoModal)generarFichaProduccion(_pedidoModal.id)">🏭 Ficha producción</button>
+      <button class="btn" style="background:#185FA5;color:white;border:none" onclick="if(_pedidoModal)window.open('https://printcopy.vercel.app/ficha.html?p='+encodeURIComponent(_pedidoModal.id)+'&op=1','_blank')">🏭 Ficha producción</button>
       <button class="btn" style="background:#BA7517;color:white;border:none" onclick="editarPedido()">✏️ Editar</button>
       <button class="btn btn-danger" onclick="anularPedido()">✗ Anular</button>
     </div>
@@ -3815,7 +3815,7 @@ function setFaseModal(id,fase){
   if(fase===4 && faseAnterior<4){
     setTimeout(function(){
       if(confirm('🚀 Pedido pasado a Producción\n\n¿Imprimir ficha de producción ahora para el productor?')){
-        generarFichaProduccion(id);
+        window.open('https://printcopy.vercel.app/ficha.html?p='+encodeURIComponent(id)+'&op=1','_blank');
       }
     },300);
   }

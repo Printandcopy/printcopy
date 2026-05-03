@@ -234,7 +234,13 @@ function renderFicha(p){
 
   var html='<div class="top"><h1>'+p.id+'</h1><div class="fecha'+(esFija?' fecha-fija':'')+'">Entrega'+(esFija?' FIJA':'')+': <b>'+fechaTxt+'</b></div></div>';
   html+='<div class="desc"><b>'+(p.cliente_nombre||'')+'</b> · '+(p.descripcion||'')+(qty?' · <b>'+qty+' uds</b>':'')+'</div>';
-  html+='<div class="acciones"><button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button></div>';
+  // Botones: imprimir siempre; enviar por WA solo en modo operario (?op=1)
+  var modoOperario=new URLSearchParams(window.location.search).get('op')==='1';
+  html+='<div class="acciones"><button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>';
+  if(modoOperario){
+    html+='<button class="btn btn-wa" onclick="abrirSelectorProductor()" style="background:#25D366">📱 Enviar por WhatsApp</button>';
+  }
+  html+='</div>';
 
   if(esPrendaCli && p.tipo_prenda_cliente){
     html+='<div class="aviso">📦 <div><b>PRENDA DEL CLIENTE:</b> '+p.tipo_prenda_cliente+'</div></div>';
@@ -310,6 +316,147 @@ function renderFicha(p){
 }
 
 cargarPedido();
+
+// ── ENVÍO WHATSAPP A PRODUCTOR (solo modo operario) ──
+var OPERARIOS_LIST=[];
+var PRODUCTORES_LIST=[];
+var EXTERNOS_LIST=[];
+var pedidoCargado=null;
+
+// Hook: tras cargar pedido, guardar referencia y precargar agendas
+var _origRender=renderFicha;
+renderFicha=function(p){
+  pedidoCargado=p;
+  _origRender(p);
+  if(new URLSearchParams(window.location.search).get('op')==='1'){
+    cargarAgendas();
+  }
+};
+
+function cargarAgendas(){
+  // Operarios fijos del sistema (con sus tels desde tabla operarios_telefonos)
+  var operariosBase=['Marilia','Álvaro','Charo','Raúl','Bea'];
+  Promise.all([
+    fetch(SUPA+'/rest/v1/operarios_telefonos?select=*',{headers:{apikey:KEY}}).then(function(r){return r.json();}).catch(function(){return [];}),
+    fetch(SUPA+'/rest/v1/productores?activo=eq.true&select=*&order=nombre',{headers:{apikey:KEY}}).then(function(r){return r.json();}).catch(function(){return [];}),
+    fetch(SUPA+'/rest/v1/proveedores?select=*&order=nombre',{headers:{apikey:KEY}}).then(function(r){return r.json();}).catch(function(){return [];})
+  ]).then(function(results){
+    var telOp={};
+    (results[0]||[]).forEach(function(o){telOp[o.nombre]=o.telefono||'';});
+    OPERARIOS_LIST=operariosBase.map(function(n){return{n:n,t:telOp[n]||''};});
+    PRODUCTORES_LIST=(results[1]||[]).map(function(p){return{n:p.nombre,t:p.telefono||''};});
+    EXTERNOS_LIST=(results[2]||[]).map(function(p){return{n:p.nombre,t:p.telefono||''};});
+  });
+}
+
+function abrirSelectorProductor(){
+  var existing=document.getElementById('modal-prod');
+  if(existing)existing.remove();
+  var modal=document.createElement('div');
+  modal.id='modal-prod';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+
+  function renderGrupo(label,icono,arr,color){
+    if(!arr.length)return '';
+    var h='<div style="font-size:10px;font-weight:700;color:'+color+';text-transform:uppercase;letter-spacing:.5px;margin:8px 0 6px">'+icono+' '+label+'</div>';
+    arr.forEach(function(o){
+      var tieneT=!!o.t;
+      var nEsc=o.n.replace(/'/g,"\\'");
+      var tEsc=(o.t||'').replace(/'/g,"\\'");
+      h+='<div onclick="selectProductor(\''+nEsc+'\',\''+tEsc+'\')" style="display:flex;align-items:center;gap:8px;padding:10px;border:0.5px solid #e0e0e0;border-radius:6px;margin-bottom:5px;cursor:pointer;background:'+(tieneT?'#fff':'#fafafa')+'">';
+      h+='<span style="flex:1;font-size:13px;font-weight:500">'+o.n+'</span>';
+      h+='<span style="font-size:11px;color:'+(tieneT?'#888':'#A32D2D')+'">'+(tieneT?o.t:'sin tel')+'</span>';
+      h+='</div>';
+    });
+    return h;
+  }
+
+  var inner='<div style="background:#fff;border-radius:10px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;font-family:Arial,sans-serif">';
+  inner+='<div style="padding:14px 18px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between">';
+  inner+='<div style="font-size:15px;font-weight:700">Enviar ficha a productor</div>';
+  inner+='<button onclick="document.getElementById(\'modal-prod\').remove()" style="background:none;border:none;font-size:18px;cursor:pointer;color:#888">×</button>';
+  inner+='</div>';
+  inner+='<div style="padding:14px 18px">';
+  inner+=renderGrupo('Operarios','🧑',OPERARIOS_LIST,'#185FA5');
+  inner+=renderGrupo('Productores taller','🏭',PRODUCTORES_LIST,'#3B6D11');
+  inner+=renderGrupo('Externalizados','📦',EXTERNOS_LIST,'#BA7517');
+  inner+='<div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee">';
+  inner+='<div style="font-size:10px;font-weight:700;color:#666;text-transform:uppercase;margin-bottom:6px">Otro número</div>';
+  inner+='<input id="prod-tel-manual" type="tel" placeholder="622123456" style="width:100%;padding:8px 10px;border:0.5px solid #d1d1d1;border-radius:6px;font-size:13px;box-sizing:border-box">';
+  inner+='<button onclick="selectProductor(\'Manual\',document.getElementById(\'prod-tel-manual\').value)" style="margin-top:6px;width:100%;padding:8px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Enviar a este número</button>';
+  inner+='</div></div></div>';
+  modal.innerHTML=inner;
+  document.body.appendChild(modal);
+}
+
+function selectProductor(nombre,tel){
+  if(!tel||!tel.trim()){
+    var n=prompt('Falta teléfono para "'+nombre+'". Introduce su número:','');
+    if(!n)return;
+    tel=n;
+  }
+  tel=tel.replace(/\s/g,'').replace(/^\+/,'');
+  if(tel.length===9 && !tel.startsWith('34'))tel='34'+tel;
+  mostrarConfirmEnvio(nombre,tel);
+}
+
+function mostrarConfirmEnvio(nombre,tel){
+  var existing=document.getElementById('modal-prod');
+  if(existing)existing.remove();
+  var modal=document.createElement('div');
+  modal.id='modal-confirm-envio';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  var nEsc=nombre.replace(/'/g,"\\'");
+  modal.innerHTML='<div style="background:#fff;border-radius:10px;max-width:380px;width:100%;font-family:Arial,sans-serif;overflow:hidden">'+
+    '<div style="padding:18px 20px;text-align:center">'+
+    '<div style="font-size:36px;margin-bottom:8px">📲</div>'+
+    '<div style="font-size:16px;font-weight:700;margin-bottom:6px">¿Enviar ficha a '+nombre+'?</div>'+
+    '<div style="font-size:12px;color:#888">Se enviará desde el número oficial 622 305 934</div>'+
+    '<div style="font-size:12px;color:#888;margin-top:4px">Destino: '+tel+'</div>'+
+    '</div>'+
+    '<div style="display:flex;border-top:1px solid #eee">'+
+    '<button onclick="document.getElementById(\'modal-confirm-envio\').remove()" style="flex:1;padding:14px;background:#fff;color:#666;border:none;border-right:1px solid #eee;font-size:14px;font-weight:600;cursor:pointer">Cancelar</button>'+
+    '<button id="btn-confirmar-envio" onclick="ejecutarEnvio(\''+nEsc+'\',\''+tel+'\')" style="flex:1;padding:14px;background:#25D366;color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer">✓ Enviar</button>'+
+    '</div></div>';
+  document.body.appendChild(modal);
+}
+
+function ejecutarEnvio(nombre,tel){
+  var btn=document.getElementById('btn-confirmar-envio');
+  if(btn){btn.disabled=true;btn.style.opacity='0.6';btn.textContent='Enviando...';}
+  var p=pedidoCargado;
+  if(!p){alert('Error: pedido no cargado');return;}
+  var fechaEnt=fmtFecha(p.fecha_entrega);
+  var msg='*Ficha de produccion · '+p.id+'*\n\n';
+  msg+='Cliente: '+(p.cliente_nombre||'').replace(/\*/g,'')+'\n';
+  msg+='Trabajo: '+(p.descripcion||'').replace(/\n/g,' ').replace(/\*/g,'')+'\n';
+  msg+='Entrega: '+fechaEnt+'\n\n';
+  msg+='Abre la ficha completa aqui:\n';
+  msg+='https://printcopy.vercel.app/ficha.html?p='+encodeURIComponent(p.id);
+
+  fetch('https://printcopy.vercel.app/api/whatsapp',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({telefono:tel,mensaje:msg,nombre:nombre,auto:false,bypassEmergency:true})
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    var m=document.getElementById('modal-confirm-envio');
+    if(m)m.remove();
+    if(data.success){
+      alert('✅ Ficha enviada por WhatsApp a '+nombre+' ('+tel+')');
+      window.close();
+    }else{
+      alert('❌ Error al enviar:\n'+(data.error||'desconocido')+'\n\nInténtalo de nuevo o usa Imprimir + entregar en mano.');
+      if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✓ Enviar';}
+    }
+  })
+  .catch(function(e){
+    var m=document.getElementById('modal-confirm-envio');
+    if(m)m.remove();
+    alert('❌ Error de red: '+e.message);
+  });
+}
 </script>
 </body>
 </html>
