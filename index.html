@@ -5422,7 +5422,7 @@ function _generarFichaHTML(p){
   var esPrendaCli=esPrendaCliente(p);
   var qtyMatch=(p.descripcion||'').match(/×\s*(\d+)/);
   var qty=qtyMatch?qtyMatch[1]:'';
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ficha '+p.id+'</title><style>'
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"><title>Ficha '+p.id+'</title><style>'
     +'*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     +'body{font-family:Arial,sans-serif;padding:20px;font-size:14px;color:#1a1a1a}'
     +'.top{text-align:center;border-bottom:2px solid #1a1a1a;padding-bottom:12px;margin-bottom:16px}'
@@ -5626,7 +5626,7 @@ function _generarFichaHTML(p){
   html+='.then(function(r){return r.json();})';
   html+='.then(function(data){';
   html+='var m=document.getElementById("modal-confirm-envio");if(m)m.remove();';
-  html+='if(data.success){alert("✅ Ficha enviada por WhatsApp a "+nombre+" ("+tel+")");}';
+  html+='if(data.success){alert("✅ Ficha enviada por WhatsApp a "+nombre+" ("+tel+")");window.close();}';
   html+='else{alert("❌ Error al enviar:\\n"+(data.error||"desconocido")+"\\n\\nIntentalo de nuevo o usa Imprimir + entregar en mano.");}';
   html+='})';
   html+='.catch(function(e){';
