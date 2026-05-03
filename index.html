@@ -2498,8 +2498,8 @@ function cargarDatos(){
 }
 
 function clienteDbToLocal(c){return{id:c.id,nombre:c.nombre,telefono:c.telefono||'',email:c.email||'',condiciones:c.condiciones||COND_STD,sector:c.sector||'',nivel:c.nivel||'nuevo',pago:c.pago||'50_50',credito:c.credito===true,creado:c.creado};}
-function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,metodoPago:p.metodo_pago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,previaAceptadaFecha:p.previa_aceptada_fecha||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,estampaciones:p.estampaciones||[],tallasRecibidasFecha:p.tallas_recibidas_fecha||null,tipoPrendaCliente:p.tipo_prenda_cliente||null,_recTallasNum:p.recordatorio_tallas_num||0,_tallasNotificado:p.tallas_notificado||false,archivosToken:p.archivos_token||null};}
-function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,metodo_pago:p.metodoPago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null,tipo_personalizacion:p.tipoPersonalizacion||null,estampaciones:p.estampaciones||[],archivos_token:p.archivosToken||null};}
+function dbToLocal(p){return{id:p.id,clienteId:p.cliente_id,clienteNombre:p.cliente_nombre,clienteTel:p.cliente_tel,clienteEmail:p.cliente_email,seccion:p.seccion,operario:p.operario,fechaCreacion:p.fecha_creacion,fechaEntrega:p.fecha_entrega,fechaTipo:p.fecha_tipo,descripcion:p.descripcion,notas:p.notas,total:parseFloat(p.total)||0,senal:parseFloat(p.senal)||0,pago:p.pago,metodoPago:p.metodo_pago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropaOk:p.ropa_ok,dtfOk:p.dtf_ok,ropaOkFecha:p.ropa_ok_fecha||null,dtfOkFecha:p.dtf_ok_fecha||null,presupuestoId:p.presupuesto_id||null,externalizado:p.externalizado||null,externalizadoFecha:p.externalizado_fecha||null,anotacion:p.anotacion_operario||'',previaEstado:p.previa_estado||null,previaCambios:p.previa_cambios||null,previaAceptadaFecha:p.previa_aceptada_fecha||null,tallasColores:p.tallas_colores||null,tipoPersonalizacion:p.tipo_personalizacion||null,estampaciones:p.estampaciones||[],tallasRecibidasFecha:p.tallas_recibidas_fecha||null,tipoPrendaCliente:p.tipo_prenda_cliente||null,_recTallasNum:p.recordatorio_tallas_num||0,_tallasNotificado:p.tallas_notificado||false,archivosToken:p.archivos_token||null,cantidad:p.cantidad||null};}
+function localToDB(p){return{id:p.id,cliente_id:p.clienteId,cliente_nombre:p.clienteNombre,cliente_tel:p.clienteTel,cliente_email:p.clienteEmail,seccion:p.seccion,operario:p.operario,fecha_creacion:p.fechaCreacion,fecha_entrega:p.fechaEntrega||null,fecha_tipo:p.fechaTipo,descripcion:p.descripcion,notas:p.notas,total:p.total,senal:p.senal,pago:p.pago,metodo_pago:p.metodoPago||'efectivo',condiciones:p.condiciones,fase:p.fase,ropa_ok:p.ropaOk,dtf_ok:p.dtfOk,presupuesto_id:p.presupuestoId||null,tallas_colores:p.tallasColores||null,tipo_personalizacion:p.tipoPersonalizacion||null,estampaciones:p.estampaciones||[],archivos_token:p.archivosToken||null,cantidad:p.cantidad||null};}
 
 function startClock(){
   document.getElementById('clock-wrap').style.display='block';
@@ -3167,7 +3167,7 @@ function finalizarGuardar(cliente){
             _nvTipoPersonalizacion='iguales';
           }
         }
-var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:item.desc,notas:notas,total:item.total,senal:senalItem,pago:pagoTipo,metodoPago:metodoPagoPed,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:presId,tallasColores:_nvTallas,tipoPersonalizacion:_nvTipoPersonalizacion,archivosToken:generarTokenArchivos()};
+var pedido={id:numPedido,clienteId:cliente.id,clienteNombre:nombre,clienteTel:tel,clienteEmail:email,seccion:sec,operario:operario,fechaCreacion:new Date().toISOString(),fechaEntrega:fechaEntrega,fechaTipo:fechaTipo,descripcion:item.desc,notas:notas,total:item.total,senal:senalItem,pago:pagoTipo,metodoPago:metodoPagoPed,condiciones:cliente.condiciones||COND_STD,fase:0,ropaOk:false,dtfOk:false,presupuestoId:presId,tallasColores:_nvTallas,tipoPersonalizacion:_nvTipoPersonalizacion,archivosToken:generarTokenArchivos(),cantidad:item.unidades||null};
         return sb.from('pedidos').insert([localToDB(pedido)]).then(function(r){
           if(r.error){alert('Error: '+r.error.message);return;}
           pedidos.unshift(pedido);
@@ -8418,7 +8418,8 @@ function nvCrearPedido(){
                 metodo_pago:metodoPago,
                 condiciones:condicion,
                 fase:0,
-                archivos_token:generarTokenArchivos()
+                archivos_token:generarTokenArchivos(),
+                cantidad:lin.cantidad||lin.unidades||null
               };
               // Añadir tallas y tipo personalización para pedidos textil
               if(sec==='TX'){
@@ -8970,7 +8971,8 @@ function crearPedidoDesdePresupuesto(pres,senal,metodo,callback){
             total:parseFloat(lin.subtotal)||0,senal:repartoSenal[idx],
             pago:pagoEst,metodo_pago:metodo||'efectivo',condiciones:pres.condicion_pago||'50_50',fase:0,
             presupuesto_id:pres.id,
-            archivos_token:generarTokenArchivos()};
+            archivos_token:generarTokenArchivos(),
+            cantidad:lin.cantidad||null};
           // Traspasar tallas, tipo personalización, estampaciones y prenda al pedido
           // (FIX igual que cotConvertir — antes esto se perdía al cobrar señal)
           if(sec==='TX'){

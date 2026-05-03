@@ -231,11 +231,13 @@ function renderFicha(p){
   var esFija=p.fecha_tipo==='fija';
 
   // CANTIDAD REAL: prioridad de fuentes
-  // 1) Si textil con tallas detalladas → suma de tallas (más fiable)
-  // 2) Si no, coger del campo cantidad de presupuesto_lineas (cargar después)
-  // 3) Si nada, regex como fallback
+  // 1) Campo cantidad de la BD (más fiable, lo guarda el sistema al crear)
+  // 2) Si textil con tallas detalladas → suma de tallas
+  // 3) Líneas de presupuesto (cargadas async para datos producción)
+  // 4) Regex como fallback
   var qty='';
-  if(esTX && p.tallas_colores && p.tallas_colores.length){
+  if(p.cantidad)qty=p.cantidad;
+  else if(esTX && p.tallas_colores && p.tallas_colores.length){
     var totalTallas=0;
     if(p.tipo_personalizacion==='individual'){
       totalTallas=p.tallas_colores.filter(function(f){return f.nombre;}).length;
@@ -248,7 +250,6 @@ function renderFicha(p){
     if(totalTallas>0)qty=totalTallas;
   }
   if(!qty){
-    // Fallback: regex anclado al final
     var qtyMatch=(p.descripcion||'').match(/×\s*(\d+)\s*$/);
     qty=qtyMatch?qtyMatch[1]:'';
   }
@@ -348,11 +349,14 @@ function cargarLineasYDatosProduccion(p){
   if(!section)return;
 
   function renderFallback(){
-    var qtyMatch=(p.descripcion||'').match(/×\s*(\d+)\s*$/);
-    var qty=qtyMatch?qtyMatch[1]:'';
+    var qtyFb=p.cantidad||null;
+    if(!qtyFb){
+      var qtyMatch=(p.descripcion||'').match(/×\s*(\d+)\s*$/);
+      qtyFb=qtyMatch?qtyMatch[1]:'';
+    }
     var html='<h3>📋 Datos para producción</h3>';
     html+='<div class="kv"><span>Producto</span><b>'+(p.descripcion||'-')+'</b></div>';
-    if(qty)html+='<div class="kv"><span>Cantidad</span><b>'+qty+' unidades</b></div>';
+    if(qtyFb)html+='<div class="kv" style="background:#FFF8EC;margin:6px -4px;padding:8px 6px;border-radius:5px;border-bottom:none"><span style="font-weight:700;color:#854F0B">CANTIDAD</span><b style="font-size:18px;color:#854F0B">'+qtyFb+' uds</b></div>';
     if(p.seccion)html+='<div class="kv"><span>Sección taller</span><b>'+p.seccion+'</b></div>';
     section.innerHTML=html;
   }
