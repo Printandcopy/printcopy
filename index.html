@@ -3689,7 +3689,7 @@ function verPedido(id){
   // Iniciar panel cerrado
   if(!p.externalizado){var eb=document.getElementById('ext-body-'+p.id);if(eb)eb.style.display='none';}
   // Cargar archivos del cliente (asincrono)
-  if(p.archivosToken){cargarArchivosPedido(p.id,p.archivosToken);p._archivosVistos=true;}
+  if(p.archivosToken){cargarArchivosPedido(p.id,p.archivosToken);p._archivosVistos=true;if(typeof renderBandejaOperario==='function')renderBandejaOperario();}
 }
 
 // Cargar lista de archivos del cliente para un pedido y renderizar en el modal
@@ -4307,9 +4307,7 @@ function detectarAvisosOperario(operario){
     var f=new Date(p.fechaEntrega+'T12:00:00');f.setHours(0,0,0,0);
     return f>=hoy && f<=en2dias;
   });
-  var aTallasCompletas=mis.filter(function(p){
-    return p.seccion==='TX' && tallasCompletas(p) && !p.ropaOk && !esPrendaCliente(p);
-  });
+  var aTallasCompletas=[]; // Eliminado: redundante con lista 'ropas por pedir' (es la misma accion vista desde otro angulo)
   var aSinTallas7d=mis.filter(function(p){
     if(p.seccion!=='TX')return false;
     if(tallasCompletas(p))return false;
@@ -9447,19 +9445,8 @@ function actualizarBarraAvisos(){
     }).join('');
   }
   html+='<div style="height:8px"></div>';
-  // PREVIAS CON CAMBIOS SOLICITADOS
-  var conCambios=pedidos.filter(function(p){return p.previaEstado==='rechazada'&&p.fase<5;});
-  if(conCambios.length){
-    barra.style.display='flex';
-    var prevHtml='<div style="padding:10px 20px 4px;font-size:10px;color:#FAC775;text-transform:uppercase;letter-spacing:.8px">✏️ Previas con cambios solicitados</div>';
-    prevHtml+=conCambios.map(function(p){
-      return'<div style="background:#3d2000;border-left:3px solid #FAC775;border-radius:6px;padding:10px 12px;margin:4px 20px;cursor:pointer" onclick="verPedido(\''+p.id+'\')"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;color:#FAC775;font-weight:600">'+p.clienteNombre+' · <span style="font-family:monospace">'+p.id+'</span></div>'+(p.previaCambios?'<div style="font-size:11px;color:#aaa;margin-top:2px;font-style:italic">"'+p.previaCambios.substring(0,60)+(p.previaCambios.length>60?'…':'')+'"</div>':'')+'</div><span style="background:#FAC775;color:#3d2000;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px">Ver →</span></div></div>';
-    }).join('');
-    html+=prevHtml;
-    var textoActual=txt.innerHTML;
-    var nCambios=conCambios.length;
-    txt.innerHTML=textoActual+(pendTotal?'':'')+'<span style="background:#FAC775;color:#3d2000;font-size:12px;font-weight:700;padding:2px 9px;border-radius:20px;margin-left:8px">'+nCambios+' previa'+(nCambios>1?'s':'')+' con cambios</span>';
-  }
+  // PREVIAS CON CAMBIOS: se muestran ahora en la BANDEJA DEL OPERARIO (filtrado por _pcYo)
+  // No se duplica aqui en la barra verde global que es para todos
   lista.innerHTML=html;
 }
 // Event delegation para botones de la barra de avisos
