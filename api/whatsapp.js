@@ -11,14 +11,21 @@ module.exports = async function handler(req, res) {
 
   // KILL SWITCH EMERGENCIA — cambiar a false para reactivar
   // ⚠️ ACTIVADO durante fase de pruebas con Marilia. Cuando termine: cambiar a false.
+  // Nota: las fichas de produccion a productores internos pueden hacer bypass con bypassEmergency:true
+  // (es comunicacion interna entre operario y productor, no afecta a clientes finales)
   const EMERGENCY_STOP = true;
-  if (EMERGENCY_STOP) {
+  const bypassEmergency = req.body && req.body.bypassEmergency === true;
+  if (EMERGENCY_STOP && !bypassEmergency) {
     console.log('WA EMERGENCY STOP -> mensaje bloqueado');
     return res.status(200).json({ success: false, blocked: true, reason: 'Emergency stop activo' });
+  }
+  if (bypassEmergency) {
+    console.log('WA BYPASS -> Ficha produccion a productor (sin bloqueo emergency ni horario)');
   }
 
   // BLOQUEO HORARIO SERVER-SIDE: solo bloquea mensajes AUTOMÁTICOS fuera de 9-21h Madrid
   // Mensajes disparados por acción del operario (crear pedido, enviar presupuesto, etc.) pasan siempre
+  // Las fichas a productores tambien hacen bypass (comunicacion interna)
   function getMadridHour() {
     var now = new Date();
     try {
@@ -32,11 +39,11 @@ module.exports = async function handler(req, res) {
   }
   var madridHour = getMadridHour();
   var isAuto = req.body && req.body.auto === true;
-  if (isAuto && (madridHour < 9 || madridHour >= 21)) {
+  if (isAuto && !bypassEmergency && (madridHour < 9 || madridHour >= 21)) {
     console.log('WA BLOCKED -> Auto msg fuera de horario Madrid:', madridHour + 'h.');
     return res.status(200).json({ success: false, blocked: true, reason: 'Fuera de horario (9-21h Madrid)', hora: madridHour });
   }
-  console.log('WA ALLOWED -> Hora Madrid:', madridHour + 'h. Auto:', isAuto);
+  console.log('WA ALLOWED -> Hora Madrid:', madridHour + 'h. Auto:', isAuto, 'Bypass:', bypassEmergency);
 
   try {
     const { telefono, mensaje, nombre } = req.body;

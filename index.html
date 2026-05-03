@@ -5586,28 +5586,51 @@ function _generarFichaHTML(p){
   html+='}';
   html+='tel=tel.replace(/\\s/g,"").replace(/^\\+/,"");';
   html+='if(tel.length===9&&!tel.startsWith("34"))tel="34"+tel;';
+  // Modal de confirmacion antes de enviar
+  html+='mostrarConfirmEnvio(nombre,tel);';
+  html+='}';
+  html+='function mostrarConfirmEnvio(nombre,tel){';
+  html+='var existing=document.getElementById("modal-prod");if(existing)existing.remove();';
+  html+='var modal=document.createElement("div");';
+  html+='modal.id="modal-confirm-envio";';
+  html+='modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";';
+  html+='modal.innerHTML="<div style=\\"background:#fff;border-radius:10px;max-width:380px;width:100%;font-family:Arial,sans-serif;overflow:hidden\\">"+';
+  html+='"<div style=\\"padding:18px 20px;text-align:center\\">"+';
+  html+='"<div style=\\"font-size:36px;margin-bottom:8px\\">📲</div>"+';
+  html+='"<div style=\\"font-size:16px;font-weight:700;margin-bottom:6px\\">¿Enviar ficha a "+nombre+"?</div>"+';
+  html+='"<div style=\\"font-size:12px;color:#888\\">Se enviara desde el numero oficial 622 305 934</div>"+';
+  html+='"<div style=\\"font-size:12px;color:#888;margin-top:4px\\">Destino: "+tel+"</div>"+';
+  html+='"</div>"+';
+  html+='"<div style=\\"display:flex;border-top:1px solid #eee\\">"+';
+  html+='"<button onclick=\\"document.getElementById(\'modal-confirm-envio\').remove()\\" style=\\"flex:1;padding:14px;background:#fff;color:#666;border:none;border-right:1px solid #eee;font-size:14px;font-weight:600;cursor:pointer\\">Cancelar</button>"+';
+  html+='"<button id=\\"btn-confirmar-envio\\" onclick=\\"ejecutarEnvio(\'"+nombre.replace(/\'/g,"\\\\\\\'")+"\',\'"+tel+"\')\\" style=\\"flex:1;padding:14px;background:#25D366;color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer\\">✓ Enviar</button>"+';
+  html+='"</div></div>";';
+  html+='document.body.appendChild(modal);';
+  html+='}';
+  html+='function ejecutarEnvio(nombre,tel){';
+  html+='var btn=document.getElementById("btn-confirmar-envio");';
+  html+='if(btn){btn.disabled=true;btn.style.opacity="0.6";btn.textContent="Enviando...";}';
   html+='var msg="*Ficha de produccion · '+p.id+'*\\n\\n";';
   html+='msg+="Cliente: '+p.clienteNombre.replace(/"/g,"").replace(/\*/g,"")+'\\n";';
   html+='msg+="Trabajo: '+(p.descripcion||"").replace(/"/g,"").replace(/\\n/g," ").replace(/\*/g,"")+'\\n";';
   html+='msg+="Entrega: '+fechaEnt+'\\n\\n";';
   html+='msg+="Abre la ficha completa aqui:\\n";';
   html+='msg+="https://printcopy.vercel.app/ficha.html?p='+encodeURIComponent(p.id)+'";';
-  // Mostrar feedback inmediato
-  html+='var btn=event&&event.target;if(btn){btn.disabled=true;btn.style.opacity="0.6";btn.textContent="Enviando...";}';
   html+='fetch("https://printcopy.vercel.app/api/whatsapp",{';
   html+='method:"POST",';
   html+='headers:{"Content-Type":"application/json"},';
-  html+='body:JSON.stringify({telefono:tel,mensaje:msg,nombre:nombre,auto:false})';
+  // bypassEmergency:true → es comunicacion interna a productor, no a cliente
+  // auto:false → es accion manual del operario, no tiene bloqueo horario
+  html+='body:JSON.stringify({telefono:tel,mensaje:msg,nombre:nombre,auto:false,bypassEmergency:true})';
   html+='})';
   html+='.then(function(r){return r.json();})';
   html+='.then(function(data){';
-  html+='var m=document.getElementById("modal-prod");if(m)m.remove();';
-  html+='if(data.blocked){alert("⚠️ Modo prueba activo: el WhatsApp NO se envio realmente.\\n\\nDestino: "+nombre+" ("+tel+")\\n\\nCuando se desactive el modo prueba, el envio funcionara automaticamente.");}';
-  html+='else if(data.success){alert("✅ Ficha enviada por WhatsApp a "+nombre+" ("+tel+")\\n\\nEl mensaje sale del numero oficial 622 305 934.");}';
+  html+='var m=document.getElementById("modal-confirm-envio");if(m)m.remove();';
+  html+='if(data.success){alert("✅ Ficha enviada por WhatsApp a "+nombre+" ("+tel+")");}';
   html+='else{alert("❌ Error al enviar:\\n"+(data.error||"desconocido")+"\\n\\nIntentalo de nuevo o usa Imprimir + entregar en mano.");}';
   html+='})';
   html+='.catch(function(e){';
-  html+='var m=document.getElementById("modal-prod");if(m)m.remove();';
+  html+='var m=document.getElementById("modal-confirm-envio");if(m)m.remove();';
   html+='alert("❌ Error de red: "+e.message);';
   html+='});';
   html+='}';
