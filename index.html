@@ -4266,6 +4266,229 @@ function pasaFiltroEntrega(p){
   if(v==='vencido')return fe<hoy&&p.fase<6;
   return true;
 }
+// ═════════════════ PDF LISTA DE ROPA POR PEDIR ═════════════════
+// Identifica el proveedor de un modelo (por defecto Roly, Valento si está marcado)
+// Modelos Valento (pendientes validar): si en futuro se marca un modelo como Valento aquí.
+var MODELOS_VALENTO = {}; // Vacío por ahora — añadir aquí cuando se valide Valento
+function getProveedorPrenda(prenda){
+  if(!prenda)return 'Sin identificar';
+  if(MODELOS_VALENTO[prenda])return 'Valento';
+  return 'Roly';
+}
+// Devuelve los pedidos elegibles para el PDF de ropa por pedir
+function getPedidosRopaPorPedir(){
+  return pedidos.filter(function(p){
+    if(p.seccion!=='TX')return false;
+    if(p.fase>=4 || p.fase<0)return false;
+    if(p.ropaOk)return false;
+    if(esPrendaCliente(p))return false;
+    if(!tallasCompletas(p))return false;
+    return true;
+  });
+}
+// Cuenta el total de prendas pendientes de pedir (para el badge del botón)
+function contarPrendasPorPedir(){
+  var lista=getPedidosRopaPorPedir();
+  return lista.reduce(function(s,p){
+    var tc=p.tallasColores||[];
+    if(p.tipoPersonalizacion==='individual'){
+      return s+tc.filter(function(f){return f.nombre&&f.nombre.trim();}).length;
+    }else{
+      return s+tc.reduce(function(ss,fila){
+        return ss+Object.values(fila.tallas||{}).reduce(function(a,v){return a+(parseInt(v)||0);},0);
+      },0);
+    }
+  },0);
+}
+// Convierte un pedido en estructura {prenda, color, hex, cod, tallas:{S:1,M:2,...}}
+function extraerPrendasDelPedido(p){
+  var tc=p.tallasColores||[];
+  var prendaDef=(tc[0]&&tc[0].prenda)||p.descripcion||'(sin prenda)';
+  // En modo individual cada fila es una persona con su talla
+  if(p.tipoPersonalizacion==='individual'){
+    var agrupado={};
+    tc.forEach(function(f){
+      if(!f.nombre||!f.nombre.trim())return;
+      var key=(f.color||'(sin color)')+'|'+(f.cod||'')+'|'+(f.hex||'');
+      if(!agrupado[key]){agrupado[key]={prenda:f.prenda||prendaDef,color:f.color||'',cod:f.cod||'',hex:f.hex||'',tallas:{}};}
+      var t=f.talla||'';
+      // Limpiar prefijo niño N:
+      var tLimpia=t.replace(/^N:/,'');
+      var keyTalla=t.indexOf('N:')===0?('Niño '+tLimpia):tLimpia;
+      agrupado[key].tallas[keyTalla]=(agrupado[key].tallas[keyTalla]||0)+1;
+    });
+    return Object.values(agrupado);
+  }
+  // Modo todas iguales: cada fila ya tiene tabla de tallas por color
+  return tc.map(function(f){
+    var tallasLimpias={};
+    Object.keys(f.tallas||{}).forEach(function(t){
+      var v=parseInt(f.tallas[t])||0;
+      if(v<=0)return;
+      var keyTalla=t.indexOf('N:')===0?('Niño '+t.slice(2)):t;
+      tallasLimpias[keyTalla]=v;
+    });
+    return {prenda:f.prenda||prendaDef,color:f.color||'',cod:f.cod||'',hex:f.hex||'',tallas:tallasLimpias};
+  }).filter(function(x){return Object.keys(x.tallas).length>0;});
+}
+// Agrega todas las prendas en formato {proveedor: {modelo: {color: {talla: cantidad}}}}
+function agruparPrendasPorProveedor(){
+  var lista=getPedidosRopaPorPedir();
+  var agg={};
+  lista.forEach(function(p){
+    var prendas=extraerPrendasDelPedido(p);
+    prendas.forEach(function(pr){
+      var prov=getProveedorPrenda(pr.prenda);
+      if(!agg[prov])agg[prov]={};
+      if(!agg[prov][pr.prenda])agg[prov][pr.prenda]={};
+      var keyColor=pr.color+(pr.cod?' ('+pr.cod+')':'');
+      if(!agg[prov][pr.prenda][keyColor])agg[prov][pr.prenda][keyColor]={hex:pr.hex,tallas:{}};
+      Object.keys(pr.tallas).forEach(function(t){
+        agg[prov][pr.prenda][keyColor].tallas[t]=(agg[prov][pr.prenda][keyColor].tallas[t]||0)+pr.tallas[t];
+      });
+    });
+  });
+  return {agg:agg, pedidos:lista};
+}
+// Orden de tallas estándar para columnas
+var ORDEN_TALLAS=['XS','S','M','L','XL','2XL','3XL','4XL','Niño 1/2','Niño 3/4','Niño 5/6','Niño 7/8','Niño 9/10','Niño 11/12','Niño 2','Niño 4','Niño 6','Niño 8','Niño 10','Niño 12','Niño 14','Niño 16'];
+function ordenarTallas(tallasObj){
+  var presentes=Object.keys(tallasObj);
+  var ordenadas=ORDEN_TALLAS.filter(function(t){return presentes.indexOf(t)>=0;});
+  // Añadir cualquier talla no contemplada al final
+  presentes.forEach(function(t){if(ordenadas.indexOf(t)<0)ordenadas.push(t);});
+  return ordenadas;
+}
+// Genera HTML del PDF (se abre en nueva pestaña, lista para imprimir/PDF)
+function generarPDFRopaPorPedir(){
+  var data=agruparPrendasPorProveedor();
+  var agg=data.agg;
+  var listaPedidos=data.pedidos;
+  if(!listaPedidos.length){alert('No hay pedidos pendientes de pedir ropa.');return;}
+  var hoy=new Date();
+  var fechaStr=hoy.getDate()+'/'+(hoy.getMonth()+1)+'/'+hoy.getFullYear();
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Lista de ropa por pedir - '+fechaStr+'</title><style>'
+    +'@page{size:A4;margin:18mm 14mm}'
+    +'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1a1a1a;font-size:12px;line-height:1.4;margin:0;padding:0}'
+    +'.page{page-break-after:always;padding:0}'
+    +'.page:last-child{page-break-after:auto}'
+    +'.header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:10px;margin-bottom:14px}'
+    +'.header-title{font-size:18px;font-weight:700;margin:0}'
+    +'.header-meta{font-size:11px;color:#666;margin-top:2px}'
+    +'.header-total{text-align:right}'
+    +'.header-total-label{font-size:11px;color:#666}'
+    +'.header-total-num{font-size:22px;font-weight:700}'
+    +'h2{font-size:14px;font-weight:700;color:#185FA5;margin:18px 0 6px;border-bottom:1px solid #B5D4F4;padding-bottom:4px}'
+    +'h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#444;margin:10px 0 5px}'
+    +'table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11.5px}'
+    +'th{text-align:center;padding:5px 4px;border-bottom:1px solid #ccc;font-weight:600;background:#f5f5f5}'
+    +'th:first-child{text-align:left}'
+    +'td{text-align:center;padding:4px;border-bottom:0.5px solid #eee}'
+    +'td:first-child{text-align:left}'
+    +'td.total,th.total{text-align:right;font-weight:700;background:#fafafa}'
+    +'.color-swatch{display:inline-block;width:12px;height:12px;border:0.5px solid #888;border-radius:2px;vertical-align:middle;margin-right:6px}'
+    +'.footer{margin-top:14px;padding-top:8px;border-top:0.5px solid #ddd;font-size:10px;color:#888;display:flex;justify-content:space-between}'
+    +'.pedido-card{background:#f9f9f9;border-left:3px solid #185FA5;padding:10px 14px;margin-bottom:10px;border-radius:4px}'
+    +'.pedido-meta{font-size:10px;color:#666;margin-top:2px}'
+    +'.warning{background:#FFF8EC;border-left:3px solid #FAC775;padding:8px 12px;margin:10px 0;font-size:11px;color:#854F0B;border-radius:4px}'
+    +'@media print{.no-print{display:none}}'
+    +'.print-btn{position:fixed;top:14px;right:14px;background:#185FA5;color:#fff;border:none;padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.15)}'
+    +'</style></head><body>';
+  html+='<button class="print-btn no-print" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>';
+  // Para cada proveedor, una página con el resumen + páginas de detalle
+  var proveedores=Object.keys(agg).sort();
+  proveedores.forEach(function(prov){
+    var modelos=agg[prov];
+    var totalPrendas=0;
+    Object.keys(modelos).forEach(function(m){
+      Object.keys(modelos[m]).forEach(function(c){
+        Object.keys(modelos[m][c].tallas).forEach(function(t){
+          totalPrendas+=modelos[m][c].tallas[t];
+        });
+      });
+    });
+    // Página resumen del proveedor
+    html+='<div class="page">';
+    html+='<div class="header"><div><div class="header-title">Pedido a '+prov+'</div><div class="header-meta">Print &amp; Copy · '+fechaStr+'</div></div>';
+    html+='<div class="header-total"><div class="header-total-label">Total prendas</div><div class="header-total-num">'+totalPrendas+'</div></div></div>';
+    if(prov==='Valento'){html+='<div class="warning">⚠️ Valento aún sin validar — comprobar referencias y colores antes de hacer el pedido.</div>';}
+    Object.keys(modelos).sort().forEach(function(modelo){
+      html+='<h3>'+modelo+'</h3>';
+      var colores=modelos[modelo];
+      // Recopilar todas las tallas usadas en este modelo
+      var tallasSet={};
+      Object.keys(colores).forEach(function(c){Object.keys(colores[c].tallas).forEach(function(t){tallasSet[t]=true;});});
+      var cols=ordenarTallas(tallasSet);
+      html+='<table><thead><tr><th>Color</th>';
+      cols.forEach(function(t){html+='<th>'+t+'</th>';});
+      html+='<th class="total">Total</th></tr></thead><tbody>';
+      Object.keys(colores).sort().forEach(function(c){
+        var fila=colores[c];
+        var totalFila=0;
+        html+='<tr>';
+        html+='<td>'+(fila.hex?'<span class="color-swatch" style="background:'+fila.hex+'"></span>':'')+c+'</td>';
+        cols.forEach(function(t){
+          var v=fila.tallas[t]||0;
+          totalFila+=v;
+          html+='<td>'+(v>0?v:'—')+'</td>';
+        });
+        html+='<td class="total">'+totalFila+'</td>';
+        html+='</tr>';
+      });
+      html+='</tbody></table>';
+    });
+    var pedidosProv=listaPedidos.filter(function(p){
+      var prendas=extraerPrendasDelPedido(p);
+      return prendas.some(function(pr){return getProveedorPrenda(pr.prenda)===prov;});
+    });
+    html+='<div class="footer"><span>'+pedidosProv.length+' pedido'+(pedidosProv.length>1?'s':'')+' pendiente'+(pedidosProv.length>1?'s':'')+' · ver detalle en páginas siguientes</span><span>'+prov+' · resumen</span></div>';
+    html+='</div>';
+    // Páginas de detalle por pedido
+    pedidosProv.forEach(function(p){
+      var prendasDelPed=extraerPrendasDelPedido(p).filter(function(pr){return getProveedorPrenda(pr.prenda)===prov;});
+      var totalPed=prendasDelPed.reduce(function(s,pr){return s+Object.values(pr.tallas).reduce(function(a,v){return a+v;},0);},0);
+      html+='<div class="page">';
+      html+='<div class="header"><div><div class="header-title">Pedido '+p.id+'</div><div class="header-meta">'+p.clienteNombre+(p.clienteTel?' · '+p.clienteTel:'')+'<br>Atiende: '+(p.operario||'—')+(p.fechaEntrega?' · Entrega: '+p.fechaEntrega:'')+'</div></div>';
+      html+='<div class="header-total"><div class="header-total-label">'+prov+'</div><div class="header-total-num">'+totalPed+'</div></div></div>';
+      // Agrupar las prendas de este pedido por modelo+color
+      var porModelo={};
+      prendasDelPed.forEach(function(pr){
+        var k=pr.prenda;
+        if(!porModelo[k])porModelo[k]={};
+        var keyColor=pr.color+(pr.cod?' ('+pr.cod+')':'');
+        if(!porModelo[k][keyColor])porModelo[k][keyColor]={hex:pr.hex,tallas:{}};
+        Object.keys(pr.tallas).forEach(function(t){
+          porModelo[k][keyColor].tallas[t]=(porModelo[k][keyColor].tallas[t]||0)+pr.tallas[t];
+        });
+      });
+      Object.keys(porModelo).sort().forEach(function(modelo){
+        html+='<h3>'+modelo+'</h3>';
+        Object.keys(porModelo[modelo]).sort().forEach(function(c){
+          var fila=porModelo[modelo][c];
+          html+='<div class="pedido-card"><div style="font-weight:600;font-size:12px">'+(fila.hex?'<span class="color-swatch" style="background:'+fila.hex+'"></span>':'')+c+'</div>';
+          var ts=ordenarTallas(fila.tallas);
+          html+='<table style="margin-top:6px;margin-bottom:0"><thead><tr>';
+          ts.forEach(function(t){html+='<th>'+t+'</th>';});
+          html+='<th class="total">Total</th></tr></thead><tbody><tr>';
+          var tot=0;
+          ts.forEach(function(t){var v=fila.tallas[t]||0;tot+=v;html+='<td>'+v+'</td>';});
+          html+='<td class="total">'+tot+'</td></tr></tbody></table>';
+          html+='</div>';
+        });
+      });
+      html+='<div class="footer"><span>'+p.id+' · '+p.clienteNombre+'</span><span>Detalle pedido</span></div>';
+      html+='</div>';
+    });
+  });
+  html+='</body></html>';
+  // Abrir en nueva pestaña
+  var w=window.open('','_blank');
+  if(!w){alert('No se pudo abrir la ventana. Revisa el bloqueador de popups.');return;}
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
 // ═════════════════ BANDEJA DEL OPERARIO ═════════════════
 // Carga el conteo de archivos por pedido (para detectar "Archivos llegados")
 function cargarConteoArchivosPedidos(){
@@ -4419,7 +4642,7 @@ function renderBandejaOpListaContenido(){
   if(hayListas){
     html+='<div class="bop-section-label">📋 Por hacer</div>';
     if(l.ropaPdte.length){
-      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">📦</span><span class="bop-text"><strong>'+l.ropaPdte.length+' ropa'+(l.ropaPdte.length>1?'s':'')+' por pedir</strong> al proveedor: '+l.ropaPdte.map(function(p){return p.id;}).join(', ')+'</span></div></div>';
+      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">📦</span><span class="bop-text"><strong>'+l.ropaPdte.length+' ropa'+(l.ropaPdte.length>1?'s':'')+' por pedir</strong> al proveedor: '+l.ropaPdte.map(function(p){return p.id;}).join(', ')+'</span></div><div class="bop-actions"><button class="bop-btn" onclick="event.stopPropagation();generarPDFRopaPorPedir()">📄 Generar PDF</button></div></div>';
     }
     if(l.dtfPdte.length){
       html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">🎨</span><span class="bop-text"><strong>'+l.dtfPdte.length+' DTF por pedir</strong>: '+l.dtfPdte.map(function(p){return p.id;}).join(', ')+'</span></div></div>';
@@ -4444,7 +4667,12 @@ function toggleBandejaOpLista(){
 }
 
 function renderTaller(){renderStats();renderBandejaOperario();if(currentView==='lista')renderLista();else if(currentView==='semana')renderSemana();else if(currentView==='mes')renderMes();}
-function renderStats(){var all=applySecFilter(pedidos),activos=all.filter(function(p){return p.fase<5;}),totalPend=all.reduce(function(s,p){return s+(p.total-(p.senal||0));},0),urgentes=activos.filter(function(p){return p.fechaTipo==='fija';}).length,listos=all.filter(function(p){return p.fase===5||p.fase===6;}).length;var txActivos=activos.filter(function(p){return p.seccion==='TX';});var sinTallas=txActivos.filter(function(p){return !tallasCompletas(p);}).length;var sinPrevia=txActivos.filter(function(p){return tallasCompletas(p)&&p.previaEstado!=='aceptada';}).length;var enProd=txActivos.filter(function(p){return tallasCompletas(p)&&p.previaEstado==='aceptada';}).length;document.getElementById('taller-stats').innerHTML='<div class="stat-card"><div class="sv">'+activos.length+'</div><div class="sl">Activos</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+listos+'</div><div class="sl">Para recoger</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPend.toFixed(0)+'€</div><div class="sl">Pdte cobro</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+urgentes+'</div><div class="sl">Fijas</div></div>'+(txActivos.length?'<div class="stat-card"><div class="sv" style="color:#A32D2D">'+sinTallas+'</div><div class="sl">Sin tallas</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+sinPrevia+'</div><div class="sl">Sin previa</div></div><div class="stat-card"><div class="sv" style="color:#3B6D11">'+enProd+'</div><div class="sl">En producción</div></div>':'');}
+function renderStats(){var all=applySecFilter(pedidos),activos=all.filter(function(p){return p.fase<5;}),totalPend=all.reduce(function(s,p){return s+(p.total-(p.senal||0));},0),urgentes=activos.filter(function(p){return p.fechaTipo==='fija';}).length,listos=all.filter(function(p){return p.fase===5||p.fase===6;}).length;var txActivos=activos.filter(function(p){return p.seccion==='TX';});var sinTallas=txActivos.filter(function(p){return !tallasCompletas(p);}).length;var sinPrevia=txActivos.filter(function(p){return tallasCompletas(p)&&p.previaEstado!=='aceptada';}).length;var enProd=txActivos.filter(function(p){return tallasCompletas(p)&&p.previaEstado==='aceptada';}).length;
+var nRopaPedir=getPedidosRopaPorPedir().length;
+var totalPrendasPdte=contarPrendasPorPedir();
+var btnRopa=nRopaPedir>0?'<button onclick="generarPDFRopaPorPedir()" style="background:#185FA5;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;margin-left:auto" title="Generar PDF imprimible con la lista de prendas a pedir agrupadas por proveedor">📄 Lista ropa por pedir <span style="background:#fff;color:#185FA5;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:700">'+nRopaPedir+' ped · '+totalPrendasPdte+' uds</span></button>':'';
+document.getElementById('taller-stats').innerHTML='<div class="stat-card"><div class="sv">'+activos.length+'</div><div class="sl">Activos</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+listos+'</div><div class="sl">Para recoger</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPend.toFixed(0)+'€</div><div class="sl">Pdte cobro</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+urgentes+'</div><div class="sl">Fijas</div></div>'+(txActivos.length?'<div class="stat-card"><div class="sv" style="color:#A32D2D">'+sinTallas+'</div><div class="sl">Sin tallas</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+sinPrevia+'</div><div class="sl">Sin previa</div></div><div class="stat-card"><div class="sv" style="color:#3B6D11">'+enProd+'</div><div class="sl">En producción</div></div>':'')+btnRopa;
+}
 function renderLista(){var list=applySecFilter(pedidos);var secSel=document.getElementById('seccion-select');var secFiltro=secSel?secSel.value:'all';if(secFiltro!=='all')list=list.filter(function(p){return p.seccion===secFiltro;});if(activeFilters.fase!=='all')list=list.filter(function(p){return String(p.fase)===activeFilters.fase;});list=list.filter(function(p){return pasaFiltroEntrega(p);});if(activeFilters.pago==='pendiente')list=list.filter(function(p){return(p.total-(p.senal||0))>0;});if(activeFilters.pago==='pagado')list=list.filter(function(p){return(p.total-(p.senal||0))<=0;});var sort=document.getElementById('sort-select').value||'entrega';list.sort(function(a,b){if(sort==='entrega')return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;if(sort==='creacion')return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);if(sort==='seccion')return a.seccion>b.seccion?1:-1;if(sort==='pendiente')return(b.total-(b.senal||0))-(a.total-(a.senal||0));return 0;});document.getElementById('taller-list').innerHTML=list.length?list.map(tarjetaTaller).join(''):'<div class="empty-state">No hay pedidos con estos filtros</div>';}
 function renderSemana(){
   var sfase=activeFilters.sfase;
