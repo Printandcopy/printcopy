@@ -5591,7 +5591,7 @@ function _generarFichaHTML(p){
   html+='msg+="Trabajo: '+(p.descripcion||"").replace(/"/g,"").replace(/\\n/g," ").replace(/\*/g,"")+'\\n";';
   html+='msg+="Entrega: '+fechaEnt+'\\n\\n";';
   html+='msg+="Abre la ficha completa aqui:\\n";';
-  html+='msg+=window.location.href;';
+  html+='msg+="https://printcopy.vercel.app/ficha.html?p='+encodeURIComponent(p.id)+'";';
   html+='var url="https://wa.me/"+tel+"?text="+encodeURIComponent(msg);';
   html+='window.open(url,"_blank");';
   html+='var m=document.getElementById("modal-prod");if(m)m.remove();';
