@@ -5592,9 +5592,24 @@ function _generarFichaHTML(p){
   html+='msg+="Entrega: '+fechaEnt+'\\n\\n";';
   html+='msg+="Abre la ficha completa aqui:\\n";';
   html+='msg+="https://printcopy.vercel.app/ficha.html?p='+encodeURIComponent(p.id)+'";';
-  html+='var url="https://wa.me/"+tel+"?text="+encodeURIComponent(msg);';
-  html+='window.open(url,"_blank");';
+  // Mostrar feedback inmediato
+  html+='var btn=event&&event.target;if(btn){btn.disabled=true;btn.style.opacity="0.6";btn.textContent="Enviando...";}';
+  html+='fetch("https://printcopy.vercel.app/api/whatsapp",{';
+  html+='method:"POST",';
+  html+='headers:{"Content-Type":"application/json"},';
+  html+='body:JSON.stringify({telefono:tel,mensaje:msg,nombre:nombre,auto:false})';
+  html+='})';
+  html+='.then(function(r){return r.json();})';
+  html+='.then(function(data){';
   html+='var m=document.getElementById("modal-prod");if(m)m.remove();';
+  html+='if(data.blocked){alert("⚠️ Modo prueba activo: el WhatsApp NO se envio realmente.\\n\\nDestino: "+nombre+" ("+tel+")\\n\\nCuando se desactive el modo prueba, el envio funcionara automaticamente.");}';
+  html+='else if(data.success){alert("✅ Ficha enviada por WhatsApp a "+nombre+" ("+tel+")\\n\\nEl mensaje sale del numero oficial 622 305 934.");}';
+  html+='else{alert("❌ Error al enviar:\\n"+(data.error||"desconocido")+"\\n\\nIntentalo de nuevo o usa Imprimir + entregar en mano.");}';
+  html+='})';
+  html+='.catch(function(e){';
+  html+='var m=document.getElementById("modal-prod");if(m)m.remove();';
+  html+='alert("❌ Error de red: "+e.message);';
+  html+='});';
   html+='}';
   html+='</'+'script></body></html>';
   var blob=new Blob([html],{type:'text/html'});
