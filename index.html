@@ -3860,13 +3860,8 @@ function setFaseModal(id,fase){
     });
   }
   
-  // WA automático fase 3 (Previas OK)
-  if(fase===3&&p.clienteTel){
-    var tel3=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
-    if(tel3.length===9&&!tel3.startsWith('34'))tel3='34'+tel3;
-    var msg3='Perfecto '+p.clienteNombre.split(' ')[0]+' ✅\n\nTu diseño del pedido *'+p.id+'* ha sido aprobado. Arrancamos producción ahora mismo 🚀\n\nTe avisamos en cuanto esté listo para recoger.\n\n⏱️ Plazo estimado: según lo acordado al encargar.\n\nPrint & Copy · 923 018 034';
-    fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:tel3,mensaje:msg3,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA fase3:',d.error);});
-  }
+  // WA automático "previa aceptada" → MOVIDO al polling (se dispara cuando el cliente aprueba)
+  // El polling lo enviará automáticamente al detectar previaEstado='aceptada'
   // WA automático fase 5 (Terminado — listo para recoger)
   if(fase===5&&p.clienteTel){
     var tel5=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
@@ -10577,6 +10572,20 @@ setInterval(function(){
           t.onclick=function(){verPedido(p.id);t.remove();};
           document.body.appendChild(t);
           setTimeout(function(){if(t.parentNode)t.remove();},8000);
+          // WA automático al cliente confirmando recepción de cambios solicitados
+          if(row.previa_estado==='rechazada' && p.clienteTel){
+            var telR=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+            if(telR.length===9&&!telR.startsWith('34'))telR='34'+telR;
+            var msgR='¡Recibido '+p.clienteNombre.split(' ')[0]+'! 👌\n\nHemos visto los cambios que pides para el pedido *'+p.id+'*. Lo ajustamos y te enviamos la nueva previa lo antes posible.\n\nPrint & Copy · 923 018 034';
+            fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telR,mensaje:msgR,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA cambios previa:',d.error);});
+          }
+          // WA automático al cliente cuando aprueba la previa
+          if(row.previa_estado==='aceptada' && p.clienteTel){
+            var telA2=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+            if(telA2.length===9&&!telA2.startsWith('34'))telA2='34'+telA2;
+            var msgA2='¡Genial '+p.clienteNombre.split(' ')[0]+'! ✅\n\nDiseño aprobado para el pedido *'+p.id+'*. Lo programamos para producción y te avisamos en cuanto esté listo para recoger.\n\n¡Gracias por la confianza! 🙌\n\nPrint & Copy · 923 018 034';
+            fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telA2,mensaje:msgA2,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA previa aceptada:',d.error);});
+          }
         }
       }
     });
