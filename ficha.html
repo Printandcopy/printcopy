@@ -227,7 +227,7 @@ function cargarPedido(){
 function renderFicha(p){
   var esTX=p.seccion==='TX';
   var esPrendaCli=esPrendaCliente(p);
-  var qtyMatch=(p.descripcion||'').match(/×\s*(\d+)/);
+  var qtyMatch=(p.descripcion||'').match(/×\s*(\d+)\s*$/);
   var qty=qtyMatch?qtyMatch[1]:'';
   var fechaTxt=fmtFecha(p.fecha_entrega);
   var esFija=p.fecha_tipo==='fija';

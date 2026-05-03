@@ -5420,7 +5420,7 @@ function _generarFichaHTML(p){
   var esTX=p.seccion==='TX';
   var esRot=p.seccion==='ROT';
   var esPrendaCli=esPrendaCliente(p);
-  var qtyMatch=(p.descripcion||'').match(/×\s*(\d+)/);
+  var qtyMatch=(p.descripcion||'').match(/×\s*(\d+)\s*$/);
   var qty=qtyMatch?qtyMatch[1]:'';
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"><title>Ficha '+p.id+'</title><style>'
     +'*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
