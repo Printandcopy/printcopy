@@ -3604,6 +3604,7 @@ function verPedido(id){
   // ── CAMBIAR FASE ──
   html+='<div style="font-size:11px;font-weight:700;color:#888;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px">Cambiar fase</div>';
   html+='<div class="fase-stepper">'+FASES.map(function(f,i){
+    if(i===3)return''; // Fase 'Previas OK' eliminada de UI (no usar mas)
     return '<button class="fase-step '+(i<p.fase?'done':i===p.fase?'current':'')+'" onclick="setFaseModal(\''+p.id+'\','+i+')">'+f+'</button>';
   }).join('')+'</div>';
 
@@ -3810,15 +3811,24 @@ function cancelarExternalizacion(id){
     verPedido(id);
   });
 }
-function setFaseModal(id,fase){
+function setFaseModal(id,fase,opts){
   var p=pedidos.find(function(x){return x.id===id;});
   if(!p)return;
   var faseAnterior=p.fase;
   var pendiente=(p.total||0)-(p.senal||0);
+  var esAuto=opts&&opts.auto===true;
   
   // Al pasar a Producción (4) — solo si avanzamos, no al retroceder. Ofrecer imprimir ficha
   if(fase===4 && faseAnterior<4){
+    // WA al cliente: pedido en producción
+    if(p.clienteTel){
+      var telP=p.clienteTel.replace(/\s/g,'').replace(/^\+/,'');
+      if(telP.length===9&&!telP.startsWith('34'))telP='34'+telP;
+      var msgP='¡Buenas noticias '+p.clienteNombre.split(' ')[0]+'! 🚀\n\nTu pedido *'+p.id+'* ha entrado en producción. Te avisamos en cuanto esté listo para recoger.\n\nPrint & Copy · 923 018 034';
+      fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telP,mensaje:msgP,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA producción:',d.error);});
+    }
     setTimeout(function(){
+      if(esAuto)return; // No mostrar confirm en transiciones automaticas
       if(confirm('🚀 Pedido pasado a Producción\n\n¿Imprimir ficha de producción ahora para el productor?')){
         window.open('https://printcopy.vercel.app/ficha.html?p='+encodeURIComponent(id)+'&op=1','_blank');
       }
@@ -3995,6 +4005,8 @@ function toggleCheckModal(id,field,val){
     if(_pedidoModal&&_pedidoModal.id===id)verPedido(id);
     // Refrescar tarjeta en taller
     renderTaller();
+    // Auto-paso a Producción si todo está verde + 24h hábiles cumplidas
+    if(val)verificarAutoProduccion(p);
   });
 }
 function imprimirDesdePedido(){if(_pedidoModal){closeModal('modal-pedido');generarResguardo(_pedidoModal);}}
@@ -4434,6 +4446,16 @@ function esListoProducir(p){
   var listoDesde=siguienteDiaLaborable(ultimaFecha);
   var hoy=new Date();hoy.setHours(0,0,0,0);listoDesde.setHours(0,0,0,0);
   return hoy>=listoDesde;
+}
+// Auto-paso a fase 4 (Producción) cuando esListoProducir devuelve true
+// Se llama tras marcar ropa/DTF, tras aceptar previa (polling), y en cron interno por regla 24h
+function verificarAutoProduccion(p){
+  if(!p)return false;
+  if(p.fase>=4)return false; // ya está en producción o más allá
+  if(!esListoProducir(p))return false; // condiciones no cumplidas
+  // Mover a fase 4 con flag auto para evitar confirm de imprimir ficha
+  setFaseModal(p.id, 4, {auto:true});
+  return true;
 }
 function renderSemaforoTaller(p){
   if(p.seccion!=='TX')return'';
@@ -10445,6 +10467,20 @@ setInterval(checkRecordatorioPago,4*60*60*1000);
 // Recordatorios automáticos tallas cada 4h
 setInterval(checkRecordatoriosTallas,4*60*60*1000);
 setInterval(checkRecordatorioRecogida,4*60*60*1000);
+// Auto-paso a Producción cada 4h: por la regla 24h hábiles desde marca ropa/dtf,
+// hay pedidos que ayer no estaban listos pero hoy ya cumplen condiciones.
+function checkAutoProduccion(){
+  if(typeof modoPruebaActivo==='function' && modoPruebaActivo()){
+    console.log('[MODO_PRUEBA] checkAutoProduccion bloqueado');
+    return;
+  }
+  pedidos.filter(function(p){return p.fase>=1 && p.fase<4 && p.seccion==='TX';}).forEach(function(p){
+    verificarAutoProduccion(p);
+  });
+}
+setInterval(checkAutoProduccion,4*60*60*1000);
+// Tambien al cargar app: verificar pedidos que ya cumplian pero quedaron parados
+setTimeout(checkAutoProduccion,10000);
 // Alerta interna: previas con cambios sin resubir > 24h
 setInterval(function(){
   var ahora=new Date();
@@ -10585,6 +10621,8 @@ setInterval(function(){
             if(telA2.length===9&&!telA2.startsWith('34'))telA2='34'+telA2;
             var msgA2='¡Genial '+p.clienteNombre.split(' ')[0]+'! ✅\n\nDiseño aprobado para el pedido *'+p.id+'*. Lo programamos para producción y te avisamos en cuanto esté listo para recoger.\n\n¡Gracias por la confianza! 🙌\n\nPrint & Copy · 923 018 034';
             fetch('/api/whatsapp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({telefono:telA2,mensaje:msgA2,nombre:p.clienteNombre})}).then(function(r){return r.json();}).then(function(d){if(!d.success)console.warn('WA previa aceptada:',d.error);});
+            // Auto-paso a Producción si todo está verde + 24h hábiles cumplidas
+            verificarAutoProduccion(p);
           }
         }
       }
