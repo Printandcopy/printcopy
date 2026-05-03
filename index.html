@@ -4300,17 +4300,22 @@ function contarPrendasPorPedir(){
     }
   },0);
 }
+// Verifica si un nombre de prenda es un modelo oficial del catálogo (PRENDA_MODELO)
+function esModeloValido(nombrePrenda){
+  return !!(nombrePrenda && PRENDA_MODELO[nombrePrenda] && nombrePrenda!=='Estampacion prenda cliente');
+}
 // Convierte un pedido en estructura {prenda, color, hex, cod, tallas:{S:1,M:2,...}}
 function extraerPrendasDelPedido(p){
   var tc=p.tallasColores||[];
-  var prendaDef=(tc[0]&&tc[0].prenda)||p.descripcion||'(sin prenda)';
+  // Solo usamos prenda si está en PRENDA_MODELO oficial (no inventar desde descripcion)
+  var prendaDef=(tc[0]&&tc[0].prenda&&esModeloValido(tc[0].prenda))?tc[0].prenda:'⚠️ Sin modelo identificado';
   // En modo individual cada fila es una persona con su talla
   if(p.tipoPersonalizacion==='individual'){
     var agrupado={};
     tc.forEach(function(f){
       if(!f.nombre||!f.nombre.trim())return;
       var key=(f.color||'(sin color)')+'|'+(f.cod||'')+'|'+(f.hex||'');
-      if(!agrupado[key]){agrupado[key]={prenda:f.prenda||prendaDef,color:f.color||'',cod:f.cod||'',hex:f.hex||'',tallas:{}};}
+      if(!agrupado[key]){agrupado[key]={prenda:esModeloValido(f.prenda)?f.prenda:prendaDef,color:f.color||'',cod:f.cod||'',hex:f.hex||'',tallas:{}};}
       var t=f.talla||'';
       // Limpiar prefijo niño N:
       var tLimpia=t.replace(/^N:/,'');
@@ -4605,7 +4610,13 @@ function renderBandejaOperario(){
   if(a.archivosLlegados.length)partes.push(a.archivosLlegados.length+' archivos nuevos');
   if(a.sinTallas7d.length)partes.push(a.sinTallas7d.length+' sin tallas 7d+');
   if(l.dtfPdte.length)partes.push(l.dtfPdte.length+' DTF por pedir');
-  if(l.ropaPdte.length)partes.push(l.ropaPdte.length+' ropa'+(l.ropaPdte.length>1?'s':'')+' por pedir');
+  if(l.ropaPdte.length){
+    var _udsRopaResumen=l.ropaPdte.reduce(function(s,p){
+      var prs=extraerPrendasDelPedido(p);
+      return s+prs.reduce(function(ss,pr){return ss+Object.values(pr.tallas).reduce(function(a,v){return a+v;},0);},0);
+    },0);
+    partes.push(l.ropaPdte.length+' ropa'+(l.ropaPdte.length>1?'s':'')+' por pedir ('+_udsRopaResumen+' uds)');
+  }
   resumen.innerHTML=partes.join(' · ');
   bar.style.display='flex';
   if(btn)btn.style.display=(totalAvisos+totalListas>0)?'inline-block':'none';
@@ -4648,7 +4659,11 @@ function renderBandejaOpListaContenido(){
   if(hayListas){
     html+='<div class="bop-section-label">📋 Por hacer</div>';
     if(l.ropaPdte.length){
-      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">📦</span><span class="bop-text"><strong>'+l.ropaPdte.length+' ropa'+(l.ropaPdte.length>1?'s':'')+' por pedir</strong> al proveedor: '+l.ropaPdte.map(function(p){return p.id;}).join(', ')+'</span></div><div class="bop-actions"><button class="bop-btn" onclick="event.stopPropagation();generarPDFRopaPorPedir()">📄 Generar PDF</button></div></div>';
+      var totalUdsRopa=l.ropaPdte.reduce(function(s,p){
+        var prendas=extraerPrendasDelPedido(p);
+        return s+prendas.reduce(function(ss,pr){return ss+Object.values(pr.tallas).reduce(function(a,v){return a+v;},0);},0);
+      },0);
+      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">📦</span><span class="bop-text"><strong>'+l.ropaPdte.length+' ropa'+(l.ropaPdte.length>1?'s':'')+' por pedir</strong> ('+totalUdsRopa+' uds) al proveedor: '+l.ropaPdte.map(function(p){return p.id;}).join(', ')+'</span></div><div class="bop-actions"><button class="bop-btn" onclick="event.stopPropagation();generarPDFRopaPorPedir()">📄 Generar PDF</button></div></div>';
     }
     if(l.dtfPdte.length){
       html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">🎨</span><span class="bop-text"><strong>'+l.dtfPdte.length+' DTF por pedir</strong>: '+l.dtfPdte.map(function(p){return p.id;}).join(', ')+'</span></div></div>';
