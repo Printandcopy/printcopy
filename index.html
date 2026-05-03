@@ -789,10 +789,40 @@ textarea{resize:vertical;min-height:64px}
     </div>
     <div id="prov-panel" style="display:none;margin-top:12px">
       <div id="prov-lista" style="margin-bottom:12px"></div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="prov-nuevo-nombre" placeholder="Nombre del proveedor..." style="flex:1">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" id="prov-nuevo-nombre" placeholder="Nombre del proveedor..." style="flex:1;min-width:140px">
+        <input type="tel" id="prov-nuevo-tel" placeholder="Teléfono (opcional)" style="flex:1;min-width:120px">
         <button class="btn btn-primary" onclick="agregarProveedor()">+ Añadir</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Panel gestión productores taller -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleProdManualPanel()">
+      <span>🏭 Productores taller (Kiko, Mónica, etc.)</span>
+      <span id="prod-manual-arrow" style="font-size:12px;color:#aaa">▼ Desplegar</span>
+    </div>
+    <div id="prod-manual-panel" style="display:none;margin-top:12px">
+      <div style="font-size:12px;color:#888;margin-bottom:10px">Productores físicos del taller que no tienen acceso al sistema. Su número se usa para enviarles fichas de producción por WhatsApp.</div>
+      <div id="prod-manual-lista" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" id="prod-manual-nombre" placeholder="Nombre del productor..." style="flex:1;min-width:140px">
+        <input type="tel" id="prod-manual-tel" placeholder="Teléfono (opcional)" style="flex:1;min-width:120px">
+        <button class="btn btn-primary" onclick="agregarProductorManual()">+ Añadir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel telefonos operarios -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-title" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleOperariosTelPanel()">
+      <span>📱 Teléfonos de operarios</span>
+      <span id="oper-tel-arrow" style="font-size:12px;color:#aaa">▼ Desplegar</span>
+    </div>
+    <div id="oper-tel-panel" style="display:none;margin-top:12px">
+      <div style="font-size:12px;color:#888;margin-bottom:10px">Teléfonos de los operarios del sistema. Se usan para enviarles fichas de producción a su WhatsApp.</div>
+      <div id="oper-tel-lista"></div>
     </div>
   </div>
   <!-- Panel configuración niveles -->
@@ -1970,7 +2000,10 @@ function getColoresPrenda(prenda){
 }
 
 // ── PROVEEDORES EXTERNOS ──
-var PROVEEDORES=[]; // se carga desde Supabase al iniciar
+var PROVEEDORES=[]; // se carga desde Supabase al iniciar (objetos con nombre+telefono)
+var PROVEEDORES_INFO={}; // mapa nombre->telefono de proveedores
+var PRODUCTORES_MANUAL=[]; // productores fisicos del taller (Kiko, Monica, etc.) - tabla productores
+var OPERARIOS_TEL={}; // mapa nombre->telefono de operarios - tabla operarios_telefonos
 
 // ── NIVELES DE FIDELIZACIÓN ──
 var NIVELES={
@@ -2177,9 +2210,11 @@ function toggleProvPanel(){
   panel.style.display=open?'none':'block';
   arrow.textContent=open?'▼ Desplegar':'▲ Cerrar';
   if(!open){
-    // Recargar siempre desde Supabase al abrir el panel
     sb.from('proveedores').select('*').order('nombre').then(function(r){
-      PROVEEDORES=(r.data||[]).map(function(p){return p.nombre;});
+      var data=r.data||[];
+      PROVEEDORES=data.map(function(p){return p.nombre;});
+      PROVEEDORES_INFO={};
+      data.forEach(function(p){PROVEEDORES_INFO[p.nombre]=p.telefono||'';});
       renderProvLista();
     });
   }
@@ -2190,22 +2225,35 @@ function renderProvLista(){
   if(!PROVEEDORES.length){lista.innerHTML='<div style="color:#aaa;font-size:12px">No hay proveedores. Añade el primero.</div>';return;}
   lista.innerHTML=PROVEEDORES.map(function(p){
     var enc=encodeURIComponent(p);
-    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#f9f9f7;border-radius:6px;margin-bottom:5px;font-size:13px">'
-      +'<span>'+p+'</span>'
+    var tel=PROVEEDORES_INFO[p]||'';
+    return'<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f9f9f7;border-radius:6px;margin-bottom:5px;font-size:13px">'
+      +'<span style="flex:1;font-weight:500">'+p+'</span>'
+      +'<input type="tel" placeholder="Sin tel" value="'+tel+'" onblur="actualizarTelProv(\''+p.replace(/\'/g,"\\'")+'\',this.value)" style="width:130px;padding:4px 8px;border:0.5px solid #d0d0d0;border-radius:5px;font-size:12px">'
       +'<button data-prov="'+enc+'" onclick="eliminarProveedor(decodeURIComponent(this.dataset.prov))" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:14px">✕</button>'
       +'</div>';
   }).join('');
 }
+function actualizarTelProv(nombre,tel){
+  tel=(tel||'').trim();
+  sb.from('proveedores').update({telefono:tel||null}).eq('nombre',nombre).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    PROVEEDORES_INFO[nombre]=tel;
+  });
+}
 function agregarProveedor(){
   var inp=document.getElementById('prov-nuevo-nombre');
+  var inpTel=document.getElementById('prov-nuevo-tel');
   var nombre=(inp.value||'').trim();
+  var tel=(inpTel?(inpTel.value||'').trim():'');
   if(!nombre)return;
   if(PROVEEDORES.includes(nombre)){alert('Ya existe ese proveedor');return;}
-  sb.from('proveedores').insert([{nombre:nombre}]).then(function(r){
+  sb.from('proveedores').insert([{nombre:nombre,telefono:tel||null}]).then(function(r){
     if(r.error){alert('Error: '+r.error.message);return;}
     PROVEEDORES.push(nombre);
     PROVEEDORES.sort();
+    PROVEEDORES_INFO[nombre]=tel;
     inp.value='';
+    if(inpTel)inpTel.value='';
     renderProvLista();
   });
 }
@@ -2214,7 +2262,100 @@ function eliminarProveedor(nombre){
   sb.from('proveedores').delete().eq('nombre',nombre).then(function(r){
     if(r.error){alert('Error: '+r.error.message);return;}
     PROVEEDORES=PROVEEDORES.filter(function(p){return p!==nombre;});
+    delete PROVEEDORES_INFO[nombre];
     renderProvLista();
+  });
+}
+
+// ── PRODUCTORES MANUALES (Kiko, Mónica, etc.) ──
+function toggleProdManualPanel(){
+  var panel=document.getElementById('prod-manual-panel');
+  var arrow=document.getElementById('prod-manual-arrow');
+  var open=panel.style.display==='block';
+  panel.style.display=open?'none':'block';
+  arrow.textContent=open?'▼ Desplegar':'▲ Cerrar';
+  if(!open){
+    sb.from('productores').select('*').eq('activo',true).order('nombre').then(function(r){
+      PRODUCTORES_MANUAL=(r.data||[]);
+      renderProdManualLista();
+    });
+  }
+}
+function renderProdManualLista(){
+  var lista=document.getElementById('prod-manual-lista');
+  if(!lista)return;
+  if(!PRODUCTORES_MANUAL.length){lista.innerHTML='<div style="color:#aaa;font-size:12px">No hay productores. Añade el primero.</div>';return;}
+  lista.innerHTML=PRODUCTORES_MANUAL.map(function(p){
+    return'<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f9f9f7;border-radius:6px;margin-bottom:5px;font-size:13px">'
+      +'<span style="flex:1;font-weight:500">'+p.nombre+'</span>'
+      +'<input type="tel" placeholder="Sin tel" value="'+(p.telefono||'')+'" onblur="actualizarTelProductor(\''+p.id+'\',this.value)" style="width:130px;padding:4px 8px;border:0.5px solid #d0d0d0;border-radius:5px;font-size:12px">'
+      +'<button onclick="eliminarProductorManual(\''+p.id+'\',\''+p.nombre.replace(/\'/g,"\\'")+'\')" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:14px">✕</button>'
+      +'</div>';
+  }).join('');
+}
+function actualizarTelProductor(id,tel){
+  tel=(tel||'').trim();
+  sb.from('productores').update({telefono:tel||null}).eq('id',id).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    var p=PRODUCTORES_MANUAL.find(function(x){return x.id===id;});
+    if(p)p.telefono=tel;
+  });
+}
+function agregarProductorManual(){
+  var inp=document.getElementById('prod-manual-nombre');
+  var inpTel=document.getElementById('prod-manual-tel');
+  var nombre=(inp.value||'').trim();
+  var tel=(inpTel.value||'').trim();
+  if(!nombre)return;
+  if(PRODUCTORES_MANUAL.find(function(p){return p.nombre===nombre;})){alert('Ya existe ese productor');return;}
+  sb.from('productores').insert([{nombre:nombre,telefono:tel||null}]).select().then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    if(r.data&&r.data[0])PRODUCTORES_MANUAL.push(r.data[0]);
+    PRODUCTORES_MANUAL.sort(function(a,b){return a.nombre.localeCompare(b.nombre);});
+    inp.value='';inpTel.value='';
+    renderProdManualLista();
+  });
+}
+function eliminarProductorManual(id,nombre){
+  if(!confirm('¿Eliminar productor "'+nombre+'"?'))return;
+  sb.from('productores').delete().eq('id',id).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    PRODUCTORES_MANUAL=PRODUCTORES_MANUAL.filter(function(p){return p.id!==id;});
+    renderProdManualLista();
+  });
+}
+
+// ── TELÉFONOS DE OPERARIOS ──
+function toggleOperariosTelPanel(){
+  var panel=document.getElementById('oper-tel-panel');
+  var arrow=document.getElementById('oper-tel-arrow');
+  var open=panel.style.display==='block';
+  panel.style.display=open?'none':'block';
+  arrow.textContent=open?'▼ Desplegar':'▲ Cerrar';
+  if(!open){
+    sb.from('operarios_telefonos').select('*').then(function(r){
+      OPERARIOS_TEL={};
+      (r.data||[]).forEach(function(o){OPERARIOS_TEL[o.nombre]=o.telefono||'';});
+      renderOperariosTelLista();
+    });
+  }
+}
+function renderOperariosTelLista(){
+  var lista=document.getElementById('oper-tel-lista');
+  if(!lista)return;
+  lista.innerHTML=OPERARIOS.map(function(op){
+    var tel=OPERARIOS_TEL[op]||'';
+    return'<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#f9f9f7;border-radius:6px;margin-bottom:5px;font-size:13px">'
+      +'<span style="flex:1;font-weight:500">'+op+'</span>'
+      +'<input type="tel" placeholder="Sin tel" value="'+tel+'" onblur="actualizarTelOperario(\''+op.replace(/\'/g,"\\'")+'\',this.value)" style="width:160px;padding:4px 8px;border:0.5px solid #d0d0d0;border-radius:5px;font-size:12px">'
+      +'</div>';
+  }).join('');
+}
+function actualizarTelOperario(nombre,tel){
+  tel=(tel||'').trim();
+  sb.from('operarios_telefonos').upsert({nombre:nombre,telefono:tel||null}).then(function(r){
+    if(r.error){alert('Error: '+r.error.message);return;}
+    OPERARIOS_TEL[nombre]=tel;
   });
 }
 
@@ -2295,7 +2436,23 @@ function testConnection(){
 
 function cargarProveedores(){
   sb.from('proveedores').select('*').order('nombre').then(function(r){
-    PROVEEDORES=(r.data||[]).map(function(p){return p.nombre;});
+    var data=r.data||[];
+    PROVEEDORES=data.map(function(p){return p.nombre;});
+    PROVEEDORES_INFO={};
+    data.forEach(function(p){PROVEEDORES_INFO[p.nombre]=p.telefono||'';});
+  });
+}
+
+function cargarProductoresManual(){
+  sb.from('productores').select('*').eq('activo',true).order('nombre').then(function(r){
+    PRODUCTORES_MANUAL=(r.data||[]);
+  });
+}
+
+function cargarOperariosTel(){
+  sb.from('operarios_telefonos').select('*').then(function(r){
+    OPERARIOS_TEL={};
+    (r.data||[]).forEach(function(o){OPERARIOS_TEL[o.nombre]=o.telefono||'';});
   });
 }
 
@@ -5385,20 +5542,59 @@ function _generarFichaHTML(p){
   html+='if(d&&d.length&&d[0].imagen_url){s.innerHTML="<div style=\\"font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;font-weight:700\\">'+(esTX?"Previa aprobada":"Arte aprobado")+'</div><img src=\\""+d[0].imagen_url+"\\">";}';
   html+='else{s.innerHTML="<div style=\\"color:#aaa;font-size:12px;padding:14px;border:1px dashed #ddd;border-radius:6px\\">Sin previa aprobada</div>";}})';
   html+='.catch(function(){});';
-  // Función enviar por WhatsApp
+  // Función enviar por WhatsApp - modal selector con agenda de productores
+  // Inyectar listas: operarios, productores manuales y externalizados (proveedores con tel)
+  var operariosJSON=JSON.stringify(OPERARIOS.map(function(o){return{n:o,t:OPERARIOS_TEL[o]||''};}));
+  var manualJSON=JSON.stringify(PRODUCTORES_MANUAL.map(function(m){return{n:m.nombre,t:m.telefono||'',id:m.id};}));
+  var externosJSON=JSON.stringify(PROVEEDORES.map(function(prov){return{n:prov,t:PROVEEDORES_INFO[prov]||''};}));
+  html+='var OPERARIOS='+operariosJSON+';';
+  html+='var PRODUCTORES_MANUAL='+manualJSON+';';
+  html+='var EXTERNOS='+externosJSON+';';
   html+='function enviarPorWA(){';
-  html+='var tel=prompt("Teléfono del destinatario (productor, externalización, etc.)\\n\\nFormato: 622305934 o 34622305934","");';
-  html+='if(!tel)return;';
+  html+='var modal=document.getElementById("modal-prod");';
+  html+='if(!modal){modal=document.createElement("div");modal.id="modal-prod";modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px";document.body.appendChild(modal);}';
+  html+='var inner="<div style=\\"background:#fff;border-radius:10px;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;font-family:Arial,sans-serif\\">";';
+  html+='inner+="<div style=\\"padding:14px 18px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between\\"><div style=\\"font-size:15px;font-weight:700\\">Enviar ficha a productor</div><button onclick=\\"document.getElementById(\'modal-prod\').remove()\\" style=\\"background:none;border:none;font-size:18px;cursor:pointer;color:#888\\">&times;</button></div>";';
+  html+='inner+="<div style=\\"padding:14px 18px\\">";';
+  // Render grupos
+  html+='function renderGrupo(label,icono,arr,color){';
+  html+='if(!arr.length)return "";';
+  html+='var h="<div style=\\"font-size:10px;font-weight:700;color:"+color+";text-transform:uppercase;letter-spacing:.5px;margin:8px 0 6px;display:flex;align-items:center;gap:5px\\">"+icono+" "+label+"</div>";';
+  html+='arr.forEach(function(o){';
+  html+='var tieneT=!!o.t;';
+  html+='h+="<div onclick=\\"selProd(\'"+o.n.replace(/\'/g,\'\\\\\\\'\')+"\',\'"+(o.t||\'\').replace(/\'/g,\'\\\\\\\'\')+"\')\\" style=\\"display:flex;align-items:center;gap:8px;padding:8px 10px;border:0.5px solid #e0e0e0;border-radius:6px;margin-bottom:4px;cursor:pointer;background:"+(tieneT?\'#fff\':\'#fafafa\')+"\\">";';
+  html+='h+="<span style=\\"flex:1;font-size:13px;font-weight:500\\">"+o.n+"</span>";';
+  html+='h+="<span style=\\"font-size:11px;color:"+(tieneT?\'#888\':\'#A32D2D\')+"\\">"+(tieneT?o.t:\'sin tel\')+"</span>";';
+  html+='h+="</div>";';
+  html+='});';
+  html+='return h;}';
+  html+='inner+=renderGrupo("Operarios","&#x1F9D1;",OPERARIOS,"#185FA5");';
+  html+='inner+=renderGrupo("Productores taller","&#x1F3ED;",PRODUCTORES_MANUAL,"#3B6D11");';
+  html+='inner+=renderGrupo("Externalizados","&#x1F4E6;",EXTERNOS,"#BA7517");';
+  html+='inner+="<div style=\\"margin-top:12px;padding-top:12px;border-top:1px solid #eee\\">";';
+  html+='inner+="<div style=\\"font-size:10px;font-weight:700;color:#666;text-transform:uppercase;margin-bottom:6px\\">Otro numero</div>";';
+  html+='inner+="<input id=\\"prod-tel-manual\\" type=\\"tel\\" placeholder=\\"622123456\\" style=\\"width:100%;padding:8px 10px;border:0.5px solid #d1d1d1;border-radius:6px;font-size:13px;box-sizing:border-box\\">";';
+  html+='inner+="<button onclick=\\"selProd(\'Manual\',document.getElementById(\'prod-tel-manual\').value)\\" style=\\"margin-top:6px;width:100%;padding:8px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer\\">Enviar a este numero</button>";';
+  html+='inner+="</div></div></div>";';
+  html+='modal.innerHTML=inner;';
+  html+='}';
+  html+='function selProd(nombre,tel){';
+  html+='if(!tel||!tel.trim()){';
+  html+='var n=prompt("Falta telefono para \\""+nombre+"\\". Introduce su numero:","");';
+  html+='if(!n)return;';
+  html+='tel=n;';
+  html+='}';
   html+='tel=tel.replace(/\\s/g,"").replace(/^\\+/,"");';
   html+='if(tel.length===9&&!tel.startsWith("34"))tel="34"+tel;';
-  html+='var msg="Ficha de producción · '+p.id+'\\n\\n";';
-  html+='msg+="Cliente: '+p.clienteNombre.replace(/"/g,"")+'\\n";';
-  html+='msg+="Trabajo: '+(p.descripcion||"").replace(/"/g,"").replace(/\\n/g," ")+'\\n";';
+  html+='var msg="*Ficha de produccion · '+p.id+'*\\n\\n";';
+  html+='msg+="Cliente: '+p.clienteNombre.replace(/"/g,"").replace(/\*/g,"")+'\\n";';
+  html+='msg+="Trabajo: '+(p.descripcion||"").replace(/"/g,"").replace(/\\n/g," ").replace(/\*/g,"")+'\\n";';
   html+='msg+="Entrega: '+fechaEnt+'\\n\\n";';
-  html+='msg+="Para ver la ficha completa con previa aprobada y datos de producción, abre el link:\\n";';
+  html+='msg+="Abre la ficha completa aqui:\\n";';
   html+='msg+=window.location.href;';
   html+='var url="https://wa.me/"+tel+"?text="+encodeURIComponent(msg);';
   html+='window.open(url,"_blank");';
+  html+='var m=document.getElementById("modal-prod");if(m)m.remove();';
   html+='}';
   html+='</'+'script></body></html>';
   var blob=new Blob([html],{type:'text/html'});
@@ -10121,6 +10317,8 @@ testConnection();
 cargarDatos();
 cargarPresupuestos();
 cargarProveedores();
+cargarProductoresManual();
+cargarOperariosTel();
 // Arrancar siempre en Mostrador
 showScreen('mostrador',document.querySelector('.nav-tab'));
 // Identidad: no persiste, siempre pedir al abrir
