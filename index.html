@@ -790,7 +790,7 @@ textarea{resize:vertical;min-height:64px}
     <div id="prov-panel" style="display:none;margin-top:12px">
       <div id="prov-lista" style="margin-bottom:12px"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input type="text" id="prov-nuevo-nombre" placeholder="Nombre del proveedor..." style="flex:1;min-width:140px">
+        <input type="text" id="prov-nuevo-nombre" placeholder="Nombre del proveedor (en MAYÚSCULAS)..." style="flex:1;min-width:140px;text-transform:uppercase">
         <input type="tel" id="prov-nuevo-tel" placeholder="Teléfono (opcional)" style="flex:1;min-width:120px">
         <button class="btn btn-primary" onclick="agregarProveedor()">+ Añadir</button>
       </div>
@@ -2243,10 +2243,15 @@ function actualizarTelProv(nombre,tel){
 function agregarProveedor(){
   var inp=document.getElementById('prov-nuevo-nombre');
   var inpTel=document.getElementById('prov-nuevo-tel');
-  var nombre=(inp.value||'').trim();
+  var nombre=(inp.value||'').trim().toUpperCase();
   var tel=(inpTel?(inpTel.value||'').trim():'');
   if(!nombre)return;
-  if(PROVEEDORES.includes(nombre)){alert('Ya existe ese proveedor');return;}
+  // Comparación case-insensitive: evita duplicados por mayús/minús/tildes
+  var nombreNorm=nombre.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  var existe=PROVEEDORES.some(function(p){
+    return p.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase()===nombreNorm;
+  });
+  if(existe){alert('Ya existe ese proveedor');return;}
   sb.from('proveedores').insert([{nombre:nombre,telefono:tel||null}]).then(function(r){
     if(r.error){alert('Error: '+r.error.message);return;}
     PROVEEDORES.push(nombre);
