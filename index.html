@@ -486,7 +486,23 @@ textarea{resize:vertical;min-height:64px}
   .resguardo{padding:10mm}
 }
 
-#barra-avisos{background:#3B6D11;padding:11px 20px;display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:56px;z-index:99}#barra-avisos-lista{display:none;flex-direction:column;gap:6px;border-top:1px solid #27500A;padding-top:8px;margin-top:8px;width:100%}.barra-item{display:flex;align-items:center;justify-content:space-between;background:#27500A;padding:8px 12px;border-radius:6px;cursor:pointer}.barra-item:hover{background:#173404}.barra-dot{width:8px;height:8px;background:#C0DD97;border-radius:50%;flex-shrink:0}.barra-badge{background:#27500A;color:#C0DD97;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}.barra-btn{background:#27500A;color:#C0DD97;font-size:12px;padding:5px 14px;border-radius:20px;white-space:nowrap;cursor:pointer;border:none;font-family:inherit}.barra-btn:hover{background:#173404}</style>
+#barra-avisos{background:#3B6D11;padding:11px 20px;display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:56px;z-index:99}#barra-avisos-lista{display:none;flex-direction:column;gap:6px;border-top:1px solid #27500A;padding-top:8px;margin-top:8px;width:100%}.barra-item{display:flex;align-items:center;justify-content:space-between;background:#27500A;padding:8px 12px;border-radius:6px;cursor:pointer}.barra-item:hover{background:#173404}.barra-dot{width:8px;height:8px;background:#C0DD97;border-radius:50%;flex-shrink:0}.barra-badge{background:#27500A;color:#C0DD97;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}.barra-btn{background:#27500A;color:#C0DD97;font-size:12px;padding:5px 14px;border-radius:20px;white-space:nowrap;cursor:pointer;border:none;font-family:inherit}.barra-btn:hover{background:#173404}
+#bandeja-op{background:#185FA5;padding:11px 20px;display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:56px;z-index:98}
+#bandeja-op-lista{display:none;flex-direction:column;gap:8px;border-top:1px solid #0C447C;padding-top:10px;margin-top:8px;width:100%}
+.bop-item{display:flex;align-items:center;justify-content:space-between;background:#0C447C;padding:9px 12px;border-radius:6px;gap:10px;flex-wrap:wrap}
+.bop-item-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.bop-icon{font-size:16px;flex-shrink:0}
+.bop-text{color:#E6F1FB;font-size:12.5px;line-height:1.35;min-width:0}
+.bop-text strong{color:#fff;font-weight:600}
+.bop-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bop-btn{background:#fff;color:#0C447C;font-size:11.5px;padding:5px 11px;border-radius:6px;border:none;cursor:pointer;font-weight:600;font-family:inherit;white-space:nowrap}
+.bop-btn:hover{background:#E6F1FB}
+.bop-btn-link{background:transparent;color:#B5D4F4;font-size:11px;padding:5px 8px;border:none;cursor:pointer;text-decoration:underline;font-family:inherit;white-space:nowrap}
+.bop-btn-link:hover{color:#fff}
+.bop-dot{width:8px;height:8px;background:#85B7EB;border-radius:50%;flex-shrink:0}
+.bop-badge{background:#0C447C;color:#B5D4F4;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.bop-section-label{font-size:10px;font-weight:700;color:#B5D4F4;text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px;padding-left:2px}
+.bop-section-label:first-child{margin-top:0}</style>
 </head>
 <body>
 <header>
@@ -525,6 +541,20 @@ textarea{resize:vertical;min-height:64px}
     </div>
   </div>
   <div id="barra-avisos-lista"></div>
+</div>
+
+<!-- BANDEJA DEL OPERARIO (filtra por _pcYo) -->
+<div id="bandeja-op">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="bop-dot"></div>
+      <span id="bandeja-op-resumen" style="color:#E6F1FB;font-size:13px;font-weight:500"></span>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="barra-btn" id="bop-ver-btn" onclick="toggleBandejaOpLista()" style="background:#0C447C;color:#B5D4F4">Ver todos ↓</button>
+    </div>
+  </div>
+  <div id="bandeja-op-lista"></div>
 </div>
 
 <!-- PRESUPUESTOS (Solicitudes + Cotizaciones) -->
@@ -2496,6 +2526,8 @@ function cargarDatos(){
     renderClientes();
     cargarSolicitudes();
     cargarPresupuestos();
+    // Cargar conteo de archivos para detectar 'archivos llegados' en bandeja del operario
+    cargarConteoArchivosPedidos().then(function(){renderBandejaOperario();});
   }).catch(function(err){
     console.error('Error cargando datos:',err);
     document.getElementById('taller-list').innerHTML='<div class="empty-state">Error al conectar con la base de datos</div>';
@@ -3657,7 +3689,7 @@ function verPedido(id){
   // Iniciar panel cerrado
   if(!p.externalizado){var eb=document.getElementById('ext-body-'+p.id);if(eb)eb.style.display='none';}
   // Cargar archivos del cliente (asincrono)
-  if(p.archivosToken){cargarArchivosPedido(p.id,p.archivosToken);}
+  if(p.archivosToken){cargarArchivosPedido(p.id,p.archivosToken);p._archivosVistos=true;}
 }
 
 // Cargar lista de archivos del cliente para un pedido y renderizar en el modal
@@ -4234,7 +4266,186 @@ function pasaFiltroEntrega(p){
   if(v==='vencido')return fe<hoy&&p.fase<6;
   return true;
 }
-function renderTaller(){renderStats();if(currentView==='lista')renderLista();else if(currentView==='semana')renderSemana();else if(currentView==='mes')renderMes();}
+// ═════════════════ BANDEJA DEL OPERARIO ═════════════════
+// Carga el conteo de archivos por pedido (para detectar "Archivos llegados")
+function cargarConteoArchivosPedidos(){
+  // Solo pedidos abiertos del operario activo (optimización)
+  if(!_pcYo || _pcYo==='all')return Promise.resolve();
+  var ids=pedidos.filter(function(p){return p.operario===_pcYo && p.fase<4 && p.archivosToken;}).map(function(p){return p.id;});
+  if(!ids.length)return Promise.resolve();
+  return sb.from('pedido_archivos').select('pedido_id').in('pedido_id',ids).then(function(r){
+    if(!r.data)return;
+    var counts={};
+    r.data.forEach(function(row){counts[row.pedido_id]=(counts[row.pedido_id]||0)+1;});
+    pedidos.forEach(function(p){
+      if(ids.indexOf(p.id)>=0){
+        var nuevo=counts[p.id]||0;
+        // _archivosVistos persiste en memoria — si el operario abrió el pedido, pasa a vistos
+        if(p._archivosCount===undefined)p._archivosCount=nuevo;
+        else if(nuevo>p._archivosCount)p._archivosVistos=false; // llegaron nuevos
+        p._archivosCount=nuevo;
+      }
+    });
+  });
+}
+
+// Detecta avisos y listas de trabajo del operario activo (_pcYo)
+function detectarAvisosOperario(operario){
+  if(!operario || operario==='all')return null;
+  var hoy=new Date();hoy.setHours(0,0,0,0);
+  var en2dias=new Date(hoy);en2dias.setDate(en2dias.getDate()+2);
+  // Filtro: pedidos del operario, no terminados (fase < 4)
+  var mis=pedidos.filter(function(p){return p.operario===operario && p.fase<4 && p.fase>=0;});
+  // Avisos
+  var aCambiosPrevia=mis.filter(function(p){return p.previaEstado==='rechazada';});
+  var aEntregaVencida=mis.filter(function(p){
+    if(!p.fechaEntrega||p.fechaTipo!=='fija')return false;
+    var f=new Date(p.fechaEntrega+'T12:00:00');return f<hoy;
+  });
+  var aEntregaCerca=mis.filter(function(p){
+    if(!p.fechaEntrega||p.fechaTipo!=='fija')return false;
+    var f=new Date(p.fechaEntrega+'T12:00:00');f.setHours(0,0,0,0);
+    return f>=hoy && f<=en2dias;
+  });
+  var aTallasCompletas=mis.filter(function(p){
+    return p.seccion==='TX' && tallasCompletas(p) && !p.ropaOk && !esPrendaCliente(p);
+  });
+  var aSinTallas7d=mis.filter(function(p){
+    if(p.seccion!=='TX')return false;
+    if(tallasCompletas(p))return false;
+    if(esPrendaCliente(p) && p.tipoPersonalizacion!=='individual')return false;
+    var dias=Math.floor((hoy-new Date(p.fechaCreacion))/(1000*3600*24));
+    return dias>=7;
+  });
+  var aArchivosLlegados=mis.filter(function(p){
+    return (p._archivosCount||0)>0 && !p._archivosVistos;
+  });
+  // Listas de trabajo (acumulados)
+  var listaDtfPdte=mis.filter(function(p){
+    return p.seccion==='TX' && tallasCompletas(p) && p.previaEstado==='aceptada' && !p.dtfOk;
+  });
+  var listaRopaPdte=mis.filter(function(p){
+    return p.seccion==='TX' && tallasCompletas(p) && !p.ropaOk && !esPrendaCliente(p);
+  });
+  return {
+    avisos:{
+      cambiosPrevia:aCambiosPrevia,
+      entregaVencida:aEntregaVencida,
+      entregaCerca:aEntregaCerca,
+      tallasCompletas:aTallasCompletas,
+      sinTallas7d:aSinTallas7d,
+      archivosLlegados:aArchivosLlegados
+    },
+    listas:{
+      dtfPdte:listaDtfPdte,
+      ropaPdte:listaRopaPdte
+    }
+  };
+}
+
+function renderBandejaOperario(){
+  var bar=document.getElementById('bandeja-op');
+  var resumen=document.getElementById('bandeja-op-resumen');
+  var lista=document.getElementById('bandeja-op-lista');
+  var btn=document.getElementById('bop-ver-btn');
+  if(!bar||!resumen||!lista)return;
+  // Sin identidad o "Todos" → ocultar barra
+  if(!_pcYo || _pcYo==='all'){
+    bar.style.display='none';
+    lista.style.display='none';
+    return;
+  }
+  var data=detectarAvisosOperario(_pcYo);
+  if(!data){bar.style.display='none';return;}
+  var a=data.avisos;
+  var l=data.listas;
+  // Total de avisos
+  var totalAvisos=a.cambiosPrevia.length+a.entregaVencida.length+a.entregaCerca.length+a.tallasCompletas.length+a.sinTallas7d.length+a.archivosLlegados.length;
+  var totalListas=l.dtfPdte.length+l.ropaPdte.length;
+  // Si no hay nada → ocultar
+  if(totalAvisos===0 && totalListas===0){
+    bar.style.display='none';
+    lista.style.display='none';
+    return;
+  }
+  // Resumen compacto
+  var partes=[];
+  partes.push('<strong>'+_pcYo+':</strong>');
+  if(a.cambiosPrevia.length)partes.push('<span style="color:#FAC775">'+a.cambiosPrevia.length+' cambios previa</span>');
+  if(a.entregaVencida.length)partes.push('<span style="color:#F09595">'+a.entregaVencida.length+' vencida'+(a.entregaVencida.length>1?'s':'')+'</span>');
+  if(a.entregaCerca.length)partes.push(a.entregaCerca.length+' entrega'+(a.entregaCerca.length>1?'s':'')+' cerca');
+  if(a.tallasCompletas.length)partes.push(a.tallasCompletas.length+' tallas listas');
+  if(a.archivosLlegados.length)partes.push(a.archivosLlegados.length+' archivos nuevos');
+  if(a.sinTallas7d.length)partes.push(a.sinTallas7d.length+' sin tallas 7d+');
+  if(l.dtfPdte.length)partes.push(l.dtfPdte.length+' DTF por pedir');
+  if(l.ropaPdte.length)partes.push(l.ropaPdte.length+' ropa'+(l.ropaPdte.length>1?'s':'')+' por pedir');
+  resumen.innerHTML=partes.join(' · ');
+  bar.style.display='flex';
+  if(btn)btn.style.display=(totalAvisos+totalListas>0)?'inline-block':'none';
+  // Si la lista está abierta, regenerarla
+  if(lista.style.display==='flex')renderBandejaOpListaContenido();
+}
+
+function renderBandejaOpListaContenido(){
+  var lista=document.getElementById('bandeja-op-lista');
+  if(!lista || !_pcYo || _pcYo==='all')return;
+  var data=detectarAvisosOperario(_pcYo);
+  if(!data)return;
+  var a=data.avisos;
+  var l=data.listas;
+  var html='';
+  var hayAvisos=a.cambiosPrevia.length||a.entregaVencida.length||a.entregaCerca.length||a.tallasCompletas.length||a.sinTallas7d.length||a.archivosLlegados.length;
+  if(hayAvisos){
+    html+='<div class="bop-section-label">🚨 Avisos</div>';
+    a.cambiosPrevia.forEach(function(p){
+      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">✏️</span><span class="bop-text"><strong>'+p.id+'</strong> · '+p.clienteNombre+' · cliente solicitó cambios</span></div><div class="bop-actions"><button class="bop-btn" onclick="event.stopPropagation();verPedido(\''+p.id+'\');togglePreviaPanel(\''+p.id+'\');">📎 Subir nueva versión</button><button class="bop-btn-link" onclick="event.stopPropagation();verPedido(\''+p.id+'\')">Ver pedido</button></div></div>';
+    });
+    a.entregaVencida.forEach(function(p){
+      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">⏰</span><span class="bop-text"><strong>'+p.id+'</strong> · '+p.clienteNombre+' · entrega vencida ('+p.fechaEntrega+')</span></div><div class="bop-actions"><button class="bop-btn-link" onclick="event.stopPropagation();verPedido(\''+p.id+'\')">Ver pedido</button></div></div>';
+    });
+    a.entregaCerca.forEach(function(p){
+      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">📦</span><span class="bop-text"><strong>'+p.id+'</strong> · '+p.clienteNombre+' · entrega '+p.fechaEntrega+'</span></div><div class="bop-actions"><button class="bop-btn-link" onclick="event.stopPropagation();verPedido(\''+p.id+'\')">Ver pedido</button></div></div>';
+    });
+    a.tallasCompletas.forEach(function(p){
+      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">👕</span><span class="bop-text"><strong>'+p.id+'</strong> · '+p.clienteNombre+' · tallas completas, falta pedir ropa</span></div><div class="bop-actions"><button class="bop-btn" onclick="event.stopPropagation();toggleCheckModal(\''+p.id+'\',\'ropaOk\',true)">✓ Ropa pedida</button><button class="bop-btn-link" onclick="event.stopPropagation();verPedido(\''+p.id+'\')">Ver pedido</button></div></div>';
+    });
+    a.archivosLlegados.forEach(function(p){
+      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">📁</span><span class="bop-text"><strong>'+p.id+'</strong> · '+p.clienteNombre+' · '+(p._archivosCount||'')+' archivo'+((p._archivosCount||0)>1?'s':'')+' nuevo'+((p._archivosCount||0)>1?'s':'')+'</span></div><div class="bop-actions"><button class="bop-btn-link" onclick="event.stopPropagation();verPedido(\''+p.id+'\')">Ver pedido</button></div></div>';
+    });
+    a.sinTallas7d.forEach(function(p){
+      var dias=Math.floor((new Date()-new Date(p.fechaCreacion))/(1000*3600*24));
+      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">🚨</span><span class="bop-text"><strong>'+p.id+'</strong> · '+p.clienteNombre+' · sin tallas hace '+dias+' días</span></div><div class="bop-actions">'+(p.clienteTel?'<button class="bop-btn" onclick="event.stopPropagation();reabrirTallasCliente(\''+p.id+'\')">📲 Reenviar WA</button>':'')+'<button class="bop-btn-link" onclick="event.stopPropagation();verPedido(\''+p.id+'\')">Ver pedido</button></div></div>';
+    });
+  }
+  var hayListas=l.dtfPdte.length||l.ropaPdte.length;
+  if(hayListas){
+    html+='<div class="bop-section-label">📋 Por hacer</div>';
+    if(l.ropaPdte.length){
+      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">📦</span><span class="bop-text"><strong>'+l.ropaPdte.length+' ropa'+(l.ropaPdte.length>1?'s':'')+' por pedir</strong> al proveedor: '+l.ropaPdte.map(function(p){return p.id;}).join(', ')+'</span></div></div>';
+    }
+    if(l.dtfPdte.length){
+      html+='<div class="bop-item"><div class="bop-item-info"><span class="bop-icon">🎨</span><span class="bop-text"><strong>'+l.dtfPdte.length+' DTF por pedir</strong>: '+l.dtfPdte.map(function(p){return p.id;}).join(', ')+'</span></div></div>';
+    }
+  }
+  lista.innerHTML=html||'<div style="color:#B5D4F4;font-size:12px;padding:6px 0">Todo al día 🎉</div>';
+}
+
+function toggleBandejaOpLista(){
+  var lista=document.getElementById('bandeja-op-lista');
+  var btn=document.getElementById('bop-ver-btn');
+  if(!lista||!btn)return;
+  var abierta=lista.style.display==='flex';
+  if(abierta){
+    lista.style.display='none';
+    btn.textContent='Ver todos ↓';
+  }else{
+    renderBandejaOpListaContenido();
+    lista.style.display='flex';
+    btn.textContent='Ocultar ↑';
+  }
+}
+
+function renderTaller(){renderStats();renderBandejaOperario();if(currentView==='lista')renderLista();else if(currentView==='semana')renderSemana();else if(currentView==='mes')renderMes();}
 function renderStats(){var all=applySecFilter(pedidos),activos=all.filter(function(p){return p.fase<5;}),totalPend=all.reduce(function(s,p){return s+(p.total-(p.senal||0));},0),urgentes=activos.filter(function(p){return p.fechaTipo==='fija';}).length,listos=all.filter(function(p){return p.fase===5||p.fase===6;}).length;var txActivos=activos.filter(function(p){return p.seccion==='TX';});var sinTallas=txActivos.filter(function(p){return !tallasCompletas(p);}).length;var sinPrevia=txActivos.filter(function(p){return tallasCompletas(p)&&p.previaEstado!=='aceptada';}).length;var enProd=txActivos.filter(function(p){return tallasCompletas(p)&&p.previaEstado==='aceptada';}).length;document.getElementById('taller-stats').innerHTML='<div class="stat-card"><div class="sv">'+activos.length+'</div><div class="sl">Activos</div></div><div class="stat-card"><div class="sv" style="color:#534AB7">'+listos+'</div><div class="sl">Para recoger</div></div><div class="stat-card"><div class="sv" style="color:#A32D2D">'+totalPend.toFixed(0)+'€</div><div class="sl">Pdte cobro</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+urgentes+'</div><div class="sl">Fijas</div></div>'+(txActivos.length?'<div class="stat-card"><div class="sv" style="color:#A32D2D">'+sinTallas+'</div><div class="sl">Sin tallas</div></div><div class="stat-card"><div class="sv" style="color:#BA7517">'+sinPrevia+'</div><div class="sl">Sin previa</div></div><div class="stat-card"><div class="sv" style="color:#3B6D11">'+enProd+'</div><div class="sl">En producción</div></div>':'');}
 function renderLista(){var list=applySecFilter(pedidos);var secSel=document.getElementById('seccion-select');var secFiltro=secSel?secSel.value:'all';if(secFiltro!=='all')list=list.filter(function(p){return p.seccion===secFiltro;});if(activeFilters.fase!=='all')list=list.filter(function(p){return String(p.fase)===activeFilters.fase;});list=list.filter(function(p){return pasaFiltroEntrega(p);});if(activeFilters.pago==='pendiente')list=list.filter(function(p){return(p.total-(p.senal||0))>0;});if(activeFilters.pago==='pagado')list=list.filter(function(p){return(p.total-(p.senal||0))<=0;});var sort=document.getElementById('sort-select').value||'entrega';list.sort(function(a,b){if(sort==='entrega')return(a.fechaEntrega||'9999')>(b.fechaEntrega||'9999')?1:-1;if(sort==='creacion')return new Date(b.fechaCreacion)-new Date(a.fechaCreacion);if(sort==='seccion')return a.seccion>b.seccion?1:-1;if(sort==='pendiente')return(b.total-(b.senal||0))-(a.total-(a.senal||0));return 0;});document.getElementById('taller-list').innerHTML=list.length?list.map(tarjetaTaller).join(''):'<div class="empty-state">No hay pedidos con estos filtros</div>';}
 function renderSemana(){
@@ -10374,6 +10585,10 @@ function setIdentidadPC(valor){
   renderOpFilterSelect();
   renderIdentidadBtn();
   renderTaller();
+  // Cargar conteo de archivos para los pedidos del operario activo
+  if(valor && valor!=='all'){
+    cargarConteoArchivosPedidos().then(function(){renderBandejaOperario();});
+  }
 }
 // Analytics siempre visible. El guard está en showScreen (pide clave al entrar).
 function actualizarVisibilidadAnalytics(){
@@ -10501,6 +10716,12 @@ function checkAutoProduccion(){
 setInterval(checkAutoProduccion,4*60*60*1000);
 // Tambien al cargar app: verificar pedidos que ya cumplian pero quedaron parados
 setTimeout(checkAutoProduccion,10000);
+// Refresco bandeja del operario cada 2 minutos (recarga conteo archivos + recalcula avisos)
+setInterval(function(){
+  if(_pcYo && _pcYo!=='all'){
+    cargarConteoArchivosPedidos().then(function(){renderBandejaOperario();});
+  }
+},2*60*1000);
 // Alerta interna: previas con cambios sin resubir > 24h
 setInterval(function(){
   var ahora=new Date();
