@@ -270,7 +270,41 @@ async function recibirNotificacionPago(req, res) {
     const pagoOk = respuesta >= 0 && respuesta <= 99;
     console.log('Redsys notificacion - order:', order, 'respuesta:', respuesta, 'ok:', pagoOk);
 
-    const { data: presArr } = await sb.from('presupuestos').select('*').ilike('numero', '%' + order.replace(/^0+/, '') + '%');
+    // Extraer el número de presupuesto del order de Redsys
+    // El order tiene formato: prefijo + numero + timestamp(4 chars)
+    // Ej: ES000110BTXE → presupuesto 000110 (PRES-000110)
+    // Ej: 000056ABCD → presupuesto 000056 (PRES-000056)
+    // Estrategia: quitar los últimos 4 chars (timestamp) y luego extraer dígitos
+    let numLimpio = order;
+    if (order.length > 4) {
+      const sinTimestamp = order.slice(0, -4); // quita timestamp
+      const soloDigitos = sinTimestamp.replace(/[^0-9]/g, ''); // solo números
+      if (soloDigitos.length > 0) {
+        numLimpio = soloDigitos.replace(/^0+/, '') || soloDigitos; // quita ceros izq
+      }
+    }
+    console.log('Buscando presupuesto - order:', order, 'numLimpio:', numLimpio);
+    
+    // Intentar 3 búsquedas en orden de probabilidad
+    let presArr = null;
+    
+    // 1. Buscar por número exacto (PRES-000110, PRES-110, etc)
+    let res1 = await sb.from('presupuestos').select('*').ilike('numero', '%' + numLimpio + '%');
+    if (res1.data && res1.data.length) {
+      // Filtrar por coincidencia exacta del número (evitar PRES-110 vs PRES-1100)
+      presArr = res1.data.filter(p => {
+        const numP = (p.numero || '').replace(/[^0-9]/g, '').replace(/^0+/, '');
+        return numP === numLimpio;
+      });
+      if (!presArr.length) presArr = res1.data; // si no hay match exacto, usar el primero
+    }
+    
+    // 2. Si no se encontró, buscar por order original
+    if (!presArr || !presArr.length) {
+      let res2 = await sb.from('presupuestos').select('*').ilike('numero', '%' + order.replace(/^0+/, '') + '%');
+      presArr = res2.data || [];
+    }
+    
     const pres = presArr && presArr[0];
 
     if (pagoOk) {
