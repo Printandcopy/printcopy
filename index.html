@@ -11017,6 +11017,39 @@ function ampliImgPrenda(src){
 function checkWAHealth(){fetch('/api/health-check').then(function(r){return r.json();}).then(function(d){var bar=document.getElementById('wa-alert-bar');if(!bar)return;if(d.estado==='ERROR'){bar.style.display='block';console.warn('⚠️ WA CAÍDO:',d.detalle);}else{bar.style.display='none';}}).catch(function(){});}
 checkWAHealth();
 setInterval(checkWAHealth,15*60*1000);
+// Polling cada 60s para detectar pedidos auto-creados (pago Redsys/Bizum/Tarjeta)
+// Estos pedidos se crean por el webhook /api/redsys cuando el cliente paga online
+// Hay que recargarlos en memoria + mostrar toast + refrescar UI sin necesidad de F5
+var _pedidosAutoVistos={};
+// Inicializar con los pedidos que ya tiene el sistema (para no avisar de antiguos)
+setTimeout(function(){pedidos.forEach(function(p){if(p.notas&&(p.notas.indexOf('Pago online')>=0||p.notas.indexOf('Auto desde')>=0))_pedidosAutoVistos[p.id]=true;});},5000);
+setInterval(function(){
+  // Buscar pedidos con notas que empiezan por "Pago online" creados en últimas 24h
+  var hace24h=new Date(Date.now()-86400000).toISOString();
+  sb.from('pedidos').select('id,cliente_nombre,cliente_tel,total,seccion,notas,fecha_creacion,fase')
+    .gte('fecha_creacion',hace24h).like('notas','Pago online%')
+    .then(function(r){
+      if(!r.data||!r.data.length)return;
+      var nuevos=r.data.filter(function(p){return !_pedidosAutoVistos[p.id];});
+      if(!nuevos.length)return;
+      nuevos.forEach(function(p){_pedidosAutoVistos[p.id]=true;});
+      // Recargar todos los datos para que aparezcan en taller/pedidos sin refrescar
+      cargarDatos().then(function(){
+        // Mostrar 1 toast por pedido nuevo
+        nuevos.forEach(function(p){
+          if(Notification.permission==='granted')
+            new Notification('💳 Nuevo pedido pagado',{body:p.cliente_nombre+' · '+p.id+' · '+p.total+'€',icon:'/favicon.ico'});
+          var t=document.createElement('div');
+          t.style.cssText='position:fixed;bottom:20px;right:20px;background:#3B6D11;color:#fff;padding:14px 18px;border-radius:10px;font-size:14px;font-weight:700;z-index:9999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.25);max-width:300px;border-left:4px solid #1F4007';
+          t.innerHTML='💳 <b>Nuevo pedido pagado</b><br><span style="font-size:12px;font-weight:400">'+p.cliente_nombre+' · '+p.id+' · '+p.total+'€</span><br><span style="font-size:11px;font-weight:400;opacity:.85">Bizum/Tarjeta · Sin asignar</span>';
+          t.onclick=function(){verPedido(p.id);t.remove();};
+          document.body.appendChild(t);
+          setTimeout(function(){if(t.parentNode)t.remove();},15000);
+        });
+      });
+    });
+},60000);
+
 // Polling cada 60s para detectar presupuestos aceptados por el cliente
 setInterval(function(){
   var hace24h=new Date(Date.now()-86400000).toISOString();
