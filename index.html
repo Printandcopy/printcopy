@@ -2552,6 +2552,8 @@ function cargarDatos(){
     renderClientes();
     cargarSolicitudes();
     cargarPresupuestos();
+    // Refrescar vista de Pedidos (sin asignar / todos) si la funcion existe
+    if(typeof renderPedidosActivos==='function')renderPedidosActivos();
     // Cargar conteo de archivos para detectar 'archivos llegados' en bandeja del operario
     cargarConteoArchivosPedidos().then(function(){renderBandejaOperario();});
   }).catch(function(err){
