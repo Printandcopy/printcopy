@@ -229,7 +229,7 @@ async function crearPedidoDesdePresupuesto(sb, pres, senal) {
         senal: Math.round((senalTotal * proporcion) * 100) / 100,
         pago: pagoEst,
         condiciones: pres.condicion_pago || '50_50',
-        fase: 1,
+        fase: 0,
         presupuesto_origen: pres.numero
       };
       await sb.from('pedidos').insert([ped]);
