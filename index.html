@@ -1547,6 +1547,16 @@ var sb=supabase.createClient('https://ffiyprmbrznofoprvvik.supabase.co','eyJhbGc
 // O cambiar MODO_PRUEBA_FORZADO abajo (true=bloqueado para todos)
 // ═══════════════════════════════════════════════════════════════════════
 var MODO_PRUEBA_FORZADO=true; // ⚠️ TRUE durante pruebas con Marilia, FALSE en producción real
+// WHITELIST de números que SÍ reciben WA aunque MODO_PRUEBA_FORZADO=true.
+// Sirve para hacer pruebas reales con tu propio número sin desactivar el modo prueba.
+// Formato: prefijo+número sin espacios. Editar el array para añadir/quitar números.
+var WA_WHITELIST=['34658797090']; // Raúl Cuadrado
+function _waNormalizarTel(t){if(!t)return'';return String(t).replace(/[\s\+\-\(\)]/g,'');}
+function _waEnWhitelist(tel){
+  var n=_waNormalizarTel(tel);
+  if(!n)return false;
+  return WA_WHITELIST.map(_waNormalizarTel).indexOf(n)>=0;
+}
 function modoPruebaActivo(){
   if(MODO_PRUEBA_FORZADO)return true;
   try{return localStorage.getItem('_modoPrueba')==='true';}catch(e){return false;}
@@ -1555,10 +1565,26 @@ function modoPruebaActivo(){
 var _originalFetch=window.fetch;
 window.fetch=function(url,opts){
   if(modoPruebaActivo() && typeof url==='string' && url.indexOf('/api/whatsapp')>=0){
-    // Mostrar toast naranja para que el operario sepa que el WA NO se envió
+    // Comprobar si el destinatario está en whitelist → si sí, dejar pasar el WA real
+    var body={};
+    try{body=JSON.parse((opts&&opts.body)||'{}');}catch(e){}
+    if(_waEnWhitelist(body.telefono)){
+      // Whitelist: enviar WA real + toast verde de aviso
+      try{
+        var preview=(body.mensaje||'').substring(0,80).replace(/\n/g,' ');
+        var tw=document.createElement('div');
+        tw.style.cssText='position:fixed;top:80px;right:20px;background:#3B6D11;color:#fff;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:99999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:340px;border-left:5px solid #1F4007';
+        tw.innerHTML='✅ <b>WA REAL enviado</b> (whitelist)<br>'
+          +'<span style="font-size:11px;opacity:.95;font-weight:400">A: '+(body.telefono||'?')+' · '+preview+(preview.length>=80?'…':'')+'</span>';
+        tw.onclick=function(){tw.remove();};
+        document.body.appendChild(tw);
+        setTimeout(function(){if(tw.parentNode)tw.remove();},6000);
+        console.log('[WHITELIST] WA real enviado a:',body.telefono);
+      }catch(e){}
+      return _originalFetch.apply(this,arguments);
+    }
+    // No está en whitelist → bloqueo normal con toast naranja
     try{
-      var body={};
-      try{body=JSON.parse((opts&&opts.body)||'{}');}catch(e){}
       var preview=(body.mensaje||'').substring(0,80).replace(/\n/g,' ');
       var t=document.createElement('div');
       t.style.cssText='position:fixed;top:80px;right:20px;background:#FF9800;color:#fff;padding:12px 16px;border-radius:8px;font-size:13px;font-weight:600;z-index:99999;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3);max-width:340px;border-left:5px solid #E65100';

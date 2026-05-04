@@ -13,14 +13,31 @@ module.exports = async function handler(req, res) {
   // ⚠️ ACTIVADO durante fase de pruebas con Marilia. Cuando termine: cambiar a false.
   // Nota: las fichas de produccion a productores internos pueden hacer bypass con bypassEmergency:true
   // (es comunicacion interna entre operario y productor, no afecta a clientes finales)
+  // WHITELIST: numeros de la lista WA_WHITELIST (env var, separados por coma) NO se bloquean
+  // aunque EMERGENCY_STOP=true. Sirve para hacer pruebas reales con tu propio numero
+  // sin desactivar el modo prueba para todos los demas clientes.
   const EMERGENCY_STOP = true;
   const bypassEmergency = req.body && req.body.bypassEmergency === true;
-  if (EMERGENCY_STOP && !bypassEmergency) {
-    console.log('WA EMERGENCY STOP -> mensaje bloqueado');
+  
+  // Normalizar telefono destinatario para comparar con whitelist
+  function normalizarTel(t) {
+    if (!t) return '';
+    return String(t).replace(/[\s\+\-\(\)]/g, '');
+  }
+  const telDestino = normalizarTel((req.body && req.body.telefono) || '');
+  const whitelistRaw = process.env.WA_WHITELIST || '34658797090'; // fallback: numero de Raul (configurable en Vercel)
+  const whitelist = whitelistRaw.split(',').map(function(n) { return normalizarTel(n); }).filter(Boolean);
+  const enWhitelist = telDestino && whitelist.indexOf(telDestino) >= 0;
+  
+  if (EMERGENCY_STOP && !bypassEmergency && !enWhitelist) {
+    console.log('WA EMERGENCY STOP -> mensaje bloqueado a', telDestino);
     return res.status(200).json({ success: false, blocked: true, reason: 'Emergency stop activo' });
   }
   if (bypassEmergency) {
     console.log('WA BYPASS -> Ficha produccion a productor (sin bloqueo emergency ni horario)');
+  }
+  if (enWhitelist) {
+    console.log('WA WHITELIST -> Numero', telDestino, 'esta en whitelist, enviando aunque EMERGENCY_STOP activo');
   }
 
   // BLOQUEO HORARIO SERVER-SIDE: solo bloquea mensajes AUTOMÁTICOS fuera de 9-21h Madrid
