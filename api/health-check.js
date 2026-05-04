@@ -69,7 +69,7 @@ module.exports = async function handler(req, res) {
         + '<li>Entra en Whaticket</li>'
         + '<li>Ve a Conexiones</li>'
         + '<li>Reconecta el WhatsApp (escanea QR)</li>'
-        + '<li>Verifica en: <a href="https://printcopy.vercel.app/api/test-wa">printcopy.vercel.app/api/test-wa</a></li>'
+        + '<li>Verifica que el ID es correcto y que el dispositivo está vinculado</li>'
         + '</ol></div>'
         + '<p style="font-size:11px;color:#aaa;margin:0">Print & Copy · Sistema de gestión · Health check automático</p>'
         + '</div></div>'
